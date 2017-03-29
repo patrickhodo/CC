@@ -1,0 +1,1526 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #SalesTableCC
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #SalesTableCC
+      Label               #@ACC127
+      FormRef             #SalesTableCC
+      TitleField1         #SalesId
+      TitleField2         #CreditCardId
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CreateRecIdIndex    #Yes
+      TableGroup          #Transaction
+      PrimaryIndex        #RecId
+      ClusterIndex        #SalesIdIdx
+      DeveloperDocumentation  #@ACC1447
+      Origin              #{DA5A92AA-8B3A-450E-9753-3F0ECAC45E37}
+      LegacyId            #20018
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AmountCur
+        REAL
+        PROPERTIES
+          Name                #AmountCur
+          Table               #SalesTableCC
+          Origin              #{E0691E8C-30C8-452B-A7EF-7121098A2FA1}
+          LegacyId            #20003
+          ExtendedDataType    #AmountMST
+        ENDPROPERTIES
+        
+      FIELD #AmountMST
+        REAL
+        PROPERTIES
+          Name                #AmountMST
+          Label               #@ACC1010
+          Table               #SalesTableCC
+          Origin              #{2D3B93DE-AC10-4FE8-80ED-D02B8D8313E4}
+          LegacyId            #20015
+          ExtendedDataType    #AmountMST
+        ENDPROPERTIES
+        
+      FIELD #AuthCode
+        STRING
+        PROPERTIES
+          Name                #AuthCode
+          Table               #SalesTableCC
+          Origin              #{A0858FEC-F82C-4B26-AE00-1F73E21158AB}
+          LegacyId            #20009
+          ExtendedDataType    #CreditCardAuthCode
+          StringSize          #6
+        ENDPROPERTIES
+        
+      FIELD #AuthTransDate
+        DATE
+        PROPERTIES
+          Name                #AuthTransDate
+          Label               #@MCR21152
+          HelpText            #@ACC1854
+          Table               #SalesTableCC
+          Origin              #{D813605F-E89A-4F7C-AB03-EB6D2B9A431F}
+          ExtendedDataType    #TransDate
+        ENDPROPERTIES
+        
+      FIELD #Cancelled
+        ENUM
+        PROPERTIES
+          Name                #Cancelled
+          Label               #@SYS1068
+          HelpText            #@ACC158
+          Table               #SalesTableCC
+          Origin              #{57F2AB9E-0A82-4E7A-8398-3436C1D213EB}
+          LegacyId            #20008
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Captured
+        ENUM
+        PROPERTIES
+          Name                #Captured
+          Label               #@ACC1018
+          HelpText            #@ACC1020
+          Table               #SalesTableCC
+          Origin              #{2D46E0DA-F704-4CC4-A265-D3DEC5A6FAF3}
+          LegacyId            #20018
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #CaptureRestricted
+        ENUM
+        PROPERTIES
+          Name                #CaptureRestricted
+          Label               #@ACC1013
+          HelpText            #@ACC1019
+          Table               #SalesTableCC
+          Origin              #{7F138D95-4D29-4FED-8CCF-44F1563CCEFE}
+          LegacyId            #20017
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #CitiPlan
+        STRING
+        PROPERTIES
+          Name                #CitiPlan
+          Table               #SalesTableCC
+          Origin              #{24F70E43-9239-49DB-81BD-898B0C9258C2}
+          LegacyId            #20012
+          ExtendedDataType    #CreditCardCitiPlan
+          StringSize          #5
+        ENDPROPERTIES
+        
+      FIELD #CreditCardId
+        STRING
+        PROPERTIES
+          Name                #CreditCardId
+          Table               #SalesTableCC
+          Origin              #{9D8CBA60-352E-4A8C-92FB-0309306C6FFD}
+          LegacyId            #20002
+          ExtendedDataType    #CreditCardId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardTrxType
+        ENUM
+        PROPERTIES
+          Name                #CreditCardTrxType
+          Table               #SalesTableCC
+          Origin              #{C2C883B0-159D-4A84-B3CB-6F00A2DB9B6D}
+          LegacyId            #20004
+          EnumType            #CreditCardTrxType
+        ENDPROPERTIES
+        
+      FIELD #CurrencyCode
+        STRING
+        PROPERTIES
+          Name                #CurrencyCode
+          Table               #SalesTableCC
+          Origin              #{A11EEE9D-C967-45B6-93D3-8CD2DBCB8C1A}
+          LegacyId            #20016
+          ExtendedDataType    #CurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #CustInvoiceRefRecId
+        INT64
+        PROPERTIES
+          Name                #CustInvoiceRefRecId
+          Table               #SalesTableCC
+          Origin              #{CE1B9C36-1BD2-4F43-B819-27EF5BB05B44}
+          LegacyId            #20022
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #Debit
+        ENUM
+        PROPERTIES
+          Name                #Debit
+          Label               #@ACC1001
+          HelpText            #@ACC1002
+          Visible             #No
+          ConfigurationKey    #Debit
+          Table               #SalesTableCC
+          Origin              #{4E7171A7-AB11-4DEC-8E20-C1B47651893F}
+          LegacyId            #20013
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #EnforceAVS
+        ENUM
+        PROPERTIES
+          Name                #EnforceAVS
+          Label               #@ACC1303
+          HelpText            #@ACC1304
+          Table               #SalesTableCC
+          Origin              #{5F156A8E-EC5F-44F4-B956-5650838EC0E1}
+          LegacyId            #20020
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Location
+        INT64
+        PROPERTIES
+          Name                #Location
+          Table               #SalesTableCC
+          Origin              #{F826FCAA-EAE6-4B81-A312-BED2006E80DD}
+          ExtendedDataType    #LogisticsLocationRecId
+        ENDPROPERTIES
+        
+      FIELD #NameOnCard
+        STRING
+        PROPERTIES
+          Name                #NameOnCard
+          Label               #@ACC14
+          HelpText            #@ACC15
+          Table               #SalesTableCC
+          Origin              #{C2389796-9CA3-40FA-8F02-59C05CB4D636}
+          LegacyId            #20019
+          ExtendedDataType    #Name
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #PNRef
+        STRING
+        PROPERTIES
+          Name                #PNRef
+          Table               #SalesTableCC
+          Origin              #{6C8F8522-F9E1-44FB-B159-7242ACAE4DFD}
+          LegacyId            #20006
+          ExtendedDataType    #CreditCardPNRef
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #PrimaryCard
+        ENUM
+        PROPERTIES
+          Name                #PrimaryCard
+          Label               #@SYS80168
+          HelpText            #@ACC1369
+          Table               #SalesTableCC
+          Origin              #{D0B98FF8-FCBB-45FE-AED2-B9E8754B904D}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Processed
+        ENUM
+        PROPERTIES
+          Name                #Processed
+          HelpText            #@ACC1475
+          Table               #SalesTableCC
+          Origin              #{1894521A-641E-4EEF-8ACC-A6B5ACDAF118}
+          LegacyId            #20005
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #ProjInvoiceProjId
+        STRING
+        PROPERTIES
+          Name                #ProjInvoiceProjId
+          AllowEdit           #No
+          Table               #SalesTableCC
+          Origin              #{C80324C4-E659-4884-9EFA-C95EC430F58B}
+          ExtendedDataType    #ProjInvoiceProjId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #ProjProposalId
+        STRING
+        PROPERTIES
+          Name                #ProjProposalId
+          Table               #SalesTableCC
+          Origin              #{B4FCEA50-F756-41EA-8C23-90896E734EC5}
+          LegacyId            #20023
+          ExtendedDataType    #ProjProposalId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #RecurringToken
+        ENUM
+        PROPERTIES
+          Name                #RecurringToken
+          Table               #SalesTableCC
+          Origin              #{F7E23FAB-7E01-4E0D-92F1-A5838E0A965B}
+          LegacyId            #20014
+          EnumType            #CreditCardRecurringToken
+        ENDPROPERTIES
+        
+      FIELD #Registered
+        ENUM
+        PROPERTIES
+          Name                #Registered
+          Label               #@SYS50316
+          HelpText            #@ACC661
+          Table               #SalesTableCC
+          Origin              #{9D67AA5A-91F8-4115-8B87-598851227710}
+          LegacyId            #20011
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #SalesId
+        STRING
+        PROPERTIES
+          Name                #SalesId
+          Table               #SalesTableCC
+          Origin              #{F88B36B3-1297-416C-92F9-0A9A590641F0}
+          LegacyId            #20001
+          ExtendedDataType    #SalesId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #ServiceOrderId
+        STRING
+        PROPERTIES
+          Name                #ServiceOrderId
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #SalesTableCC
+          IgnoreEDTRelation   #Yes
+          Origin              #{C1A760F0-63B5-43D2-9137-50769F50C192}
+          ExtendedDataType    #SMAServiceOrderId
+        ENDPROPERTIES
+        
+      FIELD #TransID
+        STRING
+        PROPERTIES
+          Name                #TransID
+          Table               #SalesTableCC
+          Origin              #{EB541E43-C1CA-4A5C-AE8A-CDA2C74CFBBF}
+          LegacyId            #20007
+          ExtendedDataType    #CreditCardTransID
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #UseProfile
+        ENUM
+        PROPERTIES
+          Name                #UseProfile
+          Label               #@ACC1444
+          HelpText            #@ACC1445
+          Table               #SalesTableCC
+          Origin              #{B764AB8B-9AEC-4FD4-8017-2D1716BFDC34}
+          LegacyId            #20021
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #VoiceAuth
+        ENUM
+        PROPERTIES
+          Name                #VoiceAuth
+          Label               #@ACC621
+          HelpText            #@ACC622
+          Table               #SalesTableCC
+          Origin              #{B3B54A35-D5E1-4DAA-B4BB-1D753DC6FD9E}
+          LegacyId            #20010
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+          #CreditCardId
+          #AmountCur
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+          #CreditCardId
+          #AmountCur
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Amount
+        PROPERTIES
+          Name                #Amount
+          Label               #@SYS53072
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AmountMST
+          #AmountCur
+          #CurrencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #CaptureRestricted
+        PROPERTIES
+          Name                #CaptureRestricted
+          Label               #@ACC1013
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CaptureRestricted
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Cardholder
+        PROPERTIES
+          Name                #Cardholder
+          Label               #@ACC1277
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #NameOnCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Citibank
+        PROPERTIES
+          Name                #Citibank
+          Label               #@ACC869
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CitiPlan
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Dates
+        PROPERTIES
+          Name                #Dates
+          Label               #@SYS80293
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AuthTransDate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Debit
+        PROPERTIES
+          Name                #Debit
+          Label               #@SYS9512
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Debit
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Hidden
+        PROPERTIES
+          Name                #Hidden
+          Label               #@SYS54478
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CustInvoiceRefRecId
+          #Location
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Information
+        PROPERTIES
+          Name                #Information
+          Label               #@SYS53922
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+          #SalesId
+          #ProjProposalId
+          #ServiceOrderId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Profile
+        PROPERTIES
+          Name                #Profile
+          Label               #@SYS40276
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UseProfile
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Transaction
+        PROPERTIES
+          Name                #Transaction
+          Label               #@SYS15191
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardTrxType
+          #Processed
+          #PNRef
+          #Cancelled
+          #Registered
+          #Captured
+          #EnforceAVS
+          #RecurringToken
+          #TransID
+          #PrimaryCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Verbal
+        PROPERTIES
+          Name                #Verbal
+          Label               #@ACC621
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #VoiceAuth
+          #AuthCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #WebSale
+        PROPERTIES
+          Name                #WebSale
+          Label               #@ACC30
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #SalesIdIdx
+      PROPERTIES
+        Name                #SalesIdIdx
+        Origin              #{FB43E295-8020-4E7F-AC17-9E1231DC1034}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #SalesId
+      ENDINDEXFIELDS
+      
+      #PNRefIdx
+      PROPERTIES
+        Name                #PNRefIdx
+        AllowDuplicates     #No
+        Origin              #{2EC04D99-2ED4-42EB-B47C-41BD91C34A4C}
+        LegacyId            #20002
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #PNRef
+        #TransID
+        #SalesId
+        #ServiceOrderId
+        #ProjProposalId
+        #ProjInvoiceProjId
+        #CustInvoiceRefRecId
+        #CreditCardTrxType
+        #CreditCardId
+        #AmountCur
+        #Cancelled
+        #Processed
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTable
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CreditCardId
+            RelatedField        #CreditCardId
+            SourceEDT           #CreditCardId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CurrencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustInvoiceTable
+        PROPERTIES
+          Name                #CustInvoiceTable
+          Table               #CustInvoiceTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustInvoiceRefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Location_FK
+        PROPERTIES
+          Name                #Location_FK
+          Table               #LogisticsPostalAddress
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #Location
+            RelatedField        #RecId
+            SourceEDT           #LogisticsLocationRecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRCustPaymTable
+        PROPERTIES
+          Name                #MCRCustPaymTable
+          Table               #MCRCustPaymTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TableId
+            RelatedField        #PaymInfoTableId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RecId
+            RelatedField        #PaymInfoRecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #PNRefId
+        PROPERTIES
+          Name                #PNRefId
+          Table               #CreditCardTrans
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #PNRef
+            RelatedField        #PNRef
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #ProjInvoiceTable
+        PROPERTIES
+          Name                #ProjInvoiceTable
+          Table               #ProjInvoiceTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #ProjInvoiceProjId
+            RelatedField        #ProjInvoiceProjId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #ProjProposalJour
+        PROPERTIES
+          Name                #ProjProposalJour
+          Table               #ProjProposalJour
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #ProjProposalId
+            RelatedField        #ProposalId
+            SourceEDT           #ProjProposalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesTable
+        PROPERTIES
+          Name                #SalesTable
+          Table               #SalesTable
+          Validate            #No
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #SalesId
+            RelatedField        #SalesId
+            SourceEDT           #SalesId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SMAServiceOrderTable
+        PROPERTIES
+          Name                #SMAServiceOrderTable
+          Table               #SMAServiceOrderTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #ServiceOrderId
+            RelatedField        #ServiceOrderId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #checkIfLines
+        #display Int checkIfLines()
+        #{
+        #    #resAppl
+        #    ImageRes            ret;
+        #    CreditCardTrans     ccTrans = CreditCardTrans::find(this.TransID);
+        #    ;
+        #    if (ccTrans && this.Processed)
+        #    {
+        #        switch (ccTrans.ResponseLevel)
+        #        {
+        #            case errorTolerance::Error  :
+        #                ret = #ImageError;
+        #                break;
+        #            case errorTolerance::Warning    :
+        #                ret = #ImageWarning;
+        #                break;
+        #            default :
+        #                ret = #ImageOk;
+        #                break;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #initValue
+        #public void initValue()
+        #{
+        #    // FR 100 Capture restriction
+        #    // AI 03.21.2007
+        #
+        #    creditCardParameters        creditCardParameters;
+        #
+        #    super();
+        #
+        #    creditCardParameters = CreditCardParameters::findParameter();
+        #    if (creditCardParameters.CaptureRestricted == NoYes::Yes)
+        #    {
+        #        this.CaptureRestricted = NoYes::Yes;
+        #
+        #    }
+        #    if (creditCardParameters.AVS == NoYes::Yes || creditCardParameters.AVSZipOnly == NoYes::Yes)
+        #    {
+        #        this.EnforceAVS = NoYes::Yes;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insert
+        #public void insert()
+        #{
+        #    super();
+        #
+        #    if (this.Processed)
+        #    {
+        #        SalesTableCC::createMCRCustPaymTable(this);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #update
+        #public void update()
+        #{
+        #    super();
+        #
+        #    if (this.Processed)
+        #    {
+        #        SalesTableCC::createMCRCustPaymTable(this);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #write
+        #public void write()
+        #{
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #adjustForCreditCard
+        #static amountMST adjustForCreditCard(CustInvoiceJour  custInvoiceJour,
+        #                                     AmountMST      amountMST)
+        #{
+        #    AmountMst               amountMSTPos;
+        #    AmountMst               amountMSTNeg;
+        #    SalesTableCC            salesTableCC;
+        #    ;
+        #    if (creditCardParameters::findParameter().EnforceCapture == NoYes::Yes)
+        #    {
+        #        select sum(amountCur) from salesTableCC
+        #            where salesTableCC.SalesId == custInvoiceJour.SalesId
+        #            && salesTableCC.CreditCardTrxType == CreditCardTrxType::A
+        #            && salesTableCC.PNRef != '';
+        #
+        #        amountMSTPos = salesTableCC.AmountCur;
+        #
+        #        /*select sum(amountCur) from salesTableCC
+        #            where salesTableCC.SalesId == custInvoiceJour.Salesid
+        #            && (salesTableCC.CreditCardTrxType == CreditCardTrxType::C
+        #            || salesTableCC.CreditCardTrxType == CreditCardTrxType::V)
+        #            && salesTableCC.PNRef != '';
+        #
+        #        _amountMSTNeg = salesTableCC.AmountCur;*/
+        #
+        #
+        #        return amountMST - (amountMSTPos - amountMSTNeg);
+        #    }
+        #
+        #    return amountMST;
+        #}
+      ENDSOURCE
+      SOURCE #calculateChargePaymStatus
+        #/// <summary>
+        #///     Calculates what the status of this payment should be based upon the
+        #///     status of the active credit card authorization record.
+        #/// </summary>
+        #/// <param name="_salesTableCC">
+        #///     The <c>SalesTableCC</c> record from which the status is updated.
+        #/// </param>
+        #/// <param name="_mcrCustPaymTable">
+        #///     The <c>MCRCustPaymTable</c> record being updated; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The updated status of the <c>MCRCustPaymTable</c> record.
+        #/// </returns>
+        #/// <remarks>
+        #///     If there is no active credit card authorization record for this
+        #///     payment, then the return value is MCRCustPaymStatus::NotSubmitted.
+        #///     This method is intended to be called only for credit card charges
+        #///     (positive unposted amount).
+        #/// </remarks>
+        #static MCRCustPaymStatus calculateChargePaymStatus(SalesTableCC _salesTableCC,
+        #                                                    MCRCustPaymTable _mcrCustPaymTable)
+        #{
+        #    MCRCustPaymStatus status;
+        #
+        #    if (_salesTableCC)
+        #    {
+        #        if (_salesTableCC.Processed && _salesTableCC.Cancelled == NoYes::No)
+        #        {
+        #            status = MCRCustPaymStatus::Authorized;
+        #        }
+        #        else if (_salesTableCC.Processed && _salesTableCC.Cancelled == NoYes::Yes)
+        #        {
+        #            status = MCRCustPaymStatus::Declined;
+        #        }
+        #        else
+        #        {
+        #            status = MCRCustPaymStatus::NotSubmitted;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        status = MCRCustPaymStatus::NotSubmitted;
+        #    }
+        #
+        #    return status;
+        #}
+      ENDSOURCE
+      SOURCE #checkForErrors
+        #static void checkForErrors(SalesTableCC salesTableCC,
+        #                           SalesTable   salesTable)
+        #{
+        #    ;
+        #
+        #    //<-- is the Sales order already posted?
+        #    if (salesTable.SalesStatus == SalesStatus::Invoiced && SalesTableCC.CreditCardTrxType != CreditCardTrxType::C)
+        #        throw error(strFmt("@ACC208", salesTable.SalesId));
+        #
+        #    //<-- Check to see if the total is zero on the Process
+        #    if (salesTableCC.AmountCur <= 0 && salesTableCC.CreditCardTrxType != CreditCardTrxType::C)
+        #        throw error(strFmt("@ACC248"));
+        #
+        #    //--> Store value must be a sale
+        #    if (CreditCardTable::find(salesTableCC.CreditCardId).CreditCardType == CreditCardType::Stored
+        #        && salesTableCC.CreditCardTrxType != CreditCardTrxType::S)
+        #    {
+        #        throw error("@ACC1864");
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #checkForErrorsFreeText
+        #static void checkForErrorsFreeText(SalesTableCC salesTableCC,
+        #                           CustInvoiceTable   custInvoiceTable = null)
+        #{
+        #    ;
+        #
+        #    //<-- Check to see if the total is zero on the Process
+        #    if (salesTableCC.AmountCur <= 0 && salesTableCC.CreditCardTrxType != CreditCardTrxType::C)
+        #        throw error(strFmt("@ACC248"));
+        #}
+      ENDSOURCE
+      SOURCE #checkForErrorsOnInvoice
+        #static void checkForErrorsOnInvoice(SalesTableCC salesTableCC,
+        #                           SalesTable   salesTable)
+        #{
+        #    ;
+        #    //<-- Check to see if the total is zero on the Process
+        #    if (salesTableCC.AmountCur <= 0 && salesTableCC.CreditCardTrxType != CreditCardTrxType::C)
+        #        throw error(strFmt("@ACC248"));
+        #}
+      ENDSOURCE
+      SOURCE #checkForErrorsPriorCapture
+        #static void checkForErrorsPriorCapture(SalesTableCC salesTableCC,
+        #                           SalesTable               salesTable,
+        #                           CreditCardParameters     ccParameters,
+        #                           SalesParmTable           salesParmTable
+        #                           )
+        #{
+        #    SalesTableCC            chkSalesTableCC;
+        #    SalesParmUpdateCC       salesParmUpdateCC;
+        #    ;
+        #
+        #    //--> If restrict captures and re-auth is on, make sure no authorizations exist
+        #    if (ccParameters.CaptureRestricted && ccParameters.ReAuthorizeRestricted)
+        #    {
+        #        select count(recId) from chkSalesTableCC
+        #            where chkSalesTableCC.SalesId == salesTable.SalesId
+        #            && chkSalesTableCC.CreditCardTrxType == CreditCardTrxType::A
+        #            && (chkSalesTableCC.Captured == NoYes::No
+        #            && chkSalesTableCC.CaptureRestricted == NoYes::Yes)
+        #            && chkSalesTableCC.Cancelled == NoYes::No
+        #            && chkSalesTableCC.Processed == NoYes::Yes;
+        #
+        #        if (chkSalesTableCC.RecId > 1)
+        #        {
+        #            select salesParmUpdateCC
+        #                where SalesParmUpdateCC.TransID == salesTableCC.TransID
+        #                && salesParmUpdateCC.ParmId == salesParmTable.ParmId;
+        #
+        #            if (!SalesParmUpdateCC)
+        #            {
+        #                throw error(strFmt("@ACC1360",salesTable.SalesId));
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #checkForErrorsProject
+        #static void checkForErrorsProject(SalesTableCC salesTableCC,
+        #                           ProjProposalJour     projProposalJour = null)
+        #{
+        #    ;
+        #
+        #    //<-- Check to see if the total is zero on the Process
+        #    if (salesTableCC.AmountCur <= 0 && salesTableCC.CreditCardTrxType != CreditCardTrxType::C)
+        #        throw error(strFmt("@ACC248"));
+        #}
+      ENDSOURCE
+      SOURCE #checkForOneTimeErrors
+        #static void checkForOneTimeErrors(CreditCardNum             _creditCardNum,
+        #                                  CreditCardExpirationDate  _expDate,
+        #                                  Name                      _Name)
+        #{
+        #    ;
+        #    //<-- Check to make sure we have a Credit Card Number
+        #    if (!_creditCardNum)
+        #        throw error("@ACC579");
+        #
+        #    if (!_expDate)
+        #        throw error("@ACC580");
+        #
+        #    if (!_Name)
+        #        throw error("@ACC582");
+        #
+        #}
+      ENDSOURCE
+      SOURCE #checkForTransactions
+        #static boolean checkForTransactions(SalesId     salesId)
+        #{
+        #    SalesTableCC        salesTableCC;
+        #    ;
+        #    select firstonly salesTableCC
+        #        index hint salesIdIdx
+        #        where salesTableCC.SalesId == salesId;
+        #
+        #    if (salesTableCC)
+        #        return true;
+        #    else
+        #        return false;
+        #}
+      ENDSOURCE
+      SOURCE #createFromCustPaymTable
+        #static SalesTableCC createFromCustPaymTable(MCRCustPaymTable       custPaymTable)
+        #{
+        #    CreditCardTable     ccTable;
+        #    salesTableCC        salesTableCC;
+        #    MCRCustPaymTable    origCustPaymTable = MCRCustPaymTable::findByRecID(custPaymTable.OrigRefundRecID);
+        #    salesTableCC        origSalesTableCC = salesTableCC::findRecId(origCustPaymTable.PaymInfoRecId);
+        #
+        #    SalesTable          SalesTable;
+        #    ;
+        #    if (origSalesTableCC)
+        #    {
+        #        salesTableCC.SalesId = origSalesTableCC.SalesId;
+        #        if (custPaymTable.Amount >= 0)
+        #        {
+        #            salesTableCC.CreditCardTrxType = CreditCardTrxType::A;
+        #        }
+        #        else
+        #        {
+        #            SalesTableCC.CreditCardTrxType = CreditCardTrxType::C;
+        #        }
+        #        salesTableCC.CurrencyCode   = custPaymTable.CurrencyCode;
+        #        SalesTableCC.AmountCur  = custPaymTable.Amount;
+        #        salesTableCC.CreditCardId = origSalesTableCC.CreditCardId;
+        #        salesTableCC.AmountMST = Currency::amountCur2MST(custPaymTable.Amount,custPaymTable.CurrencyCode);
+        #        salesTableCC.insert();
+        #
+        #    }
+        #
+        #    return salesTableCC;
+        #}
+      ENDSOURCE
+      SOURCE #createFromWeb
+        #static void createFromWeb(SalesTable       salesTable)
+        #{
+        #    CreditCardTable     ccTable;
+        #    salesTableCC        salesTableCC;
+        #    ;
+        #    select ccTable where ccTable.CustAccount == salesTable.CustAccount
+        #        && ccTable.PrimaryCard == NoYes::Yes;
+        #
+        #    if (ccTable)
+        #    {
+        #        salesTableCC.SalesId = salesTable.SalesId;
+        #        salesTablecc.CreditCardId = ccTable.CreditCardId;
+        #        salesTableCC.CreditCardTrxType = CreditCardTrxType::A;
+        #        salesTableCC.insert();
+        #    }
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createMCRCustPaymTable
+        #static void createMCRCustPaymTable(SalesTableCC     salesTableCC)
+        #{
+        #    MCRCustPaymTable            paymTable;
+        #    SalesTable                  salesTable = SalesTable::find(SalesTableCC.SalesId);
+        #    CreditCardTenderType        ccTenderType;
+        #    ;
+        #    if (!SalesTable)
+        #        return;
+        #
+        #    select ccTenderType
+        #        where ccTenderType.CreditCardType == CreditCardTable::find(SalesTableCC.CreditCardId).CreditCardType;
+        #
+        #    if (!ccTenderType && CreditCardParameters::findParameter().CallCenter)
+        #    {
+        #        throw error(strFmt("@ACC1863",SalesTableCC.CreditCardId));
+        #    }
+        #
+        #    if (salesTableCC.CreditCardTrxType == CreditCardTrxType::D
+        #        || salesTableCC.CreditCardTrxType == CreditCardTrxType::V)
+        #    {
+        #        return;
+        #    }
+        #
+        #    ttsBegin;
+        #
+        #    select forupdate paymTable
+        #        where paymTable.PaymInfoTableId == SalesTableCC.TableId
+        #        && paymTable.PaymInfoRecId== SalesTableCC.RecId;
+        #
+        #    if (!paymTable)
+        #    {
+        #        paymTable.RefTableId = SalesTable.TableId;
+        #        paymTable.RefRecId = SalesTable.RecId;
+        #        paymTable.Amount = salesTableCC.AmountCur;
+        #        paymTable.CurrencyCode  = SalesTableCC.CurrencyCode;
+        #        paymTable.CustAccount = SalesTable.InvoiceAccount;
+        #        paymTable.CustPaymType = MCRCustPaymType::CreditCard;
+        #        paymTable.CardTypeId = ccTenderType.RetailCardTypeId;
+        #        paymTable.Status = SalesTableCC.Processed ? MCRCustPaymStatus::Authorized : MCRCustPaymStatus::NotSubmitted;
+        #        paymTable.TenderTypeId = ccTenderType.tenderTypeId;
+        #        paymTable.Channel = RetailMCRChannelTable::findChannelBySalesTable(salesTable).RecId;
+        #        paymTable.PaymInfoRecId = salesTableCC.RecId;
+        #        paymTable.PaymInfoTableId = salesTableCC.TableId;
+        #        paymTable.write();
+        #    }
+        #    else if (paymTable && salesTableCC.CreditCardTrxType == CreditCardTrxType::A)
+        #    {
+        #        paymTable.Status = SalesTableCC.Processed ? MCRCustPaymStatus::Authorized : MCRCustPaymStatus::NotSubmitted;
+        #        paymTable.write();
+        #    }
+        #
+        #    //--> Check and remove holds
+        #    CreditCardOrderHoldTable::checkHolds(salesTable);
+        #    //<-- Check and remove holds
+        #
+        #    ttsCommit;
+        #}
+      ENDSOURCE
+      SOURCE #createTrans
+        #static CreditCardTrans createTrans (CreditCardTrans ccTrans)
+        #{
+        #    SalesTableCC        salesTableCC;
+        #    DictEnum            dictEnum = new DictEnum(enumnum(CreditCardTrxType));
+        #    ;
+        #    if (ccTrans.TransID)
+        #    {
+        #        salesTableCC.clear();
+        #        salesTableCC.AmountCur         =    ccTrans.AmountCur;
+        #        salesTableCC.AmountMST         =    ccTrans.AmountMST;
+        #        salesTableCC.CurrencyCode      =    ccTrans.CurrencyCode;
+        #        salesTableCC.Cancelled         =    NoYes::No;
+        #        salesTableCC.CreditCardId      =    ccTrans.CreditCardId;
+        #        salesTableCC.CreditCardTrxType =    ccTrans.TransType;
+        #        salesTableCC.Processed         =    NoYes::Yes;
+        #        salesTableCC.PNRef             =    ccTrans.PNRef;
+        #        salesTableCC.SalesId           =    ccTrans.SalesId;
+        #        salesTableCC.TransID           =    ccTrans.TransID;
+        #        salesTableCC.NameOnCard        =    ccTrans.NameOnCard;
+        #        salesTableCC.insert();
+        #
+        #        ccTrans.RefRecId                = salesTableCC.RecId;
+        #
+        #    }
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findRecId
+        #static SalesTableCC findRecId(RefRecId  _recId)
+        #{
+        #    SalesTableCC            salesTableCC;
+        #    ;
+        #    select firstonly salesTableCC
+        #        where salesTableCC.RecId == _recId;
+        #
+        #    return salesTableCC;
+        #}
+      ENDSOURCE
+      SOURCE #findReturnRecId
+        #static SalesTableCC findReturnRecId(RefRecId  _recId)
+        #{
+        #    SalesTableCC            salesTableCC;
+        #    ;
+        #    select firstonly salesTableCC
+        #        where salesTableCC.RecId == _recId
+        #        && SalesTableCC.CreditCardTrxType == CreditCardTrxType::C;
+        #
+        #    return salesTableCC;
+        #}
+      ENDSOURCE
+      SOURCE #getAmountByDate
+        #static amountCur getAmountByDate(SalesId                salesId,
+        #                                 TransDate              transDate)
+        #{
+        #    SalesLine               salesLine;
+        #    transDate               lastDate;
+        #    SalesTableCC            salesTableCC;
+        #    ;
+        #    //--> Get previous date from now
+        #    select salesLine
+        #        order by shippingDateConfirmed desc
+        #        where salesLine.SalesId == salesId
+        #        && salesLine.ShippingDateConfirmed < transDate;
+        #
+        #    if (salesLine.ShippingDateConfirmed == dateNull())
+        #    {
+        #
+        #        select sum(LineAmount) from salesLine
+        #            where salesLine.SalesId == SalesId
+        #            && salesLine.ShippingDateConfirmed <= transDate;
+        #    }
+        #    else
+        #    {
+        #        lastDate = salesLine.shippingDateConfirmed;
+        #
+        #        select salesTableCC
+        #            where salesTableCC.AuthTransDate == lastDate;
+        #
+        #        if (salesTableCC)
+        #        {
+        #            select sum(LineAmount) from salesLine
+        #                where salesLine.SalesId == SalesId
+        #                && salesLine.ShippingDateConfirmed <= transDate
+        #                && salesLine.ShippingDateConfirmed > lastDate;
+        #        }
+        #        else
+        #        {
+        #            select sum(LineAmount) from salesLine
+        #                where salesLine.SalesId == SalesId
+        #                && salesLine.ShippingDateConfirmed <= transDate;
+        #        }
+        #    }
+        #
+        #    return salesLine.LineAmount;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #processMCRCustPaymTable
+        #static boolean processMCRCustPaymTable(SalesTableCC     salesTableCC,
+        #                                       MCRCustPaymTable mcrCustPaymTable)
+        #{
+        #    CreditCardTrans         ccTrans;
+        #    CreditCard              cc = new CreditCard();
+        #    SalesTable              salesTable = SalesTable::find(salesTableCC.SalesId);
+        #    boolean                 ret = false;
+        #    DictTable               dictTable;
+        #    Common                  common;
+        #    salesTableCC            origSalesTableCC;
+        #    ;
+        #    if (salesTableCC.Processed)
+        #        return true;
+        #
+        #    if (salesTableCC.Cancelled)
+        #        return false;
+        #
+        #    if (!salesTableCC.CreditCardId)
+        #        throw error("@ACC1862");
+        #
+        #    if (!salesTableCC.SalesId)
+        #    {
+        #        dictTable = new dictTable(mcrCustPaymTable.RefTableId);
+        #        common = dictTable.makeRecord();
+        #        select common where common.RecId == mcrCustPaymTable.RefRecId;
+        #    }
+        #
+        #    ttsBegin;
+        #
+        #    salesTableCC.selectForUpdate(true);
+        #    salesTableCC.AmountCur = mcrCustPaymTable.Amount;
+        #    salesTableCC.AmountMST = Currency::amountCur2MST(mcrCustPaymTable.Amount,mcrCustPaymTable.CurrencyCode);
+        #    salesTableCC.write();
+        #
+        #    //<-- Create the Transaction record
+        #    if (salesTableCC.CreditCardTrxType == CreditCardTrxType::C && salesTableCC.PNRef)
+        #    {
+        #        ccTrans = CreditCardTrans::createTransforCredit(salesTableCC,salesTable,mcrCustPaymTable.Amount);
+        #        ccTrans.write();
+        #    }
+        #    else if (salesTableCC.CreditCardTrxType == CreditCardTrxType::C)
+        #    {
+        #        origSalesTableCC = salesTableCC::findRecId(mcrCustPaymTable.OrigRefundRecID);
+        #        ccTrans = CreditCardTrans::createTransforRefCredit( origSalesTableCC);
+        #        ccTrans.write();
+        #    }
+        #    else
+        #    {
+        #        if (salesTable)
+        #        {
+        #            ccTrans = CreditCardTrans::createTransfromSalesCC(salesTableCC,salesTable);
+        #            ccTrans.write();
+        #            ccTrans.CustomerRef = ccTrans.getMerchantRef(ccTrans);
+        #            ccTrans.write();
+        #        }
+        #        else
+        #        {
+        #            switch (common.TableId)
+        #            {
+        #                case tableNum(CustInvoiceTable) :
+        #                    ccTrans = CreditCardTrans::createTransfromSalesCCCommon(salesTableCC,common);
+        #                    ccTrans.write();
+        #                    break;
+        #                case tableNum(LedgerJournalTrans)   :
+        #                    ccTrans = CreditCardTrans::createTransfromJournalMCR(salesTableCC,common);
+        #                    break;
+        #            }
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    //<-- create Credit Card Transaction
+        #    //--> We remove the tts portion to make sure errors are captured in the try/catch blocks
+        #    ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+        #
+        #    ttsBegin;
+        #
+        #    if (CreditCardAdv::checkReturn(ccTrans,ccTrans.Result))
+        #    {
+        #        salesTableCC.PNRef     = ccTrans.pNRef;
+        #        salesTableCC.Processed = NoYes::Yes;
+        #        salesTableCC.TransID   = ccTrans.TransID;
+        #
+        #        salesTableCC.update();
+        #
+        #        info(strFmt("@ACC144",ccTrans.pnRef ? ccTrans.PNRef : ccTrans.OrbitalTxRefNum));
+        #        ret = true;
+        #    }
+        #    else
+        #    {
+        #        salesTableCC.TransID = ccTrans.TransID;
+        #        salesTableCC.update();
+        #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+        #        ret = false;
+        #    }
+        #    ttsCommit;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #processSalesTran
+        #static void processSalesTran()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #updateTrans
+        #static salesTableCC updateTrans(SalesTableCC     salesTableCC,
+        #                   CreditCardPNREF  pNRef)
+        #{
+        #    SalesTableCC    LocSalesTAbleCC;
+        #    ;
+        #    ttsbegin;
+        #    select forupdate firstonly LocSalesTAbleCC where LocSalesTAbleCC.RecId == salesTableCC.RecId;
+        #
+        #    if (LocSalesTAbleCC)
+        #    {
+        #        //_salesTableCC.TransID   = ccTrans.TransID;
+        #        LocSalesTAbleCC.PNRef     = pNRef;
+        #        LocSalesTAbleCC.Processed = NoYes::Yes;
+        #        //_salesTableCC.SalesId   = ccTrans.SalesId;
+        #        LocSalesTAbleCC.update();
+        #    }
+        #    ttscommit;
+        #
+        #    return LocSalesTAbleCC;
+        #}
+      ENDSOURCE
+      SOURCE #updateTransForCredit
+        #static CreditCardTrans updateTransForCredit (CreditCardTrans ccTrans,
+        #                                             SalesTableCC    _salesTableCC)
+        #{
+        #    SalesTableCC        salesTableCC;
+        #    ;
+        #    if (ccTrans)
+        #    {
+        #        ttsbegin;
+        #        select forupdate salesTableCC where salesTableCC.RecId == _salesTableCC.RecId;
+        #
+        #        salesTableCC.PNRef             =    ccTrans.PNRef;
+        #        salesTableCC.SalesId           =    ccTrans.SalesId;
+        #        salesTableCC.TransID           =    ccTrans.TransID;
+        #        salesTableCC.Processed         =    noYes::Yes;
+        #        salesTableCC.update();
+        #
+        #        ttscommit;
+        #    }
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #updateTransForProjEmpl
+        #static void updateTransForProjEmpl(ProjProposalEmpl     proposalEmpl)
+        #{
+        #    SalesTableCC        salesTableCC;
+        #    CreditCardTrans     ccTrans;
+        #    SMAServiceOrderLine serviceOrderLine;
+        #    ProjEmplTrans       projEmplTrans = projEmplTrans::find(proposalEmpl.TransId);
+        #    ;
+        #    while select ServiceOrderId from serviceOrderLine
+        #        where serviceOrderLine.ProjTransId == projEmplTrans.TransIdRef
+        #    {
+        #
+        #        ttsbegin;
+        #        while select forupdate salesTableCC where salesTableCC.ServiceOrderId == serviceOrderLine.ServiceOrderId
+        #            && salesTableCC.Cancelled == NoYes::No
+        #            && salesTableCC.Captured == NoYes::No
+        #            && salesTableCC.Processed == NoYes::Yes
+        #        {
+        #            if (!salesTableCC.ProjProposalId)
+        #            {
+        #                salesTableCC.ProjProposalId = proposalEmpl.ProposalId;
+        #                salesTableCC.update();
+        #            }
+        #
+        #            while select forupdate ccTrans
+        #                where ccTrans.TransID == SalesTableCC.TransID
+        #                && ccTrans.ServiceOrderId == serviceOrderLine.ServiceOrderId
+        #            {
+        #                ccTrans.ProjProposalId = proposalEmpl.ProposalId;
+        #                ccTrans.update();
+        #            }
+        #        }
+        #
+        #        ttscommit;
+        #
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #updateTransForProjFee
+        #static void updateTransForProjFee(projOnAccTransSale     projOnAccTransSale)
+        #{
+        #    SalesTableCC        salesTableCC;
+        #    CreditCardTrans     ccTrans;
+        #    SMAServiceOrderLine serviceOrderLine;
+        #    ProjOnAccTrans      projOnAccTrans = ProjOnAccTrans::find(projOnAccTransSale.TransId);
+        #    ;
+        #    while select ServiceOrderId from serviceOrderLine
+        #        where serviceOrderLine.ProjTransId == projOnAccTrans.TransId
+        #    {
+        #        ttsbegin;
+        #        while select forupdate salesTableCC where salesTableCC.ServiceOrderId == serviceOrderLine.ServiceOrderId
+        #            && salesTableCC.Cancelled == NoYes::No
+        #            && salesTableCC.Captured == NoYes::No
+        #            && salesTableCC.Processed == NoYes::Yes
+        #        {
+        #
+        #            if (!salesTableCC.ProjProposalId)
+        #            {
+        #                salesTableCC.ProjProposalId = projOnAccTransSale.proposalId();
+        #                salesTableCC.update();
+        #            }
+        #
+        #            while select forupdate ccTrans
+        #                where ccTrans.TransID == SalesTableCC.TransID
+        #                && ccTrans.ServiceOrderId == serviceOrderLine.ServiceOrderId
+        #            {
+        #                ccTrans.ProjProposalId = projOnAccTransSale.proposalId();
+        #                ccTrans.update();
+        #            }
+        #        }
+        #
+        #        ttscommit;
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #updateTransForProjItem
+        #static void updateTransForProjItem (ProjProposalItem     projProposalItem)
+        #{
+        #    SalesTableCC        salesTableCC;
+        #    CreditCardTrans     ccTrans;
+        #    SMAServiceOrderLine serviceOrderLine;
+        #    ProjItemTrans       projItemTrans = ProjItemTrans::find(projProposalItem.ProjTransId);
+        #    ;
+        #    while select ServiceOrderId from serviceOrderLine
+        #        where serviceOrderLine.ProjTransId == projItemTrans.ProjTransIdRef
+        #    {
+        #        ttsbegin;
+        #        while select forupdate salesTableCC where salesTableCC.ServiceOrderId == serviceOrderLine.ServiceOrderId
+        #            && salesTableCC.Cancelled == NoYes::No
+        #            && salesTableCC.Captured == NoYes::No
+        #            && salesTableCC.Processed == NoYes::Yes
+        #        {
+        #
+        #            if (!salesTableCC.ProjProposalId)
+        #            {
+        #                salesTableCC.ProjProposalId = projProposalItem.ProposalId;
+        #                salesTableCC.update();
+        #            }
+        #
+        #            while select forupdate ccTrans
+        #                where ccTrans.TransID == SalesTableCC.TransID
+        #                && ccTrans.ServiceOrderId == serviceOrderLine.ServiceOrderId
+        #            {
+        #                ccTrans.ProjProposalId = projProposalItem.ProposalId;
+        #                ccTrans.update();
+        #            }
+        #        }
+        #
+        #        ttscommit;
+        #    }
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

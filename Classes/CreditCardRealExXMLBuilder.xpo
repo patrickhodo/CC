@@ -1,0 +1,55 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardRealExXMLBuilder
+    PROPERTIES
+      Name                #CreditCardRealExXMLBuilder
+      Origin              #{C1769B0F-9108-4474-AE7C-CBA63211E44E}
+      LegacyId            #20038
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #checkMerchantRealEx
+        #boolean checkMerchantRealEx(CreditCardMerchantRealEx  ccMerchantRealEx)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantRealEx.MerchantId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantRealEx.URL)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardRealExXMLBuilder
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static TempStr construct(CreditCardTrans        ccTrans)
+        #{
+        #    TempStr                         parmList;
+        #    ;
+        #    parmList = CreditCardRealExXMLBuilder131::construct(ccTrans);
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #static void createProfile()
+        #{
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

@@ -1,0 +1,1421 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardMonerisUS
+    PROPERTIES
+      Name                #CreditCardMonerisUS
+      Origin              #{AB1DF12F-DC1C-4256-B01F-DBF448D352B6}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #build
+        #creditCardTrans build(CreditCardTrans   _ccTrans)
+        #{
+        #    ;
+        #    switch (_ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            if (_ccTrans.Profile)
+        #            {
+        #                _ccTrans = this.buildNewAuthProfile(_ccTrans);
+        #            }
+        #            else
+        #            {
+        #                _ccTrans= this.buildNewAuth(_ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (_ccTrans.Profile)
+        #            {
+        #                _ccTrans = this.buildPurchaseProfile(_ccTrans);
+        #            }
+        #            else
+        #            {
+        #                _ccTrans = this.buildPurchase(_ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D     :
+        #            _ccTrans = this.buildCapture(_ccTrans);
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (_ccTrans.Profile)
+        #            {
+        #                _ccTrans = this.buildPurchaseProfile(_ccTrans);
+        #            }
+        #            else
+        #            {
+        #                if (_ccTrans.OrigID)
+        #                {
+        #                    _ccTrans = this.buildRefund(_ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    _ccTrans = this.buildIndpRefund(_ccTrans);
+        #                }
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            _ccTrans = this.buildVoid(_ccTrans);
+        #            break;
+        #
+        #    }
+        #
+        #    return _ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #creditCardTrans buildCapture(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans             newccTrans;
+        #    /*USMoneris.USCompletion      completion;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    CreditCardStr               result;
+        #    DictEnum                    dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #
+        #    InteropPermission           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    completion = new USMoneris.USCompletion(_ccTrans.RetrevalRefNum,
+        #        num2str(this.parmProcessAmt(),-1,-1,-1,-1),
+        #        _ccTrans.OrigID,
+        #        "1",
+        #        _ccTrans.CustomerRef,
+        #        num2str(_ccTrans.CommercialSalesTax,9,2,0,0));
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        completion);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        _ccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    newccTrans.AuthNetId = receipt.GetISO();
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #    ttsCommit;
+        #    */
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildCaptureProfile
+        #creditCardTrans buildCaptureProfile(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans             newccTrans;
+        #    /*USMoneris.USCompletion      completion;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    TempStr                     result;
+        #    DictEnum                    dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #
+        #    InteropPermission           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    completion = new USMoneris.USCompletion(_ccTrans.RetrevalRefNum,
+        #        num2str(_ccTrans.AmountCur,-1,-1,0,0),
+        #        _ccTrans.OrigID,
+        #        "1",
+        #        _ccTrans.CustomerRef,
+        #        num2str(_ccTrans.CommercialSalesTax,9,2,0,0));
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        completion);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        _ccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    newccTrans.AuthNetId = receipt.GetISO();
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #    ttsCommit;
+        #    */
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildIndpRefund
+        #creditCardTrans buildIndpRefund(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans                 newccTrans;
+        #    /*USMoneris.USIndependentRefund   refund;
+        #    USMoneris.HttpsPostRequest      postRequest;
+        #    CreditCardStr                   ccPan;
+        #    CreditCardStr                   result;
+        #    DictEnum                        dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #
+        #    ccPan =  this.returnAccount(_ccTrans);
+        #
+        #    refund = new USMoneris.USIndependentRefund(int642str(_ccTrans.recId),
+        #        num2str(abs(this.parmProcessAmt()),-1,-1,-1,-1),
+        #        ccPan,
+        #        this.returnExpDate(_ccTrans),
+        #        "1");
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        refund);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        if (strLen(result)==0)
+        #        {
+        #            newCCTrans.Result = "@SYS36230";
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        _ccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #
+        #    ttsCommit;
+        #    */
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuth
+        #creditCardTrans buildNewAuth(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans             newccTrans;
+        #    /*USMoneris.USPreAuth         preAuth;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    USMoneris.AvsInfo           avsInfo;
+        #    USMoneris.CvdInfo           cvdInfo;
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    CreditCardStr               amount;
+        #    CreditCardParameters        ccParameters;
+        #    DictEnum                    dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #
+        #    InteropPermission           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Instatiate COM Object
+        #
+        #    ccPan =  this.returnAccount(_ccTrans);
+        #
+        #    amount = num2str(this.parmProcessAmt(),-1,-1,0,0);
+        #
+        #    preAuth = new USMoneris.USPreAuth(int642str(_ccTrans.recId),
+        #        amount,
+        #        ccPan,
+        #        this.returnExpDate(_ccTrans),
+        #        "1");
+        #
+        #    select AVS,CVD from ccParameters
+        #        where ccParameters.TerminalId == this.parmCCParameters().TerminalId;
+        #
+        #    //--> AVS Information
+        #    if (ccParameters.AVS)
+        #    {
+        #        avsInfo = new USMoneris.AvsInfo();
+        #        avsInfo.SetAvsZipCode(this.parmPostalAddress().ZipCode);
+        #        avsInfo.SetAvsStreetName(this.parmPostalAddress().Street);
+        #        avsInfo.SetAvsStreetNumber(this.parmPostalAddress().StreetNumber);
+        #
+        #        preAuth.SetAvsInfo(avsInfo);
+        #    }
+        #
+        #    //==> CVD Information
+        #    if (ccParameters.CVD && _ccTrans.CID)
+        #    {
+        #        cvdInfo = new USMoneris.CvdInfo();
+        #        cvdInfo.SetCvdValue(_ccTrans.CID);
+        #
+        #        preAuth.SetCvdInfo(cvdInfo);
+        #    }
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        preAuth);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        if (strLen(result)==0)
+        #        {
+        #            newCCTrans.Result = "@SYS36230";
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        _ccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    if (ccParameters.AVS)
+        #    {
+        #        newccTrans.AvsAddr = receipt.GetAvsResultCode();
+        #    }
+        #
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #
+        #    ttsCommit;
+        #    */
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuthProfile
+        #creditCardTrans buildNewAuthProfile(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans             newccTrans;
+        #    /*USMoneris.USResPreauthCC    preAuth;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    USMoneris.AvsInfo           avsInfo;
+        #    USMoneris.CvdInfo           cvdInfo;
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    CreditCardStr               amount;
+        #    CreditCardParameters        ccParameters;
+        #    DictEnum                    dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #
+        #    InteropPermission           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Instatiate COM Object
+        #
+        #
+        #    amount = num2str(this.parmProcessAmt(),-1,-1,0,0);
+        #
+        #    preAuth = new USMoneris.USResPreauthCC(_ccTrans.profileId,
+        #        int642str(_ccTrans.recId),
+        #        amount,
+        #        "1");
+        #
+        #
+        #    //==> CVD Information
+        #    if (ccParameters.CVD && _ccTrans.CID)
+        #    {
+        #        cvdInfo = new USMoneris.CvdInfo();
+        #        cvdInfo.SetCvdValue(_ccTrans.CID);
+        #
+        #        preAuth.SetCvdInfo(cvdInfo);
+        #    }
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        preAuth);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        if (strLen(result)==0)
+        #        {
+        #            newCCTrans.Result = "@SYS36230";
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        newccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    if (ccParameters.AVS)
+        #    {
+        #        newccTrans.AvsAddr = receipt.GetAvsResultCode();
+        #    }
+        #
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #
+        #    ttsCommit;
+        #    */
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildPurchase
+        #creditCardTrans buildPurchase(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans             newccTrans;
+        #    /*USMoneris.USPurchase        purchase;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    USMoneris.AvsInfo           avsInfo;
+        #    USMoneris.CvdInfo           cvdInfo;
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    CreditCardParameters        ccParameters;
+        #    DictEnum                    dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #
+        #    InteropPermission           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Instatiate COM Object
+        #
+        #    ccPan =  this.returnAccount(_ccTrans);
+        #
+        #    purchase = new USMoneris.USPurchase(int642str(_ccTrans.recId),
+        #        num2str(this.parmProcessAmt(),-1,-1,0,0),
+        #        ccPan,
+        #        this.returnExpDate(_ccTrans),
+        #        "1",
+        #        _ccTrans.CustomerRef,
+        #        num2str(_ccTrans.CommercialSalesTax,9,2,0,0));
+        #
+        #    select AVS,CVD from ccParameters
+        #        where ccParameters.TerminalId == this.parmCCParameters().TerminalId;
+        #
+        #    //--> AVS Information
+        #    if (ccParameters.AVS)
+        #    {
+        #        avsInfo = new USMoneris.AvsInfo();
+        #        avsInfo.SetAvsZipCode(this.parmPostalAddress().ZipCode);
+        #        avsInfo.SetAvsStreetName(this.parmPostalAddress().Street);
+        #        avsInfo.SetAvsStreetNumber(this.parmPostalAddress().StreetNumber);
+        #
+        #        purchase.SetAvsInfo(avsInfo);
+        #    }
+        #
+        #    //==> CVD Information
+        #    if (ccParameters.CVD && _ccTrans.CID)
+        #    {
+        #        cvdInfo = new USMoneris.CvdInfo();
+        #        cvdInfo.SetCvdValue(_ccTrans.CID);
+        #
+        #        purchase.SetCvdInfo(cvdInfo);
+        #    }
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        purchase);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        if (strLen(result)==0)
+        #        {
+        #            newCCTrans.Result = "@SYS36230";
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        newccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    if (ccParameters.AVS)
+        #    {
+        #        newccTrans.AvsAddr = receipt.GetAvsResultCode();
+        #    }
+        #    newccTrans.AuthNetId = receipt.GetISO();
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #
+        #    ttsCommit;
+        #    */
+        #
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildPurchaseProfile
+        #creditCardTrans buildPurchaseProfile(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans             newccTrans;
+        #    /*USMoneris.USResPurchaseCC   purchase;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    USMoneris.AvsInfo           avsInfo;
+        #    USMoneris.CvdInfo           cvdInfo;
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    CreditCardParameters        ccParameters;
+        #    DictEnum                    dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #    CreditCardStr               amount;
+        #    InteropPermission           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Instatiate COM Object
+        #
+        #    ccPan =  this.returnAccount(_ccTrans);
+        #
+        #    amount = num2str(this.parmProcessAmt(),-1,-1,0,0);
+        #
+        #    purchase = new USMoneris.USResPurchaseCC(_ccTrans.profileId,
+        #        int642str(_ccTrans.recId),
+        #        amount,
+        #        "1");
+        #
+        #    //==> CVD Information
+        #    if (ccParameters.CVD && _ccTrans.CID)
+        #    {
+        #        cvdInfo = new USMoneris.CvdInfo();
+        #        cvdInfo.SetCvdValue(_ccTrans.CID);
+        #
+        #        purchase.SetCvdInfo(cvdInfo);
+        #    }
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        purchase);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        if (strLen(result)==0)
+        #        {
+        #            newCCTrans.Result = "@SYS36230";
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        newccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #
+        #    ttsCommit;
+        #    */
+        #
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildRefund
+        #creditCardTrans buildRefund(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans             newccTrans;
+        #    /*USMoneris.USRefund          refund;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    DictEnum                    dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #
+        #    InteropPermission           clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    CreditCardParameters        ccParameters;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    refund = new USMoneris.USRefund(_ccTrans.RetrevalRefNum,
+        #        num2str(abs(this.parmProcessAmt()),-1,-1,0,0),
+        #        _ccTrans.PNRef,
+        #        "7");
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        refund);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        if (strLen(result)==0)
+        #        {
+        #            newCCTrans.Result = "@SYS36230";
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        _ccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #    */
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildRefundProfile
+        #creditCardTrans buildRefundProfile(CreditCardTrans        _ccTrans)
+        #{
+        #    CreditCardTrans             newccTrans;
+        #    /*USMoneris.USResIndRefundCC  refund;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    DictEnum                    dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #    CreditCardStr               amount;
+        #    InteropPermission           clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    CreditCardParameters        ccParameters;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    amount = num2str(this.parmProcessAmt(),-1,-1,0,0);
+        #
+        #    refund = new USMoneris.USResIndRefundCC(_ccTrans.profileId,
+        #        int642str(_ccTrans.recId),
+        #        amount,
+        #        "1");
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        refund);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        if (strLen(result)==0)
+        #        {
+        #            newCCTrans.Result = "@SYS36230";
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        _ccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #    */
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #creditCardTrans buildVoid(CreditCardTrans        _ccTrans)
+        #{
+        #
+        #    CreditCardTrans                     newccTrans;
+        #    /*USMoneris.USPurchaseCorrection      correction;
+        #    USMoneris.HttpsPostRequest          postRequest;
+        #    CreditCardStr                       result;
+        #    DictEnum                            dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    correction = new USMoneris.USPurchaseCorrection(_ccTrans.RetrevalRefNum,
+        #        _ccTrans.OrigID,
+        #        "1");
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(this.parmCCParameters().HostAddress,
+        #        this.parmCCParameters().StoreId,
+        #        this.parmCCParameters().APIToken,
+        #        correction);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    select forUpdate newccTrans
+        #        where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    result = receipt.GetResponseCode();
+        #    if (result == 'null')
+        #    {
+        #        newCCTrans.Result = 'null';
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #             newCCTrans.RepMsg = result;
+        #        }
+        #        else
+        #        {
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        if (strLen(result)==0)
+        #        {
+        #            newCCTrans.Result = "@SYS36230";
+        #            newCCTrans.RepMsg = "@SYS96731";
+        #        }
+        #        //--> Result is good to go.
+        #        newccTrans.result = '0';
+        #    }
+        #    else
+        #    {
+        #        _ccTrans.result = result;
+        #        if (newccTrans.result == '')
+        #        {
+        #            newccTrans.RepMsg = receipt.GetMessage();
+        #        }
+        #    }
+        #
+        #    newccTrans.PNRef = receipt.GetTxnNumber();
+        #    newccTrans.Comment2 = receipt.GetMessage();
+        #    newccTrans.RetrevalRefNum = int642str(_ccTrans.recId);
+        #    newccTrans.AuthCode = receipt.GetAuthCode();
+        #    newccTrans.RepMsg = receipt.GetMessage();
+        #    newccTrans.update();
+        #    */
+        #    return newccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardMonerisUS
+        #{
+        #    CreditCardMerchantMoneris           ccMerchantMoneris;
+        #    LogisticsPostalAddress              postalAddress;
+        #    Amount                              processAmt;
+        #    //USMoneris.Receipt                   receipt;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCParameters
+        #CreditCardMerchantMoneris parmCCParameters(CreditCardMerchantMoneris    _ccMerchantMoneris = ccMerchantMoneris)
+        #{
+        #    ;
+        #    ccMerchantMoneris = _ccMerchantMoneris;
+        #    return ccMerchantMoneris;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmProcessAmt
+        #public Amount parmProcessAmt(Amount     _processAmt = processAmt)
+        #{
+        #    ;
+        #    processAmt = _processAmt;
+        #    return processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #parmStreetName
+        #Name parmStreetName(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    str         reduction;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker+1);
+        #
+        #    //--> Some addresses end with the number, we want to reverse if that is so
+        #    if (str2int(strLRTrim(reduction)) > 0)
+        #    {
+        #        reduction = subStr(_name,1,marker);
+        #    }
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #
+        #
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmStreetNumber
+        #Name parmStreetNumber(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    //--> Did we get a number or a name, some European addresses have the
+        #    //--> number last
+        #    if (str2int(tmpStr) == 0)
+        #    {
+        #        tmpStr = subStr(_name,marker+1,len);
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue(CreditCardNumEncrypt ccNum)
+        #{
+        #    CreditCardStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardTable::retrieveValueNum(ccNum);
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount(CreditCardTrans      _ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    CreditCardStr           ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == _ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( _ccTrans.TrxType == 'C' ||
+        #            _ccTrans.TrxType == 'D' ||
+        #            _ccTrans.TrxType == 'V')
+        #        {
+        #            if (!_ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (_ccTrans.TrxType == 'C' && !_ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(_ccTrans.CreditCardNumEncrypt);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(_ccTrans.CreditCardNumEncrypt);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(_ccTrans.CreditCardNumEncrypt);
+        #            }
+        #
+        #
+        #        }
+        #        else if (_ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!_ccTrans.CreditCardNumEncrypt)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(_ccTrans.CreditCardNumEncrypt);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",_ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable);
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnExpDate
+        #str returnExpDate(CreditCardTrans      _ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == _ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(_ccTrans.OneTimeDateExp));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ccYear = int2str(Year(_ccTrans.OneTimeDateExp));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,2);
+        #        }
+        #
+        #        ParmList =  ccYear + month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,2);
+        #        }
+        #
+        #        ParmList =  ccYear + month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnExpDateCC
+        #str returnExpDateCC(CreditCardTable      ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    ccYear = substr(ccYear,3,2);
+        #    ParmList =  ccYear + month;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static CreditCardTrans construct(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantMoneris           ccMerchantMoneris;
+        #    CreditCardMonerisUS                 ccMoneris =new CreditCardMonerisUS();
+        #    CreditCardParameters                ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #    ;
+        #    //--> Retrieve Parameters
+        #    select ccMerchantMoneris
+        #        where ccMerchantMoneris.TerminalId == ccTrans.TerminalId;
+        #
+        #    if (ccParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Specified)
+        #    {
+        #        if (!ccParameters.ProcessCurrencyCode)
+        #        {
+        #            throw error(strFmt("@ACC1835",ccTrans.TerminalId));
+        #        }
+        #
+        #        if (ccParameters.ProcessCurrencyCode != CompanyInfo::standardCurrency())
+        #        {
+        #            if (ccTrans.CurrencyCode != ccParameters.ProcessCurrencyCode)
+        #            {
+        #                throw error(strFmt("@ACC1836",
+        #                    ccTrans.TerminalId,
+        #                    ccParameters.ProcessCurrencyCode,
+        #                    ccTrans.CurrencyCode));
+        #            }
+        #
+        #            ccMoneris.parmProcessAmt(ccTrans.AmountCur);
+        #        }
+        #        else
+        #        {
+        #            ccMoneris.parmProcessAmt(ccTrans.AmountMST);
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        ccMoneris.parmProcessAmt(ccTrans.AmountMST);
+        #    }
+        #
+        #    ccMoneris.parmCCParameters(ccMerchantMoneris);
+        #    ccMoneris.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #    ccTrans = ccMoneris.build(ccTrans);
+        #
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #server static CreditCardTable createProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardMonerisUS         monerisUS = new CreditCardMonerisUS();
+        #    /*USMoneris.USResAddCC        usResAddCC;
+        #    USMoneris.AvsInfo           avsInfo;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    USMoneris.Receipt           receipt;
+        #    LogisticsPostalAddress      postalAddress;
+        #    CreditCardMerchantMoneris   ccMoneris = CreditCardMerchantMoneris::find(ccTable.ProfileTerminalId);
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    CreditCardStr               amount;
+        #    ;
+        #    ccPan = CreditCardTable::retrieveValue(ccTable);
+        #    usResAddCC = new USMoneris.USResAddCC(ccPan,
+        #        monerisUS.returnExpDateCC(ccTable),
+        #        "7");
+        #    usResAddCC.SetCustId(ccTable.CustAccount);
+        #    usResAddCC.SetEmail(ccTable.Email);
+        #    usResAddCC.SetPhone(ccTable.Phone);
+        #
+        #    if (ccTable.Location != 0)
+        #    {
+        #        postalAddress = LogisticsPostalAddress::findByLocation(ccTable.Location);
+        #
+        #        avsInfo = new USMoneris.AvsInfo();
+        #        avsInfo.SetAvsZipCode(postalAddress.ZipCode);
+        #        avsInfo.SetAvsStreetName(postalAddress.Street);
+        #        avsInfo.SetAvsStreetNumber(postalAddress.StreetNumber);
+        #
+        #        usResAddCC.SetAvsInfo(avsInfo);
+        #    }
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(ccMoneris.HostAddress,
+        #        ccMoneris.StoreId,
+        #        ccMoneris.APIToken,
+        #        usResAddCC);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        result = receipt.GetMessage();
+        #        if (result != 'null')
+        #        {
+        #            throw error(result);
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS96731");
+        #        }
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.ProfileId = receipt.GetDataKey();
+        #        ccTable.write();
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC143",result,receipt.GetMessage()));
+        #    }
+        #    ttsCommit;
+        #    */
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #deleteProfile
+        #server static CreditCardTable deleteProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardMonerisUS         monerisUS = new CreditCardMonerisUS();
+        #    /*USMoneris.USResDelete       usResDeleteCC;
+        #    USMoneris.AvsInfo           avsInfo;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    USMoneris.Receipt           receipt;
+        #    LogisticsPostalAddress      postalAddress;
+        #    CreditCardMerchantMoneris   ccMoneris = CreditCardMerchantMoneris::find(ccTable.ProfileTerminalId);
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    CreditCardStr               amount;
+        #    ;
+        #    usResDeleteCC = new USMoneris.USResDelete(ccTable.ProfileId);
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(ccMoneris.HostAddress,
+        #        ccMoneris.StoreId,
+        #        ccMoneris.APIToken,
+        #        usResDeleteCC);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        throw error("@SYS96731");
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.Inactive = NoYes::Yes;
+        #        ccTable.write();
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC143",result,receipt.GetMessage()));
+        #    }
+        #    ttsCommit;
+        #    */
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #updateProfile
+        #server static CreditCardTable updateProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardMonerisUS         monerisUS = new CreditCardMonerisUS();
+        #    /*USMoneris.USResUpdateCC     usResUpdateCC;
+        #    USMoneris.AvsInfo           avsInfo;
+        #    USMoneris.HttpsPostRequest  postRequest;
+        #    USMoneris.Receipt           receipt;
+        #    LogisticsPostalAddress      postalAddress;
+        #    CreditCardMerchantMoneris   ccMoneris = CreditCardMerchantMoneris::find(ccTable.ProfileTerminalId);
+        #    CreditCardStr               ccPan;
+        #    CreditCardStr               result;
+        #    CreditCardStr               amount;
+        #    ;
+        #    usResUpdateCC = new USMoneris.USResUpdateCC(ccTable.ProfileId);
+        #    usResUpdateCC.SetCustId(ccTable.CustAccount);
+        #    usResUpdateCC.SetEmail(ccTable.Email);
+        #    usResUpdateCC.SetPhone(ccTable.Phone);
+        #
+        #    if (ccTable.Location != 0)
+        #    {
+        #        postalAddress = LogisticsPostalAddress::findByLocation(ccTable.Location);
+        #
+        #        avsInfo = new USMoneris.AvsInfo();
+        #        avsInfo.SetAvsZipCode(postalAddress.ZipCode);
+        #        avsInfo.SetAvsStreetName(postalAddress.Street);
+        #        avsInfo.SetAvsStreetNumber(postalAddress.StreetNumber);
+        #
+        #        usResUpdateCC.SetAvsInfo(avsInfo);
+        #    }
+        #
+        #    postRequest = new USMoneris.HttpsPostRequest(ccMoneris.HostAddress,
+        #        ccMoneris.StoreId,
+        #        ccMoneris.APIToken,
+        #        usResUpdateCC);
+        #
+        #    receipt = postRequest.GetReceipt();
+        #
+        #    result = receipt.GetResponseCode();
+        #    ttsBegin;
+        #    if (result == 'null')
+        #    {
+        #        throw error("@SYS96731");
+        #
+        #    }
+        #    else if (str2int(result) < 50)
+        #    {
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.write();
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC143",result,receipt.GetMessage()));
+        #    }
+        #    ttsCommit;
+        #    */
+        #    return ccTable;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

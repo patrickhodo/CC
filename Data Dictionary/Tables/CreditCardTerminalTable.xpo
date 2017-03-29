@@ -1,0 +1,646 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardTerminalTable
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardTerminalTable
+      Label               #@ACC592
+      FormRef             #creditCardterminalTable
+      TitleField1         #TerminalId
+      TitleField2         #Description
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdIdx
+      ClusterIndex        #TerminalIdIdx
+      DeveloperDocumentation  #@ACC1429
+      Origin              #{8BDEA54E-06AF-4292-85E1-D85E055C17FB}
+      LegacyId            #20013
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #BatchType
+        ENUM
+        PROPERTIES
+          Name                #BatchType
+          Table               #CreditCardTerminalTable
+          Origin              #{8123970D-A2A3-45B8-9FED-96F10AE26084}
+          LegacyId            #20005
+          EnumType            #CreditCardBatchType
+        ENDPROPERTIES
+        
+      FIELD #del_IndustryTCS
+        ENUM
+        PROPERTIES
+          Name                #del_IndustryTCS
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #CreditCardTerminalTable
+          Origin              #{DDDFD5D6-71CB-4BB8-9294-5ECD74B2F059}
+          LegacyId            #20006
+          EnumType            #ABC
+        ENDPROPERTIES
+        
+      FIELD #Description
+        STRING
+        PROPERTIES
+          Name                #Description
+          Table               #CreditCardTerminalTable
+          Origin              #{7DD2EAF3-6D90-4F19-BCCC-04A22F8D13BA}
+          LegacyId            #20002
+          ExtendedDataType    #Description
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #DuplicateCheck
+        ENUM
+        PROPERTIES
+          Name                #DuplicateCheck
+          Table               #CreditCardTerminalTable
+          Origin              #{E8FA0C0F-E923-4D1B-8379-4E41E2FFAE6D}
+          LegacyId            #20011
+          EnumType            #CreditCardDuplicateCheck
+        ENDPROPERTIES
+        
+      FIELD #IndustryHCS
+        ENUM
+        PROPERTIES
+          Name                #IndustryHCS
+          Table               #CreditCardTerminalTable
+          Origin              #{201FFF89-353C-429E-AA9C-DF55C5845341}
+          LegacyId            #20003
+          EnumType            #CreditCardIndustryHCS
+        ENDPROPERTIES
+        
+      FIELD #PINCapable
+        ENUM
+        PROPERTIES
+          Name                #PINCapable
+          Label               #@ACC642
+          HelpText            #@ACC643
+          Table               #CreditCardTerminalTable
+          Origin              #{9F319E15-6D0E-4F2F-BA81-B61028243C59}
+          LegacyId            #20004
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Processor
+        ENUM
+        PROPERTIES
+          Name                #Processor
+          Table               #CreditCardTerminalTable
+          Origin              #{9BB42195-1B11-4D7C-9FAA-B908CD379C20}
+          LegacyId            #20012
+          EnumType            #CreditCardProcessor
+        ENDPROPERTIES
+        
+      FIELD #StoredValue
+        ENUM
+        PROPERTIES
+          Name                #StoredValue
+          Label               #@ACC1710
+          HelpText            #@ACC1790
+          Visible             #No
+          Table               #CreditCardTerminalTable
+          Origin              #{053C2068-CA2F-4B0E-AF8B-C28749B40856}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #SystemIndicator
+        ENUM
+        PROPERTIES
+          Name                #SystemIndicator
+          Table               #CreditCardTerminalTable
+          Origin              #{9276B293-3F7A-4DDA-9BDC-583E63193AF9}
+          LegacyId            #20007
+          EnumType            #CreditCardSystemIndicator
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardTerminalTable
+          Origin              #{4AC7E61E-82C0-45FC-8802-45647F57BA0E}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #Description
+          #IndustryHCS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #Description
+          #IndustryHCS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS104938
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Processor
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #IndustryHCS
+        PROPERTIES
+          Name                #IndustryHCS
+          Label               #@ACC634
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #IndustryHCS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #IndustryOrbital
+        PROPERTIES
+          Name                #IndustryOrbital
+          Label               #@ACC634
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #PINCapable
+        PROPERTIES
+          Name                #PINCapable
+          Label               #@ACC642
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #PINCapable
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #System
+        PROPERTIES
+          Name                #System
+          Label               #@SYS15320
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SystemIndicator
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #Description
+          #BatchType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Transaction
+        PROPERTIES
+          Name                #Transaction
+          Label               #@SYS15191
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #DuplicateCheck
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdIdx
+      PROPERTIES
+        Name                #TerminalIdIdx
+        AllowDuplicates     #No
+        Origin              #{A6E3A01E-7375-4258-8B61-AA42955C534D}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #CreditCardUsers
+      PROPERTIES
+        Table               #CreditCardUsers
+      ENDPROPERTIES
+      
+      #CreditCardMerchantCybersource
+      PROPERTIES
+        Table               #CreditCardMerchantCybersource
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantCommidea
+      PROPERTIES
+        Table               #CreditCardMerchantCommidea
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantMoneris
+      PROPERTIES
+        Table               #CreditCardMerchantMoneris
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantOrbital
+      PROPERTIES
+        Table               #CreditCardMerchantOrbital
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantPaymentech
+      PROPERTIES
+        Table               #CreditCardMerchantPaymentech
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantRealEx
+      PROPERTIES
+        Table               #CreditCardMerchantRealEx
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantVerisign
+      PROPERTIES
+        Table               #CreditCardMerchantVerisign
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantDPS
+      PROPERTIES
+        Table               #CreditCardMerchantDPS
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantElavon
+      PROPERTIES
+        Table               #CreditCardMerchantElavon
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantFirstData
+      PROPERTIES
+        Table               #CreditCardMerchantFirstData
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantGiveX
+      PROPERTIES
+        Table               #CreditCardMerchantGiveX
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantHeartland
+      PROPERTIES
+        Table               #CreditCardMerchantHeartland
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantOpenEdge
+      PROPERTIES
+        Table               #CreditCardMerchantOpenEdge
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantPayPalX
+      PROPERTIES
+        Table               #CreditCardMerchantPayPalX
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantTSYS
+      PROPERTIES
+        Table               #CreditCardMerchantTSYS
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardMerchantUDCC
+      PROPERTIES
+        Table               #CreditCardMerchantUDCC
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardParameters
+      PROPERTIES
+        Table               #CreditCardParameters
+        DeleteAction        #Restricted
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #find
+        #static CreditCardTerminalTable find()
+        #{
+        #    CreditCardTerminalTable     ccTerminal;
+        #    CreditCardUsers             ccUsers;
+        #    ;
+        #    select firstonly ccUsers where ccUsers.UserId == curUserId();
+        #
+        #    if (!ccUsers)
+        #        throw error("@ACC923");
+        #
+        #    select ccTerminal where ccTerminal.TerminalId == ccUsers.TerminalId;
+        #
+        #    if (!ccTerminal)
+        #        throw error("@ACC924");
+        #
+        #    return ccTerminal;
+        #}
+      ENDSOURCE
+      SOURCE #findStoredValue
+        #static CreditCardTerminalTable findStoredValue()
+        #{
+        #    CreditCardTerminalTable     ccTerminal;
+        #    ;
+        #    select ccTerminal where ccTerminal.StoredValue == NoYes::Yes;
+        #
+        #    if (!ccTerminal)
+        #        throw error("@ACC1793");
+        #
+        #    return ccTerminal;
+        #}
+      ENDSOURCE
+      SOURCE #findTerminalWithId
+        #static CreditCardTerminalTable findTerminalWithId(CreditCardTerminalId ccTerminalId)
+        #{
+        #    CreditCardTerminalTable     ccTerminal;
+        #    ;
+        #
+        #    select ccTerminal where ccTerminal.TerminalId == ccTerminalId;
+        #
+        #    if (!ccTerminal)
+        #        throw error("@ACC924");
+        #
+        #    return ccTerminal;
+        #}
+      ENDSOURCE
+      SOURCE #getCurrency
+        #static TempStr getCurrency(CreditCardOrbitalCurrency ccCurrency)
+        #{
+        #    TempStr     ret;
+        #    ;
+        #    switch (ccCurrency)
+        #    {
+        #        case CreditCardOrbitalCurrency::AUS :
+        #            ret = "036";
+        #            break;
+        #        case CreditCardOrbitalCurrency::CAD :
+        #            ret = "124";
+        #            break;
+        #        case CreditCardOrbitalCurrency::DKK :
+        #            ret = "208";
+        #            break;
+        #        case CreditCardOrbitalCurrency::EUR :
+        #            ret =  "978";
+        #            break;
+        #        case CreditCardOrbitalCurrency::GBP :
+        #            ret =  "826";
+        #            break;
+        #        case CreditCardOrbitalCurrency::NGK :
+        #            ret = "578";
+        #            break;
+        #        case CreditCardOrbitalCurrency::NZD  :
+        #            ret = "554";
+        #            break;
+        #        case CreditCardOrbitalCurrency::SAR  :
+        #            ret =  "710";
+        #            break;
+        #        case CreditCardOrbitalCurrency::SGD  :
+        #            ret = "702";
+        #            break;
+        #        case CreditCardOrbitalCurrency::SVK  :
+        #            ret =  "752";
+        #            break;
+        #        case CreditCardOrbitalCurrency::USD  :
+        #            ret =  "840";
+        #            break;
+        #        default :
+        #            throw error("@ACC1057");
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #getCurrencyExponent
+        #static TempStr getCurrencyExponent(CreditCardOrbitalCurrency ccCurrency)
+        #{
+        #    TempStr     ret;
+        #    ;
+        #    switch (ccCurrency)
+        #    {
+        #        case CreditCardOrbitalCurrency::AUS :
+        #            ret = "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::CAD :
+        #            ret = "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::DKK :
+        #            ret = "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::EUR :
+        #            ret =  "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::GBP :
+        #            ret =  "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::NGK :
+        #            ret = "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::NZD  :
+        #            ret = "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::SAR  :
+        #            ret =  "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::SGD  :
+        #            ret = "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::SVK  :
+        #            ret =  "2";
+        #            break;
+        #        case CreditCardOrbitalCurrency::USD  :
+        #            ret =  "2";
+        #            break;
+        #        default :
+        #            throw error("@ACC1057");
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #getCurrencyExponentISO
+        #static TempStr getCurrencyExponentISO(CurrencyCode      currencyCode)
+        #{
+        #    TempStr     ret;
+        #    ;
+        #    switch (currencyCode)
+        #    {
+        #        case 'AUD' :
+        #            ret = "2";
+        #            break;
+        #        case 'CAD' :
+        #            ret = "2";
+        #            break;
+        #        case 'DKK' :
+        #            ret = "2";
+        #            break;
+        #        case 'EUR' :
+        #            ret =  "2";
+        #            break;
+        #        case 'GBP' :
+        #            ret =  "2";
+        #            break;
+        #        case 'NGK' :
+        #            ret = "2";
+        #            break;
+        #        case 'NZD'  :
+        #            ret = "2";
+        #            break;
+        #        case 'SAR'  :
+        #            ret =  "2";
+        #            break;
+        #        case 'SGD'  :
+        #            ret = "2";
+        #            break;
+        #        case 'SVK'  :
+        #            ret =  "2";
+        #            break;
+        #        case 'USD'  :
+        #            ret =  "2";
+        #            break;
+        #        default :
+        #            throw error("@ACC1057");
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #getCurrencyISO
+        #public static TempStr getCurrencyISO(CurrencyCode   currencyCode)
+        #{
+        #    ISOCurrencyCode                 isoCurrencyCode;
+        #    ISOCurrencyCodeNum              iso;
+        #    TempStr                         isoCode;
+        #    ;
+        #    select isoCurrencyCodeNum,ISCCurrencyCodeAlpha from ISOCurrencyCode
+        #        where ISOCurrencyCode.ISCCurrencyCodeAlpha == CurrencyCode;
+        #
+        #    iso = isoCurrencyCode.ISOCurrencyCodeNum;
+        #
+        #    isoCode = int2str(iso);
+        #
+        #    if (strLen(isoCode) == 1)
+        #    {
+        #            isoCode = '00'+isoCode;
+        #    }
+        #    else if (strLen(isoCode) == 2)
+        #    {
+        #            isoCode = '0'+isoCode;
+        #    }
+        #
+        #    return isoCode;
+        #}
+      ENDSOURCE
+      SOURCE #getSystemIndicator
+        #static TempStr getSystemIndicator()
+        #{
+        #    CreditCardTerminalTable     ccTerminalTable;
+        #    TempStr                      indicator;
+        #    ;
+        #    ccTerminalTable = CreditCardTerminalTable::find();
+        #
+        #    if (!ccTerminalTable)
+        #        throw error("@SYS79343");
+        #
+        #    switch (ccTerminalTable.SystemIndicator)
+        #    {
+        #        case CreditCardSystemIndicator::HCS :
+        #            indicator = strFmt("@ACC1086");
+        #            break;
+        #        case CreditCardSystemIndicator::del_TCS :
+        #            indicator = strFmt("@ACC1087");
+        #            break;
+        #    }
+        #
+        #    return indicator;
+        #}
+      ENDSOURCE
+      SOURCE #getTimeZone
+        #static TempStr getTimeZone(CreditCardOrbitalTimeZone ccTimeZone)
+        #{
+        #    TempStr     ret;
+        #    ;
+        #    switch (ccTimeZone)
+        #    {
+        #        case CreditCardOrbitalTimeZone::Eastern :
+        #            ret = "705";
+        #            break;
+        #        case CreditCardOrbitalTimeZone::Indiana :
+        #            ret = "105";
+        #            break;
+        #        case CreditCardOrbitalTimeZone::Central :
+        #            ret = "706";
+        #            break;
+        #        case CreditCardOrbitalTimeZone::Arizona :
+        #            ret = "107";
+        #            break;
+        #        case CreditCardOrbitalTimeZone::Mountain:
+        #            ret =  "707";
+        #            break;
+        #        case CreditCardOrbitalTimeZone::Pacific :
+        #            ret =  "708";
+        #            break;
+        #        case CreditCardOrbitalTimeZone::Alaska  :
+        #            ret =  "709";
+        #            break;
+        #        case CreditCardOrbitalTimeZone::Hawaii  :
+        #            ret = "110";
+        #            break;
+        #        default :
+        #            throw error("@ACC1058");
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

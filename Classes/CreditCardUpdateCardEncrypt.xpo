@@ -1,0 +1,228 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardUpdateCardEncrypt
+    PROPERTIES
+      Name                #CreditCardUpdateCardEncrypt
+      Extends             #RunBaseBatch
+      Origin              #{3C907C79-A43C-4574-9D43-87A76F8C6666}
+      LegacyId            #20041
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #checkForInvalidCharacters
+        #private boolean checkForInvalidCharacters(str ccNum)
+        #{
+        #    #define.MinValue(32)
+        #    #define.MaxValue(127)
+        #    boolean         ret;
+        #
+        #    int             i;
+        #    int             characterValue;
+        #    ;
+        #
+        #    for(i = 1; i <= strlen(ccNum); i++)
+        #    {
+        #        characterValue = char2num(ccNum, i);
+        #
+        #        if ((characterValue < #MinValue) || (characterValue > #MaxValue))
+        #        {
+        #            ret = true;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardUpdateCardEncrypt extends RunBaseBatch
+        #{
+        #
+        #    QueryRun                    QueryRun;
+        #    CreditCardEncryptionKey     newEncryptKey;
+        #    CreditCardEncryptionKey     oldEncryptKEy;
+        #
+        #
+        #    DialogField                 fieldOldKey;
+        #    DialogField                 fieldNewKey;
+        #
+        #
+        #    #define.CurrentVersion(2)
+        #    #LOCALMACRO.CurrentList
+        #        oldEncryptKey,
+        #        newEncryptKey
+        #    #ENDMACRO
+        #
+        #    #LOCALMACRO.CurrentList1
+        #        oldEncryptKey,
+        #        newEncryptKey
+        #    #ENDMACRO
+        #
+        #}
+      ENDSOURCE
+      SOURCE #dialog
+        #// AOSRunMode::Server
+        #Object dialog()
+        #{
+        #    DialogRunbase   dialog = super();
+        #    ;
+        #    dialog.addGroup('Keys');
+        #
+        #    fieldOldKey      = dialog.addField(extendedTypeStr(CreditCardEncryptionKey),'Old key');
+        #    fieldNewKey      = dialog.addField(extendedTypeStr(CreditCardEncryptionKey),'New key');
+        #
+        #    fieldNewKey.value(newEncryptKey);
+        #    fieldOldKey.value(oldEncryptKey);
+        #
+        #    return dialog;
+        #}
+      ENDSOURCE
+      SOURCE #getFromDialog
+        #// AOSRunMode::Server
+        #boolean getFromDialog()
+        #{
+        #    ;
+        #    newEncryptKey   = fieldNewKey.value();
+        #    oldEncryptKey   = fieldOldKey.value();
+        #
+        #
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #initParmDefault
+        #void initParmDefault()
+        #{
+        #    super();
+        #
+        #    QueryRun = new QueryRun(QueryStr(CreditCardTable));
+        #
+        #}
+      ENDSOURCE
+      SOURCE #pack
+        #container pack()
+        #{
+        #    return [#CurrentVersion,#CurrentList, QueryRun.pack()];
+        #}
+      ENDSOURCE
+      SOURCE #queryRun
+        #QueryRun queryRun()
+        #{
+        #    return QueryRun;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #void run()
+        #{
+        #    CreditCardTable         ccTable;
+        #    CreditCardTable         newccTable;
+        #    CreditCardNumEncrypt    ccNum;
+        #    CreditCardNumEncrypt    newccNum;
+        #    SysOperationProgress    locProgress = new SysOperationProgress();
+        #    ;
+        #    select count(recId) from ccTable;
+        #    locProgress.setTotal(ccTable.RecId);
+        #
+        #
+        #    setPrefix(CreditCardUpdateCardEncrypt::description());
+        #
+        #    if (!newEncryptKey || !oldEncryptKey)
+        #       throw error("@ACC1297");
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #
+        #        while (QueryRun.next())
+        #        {
+        #            ccTable = QueryRun.get(tableNum(CreditCardTable));
+        #
+        #            select forupdate newCCTable
+        #                where newCCTAble.RecId == ccTable.RecId;
+        #
+        #            ccNum = CreditCardUtility::decrypt(newCCTable.CreditCardNum,oldEncryptKey);
+        #
+        #            if (this.checkForInvalidCharacters(ccNum))
+        #            {
+        #                throw error(strFmt("@ACC1298",ccTable.CreditCardId));
+        #            }
+        #
+        #            locProgress.setText(strFmt("@SYS121578",ccTable.CreditCardId));
+        #            newCCNum = CreditCardUtility::encrypt(ccNum,newEncryptKey);
+        #
+        #            newCCTable.CreditCardNum    = newCCNum;
+        #            newCCTAble.update();
+        #
+        #        }
+        #        ttscommit;
+        #    }
+        #    catch (Exception::Deadlock)
+        #        retry;
+        #    catch (Exception::CLRError)
+        #    {
+        #        throw error(strFmt("@ACC1389",ccTable.CreditCardId));
+        #    }
+        #
+        #    info("@ACC1390");
+        #
+        #}
+      ENDSOURCE
+      SOURCE #showQueryValues
+        #boolean showQueryValues()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #unpack
+        #boolean unpack(container packedClass)
+        #{
+        #    Integer     locVersion     = conPeek(packedClass,1);
+        #    container   locPackedQuery;
+        #
+        #    switch (locVersion)
+        #    {
+        #        case #CurrentVersion:
+        #            [locVersion,#CurrentList1,locPackedQuery] = packedClass;
+        #            if (!locPackedQuery)
+        #                return false;
+        #            QueryRun = new QueryRun(locPackedQuery);
+        #            break;
+        #        case 1                  :
+        #            [locVersion,#CurrentList1] = packedClass;
+        #            QueryRun = new QueryRun(QueryStr(CreditCardTable));
+        #            break;
+        #        default :
+        #            return false;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #description
+        #client server static public ClassDescription description()
+        #{
+        #    return "@ACC1296";
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #server static void main(Args args)
+        #{
+        #    CreditCardUpdateCardEncrypt    ccUpdateCareEncrypt;
+        #    ;
+        #    ccUpdateCareEncrypt  = new CreditCardUpdateCardEncrypt();
+        #
+        #    if (ccUpdateCareEncrypt.prompt())
+        #    {
+        #        ccUpdateCareEncrypt.run();
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

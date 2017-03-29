@@ -1,0 +1,1184 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #MCRCustPaymDialog
+  PROPERTIES
+    Name                #MCRCustPaymDialog
+    Origin              #{102976A9-C2DD-4272-B98F-AD54A4261C83}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    Common  argsRecord;
+      #    boolean mcrGiftCardPoliciesEnabled;
+      #
+      #    //--> Red Maple Credit Cards
+      #    QueryBuildRange     qbrSalesTableCC;
+      #    //<-- Red Maple Credit Cards
+      #}
+    ENDSOURCE
+    SOURCE #addNewCardHolder
+      #/// <summary>
+      #/// Loads customer credit card creation form and populates
+      #///     selected payment record with returned values.
+      #/// </summary>
+      #void addNewCardHolder()
+      #{
+      #    CreditCardPaymentCardTokenize   cardTokenize;
+      #    CreditCardProcessors            activeCreditCardProcessors;
+      #    CreditCardCust                  newCreditCardCust;
+      #
+      #    activeCreditCardProcessors = CreditCardProcessors::findActiveProcessor();
+      #
+      #    cardTokenize = CreditCardPaymentCardTokenize::construct();
+      #
+      #    cardTokenize.init(activeCreditCardProcessors.Name);
+      #    cardTokenize.parmCustAccount(mcrCustPaymTable.CustAccount);
+      #    if(!cardTokenize.getFromDialog())
+      #    {
+      #        return;
+      #    }
+      #
+      #    newCreditCardCust = CreditCard::addCreditCard(cardTokenize.getXmlString(),
+      #                                                    mcrCustPaymTable.CustAccount,
+      #                                                    activeCreditCardProcessors.RecId);
+      #    if (newCreditCardCust)
+      #    {
+      #        mcrCustPaymTable.PaymInfoRecId = newCreditCardCust.RecId;
+      #        mcrCustPaymTable.PaymInfoTableId = newCreditCardCust.TableId;
+      #        mcrCustPaymTable_ds.cacheCalculateMethod(tableMethodStr(MCRCustPaymTable, editCreditCard));
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    if (!element.args()
+      #        || !element.args().record())
+      #    {
+      #        throw error(strFmt("@MCR10663", element.name()) + "  " + "@MCR10664");
+      #    }
+      #    argsRecord = element.args().record();
+      #
+      #    mcrGiftCardPoliciesEnabled = RetailParameters::find().UseGiftCardPolicies;
+      #
+      #    super();
+      #}
+    ENDSOURCE
+    SOURCE #refreshCCID
+      #public void refreshCCID(CreditCardId       creditCardId)
+      #{
+      #    CreditCardTable         ccTable = CreditCardTable::find(creditCardId);
+      #    ;
+      #    SalesTableCC.CreditCardId = creditCardId;
+      #    salesTableCC.NameOnCard =   ccTable.NameOnCard;
+      #    SalesTableCC.Location   =   ccTable.Location;
+      #    SalesTableCC_ds.write();
+      #    MCRCustPaymTable_ds.research(true);
+      #
+      #    //salesTableCC_ds.research(true);
+      #
+      #
+      #}
+    ENDSOURCE
+    SOURCE #run
+      #public void run()
+      #{
+      #    MCRCustPaymTotals mcrCustPaymTotals;
+      #    super();
+      #
+      #    // If a payment record is passed in
+      #    //  don't create a new one
+      #    if (argsRecord.TableId != tableNum(MCRCustPaymTable))
+      #    {
+      #        // or if a record that only allows 1 payment is passed in
+      #        switch (argsRecord.TableId)
+      #        {
+      #            case tableNum(LedgerJournalTrans):
+      #            case tableNum(MCRContinuityCustHeader):
+      #            case tableNum(MCRInstallmentPlanSalesTable):
+      #                if (MCRCustPaymTable::findByRefRecIDRefTableID(argsRecord.RecId, argsRecord.TableId))
+      #                {
+      #                    break;
+      #                }
+      #            default:
+      #                mcrCustPaymTable_ds.create();
+      #        }
+      #        // If the related record is not installment then allow payment to be edited if parent can be.
+      #        if (argsRecord.TableId != tableNum(MCRInstallmentPlanSalesTable))
+      #        {
+      #            mcrCustPaymTotals = MCRCustPaymTotals::construct(argsRecord.TableId, argsRecord.RecId);
+      #            mcrCustPaymTable_ds.allowEdit(mcrCustPaymTotals.allowEdit());
+      #        }
+      #    }
+      #    else
+      #    {
+      #        mcrCustPaymTotals = MCRCustPaymTotals::construct(mcrCustPaymTable.RefTableId, mcrCustPaymTable.RefRecId);
+      #        mcrCustPaymTable_ds.allowEdit(mcrCustPaymTotals.allowEdit());
+      #    }
+      #
+      #    element.updatePaymTypeControls();
+      #}
+    ENDSOURCE
+    SOURCE #updatePaymTypeControls
+      #/// <summary>
+      #///     Updates the form controls based on the payment method.
+      #/// </summary>
+      #public void updatePaymTypeControls()
+      #{
+      #    MCRCustPaymType     cardType;
+      #
+      #
+      #    void setControl(FormControl _control, boolean _visible)
+      #    {
+      #        if (_control.visible() != _visible)
+      #        {
+      #            _control.visible(_visible);
+      #        }
+      #    }
+      #
+      #    element.lock();
+      #
+      #    createCCBtn.enabled(false);
+      #    newCC.visible(false);
+      #
+      #    setControl(mcrCustPaymTable_CardTypeId, false);
+      #    setControl(GiftCardPolicy, false);
+      #
+      #    switch (mcrCustPaymTable.CustPaymType)
+      #    {
+      #        case MCRCustPaymType::CreditCard:
+      #        case MCRCustPaymType::GiftCard:
+      #            setControl(mcrCustPaymTable_CardTypeId, true);
+      #            cardType = MCRCustPaymTable::getMCRCardTypeFromCardTypeId(mcrCustPaymTable.CardTypeId);
+      #            if (cardType == MCRCustPaymType::CreditCard)
+      #            {
+      #                setControl(giftCardGroup, false);
+      #                setControl(checkGroup, false);
+      #
+      #                setControl(creditCardGroup, true);
+      #
+      #                creditCardGroup.enabled(true);
+      #                creditCardGroup.skip(false);
+      #                if (mcrCustPaymTable_ds.allowEdit())
+      #                {
+      #                    createCCBtn.enabled(true);
+      #                }
+      #
+      #                //--> Red Maple Begin
+      #                setControl(RedMapleCreditCardGroup, true);
+      #                RedMapleCreditCardGroup.enabled(true);
+      #                //salesTableCC_ds.create();
+      #                SalesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardId)).enabled(true);
+      #                if (mcrCustPaymTable_ds.allowEdit())
+      #                {
+      #                    newCC.visible(true);
+      #                    NewCC.enabled(true);
+      #                }
+      #                //<-- Red Maple End
+      #            }
+      #            else if (cardType == MCRCustPaymType::GiftCard)
+      #            {
+      #                setControl(creditCardGroup, false);
+      #                //--> Red Maple Begin
+      #                setControl(RedMapleCreditCardGroup, false);
+      #                createCCBtn.visible(false);
+      #                //--> Red Maple End
+      #                setControl(checkGroup, false);
+      #
+      #                setControl(giftCardGroup, true);
+      #                setControl(GiftCardPolicy, mcrGiftCardPoliciesEnabled);
+      #            }
+      #        break;
+      #        case MCRCustPaymType::Check:
+      #            setControl(creditCardGroup, false);
+      #            setControl(giftCardGroup, false);
+      #
+      #            setControl(checkGroup, true);
+      #
+      #            //--> Red Maple Begin
+      #            setControl(RedMapleCreditCardGroup, false);
+      #            createCCBtn.visible(false);
+      #            //--> Red Maple End
+      #        break;
+      #        default:
+      #            setControl(creditCardGroup, true);
+      #            creditCardGroup.enabled(false);
+      #            creditCardGroup.skip(true);
+      #            setControl(giftCardGroup, false);
+      #            setControl(checkGroup, false);
+      #            //--> Red Maple Begin
+      #            setControl(RedMapleCreditCardGroup, false);
+      #            RedMapleCreditCardGroup.enabled(false);
+      #            RedMapleCreditCardGroup.skip(true);
+      #            createCCBtn.visible(false);
+      #            //--> Red Maple End
+      #        break;
+      #    }
+      #
+      #    // allow/disallow editing of fields for the current record
+      #    if (mcrCustPaymTable_ds.allowEdit())
+      #    {
+      #        mcrCustPaymTable.setAllowEditInDataSource();
+      #    }
+      #
+      #    switch (argsRecord.TableId)
+      #    {
+      #        case tableNum(MCRInstallmentPlanSalesTable):
+      #        case tableNum(MCRContinuityCustHeader):
+      #            identification_Amount.visible(false);
+      #        case tableNum(LedgerJournalTrans):
+      #            identification_PercentAmount.visible(false);
+      #        break;
+      #        // no default, show everything
+      #    }
+      #
+      #    element.resetSize();
+      #    element.redraw();
+      #    element.unLock();
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #MCRCustPaymTable
+          Table               #MCRCustPaymTable
+          AllowDelete         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD CardTypeId
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    // Set default values executed, need to refresh
+                #    mcrCustPaymTable_ds.refresh();
+                #
+                #    // update properties of controls based upon the payment type
+                #    element.updatePaymTypeControls();
+                #}
+              ENDSOURCE
+              SOURCE #lookup
+                #public void lookup(FormControl _formControl, str _filterStr)
+                #{
+                #    MCRCustPaymTable::lookupCardType(_formControl,
+                #                                    mcrCustPaymTable.TenderTypeId,
+                #                                    mcrCustPaymTable.Channel);
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD TenderTypeId
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    // Set default values executed, need to refresh
+                #    mcrCustPaymTable_ds.refresh();
+                #
+                #    // update properties of controls based upon the payment type
+                #    element.updatePaymTypeControls();
+                #
+                #    mcrCustPaymTable_ds.cacheCalculateMethod(tableMethodStr(MCRCustPaymTable, displayName));
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #leaveRecord
+          #public boolean leaveRecord(boolean _forceUpdate = false)
+          #{
+          #    boolean ret;
+          #
+          #    ret = super(_forceUpdate);
+          #
+          #    //--> Red Maple Begin
+          #    if (MCRCustPaymTable.IsPrepay)
+          #    {
+          #        SalesTableCC.CreditCardTrxType = CreditCardTrxType::S;
+          #    }
+          #
+          #    if (SalesTableCC.CreditCardId)
+          #    {
+          #
+          #        SalesTableCC_ds.write();
+          #        salesTableCC_ds.research(true);
+          #        //--> Red Maple End
+          #    }
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+        SOURCE #initValue
+          #public void initValue()
+          #{
+          #    mcrCustPaymTable.RefTableId = argsRecord.TableId;
+          #    mcrCustPaymTable.RefRecId = argsRecord.RecId;
+          #
+          #    mcrCustPaymTable.setCustAccount();
+          #
+          #    super();
+          #
+          #    //--> Red Maple Begin
+          #    // Set to zero as there is a bug if you mix amount and percent use
+          #    // in MCRCustPaymTotals
+          #    MCRCustPaymTable.PercentAmount = 0;
+          #    //<--
+          #}
+        ENDSOURCE
+        SOURCE #init
+          #public void init()
+          #{
+          #    QueryBuildDataSource queryBuildDataSource;
+          #
+          #    super();
+          #
+          #    if (argsRecord.TableId == tableNum(MCRCustPaymTable))
+          #    {
+          #        // Due to a relation on the MCRCustPaymTable that points to itself
+          #        //  have to reset dynalink to link it to itself by recId
+          #        queryBuildDataSource = this.queryBuildDataSource();
+          #        queryBuildDataSource.clearDynalinks();
+          #        queryBuildDataSource.addRange
+          #                (fieldNum(MCRCustPaymTable, RecId))
+          #                .value(SysQuery::value(argsRecord.RecId));
+          #
+          #    }
+          #    if (argsRecord.TableId == tableNum(LedgerJournalTrans)
+          #        || argsRecord.TableId == tableNum(MCRInstallmentPlanSalesTable))
+          #    {
+          #        identification_Amount.enabled(false);
+          #    }
+          #
+          #    mcrCustPaymTable_ds.cacheAddMethod(tableMethodStr(MCRCustPaymTable, editCreditCard), false);
+          #    mcrCustPaymTable_ds.cacheAddMethod(tableMethodStr(MCRCustPaymTable, displayName), false);
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SalesTableCC
+          Table               #SalesTableCC
+          JoinSource          #MCRCustPaymTable
+          LinkType            #Active
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD CreditCardId
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #lookup
+                #public void lookup(FormControl _formControl, str _filterStr)
+                #{
+                #    ;
+                #
+                #    CreditCardTable::lookupCustCreditCard(_formControl,mcrcustPaymTable.CustAccount,SalesTableCC);
+                #}
+              ENDSOURCE
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    CreditCardTable         ccTable = CreditCardTable::find(salesTableCC.CreditCardId);
+                #
+                #    super();
+                #
+                #    if (ccTable)
+                #    {
+                #        salesTableCC.NameOnCard =   ccTable.NameOnCard;
+                #        SalesTableCC.Location   =   ccTable.Location;
+                #
+                #
+                #    }
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #write
+          #public void write()
+          #{
+          #    MCRCustPaymTotals   custPaymTotals;
+          #    Amount              amount;
+          #    ;
+          #
+          #    //Update the paymTable
+          #    if (MCRCustPaymTable.CustPaymType == MCRCustPaymType::CreditCard)
+          #    {
+          #        super();
+          #
+          #        MCRCustPaymTable.PaymInfoRecId = SalesTableCC.RecId;
+          #        MCRCustPaymTable.PaymInfoTableId = SalesTableCC.TableId;
+          #
+          #        if (argsRecord)
+          #        {
+          #            custPaymTotals = MCRCustPaymTotals::construct(argsRecord.TableId,argsRecord.RecId);
+          #            if (custPaymTotals)
+          #            {
+          #                amount = custPaymTotals.getTotalSalesAmount();
+          #            }
+          #        }
+          #
+          #        if (MCRCustPaymTable.Amount)
+          #        {
+          #            SalesTableCC.AmountCur = MCRCustPaymTable.Amount;
+          #        }
+          #        else if (MCRCustPaymTable.PercentAmount > 0)
+          #        {
+          #            amount -= custPaymTotals.getTotalPaymAmount(false);
+          #            SalesTableCC.AmountCur = Currency::amount(amount * MCRCustPaymTable.PercentAmount/100);
+          #            MCRCustPaymTable.Amount = SalesTableCC.AmountCur;
+          #        }
+          #
+          #        if (MCRCustPaymTable.Amount >= 0)
+          #        {
+          #            if (MCRCustPaymTable.IsPrepay)
+          #            {
+          #                salesTableCC.CreditCardTrxType = CreditCardTrxType::S;
+          #
+          #            }
+          #            else
+          #            {
+          #                salesTableCC.CreditCardTrxType = CreditCardTrxType::A;
+          #            }
+          #        }
+          #        else
+          #        {
+          #            SalesTableCC.CreditCardTrxType = CreditCardTrxType::C;
+          #
+          #        }
+          #
+          #        SalesTableCC.write();
+          #
+          #
+          #        MCRCustPaymTable.PercentAmount = 0.00;
+          #        MCRCustPaymTable.write();
+          #    }
+          #}
+        ENDSOURCE
+        SOURCE #executeQuery
+          #public void executeQuery()
+          #{
+          #    ;
+          #    qbrSalesTableCC.value(SysQuery::value(mcrCustPaymTable.PaymInfoRecId));
+          #
+          #    super();
+          #}
+        ENDSOURCE
+        SOURCE #init
+          #public void init()
+          #{
+          #    ;
+          #
+          #    super();
+          #
+          #    qbrSalesTableCC = this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,RecId));
+          #}
+        ENDSOURCE
+        SOURCE #create
+          #public void create(boolean _append = false)
+          #{
+          #    SalesTable          salesTable;
+          #    ;
+          #    super(_append);
+          #
+          #    switch (MCRCustPaymTable.RefTableId)
+          #    {
+          #        case    tableNum(salesTable)    :
+          #            salesTable = salesTable::findRecId(MCRCustPaymTable.RefRecId);
+          #
+          #            if (salesTable)
+          #            {
+          #                SalesTableCC.SalesId = salesTable.SalesId;
+          #                if (MCRCustPaymTable.Amount >= 0)
+          #                {
+          #                    salesTableCC.CreditCardTrxType = CreditCardTrxType::A;
+          #                }
+          #                else
+          #                {
+          #                    SalesTableCC.CreditCardTrxType = CreditCardTrxType::C;
+          #                }
+          #                salesTableCC.CurrencyCode   = salesTable.CurrencyCode;
+          #                SalesTableCC.AmountCur  = MCRCustPaymTable.Amount;
+          #            }
+          #            break;
+          #    }
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+    SalesTableCC MCRCustPaymTable
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Width               #Column width
+      Height              #Column height
+      Caption             #@SYS333904
+      Frame               #Dialog
+      WindowType          #Popup
+      HideToolbar         #Yes
+      BackgroundColor     #Window background
+      DataSource          #MCRCustPaymTable
+      Style               #Dialog
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #AddCard
+          ElementPosition     #1380525201
+          HierarchyParent     #Identification
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroup
+          Left                #Auto (right)
+          ElementPosition     #1073741822
+          HierarchyParent     #DialogCommit
+          Style               #DialogCommitContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CheckGroup
+          AutoDeclaration     #Yes
+          Visible             #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1717986916
+          HierarchyParent     #PaymentType
+          FrameType           #None
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #leave
+            #public boolean leave()
+            #{
+            #    boolean ret;
+            #
+            #    ret = super();
+            #
+            #    element.delAutoCompleteString(this);
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CreditCardGroup
+          AutoDeclaration     #Yes
+          Visible             #No
+          Enabled             #No
+          ElementPosition     #644245092
+          HierarchyParent     #PaymentType
+          FrameType           #None
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DialogCommit
+          ElementPosition     #1431655764
+          Style               #DialogCommit
+          AlignChild          #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DialogContent
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #715827882
+          Style               #DialogContent
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Footnote
+          Visible             #No
+          ElementPosition     #1610612734
+          HierarchyParent     #DialogCommit
+          FrameType           #Edged 3D Line
+          Style               #MarginlessContainer
+          TopMargin           #10
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GiftCardGroup
+          AutoDeclaration     #Yes
+          Visible             #No
+          ElementPosition     #1288490187
+          HierarchyParent     #PaymentType
+          FrameType           #None
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Identification
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612734
+          HierarchyParent     #DialogContent
+          FrameType           #None
+          LeftMargin          #15
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PaymentType
+          ElementPosition     #1124872386
+          HierarchyParent     #Identification
+          FrameType           #None
+          HideIfEmpty         #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PolicyGroup
+          Height              #Column height
+          ElementPosition     #1879048189
+          HierarchyParent     #GiftCardGroup
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #RedMapleCreditCardGroup
+          AutoDeclaration     #Yes
+          ElementPosition     #966367638
+          HierarchyParent     #PaymentType
+          Columns             #3
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #TenderCardGrp
+          ElementPosition     #613566756
+          HierarchyParent     #Identification
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #CreateCCBtn
+          AutoDeclaration     #Yes
+          Visible             #No
+          HelpText            #@SYS116744
+          ElementPosition     #1550960411
+          HierarchyParent     #Identification
+          Text                #@MCR40429
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    element.addNewCardHolder();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #MCRCustPaymTable_IsPrepay
+          ElementPosition     #2019657238
+          HierarchyParent     #Identification
+          DataSource          #MCRCustPaymTable
+          DataField           #IsPrepay
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #SalesTableCC_PrimaryCard
+          ElementPosition     #1717986916
+          HierarchyParent     #RedMapleCreditCardGroup
+          DataSource          #SalesTableCC
+          DataField           #PrimaryCard
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #CancelButton
+          ElementPosition     #1610612734
+          HierarchyParent     #ButtonGroup
+          SaveRecord          #No
+          Command             #264
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #OKButton
+          ElementPosition     #1073741822
+          HierarchyParent     #ButtonGroup
+          DefaultButton       #Yes
+          Command             #263
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DROPDIALOGBUTTON
+        PROPERTIES
+          Name                #NewCC
+          AutoDeclaration     #Yes
+          HelpText            #@ACC1880
+          ElementPosition     #858993458
+          HierarchyParent     #RedMapleCreditCardGroup
+          NormalImage         #12425
+          ImageLocation       #EmbeddedResource
+          DataSource          #SalesTableCC
+          MenuItemName        #creditcardadhocCreate
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    mcrCustPaymTable_ds.research(true);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #GiftCard_M_DisplayAvailableBalance
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          HelpText            #@MCR11166
+          ElementPosition     #1610612733
+          HierarchyParent     #GiftCardGroup
+          Label               #@MCR11164
+          DataSource          #MCRCustPaymTable
+          DataMethod          #displayGiftCardAvailableBalance
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #Identification_Amount
+          AutoDeclaration     #Yes
+          ElementPosition     #1891830831
+          HierarchyParent     #Identification
+          DataSource          #MCRCustPaymTable
+          DataField           #Amount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #Identification_PercentAmount
+          AutoDeclaration     #Yes
+          ElementPosition     #1721395621
+          HierarchyParent     #Identification
+          DataSource          #MCRCustPaymTable
+          DataField           #PercentAmount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #MainInstruction
+          ElementPosition     #1073741822
+          HierarchyParent     #DialogContent
+          Text                #@SYS114328
+          ForegroundColor     #Scroll bar
+          FontSize            #13
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CheckNumber
+          AutoDeclaration     #Yes
+          Width               #166
+          ElementPosition     #1431655764
+          HierarchyParent     #CheckGroup
+          Label               #@SYS13864
+          DataSource          #MCRCustPaymTable
+          DataField           #CheckNumber
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCard_M_editCreditCard
+          AutoDeclaration     #Yes
+          Visible             #No
+          Width               #166
+          ElementPosition     #1431655764
+          HierarchyParent     #CreditCardGroup
+          Label               #@SYS13864
+          DataSource          #MCRCustPaymTable
+          DataMethod          #editCreditCard
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #leave
+            #public boolean leave()
+            #{
+            #    boolean ret;
+            #
+            #    ret = super();
+            #
+            #    element.delAutoCompleteString(this);
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+          SOURCE #lookup
+            #public void lookup()
+            #{
+            #    CreditCardCust::lookupCreditCard(this, mcrCustPaymTable.CustAccount, mcrCustPaymTable.PaymInfoRecId);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #GiftCard_M_editGiftCard
+          AutoDeclaration     #Yes
+          Width               #166
+          HelpText            #@RET4429
+          ElementPosition     #1073741822
+          HierarchyParent     #GiftCardGroup
+          LookupButton        #Never
+          Label               #@SYS13864
+          DataSource          #MCRCustPaymTable
+          DataMethod          #editRetailGiftCardId
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #leave
+            #public boolean leave()
+            #{
+            #    boolean ret;
+            #
+            #    ret = super();
+            #
+            #    element.delAutoCompleteString(this);
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #GiftCardPolicy
+          AutoDeclaration     #Yes
+          Visible             #No
+          AllowEdit           #No
+          ElementPosition     #1431655764
+          HierarchyParent     #PolicyGroup
+          MultiLine           #Yes
+          DataSource          #MCRCustPaymTable
+          DataMethod          #displayGiftCardPolicyDescription
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Identification_M_displayName
+          AllowEdit           #No
+          ElementPosition     #869219571
+          HierarchyParent     #Identification
+          DataSource          #MCRCustPaymTable
+          DataMethod          #displayName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Identification_TenderTypeId
+          ElementPosition     #1073741822
+          HierarchyParent     #TenderCardGrp
+          DataSource          #MCRCustPaymTable
+          DataField           #TenderTypeId
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    boolean ret;
+            #    // Lookup modified current record, refresh datasource
+            #    //      to get most current.
+            #    mcrCustPaymTable_ds.refresh();
+            #
+            #    ret = super();
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #MCRCustPaymTable_CardTypeId
+          AutoDeclaration     #Yes
+          ElementPosition     #1610612733
+          HierarchyParent     #TenderCardGrp
+          ShowLabel           #No
+          DataSource          #MCRCustPaymTable
+          DataField           #CardTypeId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesTableCC_CreditCardId
+          ElementPosition     #1288490187
+          HierarchyParent     #RedMapleCreditCardGroup
+          DataSource          #SalesTableCC
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

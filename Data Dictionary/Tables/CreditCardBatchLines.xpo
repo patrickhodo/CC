@@ -1,0 +1,215 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardBatchLines
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardBatchLines
+      Label               #@ACC714
+      TitleField1         #BatchNumber
+      TitleField2         #SequenceNumber
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      TableGroup          #WorksheetLine
+      PrimaryIndex        #BatchNumberIdx
+      ClusterIndex        #BatchNumberIdx
+      DeveloperDocumentation  #@ACC1443
+      Origin              #{B5BEF913-B6EC-46DA-A01E-87993209640C}
+      LegacyId            #20002
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #BatchNumber
+        STRING
+        PROPERTIES
+          Name                #BatchNumber
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardBatchLines
+          Origin              #{BB022B60-9C8C-4E77-92B0-42BCE47A40DF}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardBatchNumber
+          StringSize          #6
+        ENDPROPERTIES
+        
+      FIELD #CreditCardTransID
+        STRING
+        PROPERTIES
+          Name                #CreditCardTransID
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardBatchLines
+          Origin              #{D41D0E9E-EA0D-4397-A929-85D1A614217B}
+          LegacyId            #20004
+          ExtendedDataType    #CreditCardTransID
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #LineNum
+        REAL
+        PROPERTIES
+          Name                #LineNum
+          AllowEdit           #No
+          Table               #CreditCardBatchLines
+          Origin              #{39EEFCAB-BF42-4586-96E7-8D18F9ABA4C8}
+          LegacyId            #20003
+          ExtendedDataType    #LineNum
+        ENDPROPERTIES
+        
+      FIELD #SequenceNumber
+        STRING
+        PROPERTIES
+          Name                #SequenceNumber
+          Label               #@SYS2658
+          HelpText            #@ACC708
+          AllowEdit           #No
+          Table               #CreditCardBatchLines
+          Origin              #{488D775E-51B8-4F19-B589-45CEE4E602E1}
+          LegacyId            #20002
+          ExtendedDataType    #CreditCardBatchNumber
+          StringSize          #6
+        ENDPROPERTIES
+        
+      FIELD #TrxType
+        ENUM
+        PROPERTIES
+          Name                #TrxType
+          Table               #CreditCardBatchLines
+          Origin              #{A7F14407-D32C-41CB-845E-A1CD0CB5F1F8}
+          LegacyId            #20005
+          EnumType            #CreditCardTrxType
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BatchNumber
+          #SequenceNumber
+          #LineNum
+          #CreditCardTransID
+          #TrxType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BatchNumber
+          #SequenceNumber
+          #LineNum
+          #CreditCardTransID
+          #TrxType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Batch
+        PROPERTIES
+          Name                #Batch
+          Label               #@SYS14462
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BatchNumber
+          #LineNum
+          #SequenceNumber
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Transaction
+        PROPERTIES
+          Name                #Transaction
+          Label               #@SYS15191
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardTransID
+          #TrxType
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #BatchNumberIdx
+      PROPERTIES
+        Name                #BatchNumberIdx
+        AllowDuplicates     #No
+        Origin              #{D4BC9931-43A4-42B7-9FCE-5C720D9793AD}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #BatchNumber
+        #CreditCardTransID
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #BatchNumber
+        PROPERTIES
+          Name                #BatchNumber
+          Table               #CreditCardBatchTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #BatchNumber
+            RelatedField        #BatchNumber
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTrans
+        PROPERTIES
+          Name                #CreditCardTrans
+          Table               #CreditCardTrans
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CreditCardTransID
+            RelatedField        #TransID
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #lastLineNum
+        #static LineNum  lastLineNum(CreditCardBatchNumber ccBatchNum)
+        #{
+        #    return (select maxof(lineNum) from creditCardBatchLines
+        #                where creditCardBatchLines.BatchNumber == ccBatchNum).lineNum;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

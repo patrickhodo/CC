@@ -1,0 +1,475 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SalesPickingListJournalPost
+    PROPERTIES
+      Name                #SalesPickingListJournalPost
+      Extends             #FormletterJournalPost
+      RunOn               #Server
+      Origin              #{2D1B0000-0000-1000-1FE5-55E06B29E63E}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #addToInventReportDimHistory
+        #/// <summary>
+        #/// Adds a record to the <c>InventReportDimHistory</c> table.
+        #/// </summary>
+        #/// <param name="_journalline">
+        #/// A journal line record.
+        #/// </param>
+        #protected void addToInventReportDimHistory(Common _journalline)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #checkIfWMSOrderTransExist
+        #protected boolean checkIfWMSOrderTransExist()
+        #{;
+        #    return (select firstonly RecId from wmsOrderTrans
+        #                where wmsOrderTrans.RouteId == wmsPickingRoute.PickingRouteID).RecId != 0;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class SalesPickingListJournalPost
+        #extends FormletterJournalPost
+        #{
+        #    WMSPickingRoute     wmsPickingRoute;
+        #    WMSOrderTrans       wmsOrderTrans;
+        #    SalesParmTable      salesParmTable;
+        #    SalesTable          salesTable;
+        #    SalesLine           salesLine;
+        #
+        #    List                listProformaWMSOrder;
+        #    RecordInsertList    recordListLinks;
+        #}
+      ENDSOURCE
+      SOURCE #copyDocuRefLine
+        #/// <summary>
+        #/// Copies document references to the journal line.
+        #/// </summary>
+        #//performed in SalesPickingListJournalCreate
+        #protected void copyDocuRefLine()
+        #{
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #createJournalLink
+        #protected void  createJournalLink()
+        #{
+        #    WMSPickingRouteLink     wmsPickingRouteLink;
+        #    SalesParmLine           localSalesParmLine;
+        #
+        #    while select localSalesParmLine
+        #        group by OrigSalesId
+        #        where localSalesParmLine.ParmId == salesParmTable.ParmId
+        #           && localSalesParmLine.TableRefId == salesParmTable.TableRefId
+        #    {
+        #        wmsPickingRouteLink.clear();
+        #        wmsPickingRouteLink.initFromSalesTable     (SalesTable::find(localSalesParmLine.OrigSalesId));
+        #        wmsPickingRouteLink.initFromWMSPickingRoute(wmsPickingRoute);
+        #        recordListLinks.add(wmsPickingRouteLink);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #documentStatus
+        #/// <summary>
+        #/// Gets the type of document.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>DocumentStatus::PickingList</c> enumeration value.
+        #/// </returns>
+        #protected DocumentStatus  documentStatus()
+        #{
+        #    return DocumentStatus::PickingList;
+        #}
+      ENDSOURCE
+      SOURCE #endLines
+        #protected void endLines()
+        #{
+        #    if (!this.postMarkupLineBeforeInventory())
+        #    {
+        #        this.postMarkupOnSalesLine();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #endPostLine
+        #/// <summary>
+        #/// Ends the posting of one journal line.
+        #/// </summary>
+        #protected void endPostLine()
+        #{
+        #    super();
+        #
+        #    InventQualityManagementCreateHandler::createSalesPickingListAfterPost(salesLine, wmsOrderTrans.qty, wmsOrderTrans.PdsCWQty);
+        #}
+      ENDSOURCE
+      SOURCE #formletterType
+        #/// <summary>
+        #/// Determines the formletter type.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>FormletterType::Sales</c> enumeration value.
+        #/// </returns>
+        #protected FormletterType formletterType()
+        #{
+        #    return FormletterType::Sales;
+        #}
+      ENDSOURCE
+      SOURCE #getVoucher
+        #/// <summary>
+        #/// Gets a voucher number.
+        #/// </summary>
+        #/// <returns>
+        #/// An empty <c>Num</c> value.
+        #/// </returns>
+        #protected Num getVoucher()
+        #{
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #/// <summary>
+        #/// Initializes the class.
+        #/// </summary>
+        #public void init()
+        #{
+        #    super();
+        #    salesTable = salesParmTable.salesTable();
+        #
+        #    if (proforma)
+        #    {
+        #        listProformaWMSOrder = new List(Types::String);//WMSOrder.orderId is used as value
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initRecordLists
+        #/// <summary>
+        #/// Initializes the record lists.
+        #/// </summary>
+        #protected void initRecordLists()
+        #{
+        #    super();
+        #
+        #    recordListLinks = new RecordInsertList(tableNum(WMSPickingRouteLink));
+        #}
+      ENDSOURCE
+      SOURCE #initRelatedLineTables
+        #/// <summary>
+        #/// Initializes the records that are related to the current journal line.
+        #/// </summary>
+        #protected void initRelatedLineTables()
+        #{
+        #    super();
+        #    salesLine = SalesLine::findInventTransId(wmsOrderTrans.InventTransId, true);
+        #}
+      ENDSOURCE
+      SOURCE #insertRecordList
+        #/// <summary>
+        #/// Inserts records in the record lists into the database.
+        #/// </summary>
+        #protected void insertRecordList()
+        #{
+        #    recordListLinks.insertDatabase();
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #journalLine
+        #/// <summary>
+        #/// Gets or sets the current journal line record.
+        #/// </summary>
+        #/// <param name="_journalLine">
+        #/// A journal line record.
+        #/// </param>
+        #/// <returns>
+        #/// A journal line record.
+        #/// </returns>
+        #protected Common journalLine(Common _journalLine = null)
+        #{
+        #    return wmsOrderTrans;
+        #}
+      ENDSOURCE
+      SOURCE #journalLineTableId
+        #/// <summary>
+        #/// Gets the table ID for the journal line table.
+        #/// </summary>
+        #/// <returns>
+        #/// A table ID.
+        #/// </returns>
+        #protected TableId journalLineTableId()
+        #{
+        #    return tableNum(WMSOrderTrans);
+        #}
+      ENDSOURCE
+      SOURCE #parmJournalTable
+        #public Common parmJournalTable(Common _journalTable = wmsPickingRoute)
+        #{;
+        #    wmsPickingRoute = _journalTable as WMSPickingRoute;
+        #    return wmsPickingRoute;
+        #}
+      ENDSOURCE
+      SOURCE #parmParmTable
+        #public Common parmParmTable(Common _parmTable = salesParmTable)
+        #{;
+        #    salesParmTable = _parmTable as SalesParmTable;
+        #    return salesParmTable;
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupLine
+        #/// <summary>
+        #/// Posts the markup for the current journal line.
+        #/// </summary>
+        #protected void postMarkupLine()
+        #{
+        #    // Overridden to save a call to this.postMarkupOnTrans()
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupOnJour
+        #protected void postMarkupOnJour(SalesTable _salesTableMarkup)
+        #{;
+        #    Markup::updateMarkupAsPosted(_salesTableMarkup,this.documentStatus());
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupOnSalesLine
+        #/// <summary>
+        #/// Posts markup for the journal lines.
+        #/// </summary>
+        #protected void postMarkupOnSalesLine()
+        #{
+        #    MarkupTrans     markupTrans;
+        #    SalesLine       localSalesLine;
+        #    SalesParmLine   localSalesParmLine;
+        #
+        #    ttsbegin;
+        #    markupTrans.skipDataMethods(true);
+        #
+        #    update_recordset markupTrans
+        #        setting DocumentStatus = DocumentStatus::PickingList
+        #        where  markupTrans.TransTableId      == tableNum(SalesLine)
+        #            && markupTrans.Keep              == NoYes::No
+        #            && markupTrans.DocumentStatus    != DocumentStatus::PickingList
+        #            && markupTrans.DocumentStatus    != DocumentStatus::PackingSlip
+        #    exists join localSalesLine
+        #        where localSalesLine.RecId              == markupTrans.TransRecId
+        #    exists join localSalesParmLine
+        #        where  localSalesParmLine.ParmId        == salesParmTable.ParmId
+        #            && localSalesParmLine.TableRefId    == salesParmTable.TableRefId
+        #            && localSalesParmLine.OrigSalesId   == localSalesLine.SalesId
+        #            && localSalesParmLine.InventTransId == localSalesLine.InventTransId
+        #            && localSalesParmLine.WMSOrder      == NoYes::No
+        #            && localSalesParmLine.DeliverNow    != 0;
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupTable
+        #/// <summary>
+        #/// Posts the markup for the journal header.
+        #/// </summary>
+        #protected void postMarkupTable()
+        #{
+        #    SalesTable          salesTableMarkup;
+        #    SalesParmSubTable   localSalesParmSubTable;
+        #
+        #    if (this.checkIfWMSOrderTransExist())
+        #    {
+        #        while select RecId from localSalesParmSubTable
+        #            where  localSalesParmSubTable.ParmId     == salesParmTable.ParmId
+        #                && localSalesParmSubTable.TableRefId == salesParmTable.TableRefId
+        #        join salesTableMarkup
+        #            where salesTableMarkup.SalesId == localSalesParmSubTable.OrigSalesId
+        #        {
+        #            this.postMarkupOnJour(salesTableMarkup);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #public void run()
+        #{
+        #    super();
+        #
+        #    //--> Advanced credit card begin
+        #    if (!CreditCardPosting::construct(this,this.documentStatus()))
+        #    {
+        #        throw error("@ACC1060");
+        #    }
+        #
+        #    //<-- Advanced credit card end
+        #}
+      ENDSOURCE
+      SOURCE #selectFormletterJournalTrans
+        #/// <summary>
+        #///   Selects a picking list journal line.
+        #/// </summary>
+        #protected void selectFormletterJournalTrans()
+        #{
+        #    select forupdate formletterJournalTrans
+        #        where formletterJournalTrans.JournalId          == formletterJournal.JournalId
+        #        && formletterJournalTrans.InternalJournalId     == formletterJournal.InternalJournalId
+        #        && formletterJournalTrans.OrderId               == formletterJournal.OrderId
+        #        && formletterJournalTrans.NumberSequenceGroup   == formletterJournal.NumberSequenceGroup;
+        #}
+      ENDSOURCE
+      SOURCE #sourceLine
+        #/// <summary>
+        #/// Gets the source line record for the current journal line.
+        #/// </summary>
+        #/// <returns>
+        #/// A source line record.
+        #/// </returns>
+        #protected Common sourceLine()
+        #{
+        #    return salesLine;
+        #}
+      ENDSOURCE
+      SOURCE #sourceTable
+        #/// <summary>
+        #/// Gets the source header record for the journal header.
+        #/// </summary>
+        #/// <returns>
+        #/// A source header record.
+        #/// </returns>
+        #protected Common sourceTable()
+        #{
+        #    return salesTable;
+        #}
+      ENDSOURCE
+      SOURCE #startLines
+        #protected void startLines()
+        #{
+        #    if (this.postMarkupLineBeforeInventory())
+        #    {
+        #        this.postMarkupOnSalesLine();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogTxt
+        #/// <summary>
+        #/// Gets an instance of the <c>TransTxt</c> object.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>TransTxt</c> object.
+        #/// </returns>
+        #protected TransTxt  transactionLogTxt()
+        #{
+        #    return "@SYS50969";
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogType
+        #/// <summary>
+        #/// Gets the transaction log type.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>TransactionLogType::SalesPickingList</c> enumeration value.
+        #/// </returns>
+        #protected TransactionLogType  transactionLogType()
+        #{
+        #    return TransactionLogType::SalesPickingList;
+        #}
+      ENDSOURCE
+      SOURCE #updateDate
+        #/// <summary>
+        #/// Gets the transaction Date.
+        #/// </summary>
+        #/// <returns>
+        #/// A transaction date.
+        #/// </returns>
+        #protected TransDate updateDate()
+        #{
+        #    return wmsPickingRoute.DlvDate;
+        #}
+      ENDSOURCE
+      SOURCE #updateJournalLine
+        #/// <summary>
+        #/// Updates the journal line.
+        #/// </summary>
+        #protected void updateJournalLine()
+        #{
+        #    WMSOrder    wmsOrder;
+        #    ;
+        #    if (proforma)
+        #    {
+        #        wmsOrder = wmsOrderTrans.wmsOrder();
+        #        listProformaWMSOrder.addEnd(wmsOrder.OrderId);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSourceTable
+        #/// <summary>
+        #/// Updates the source table for the journal header.
+        #/// </summary>
+        #protected void updateSourceTable()
+        #{
+        #    WMSOrderTrans   wmsOrderTransProforma;
+        #    SetEnumerator   se = ordersPosted.getEnumerator();
+        #
+        #    ttsbegin;
+        #
+        #    if (proforma && SalesParameters::find().PickRouteStatusOnUpdate == WMSPickRouteStatusOnUpdate::completed)//don't complete since transactions will the be picked
+        #    {
+        #         wmsPickingRoute.updateRoute(WMSPickRouteStatusOnUpdate::activated);
+        #         wmsPickingRoute.ExpeditionStatus = WMSExpeditionStatus::Complete;
+        #         wmsPickingRoute.doUpdate();
+        #
+        #         wmsOrderTransProforma.skipDataMethods(true);
+        #
+        #         update_recordset wmsOrderTransProforma
+        #            setting ExpeditionStatus = WMSExpeditionStatus::Complete
+        #            where wmsOrderTransProforma.RouteId == wmsPickingRoute.PickingRouteID;
+        #
+        #    }
+        #    else
+        #    {
+        #         wmsPickingRoute.updateRoute(SalesParameters::find().PickRouteStatusOnUpdate);
+        #    }
+        #
+        #    this.createJournalLink();
+        #
+        #    while (se.moveNext())
+        #    {
+        #        salesTable = SalesTable::find(se.current(),true);
+        #        if (salesTable)
+        #        {
+        #            salesTable.updateDocumentStatus(this.documentStatus());
+        #            salesTable.updateBackStatus();
+        #            salesTable.updateSalesType();
+        #        }
+        #    }
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #updateSumSalesId
+        #protected void  updateSumSalesId()
+        #{
+        #    SalesTable  localSalesTable;
+        #    ;
+        #
+        #    if (SalesTable::exist(salesLine.SalesId))
+        #    {
+        #        ttsbegin;
+        #
+        #        localSalesTable = salesLine.salesTable(true);
+        #
+        #        localSalesTable.updateBackStatus();
+        #        localSalesTable.write();
+        #
+        #        ttscommit;
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #construct
+        #public static SalesPickingListJournalPost construct()
+        #{
+        #    return new SalesPickingListJournalPost();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

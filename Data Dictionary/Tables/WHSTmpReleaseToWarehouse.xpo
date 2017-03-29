@@ -1,0 +1,763 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #WHSTmpReleaseToWarehouse
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #WHSTmpReleaseToWarehouse
+      Label               #@WAX1884
+      TitleField1         #ReleaseToWarehouseId
+      TitleField2         #OrderNum
+      TableType           #TempDB
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #ReleaseToWarehouseIdInventTransIdIdx
+      ClusterIndex        #ReleaseToWarehouseIdInventTransIdIdx
+      ModifiedDateTime    #Yes
+      ModifiedBy          #Yes
+      DeveloperDocumentation  #@WAX4432
+      Origin              #{E233AA68-7C5E-4594-BD90-53B11BA10CA1}
+      LegacyId            #20179
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AutoReserved
+        ENUM
+        PROPERTIES
+          Name                #AutoReserved
+          Table               #WHSTmpReleaseToWarehouse
+          Origin              #{7D4429DC-86A9-4510-B8FE-8CBD3E5C1D7A}
+          ExtendedDataType    #WHSAutoReserved
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #InventDimId
+        STRING
+        PROPERTIES
+          Name                #InventDimId
+          Mandatory           #Yes
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #WHSTmpReleaseToWarehouse
+          Origin              #{2D8EF456-2D05-433B-94D7-42944EB0E2D4}
+          ExtendedDataType    #InventDimId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #InventTransId
+        STRING
+        PROPERTIES
+          Name                #InventTransId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #WHSTmpReleaseToWarehouse
+          Origin              #{BC3704BA-2420-4637-995D-B5A159AECDED}
+          LegacyId            #20002
+          ExtendedDataType    #InventTransId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #Module
+        ENUM
+        PROPERTIES
+          Name                #Module
+          Table               #WHSTmpReleaseToWarehouse
+          Origin              #{8DE1B91B-E66E-4120-A730-2C28198E8A6E}
+          LegacyId            #20004
+          EnumType            #WHSModule
+        ENDPROPERTIES
+        
+      FIELD #OrderNum
+        STRING
+        PROPERTIES
+          Name                #OrderNum
+          Table               #WHSTmpReleaseToWarehouse
+          Origin              #{80FD48E9-27B6-40A5-BA10-AB8F06C1D995}
+          LegacyId            #20005
+          ExtendedDataType    #WHSOrderNum
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #ReleasedQty
+        REAL
+        PROPERTIES
+          Name                #ReleasedQty
+          Table               #WHSTmpReleaseToWarehouse
+          Origin              #{26CA0193-DB67-47DE-812C-ED6EDF7334B8}
+          LegacyId            #20003
+          ExtendedDataType    #WHSReleasedQty
+        ENDPROPERTIES
+        
+      FIELD #ReleaseToWarehouseId
+        STRING
+        PROPERTIES
+          Name                #ReleaseToWarehouseId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #WHSTmpReleaseToWarehouse
+          IgnoreEDTRelation   #Yes
+          Origin              #{28DB2F1E-ADEA-4031-9A83-44702DE075F7}
+          LegacyId            #20001
+          ExtendedDataType    #WHSReleaseToWarehouseId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #ReservationStatus
+        ENUM
+        PROPERTIES
+          Name                #ReservationStatus
+          Table               #WHSTmpReleaseToWarehouse
+          Origin              #{0E74F1F6-0298-4824-A8CA-26AEEFC74EB1}
+          EnumType            #WHSReservationStatus
+        ENDPROPERTIES
+        
+      FIELD #ShipmentId
+        STRING
+        PROPERTIES
+          Name                #ShipmentId
+          Table               #WHSTmpReleaseToWarehouse
+          Origin              #{C49B5FA4-3F6A-4F57-B365-3D224A393016}
+          LegacyId            #20006
+          ExtendedDataType    #WHSShipmentId
+          StringSize          #20
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ReleaseToWarehouseId
+          #InventTransId
+          #ReleasedQty
+          #Module
+          #OrderNum
+          #ShipmentId
+          #AutoReserved
+          #ReservationStatus
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #All
+        PROPERTIES
+          Name                #All
+          Label               #@WAX2277
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ReleaseToWarehouseId
+          #InventTransId
+          #ReleasedQty
+          #Module
+          #OrderNum
+          #ShipmentId
+          #AutoReserved
+          #ReservationStatus
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #ReleaseToWarehouseIdInventTransIdIdx
+      PROPERTIES
+        Name                #ReleaseToWarehouseIdInventTransIdIdx
+        AllowDuplicates     #No
+        Origin              #{9094E740-0AFA-46F2-8476-6D95A6EEC152}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #ReleaseToWarehouseId
+        #InventTransId
+        #InventDimId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #InventDim
+        PROPERTIES
+          Name                #InventDim
+          Table               #InventDim
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #InventDim
+          CreateNavigationPropertyMethods           #Yes
+          NavigationPropertyMethodNameOverride                #inventDim
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #InventDimId
+            RelatedField        #inventDimId
+            SourceEDT           #InventDimId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #InventTranferLine
+        PROPERTIES
+          Name                #InventTranferLine
+          Table               #InventTransferLine
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE THISFIXED
+          PROPERTIES
+            Table               #WHSTmpReleaseToWarehouse
+            Field               #Module
+            Value               #3
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #InventTransId
+            RelatedField        #InventTransId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #InventTransOrigin
+        PROPERTIES
+          Name                #InventTransOrigin
+          Table               #InventTransOrigin
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Aggregation
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #InventTransId
+            RelatedField        #InventTransId
+            SourceEDT           #InventTransId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SaleLine
+        PROPERTIES
+          Name                #SaleLine
+          Table               #SalesLine
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE THISFIXED
+          PROPERTIES
+            Table               #WHSTmpReleaseToWarehouse
+            Field               #Module
+            Value               #1
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #InventTransId
+            RelatedField        #InventTransId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #WHSShipmentTable
+        PROPERTIES
+          Name                #WHSShipmentTable
+          Table               #WHSShipmentTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #ShipmentId
+            RelatedField        #ShipmentId
+            SourceEDT           #WHSShipmentId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #displayPartiallyReserved
+        #/// <summary>
+        #/// Displays a warning image if the line is partially reserved
+        #/// </summary>
+        #/// <returns>
+        #/// Returns an image
+        #/// </returns>
+        #display ImageRes displayPartiallyReserved()
+        #{
+        #    #ResAppl
+        #    ImageRes            ret;
+        #    boolean             partiallyReserved;
+        #    SalesLine           salesLine;
+        #    InventTransferLine  inventTransferLine;
+        #    InventQty           qtyReservedPhysical;
+        #    InventQty           pdsCWQtyReservPhysical;
+        #
+        #    switch (this.Module)
+        #    {
+        #        case WHSModule::Sales:
+        #            salesLine = SalesLine::findInventTransId(this.InventTransId);
+        #            partiallyReserved = salesLine.onOrder() > 0;
+        #            break;
+        #
+        #        case WHSModule::Transfer:
+        #            inventTransferLine = InventTransferLine::findTransIdShip(this.InventTransId);
+        #            [qtyReservedPhysical, pdsCWQtyReservPhysical] = inventTransferLine.qtyReservedPhysical();
+        #            partiallyReserved = (inventTransferLine.QtyTransfer - qtyReservedPhysical) > 0;
+        #            break;
+        #    }
+        #
+        #    if (partiallyReserved)
+        #    {
+        #        ret = #ImageWarning;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #displayRequestedQty
+        #/// <summary>
+        #/// Displays the requested quantity to be released to the warehouse
+        #/// </summary>
+        #/// <returns>
+        #/// Returns the requested inventory quantity
+        #/// </returns>
+        #display InventQty displayRequestedQty()
+        #{
+        #    InventQty   ret;
+        #
+        #    switch (this.Module)
+        #    {
+        #        case WHSModule::Sales:
+        #            ret = SalesLine::findInventTransId(this.InventTransId).QtyOrdered;
+        #            break;
+        #
+        #        case WHSModule::Transfer:
+        #            ret = InventTransferLine::findTransIdShip(this.InventTransId).QtyTransfer;
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateField
+        #public boolean validateField(FieldId _fieldIdToCheck)
+        #{
+        #    boolean ret;
+        #    WHSInventTransSumDim inventTransSumDim;
+        #
+        #    ret = super(_fieldIdToCheck);
+        #
+        #    if (ret && _fieldIdToCheck == (fieldNum(WHSTmpReleaseToWarehouse, ReleasedQty)))
+        #    {
+        #        select firstonly SumOfQty from inventTransSumDim
+        #            where inventTransSumDim.InventTransId == this.InventTransId
+        #                && inventTransSumDim.InventDimId  == this.InventDimId;
+        #
+        #        if (-inventTransSumDim.SumOfQty < this.ReleasedQty)
+        #        {
+        #            ret = checkFailed(strFmt("@WAX5658", -inventTransSumDim.SumOfQty));
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #public boolean validateWrite()
+        #{
+        #    boolean ret;
+        #
+        #    ret = super();
+        #
+        #    ret = ret && this.inventDim().inventLocation().checkIsWHSEnabled();
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #calcQtyLeftToRelease
+        #/// <summary>
+        #/// Calculates the quantity left to be released to the warehouse
+        #/// </summary>
+        #/// <param name="_releaseToWarehouse">
+        #/// The <c>WHSTmpReleaseToWarehouse</c> table object
+        #/// </param>
+        #/// <param name="_inventTransId">
+        #/// The inventTransId.
+        #/// </param>
+        #/// <param name="_inventDimId">
+        #/// The inventDim Id.
+        #/// </param>
+        #/// <param name="_calculcatedReleasableQuantity">
+        #/// The quantity available to be released to the warehouse
+        #/// </param>
+        #/// <returns>
+        #/// Returns the quantity that remains to be released to the warehouse
+        #/// </returns>
+        #public static Qty calcQtyLeftToRelease(
+        #    WHSTmpReleaseToWarehouse    _releaseToWarehouse,
+        #    InventTransId               _inventTransId,
+        #    InventDimId                 _inventDimId,
+        #    InventQty                   _calculcatedReleasableQuantity = 0)
+        #{
+        #    Qty                         ret;
+        #    WHSTmpReleaseToWarehouse    releaseToWarehouse;
+        #    WHSReleasedQtyView          releasedQtyView;
+        #    InventQty                   quantityLeftToRelease = _calculcatedReleasableQuantity;
+        #
+        #    releaseToWarehouse.linkPhysicalTableInstance(_releaseToWarehouse);
+        #
+        #    if (!_calculcatedReleasableQuantity)
+        #    {
+        #        select SumOfInventQty from releasedQtyView
+        #            where releasedQtyView.InventTransId == _inventTransId &&
+        #                  releasedQtyView.InventDimId   == _inventDimId;
+        #
+        #        quantityLeftToRelease = WHSInvent::getResPhyPickedDeliveredQty(_inventTransId, _inventDimId) - releasedQtyView.SumOfInventQty;
+        #    }
+        #
+        #    select sum(ReleasedQty) from releaseToWarehouse
+        #        where releaseToWarehouse.InventTransId  == _inventTransId &&
+        #              releaseToWarehouse.InventDimId    == _inventDimId;
+        #
+        #    ret = quantityLeftToRelease  - releaseToWarehouse.ReleasedQty;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #calcQtyLeftToReleaseDelta
+        #/// <summary>
+        #/// Calculates the quantity left to be released to the warehouse
+        #/// </summary>
+        #/// <param name="_releaseToWarehouse">
+        #/// The <c>WHSTmpReleaseToWarehouse</c> table object
+        #/// </param>
+        #/// <param name="_inventTransSumDim">
+        #/// The <c>WHSInventTransSumDim</c> view object
+        #/// </param>
+        #/// <param name="_releaseableQty">
+        #/// The quantity available to be released to the warehouse
+        #/// </param>
+        #/// <returns>
+        #/// Returns the quantity that remains to be released to the warehouse
+        #/// </returns>
+        #public static Qty calcQtyLeftToReleaseDelta(
+        #    WHSTmpReleaseToWarehouse    _releaseToWarehouse,
+        #    WHSInventTransSumDim        _inventTransSumDim,
+        #    InventQty                   _releaseableQty = 0)
+        #{
+        #    Qty                         ret;
+        #    WHSTmpReleaseToWarehouse    releaseToWarehouse;
+        #    WHSReleasedQtyView          releasedQtyView;
+        #    InventQty                   releaseableQty = _releaseableQty;
+        #
+        #    releaseToWarehouse.linkPhysicalTableInstance(_releaseToWarehouse);
+        #
+        #    if (!releaseableQty)
+        #    {
+        #        releaseableQty = WHSInvent::getResPhyPickedDeliveredQty(_inventTransSumDim.InventTransId, _inventTransSumDim.InventDimId);
+        #    }
+        #
+        #    select sum(ReleasedQty) from releaseToWarehouse
+        #        where releaseToWarehouse.InventTransId  == _inventTransSumDim.InventTransId &&
+        #              releaseToWarehouse.InventDimId    == _inventTransSumDim.InventDimId;
+        #
+        #    select SumOfInventQty from releasedQtyView
+        #        where releasedQtyView.InventTransId == _inventTransSumDim.InventTransId &&
+        #              releasedQtyView.InventDimId   == _inventTransSumDim.InventDimId;
+        #
+        #    ret = releaseableQty - releasedQtyView.SumOfInventQty - releaseToWarehouse.ReleasedQty;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #createFromSalesLine
+        #/// <summary>
+        #/// Creates or updates a <c>WHSTmpReleaseToWarehouse</c> record based on a <c>SalesLine</c> record
+        #/// </summary>
+        #/// <param name="_releaseToWarehouse">
+        #/// The current <c>WHSTmpReleaseToWarehouse</c> table record
+        #/// </param>
+        #/// <param name="_releaseToWarehouseId">
+        #/// The release to warehouse identifier
+        #/// </param>
+        #/// <param name="_salesLine">
+        #/// The current <c>SalesLine</c> table record
+        #/// </param>
+        #/// <param name="_releaseQuantitySpecification">
+        #/// The quantity to release.
+        #/// </param>
+        #public static void createFromSalesLine(
+        #    WHSTmpReleaseToWarehouse        _releaseToWarehouse,
+        #    WHSReleaseToWarehouseId         _releaseToWarehouseId,
+        #    SalesLine                       _salesLine,
+        #    WHSReleaseQuantitySpecification _releaseQuantitySpecification = WHSReleaseQuantitySpecification::All)
+        #{
+        #    WHSTmpReleaseToWarehouse        releaseToWarehouse, releaseToWarehousePrevious;
+        #    WHSInventTransSumDim            inventTransSumDim;
+        #    InventTable                     inventTable;
+        #    InventQty                       releaseQuantity, reservedOrOnOrderQty, reservedPhysicalQty, releasedNotPickedQty;
+        #    WHSInventTransSumDimEnumerator  inventTransSumDimEnumerator;
+        #
+        #    releaseToWarehouse.linkPhysicalTableInstance(_releaseToWarehouse);
+        #
+        #    inventTransSumDimEnumerator = new WHSInventTransSumDimQuery().forInventTransId(_salesLine.InventTransId)
+        #                                                                 .fromWHSEnabledWarehouse()
+        #                                                                 .getEnumerator();
+        #
+        #    while (inventTransSumDimEnumerator.moveNext())
+        #    {
+        #        inventTransSumDim = inventTransSumDimEnumerator.inventTransSumDim();
+        #
+        #        releaseToWarehousePrevious = WHSTmpReleaseToWarehouse::find(_releaseToWarehouse, _releaseToWarehouseId, _salesLine.InventTransId, inventTransSumDim.inventDimId);
+        #        reservedOrOnOrderQty = -inventTransSumDim.SumOfQty; // The inventTransSumDim view only selects reserved or on order transactions
+        #        releasedNotPickedQty = WHSWarehouseRelease::getReleasedNotPickedQty(inventTransSumDim) + releaseToWarehousePrevious.ReleasedQty;
+        #
+        #        if (reservedOrOnOrderQty > releasedNotPickedQty)
+        #        {
+        #            inventTable = InventTable::find(inventTransSumDim.ItemId);
+        #            reservedPhysicalQty = WHSWarehouseRelease::getReservedPhysicalQty(inventTable, inventTransSumDim);
+        #
+        #            if (reservedOrOnOrderQty > reservedPhysicalQty && inventTable.whsAllowPhysNeg())
+        #            {
+        #                WHSWarehouseRelease::reserve(inventTransSumDim);
+        #                reservedPhysicalQty = reservedOrOnOrderQty;
+        #            }
+        #
+        #            releaseQuantity = _releaseQuantitySpecification == WHSReleaseQuantitySpecification::All ? reservedOrOnOrderQty - releasedNotPickedQty : reservedPhysicalQty - releasedNotPickedQty;
+        #
+        #            WHSTmpReleaseToWarehouse::createLineFromInventTransIdInventDimId(releaseToWarehouse,
+        #                                                                             _releaseToWarehouseId,
+        #                                                                             inventTransSumDim.InventTransId,
+        #                                                                             inventTransSumDim.InventDimId,
+        #                                                                             WHSModule::Sales,
+        #                                                                             releaseQuantity,
+        #                                                                             true); // skip validation since invalid inventory transactions have already been filtered out in the query
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createLineFromInventTransIdInventDimId
+        #/// <summary>
+        #/// Creates or updates a <c>WHSTmpReleaseToWarehouse</c> record based on an InventTransId and InventDimId
+        #/// </summary>
+        #/// <param name="_releaseToWarehouse">
+        #/// The <c>WHSTmpReleaseToWarehouse</c> table object
+        #/// </param>
+        #/// <param name="_releaseToWarehouseId">
+        #/// The release to warehouse identifier
+        #/// </param>
+        #/// <param name="_inventTransId">
+        #/// The inventory transaction identifier
+        #/// </param>
+        #/// <param name="_inventDimId">
+        #/// The inventory dimension identifier
+        #/// </param>
+        #/// <param name="_module">
+        #/// The module for which the <c>WHSTmpReleaseToWarehouse</c> record is to be created or updated
+        #/// </param>
+        #/// <param name="_qtyToRelease">
+        #/// The quantity to release to the warehouse
+        #/// </param>
+        #/// <param name="_skipValidation">
+        #/// Identifies if validation should be skipped.
+        #/// </param>
+        #/// <exception cref="Exception::Error">
+        #/// Throws an error if the specified inventory dimensions refer to a non-WHS warehouse.
+        #/// </exception>
+        #public static void createLineFromInventTransIdInventDimId(
+        #    WHSTmpReleaseToWarehouse    _releaseToWarehouse,
+        #    WHSReleaseToWarehouseId     _releaseToWarehouseId,
+        #    InventTransId               _inventTransId,
+        #    InventDimId                 _inventDimId,
+        #    WHSModule                   _module,
+        #    InventQty                   _qtyToRelease,
+        #    boolean                     _skipValidation = false)
+        #{
+        #    WHSTmpReleaseToWarehouse    releaseToWarehouse;
+        #    Qty                         qty = abs(_qtyToRelease);
+        #
+        #    if (_releaseToWarehouseId && _inventTransId && _inventDimId && _qtyToRelease)
+        #    {
+        #        ttsbegin;
+        #
+        #        releaseToWarehouse.linkPhysicalTableInstance(_releaseToWarehouse);
+        #
+        #        releaseToWarehouse = WHSTmpReleaseToWarehouse::find(releaseToWarehouse, _releaseToWarehouseId, _inventTransId, _inventDimId, true);
+        #
+        #        if (releaseToWarehouse.RecId)
+        #        {
+        #            releaseToWarehouse.ReleasedQty += qty;
+        #            releaseToWarehouse.update();
+        #        }
+        #        else
+        #        {
+        #            switch (_module)
+        #            {
+        #                case WHSModule::Sales:
+        #                    releaseToWarehouse.OrderNum = SalesLine::findInventTransId(_inventTransId).SalesId;
+        #                    break;
+        #
+        #                case WHSModule::Transfer:
+        #                    releaseToWarehouse.OrderNum = InventTransferLine::findTransIdShip(_inventTransId).TransferId;
+        #                    break;
+        #
+        #                default:
+        #                    throw error(Error::wrongUseOfFunction(funcName()));
+        #            }
+        #            releaseToWarehouse.ReleaseToWarehouseId = _releaseToWarehouseId;
+        #            releaseToWarehouse.InventTransId        = _inventTransId;
+        #            releaseToWarehouse.InventDimId          = _inventDimId;
+        #            releaseToWarehouse.Module               = _module;
+        #            releaseToWarehouse.ReleasedQty          = qty;
+        #
+        #            if (!_skipValidation && !releaseToWarehouse.validateWrite())
+        #            {
+        #                throw error("@SYS23020");
+        #            }
+        #
+        #            releaseToWarehouse.insert();
+        #        }
+        #
+        #        ttscommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #exist
+        #/// <summary>
+        #///     Determines whether a specified record in the <c>WHSReleaseToWarehouse</c> table exists.
+        #/// </summary>
+        #/// <param name="_releaseToWarehouse">
+        #///     A <c>WHSReleaseToWarehouse</c> record.
+        #/// </param>
+        #/// <param name="_releaseToWarehouseId">
+        #///     The ReleaseToWarehouseId of the record.
+        #/// </param>
+        #/// <param name="_inventTransId">
+        #///     The InventTransId of the record.
+        #/// </param>
+        #/// <param name="_inventDimId">
+        #///     The InventDimId of the record.
+        #/// </param>
+        #/// <returns>
+        #///     true if the specified record exists; otherwise, false.
+        #/// </returns>
+        #public static boolean exist(
+        #    WHSTmpReleaseToWarehouse    _releaseToWarehouse,
+        #    WHSReleaseToWarehouseId     _releaseToWarehouseId,
+        #    InventTransId               _inventTransId,
+        #    InventDimId                 _inventDimId)
+        #{
+        #    if (_releaseToWarehouseId && _inventTransId && _inventDimId)
+        #    {
+        #        select firstonly RecId from _releaseToWarehouse
+        #            where _releaseToWarehouse.ReleaseToWarehouseId  == _releaseToWarehouseId    &&
+        #                  _releaseToWarehouse.InventTransId         == _inventTransId           &&
+        #                  _releaseToWarehouse.InventDimId           == _inventDimId;
+        #
+        #        if (_releaseToWarehouse.RecId != 0)
+        #        {
+        #            return true;
+        #        }
+        #    }
+        #
+        #    return false;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #find
+        #/// <summary>
+        #///     Finds the specified record in <c>WHSTmpReleaseToWarehouse</c> table.
+        #/// </summary>
+        #/// <param name="_releaseToWarehouse">
+        #///     A <c>WHSTmpReleaseToWarehouse</c> record.
+        #/// </param>
+        #/// <param name="_releaseToWarehouseId">
+        #///     The <c>ReleaseToWarehouseId</c> of the record.
+        #/// </param>
+        #/// <param name="_inventTransId">
+        #///     The <c>InventTransId</c> of the record.
+        #/// </param>
+        #/// <param name="_inventDimId">
+        #///     The <c>InventDimId</c> of the record
+        #/// </param>
+        #/// <param name="_forupdate">
+        #///     A boolean value that indicates whether to read the record for update;optional.
+        #/// </param>
+        #/// <returns>
+        #///     A record in <c>WHSTmpReleaseToWarehouse</c> table; otherwise, an empty record.
+        #/// </returns>
+        #public static WHSTmpReleaseToWarehouse find(
+        #    WHSTmpReleaseToWarehouse   _releaseToWarehouse,
+        #    WHSReleaseToWarehouseId    _releaseToWarehouseId,
+        #    InventTransId              _inventTransId,
+        #    InventDimId                _inventDimId,
+        #    boolean                    _forupdate = false)
+        #{
+        #    WHSTmpReleaseToWarehouse    releaseToWarehouse;
+        #
+        #    releaseToWarehouse.linkPhysicalTableInstance(_releaseToWarehouse);
+        #
+        #    if (_releaseToWarehouseId && _inventTransId && _inventDimId)
+        #    {
+        #        releaseToWarehouse.selectForUpdate(_forupdate);
+        #
+        #        select firstonly releaseToWarehouse
+        #            where releaseToWarehouse.ReleaseToWarehouseId   == _releaseToWarehouseId  &&
+        #                  releaseToWarehouse.InventTransId          == _inventTransId         &&
+        #                  releaseToWarehouse.InventDimId            == _inventDimId;
+        #    }
+        #
+        #    return releaseToWarehouse;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getNextReleaseToWarehouseId
+        #/// <summary>
+        #/// Gets the next release to warehouse ID
+        #/// </summary>
+        #/// <returns>
+        #/// Returns the next release to warehouse identifier
+        #/// </returns>
+        #public static WHSWaveId getNextReleaseToWarehouseId()
+        #{
+        #    return NumberSeq::newGetNum(WHSParameters::numRefWHSReleaseToWarehouseId()).num();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

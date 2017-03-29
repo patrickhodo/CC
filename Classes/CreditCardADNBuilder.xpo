@@ -1,0 +1,694 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardADNBuilder
+    PROPERTIES
+      Name                #CreditCardADNBuilder
+      Extends             #CreditCardAdv
+      RunOn               #Server
+      Origin              #{D0341A0F-FF3A-45E7-ABB7-40959BF91196}
+      LegacyId            #20001
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #build
+        #TempStr build(CreditCardTrans       _ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM/.NET objects used in this method do NOT violate the security standards
+        #    CreditCardStr                       parmList;
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                Stream;
+        #    System.IO.StreamWriter          StreamWriter = null;
+        #    System.IO.StreamReader          StreamReader = null;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    CreditCardParameters            ccParameters = CreditCardParameters::findParameterWithTerminal(_ccTrans.TerminalId);
+        #    ;
+        #    clrPermission.assert();
+        #    select ccADN
+        #        where ccADN.TerminalId == _ccTrans.TerminalId;
+        #
+        #    if (!ccADN)
+        #    {
+        #        throw error("@ACC1209");
+        #    }
+        #
+        #    this.parmccTrans(_ccTrans);
+        #
+        #    if (ccParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Specified)
+        #    {
+        #        if (!ccParameters.ProcessCurrencyCode)
+        #        {
+        #            throw error(StrFmt("@ACC1835",ccTrans.TerminalId));
+        #        }
+        #
+        #        if (ccParameters.ProcessCurrencyCode != CompanyInfo::standardCurrency())
+        #        {
+        #            if (ccTrans.CurrencyCode != ccParameters.ProcessCurrencyCode)
+        #            {
+        #                throw error(StrFmt("@ACC1836",
+        #                    ccTrans.TerminalId,
+        #                    ccParameters.ProcessCurrencyCode,
+        #                    ccTrans.CurrencyCode));
+        #            }
+        #
+        #            this.parmProcessAmt(ccTrans.AmountCur);
+        #        }
+        #        else
+        #        {
+        #            this.parmProcessAmt(ccTrans.AmountMST);
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        this.parmProcessAmt(ccTrans.AmountMST);
+        #    }
+        #
+        #    this.parmCreditCardMerchantADN(ccADN);
+        #
+        #
+        #    parmList = this.buildADNAIMLogin();
+        #
+        #    switch (this.parmccTrans().TransType)
+        #    {
+        #        case    CreditCardTrxType::A        :
+        #            parmList += this.buildAuthAIM();
+        #            break;
+        #        case    CreditCardTrxType::C        :
+        #            parmList += this.buildCredit();
+        #            break;
+        #        case    CreditCardTrxType::D        :
+        #            parmList += this.buildCapture();
+        #            break;
+        #        case    CreditCardTrxType::S        :
+        #            parmList += this.buildSale();
+        #            break;
+        #        case    CreditCardTrxType::V        :
+        #            parmList += this.buildVoid();
+        #            break;
+        #    }
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccAdn.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(Strlen(parmList));
+        #        WebRequest.set_ContentType('application/x-www-form-urlencoded');
+        #
+        #        Stream = webRequest.GetRequestStream();
+        #        StreamWriter = new System.IO.StreamWriter(Stream);
+        #        StreamWriter.Write(parmList);
+        #        StreamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        Stream = webResponse.GetResponseStream();
+        #        StreamReader = new System.IO.StreamReader(Stream);
+        #
+        #        response = StreamReader.ReadToEnd();
+        #
+        #        StreamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildADNAIMLogin
+        #TempStr buildADNAIMLogin()
+        #{
+        #    #define.amp('&')
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    parmList = 'x_login=' + ccADN.LoginId;
+        #    parmList += #amp;
+        #    parmList += 'x_tran_key=' + ccADN.TransKey;
+        #    parmList += #amp;
+        #    parmList += 'Version=3.1';
+        #    parmList += #amp;
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildAuth
+        #TempStr buildAuth()
+        #{
+        #    #define.amp('&')
+        #    CreditCardStr   parmList;
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    parmList = 'x_type=' + 'AUTH_ONLY';
+        #
+        #    //--> Amount
+        #    parmList += #amp;
+        #    parmList += 'x_amount=' + StrLRTrim(this.parmccAmountStr(this.parmProcessAmt()));
+        #    //--> Account
+        #    parmList += #amp;
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        parmList += 'x_card_num=' + CreditCardTable::retrieveValue(ccTable);
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_card_num=' + this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #    }
+        #
+        #    //--> Expiration date
+        #    parmList += #amp;
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    parmList += #amp;
+        #
+        #
+        #    parmList += 'x_delim_data=TRUE';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_relay_response=FALSE';
+        #    parmList += #amp;
+        #    //--> Customer information
+        #    parmList += this.getCustomerInfo();
+        #
+        #    //--> Purchase card information
+        #    parmList += this.getPurchaseCardInfo();
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildAuthAIM
+        #TempStr buildAuthAIM()
+        #{
+        #    #define.amp('&')
+        #    CreditCardStr   parmList;
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    parmList = 'x_type=' + 'AUTH_ONLY';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_cust_id=' + this.parmccTrans().CustAccount;
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_invoice_num=' + this.parmccTrans().SalesId;
+        #
+        #    //--> Amount
+        #    parmList += #amp;
+        #    parmList += 'x_amount=' + StrLRTrim(this.parmccAmountStr(this.parmProcessAmt()));
+        #    //--> Account
+        #    parmList += #amp;
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        parmList += 'x_card_num=' + CreditCardTable::retrieveValue(ccTable);
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_card_num=' + this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #    }
+        #
+        #    //--> Expiration date
+        #    parmList += #amp;
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    parmList += #amp;
+        #
+        #    if (this.parmccTrans().CID)
+        #    {
+        #        parmList += 'x_card_code=' + this.parmccTrans().CID;
+        #        parmList += #amp;
+        #    }
+        #
+        #    parmList += 'x_delim_data=TRUE';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_relay_response=FALSE';
+        #    parmList += #amp;
+        #
+        #    //--> Customer information
+        #    parmList += this.getCustomerInfo();
+        #
+        #    //--> Purchase card information
+        #    parmList += this.getPurchaseCardInfo();
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #TempStr buildCapture()
+        #{
+        #    #define.amp('&')
+        #    CreditCardStr           parmList;
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    parmList += 'x_type=' + 'PRIOR_AUTH_CAPTURE';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_auth_code=' + this.parmccTrans().AuthCode;
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_trans_id=' + this.parmccTrans().OrigID;
+        #    //--> Amount
+        #    parmList += #amp;
+        #    parmList += 'x_amount=' + StrLRTrim(this.parmccAmountStr(this.parmProcessAmt()));
+        #    //--> Account
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_cust_id=' + this.parmccTrans().CustAccount;
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_invoice_num=' + this.parmccTrans().CustomerRef;
+        #    parmList += #amp;
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        parmList += 'x_card_num=' + CreditCardTable::retrieveValue(ccTable);
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_card_num=' + this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #    }
+        #    parmList += #amp;
+        #
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_delim_data=TRUE';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_relay_response=FALSE';
+        #    parmList += #amp;
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildCredit
+        #TempStr buildCredit()
+        #{
+        #   #define.amp('&')
+        #    CreditCardStr           parmList;
+        #    CreditCardTable         ccTable;
+        #    CreditCardStr           tmpTempStr;
+        #    ;
+        #    parmList = 'x_type=' + 'CREDIT';
+        #    parmList += #amp;
+        #
+        #    if (this.parmccTrans().OrigID)
+        #    {
+        #        parmList += 'x_trans_id=' + this.parmccTrans().OrigID;
+        #        //--> Amount
+        #        parmList += #amp;
+        #    }
+        #    parmList += 'x_amount=' + StrLRTrim(this.parmccAmountStr(abs(this.parmProcessAmt())));
+        #    //--> Account
+        #    parmList += #amp;
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        tmpTempStr = CreditCardTable::retrieveValue(ccTable);
+        #        //tmpTempStr = subTempStr(tmpTempStr,TempStrlen(tmpTempStr)-3,4);
+        #        parmList += 'x_card_num=' + tmpTempStr;
+        #    }
+        #    else
+        #    {
+        #        tmpTempStr = this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #        //tmpTempStr = subTempStr(tmpTempStr,TempStrlen(tmpTempStr)-3,4);
+        #        parmList += 'x_card_num=' + tmpTempStr;
+        #    }
+        #
+        #    parmList += #amp;
+        #
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_delim_data=TRUE';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_relay_response=FALSE';
+        #    parmList += #amp;
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildSale
+        #TempStr buildSale()
+        #{
+        #    #define.amp('&')
+        #    CreditCardStr   parmList;
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    parmList = 'x_type=' + 'AUTH_CAPTURE';
+        #
+        #    //--> Amount
+        #    parmList += #amp;
+        #    parmList += 'x_amount=' + StrLRTrim(this.parmccAmountStr(this.parmProcessAmt()));
+        #    //--> Account
+        #    parmList += #amp;
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        parmList += 'x_card_num=' + CreditCardTable::retrieveValue(ccTable);
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_card_num=' + this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #    }
+        #
+        #    //--> Expiration date
+        #    parmList += #amp;
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    parmList += #amp;
+        #
+        #    if (this.parmccTrans().CID)
+        #    {
+        #        parmList += 'x_card_code=' + this.parmccTrans().CID;
+        #        parmList += #amp;
+        #    }
+        #
+        #    parmList += 'x_delim_data=TRUE';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_relay_response=FALSE';
+        #    parmList += #amp;
+        #
+        #    //--> Customer information
+        #    parmList += this.getCustomerInfo();
+        #
+        #    //--> Purchase card information
+        #    parmList += this.getPurchaseCardInfo();
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #TempStr buildVoid()
+        #{
+        #    #define.amp('&')
+        #    CreditCardStr           parmList;
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    parmList = 'x_type=' + 'VOID';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_auth_code=' + this.parmccTrans().AuthCode;
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_amount=' + StrLRTrim(this.parmccAmountStr(abs(this.parmProcessAmt())));
+        #    //--> Account
+        #    parmList += #amp;
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        parmList += 'x_card_num=' + CreditCardTable::retrieveValue(ccTable);
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_card_num=' + this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #    }
+        #    parmList += #amp;
+        #
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    else
+        #    {
+        #        parmList += 'x_exp_date=' + this.getExpDate();
+        #    }
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_delim_data=TRUE';
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_relay_response=FALSE';
+        #    parmList += #amp;
+        #
+        #
+        #    parmList += 'x_trans_id=' + this.parmccTrans().OrigID;
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardADNBuilder extends CreditCardAdv
+        #{
+        #    //CreditCardADNUtilities          utilities;
+        #    CreditCardMerchantADN           ccADN;
+        #}
+      ENDSOURCE
+      SOURCE #getCustomerInfo
+        #TempStr getCustomerInfo()
+        #{
+        #    #define.amp('&')
+        #    TempStr                     parmList;
+        #    TempStr                     temp;
+        #    ContactPerson           contactPerson;
+        #    LogisticsPostalAddress  logistics = LogisticsPostalAddress::findRecId(this.parmccTrans().Location);
+        #    LogisticsPostalAddress  delivery;
+        #    DirPersonName           personName;
+        #    ;
+        #    //--> Customer information
+        #    parmList = 'x_cust_id=' + this.parmccTrans().CustAccount;
+        #    parmList += #amp;
+        #
+        #    //--> AVS Information
+        #    temp = System.Web.HttpUtility::UrlEncode(logistics.Street);
+        #    parmList += 'x_address=' + temp;
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_zip=' + logistics.ZipCode;
+        #    parmList += #amp;
+        #
+        #    salesTable = SalesTable::find(this.parmccTrans().SalesId);
+        #    delivery = LogisticsPostalAddress::findRecId(SalesTable.deliveryLocation());
+        #
+        #    if (salesTable && SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::Yes)
+        #    {
+        #        temp = System.Web.HttpUtility::UrlEncode(CustTable::find(salesTable.CustAccount).name());
+        #        parmList += 'x_ship_to_company=' + temp;
+        #
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.Street);
+        #        parmList += 'x_ship_to_address=' + temp;
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.City);
+        #        parmList += 'x_ship_to_city=' + temp;
+        #        parmList += #amp;
+        #
+        #        parmList += 'x_ship_to_state=' + delivery.State;
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.ZipCode);
+        #        parmList += 'x_ship_to_zip=' + temp;
+        #        parmList += #amp;
+        #
+        #        parmList += 'x_ship_to_country=' + delivery.CountryRegionId;
+        #        parmList += #amp;
+        #
+        #        contactPerson = ContactPerson::find(salesTable.ContactPersonId);
+        #
+        #        if (contactPerson)
+        #        {
+        #            personName = DirPersonName::find(contactPerson.Party);
+        #            if (personName.FirstName)
+        #            {
+        #                temp = System.Web.HttpUtility::UrlEncode(personName.FirstName);
+        #                parmList += 'x_ship_to_first_name=' + temp;
+        #                parmList += #amp;
+        #            }
+        #            if (personName.LastName)
+        #            {
+        #                temp = System.Web.HttpUtility::UrlEncode(personName.LastName);
+        #                parmList += 'x_ship_to_last_name=' + temp;
+        #                parmList += #amp;
+        #            }
+        #        }
+        #    }
+        #
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #getExpDate
+        #TempStr getExpDate()
+        #{
+        #    TempStr                     ExpDate;
+        #    TempStr                     month;
+        #    TempStr                     ccYear;
+        #    ;
+        #    //--> Create date
+        #    month =  int2Str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #    if (Strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2Str(Year(this.parmccTrans().OneTimeDateExp));
+        #    if (this.parmYearType() == CreditCardDateTYpe::Two && Strlen(ccYear) == 4)
+        #    {
+        #        ccYear = subStr(ccYear,3,2);
+        #    }
+        #
+        #    ExpDate =  month + ccYear;
+        #
+        #    return ExpDate;
+        #}
+      ENDSOURCE
+      SOURCE #getPurchaseCardInfo
+        #TempStr getPurchaseCardInfo()
+        #{
+        #    #define.amp('&')
+        #    TempStr                 parmList;
+        #    TempStr                 tmp;
+        #    int                 sLen;
+        #    ;
+        #    if (this.parmccTrans().CommercialCard)
+        #    {
+        #        //--Sales Tax
+        #
+        #        if (this.parmccTrans().CommercialSalesTax == 0
+        #            || this.parmccTrans().CommercialLocalTax == CreditCardCommercialTaxFlag::NonTaxable)
+        #        {
+        #            parmList += 'x_tax=' + '0.00';
+        #            parmList += #amp;
+        #        }
+        #        else
+        #        {
+        #            tmp = StrLRTrim(num2Str(this.parmccTrans().CommercialSalesTax,9,2,0,1));
+        #
+        #            parmList += 'x_tax=' + tmp;
+        #            parmList += #amp;
+        #        }
+        #
+        #        //--> Tax Exempt Status
+        #        if (this.parmccTrans().CommercialLocalTax == CreditCardCommercialTaxFlag::NonTaxable)
+        #        {
+        #            parmList += 'x_tax_exempt=' + 'TRUE';
+        #            parmList += #amp;
+        #        }
+        #        else
+        #        {
+        #            parmList += 'x_tax_exempt=' + 'FALSE';
+        #            parmList += #amp;
+        #        }
+        #
+        #        //--> Purchase order info
+        #        salesTable = SalesTable::find(this.parmccTrans().SalesId);
+        #        tmp = salesTable.CustomerRef;
+        #        sLen = StrLen(tmp);
+        #        if (StrFind(tmp,'_', 1,sLen) >0)
+        #        {
+        #            tmp = StrReplace(tmp,'_','');
+        #        }
+        #
+        #        if (tmp)
+        #        {
+        #            parmList += 'x_po_num=' + tmp;
+        #            parmList += #amp;
+        #        }
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardMerchantADN
+        #CreditCardMerchantADN parmCreditCardMerchantADN(CreditCardMerchantADN _ccADN = ccADN)
+        #{
+        #    ;
+        #    ccADN = _ccADN;
+        #    return ccADN;
+        #}
+      ENDSOURCE
+      SOURCE #getResponse
+        #static TempStr getResponse(TempStr response)
+        #{
+        #    CreditCardStr   r;
+        #    ;
+        #    switch (response)
+        #    {
+        #        case '1'    :
+        #            r = '0';  //<-- Approved in our jargon
+        #            break;
+        #        default     :
+        #            r = response;
+        #            break;
+        #    }
+        #
+        #    return r;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

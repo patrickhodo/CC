@@ -1,0 +1,2770 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CustPostInvoice
+    PROPERTIES
+      Name                #CustPostInvoice
+      RunOn               #Server
+      Origin              #{2D0F004D-0000-1000-F635-BE406AFB49F1}
+      LegacyId            #77
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #allocateNumAndVoucher
+        #NumberSeq  allocateNumAndVoucher()
+        #{
+        #    RefRecId            invoiceNumberId;
+        #    RefRecId            invoiceVoucherId;
+        #
+        #    CustBillingClassification    custBillingClassification;
+        #    NumberSequenceTable          numberSequenceTable;
+        #
+        #    boolean             voucherEqualsNumber;
+        #
+        #    CustInvoiceLine         tmpCustInvoiceLine;
+        #    NumberSeq               tmpNumberSeq;
+        #    NumberSequenceDatatype  numberDatatype;
+        #    NumberSequenceDatatype  voucherDatatype;
+        #    RefRecId                scopeId = NumberSeqScopeFactory::createDefaultScope().getId();
+        #
+        #    #ISOCountryRegionCodes
+        #
+        #    boolean                 countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #
+        #    // <GMY>
+        #    boolean                 isIsoMY = TaxGSTFeatureChecker_MY::isCountryRegionMY();
+        #    // </GMY>
+        #
+        #    if (custInvoiceTable.NumberSequenceGroup)
+        #    {
+        #        if (creditNote)
+        #        {
+        #            numberDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustCreditNoteId().NumberSequenceDatatype);
+        #            voucherDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustCreditNoteVoucher().NumberSequenceDatatype);
+        #
+        #            if (countryRegion_RU)
+        #            {
+        #                invoiceNumberId = NumberSequenceGroupRef::findNaturalKey(custInvoiceTable.Correct_RU                                               ?
+        #                                                                         CustParameters::numRefCustCorrectCreditNoteId_RU().NumberSequenceDatatype :
+        #                                                                         CustParameters::numRefCustCreditNoteId().NumberSequenceDatatype,
+        #                                                                         scopeId,
+        #                                                                         custInvoiceTable.NumberSequenceGroup).NumberSequenceId;
+        #            }
+        #            else
+        #            {
+        #                invoiceNumberId = NumberSequenceGroupRef::findNaturalKey(numberDatatype.RecId, scopeId, custInvoiceTable.NumberSequenceGroup).NumberSequenceId;
+        #            }
+        #
+        #            if (!invoiceNumberId)
+        #            {
+        #                if (countryRegion_RU)
+        #                {
+        #                    invoiceNumberId =  NumberSequenceReference::findNaturalKey(custInvoiceTable.Correct_RU                                               ?
+        #                                                                               CustParameters::numRefCustCorrectCreditNoteId_RU().NumberSequenceDatatype :
+        #                                                                               CustParameters::numRefCustCreditNoteId().NumberSequenceDatatype,
+        #                                                                               scopeId).NumberSequenceId;
+        #                }
+        #                else
+        #                {
+        #                    invoiceNumberId = NumberSequenceReference::findNaturalKey(numberDatatype.RecId, scopeId).NumberSequenceId;
+        #                }
+        #            }
+        #
+        #            if (countryRegion_RU
+        #                    && custInvoiceTable.Correct_RU ?
+        #                CustParameters::numRefCustCorrectCreditNoteVoucher_RU().AllowSameAs :
+        #                CustParameters::numRefCustCreditNoteVoucher().AllowSameAs)
+        #            {
+        #                voucherEqualsNumber = true;
+        #                invoiceVoucherId      = invoiceNumberId;
+        #            }
+        #            else
+        #            {
+        #                if (countryRegion_RU)
+        #                {
+        #                    invoiceVoucherId = NumberSequenceGroupRef::findNaturalKey(custInvoiceTable.Correct_RU                                                    ?
+        #                                                                              CustParameters::numRefCustCorrectCreditNoteVoucher_RU().NumberSequenceDatatype :
+        #                                                                              CustParameters::numRefCustCreditNoteVoucher().NumberSequenceDatatype,
+        #                                                                              scopeId,
+        #                                                                              custInvoiceTable.NumberSequenceGroup).NumberSequenceId;
+        #                }
+        #                else
+        #                {
+        #                    invoiceVoucherId = NumberSequenceGroupRef::findNaturalKey(voucherDatatype.RecId, scopeId, custInvoiceTable.NumberSequenceGroup).NumberSequenceId;
+        #                }
+        #
+        #                if (!invoiceVoucherId)
+        #                {
+        #                    invoiceVoucherId = countryRegion_RU
+        #                                        && custInvoiceTable.Correct_RU ?
+        #                                       CustParameters::numRefCustCorrectCreditNoteVoucher_RU().NumberSequenceId :
+        #                                       CustParameters::numRefCustCreditNoteVoucher().NumberSequenceId;
+        #                }
+        #            }
+        #        }
+        #        else
+        #        {
+        #            if (isUnrealizedVATEnabled
+        #                && this.isDebitNote())
+        #            {
+        #                // Debit note sequence will be generated.
+        #                numberDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustDebitNoteId().NumberSequenceDatatype);
+        #                voucherDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustDebitNoteVoucher().NumberSequenceDatatype);
+        #            }
+        #            // <GMY>
+        #            else if (isIsoMY && this.isDebitNote_MY())
+        #            {
+        #                // Debit note sequence will be generated.
+        #                numberDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustDebitNoteId_MY().NumberSequenceDatatype);
+        #                voucherDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustDebitNoteVoucher_MY().NumberSequenceDatatype);
+        #            }
+        #            // </GMY>
+        #            else
+        #            {
+        #                if (isUnrealizedVATEnabled
+        #                    && this.isNoneFormatWithRealizedVAT())
+        #                {
+        #                    // Free text tax invoice sequence will be generated.
+        #                    numberDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustTaxInvoiceId().NumberSequenceDatatype);
+        #                    voucherDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustTaxInvoiceVoucher().NumberSequenceDatatype);
+        #                }
+        #                else
+        #                {
+        #                    numberDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustInvoiceId().NumberSequenceDatatype);
+        #                    voucherDatatype = NumberSequenceDatatype::find(CustParameters::numRefCustInvoiceVoucher().NumberSequenceDatatype);
+        #                }
+        #            }
+        #
+        #            if (countryRegion_RU)
+        #            {
+        #                invoiceNumberId = NumberSequenceGroupRef::findNaturalKey(custInvoiceTable.Correct_RU                                            ?
+        #                                                                         CustParameters::numRefCustCorrectInvoiceId_RU().NumberSequenceDatatype :
+        #                                                                         CustParameters::numRefCustInvoiceId().NumberSequenceDatatype,
+        #                                                                         scopeId,
+        #                                                                         custInvoiceTable.NumberSequenceGroup).NumberSequenceId;
+        #            }
+        #            else
+        #            {
+        #                invoiceNumberId = NumberSequenceGroupRef::findNaturalKey(numberDatatype.RecId, scopeId, custInvoiceTable.NumberSequenceGroup).NumberSequenceId;
+        #            }
+        #
+        #            if (!invoiceNumberId)
+        #            {
+        #                if (countryRegion_RU)
+        #                {
+        #                    invoiceNumberId = NumberSequenceReference::findNaturalKey(custInvoiceTable.Correct_RU                                            ?
+        #                                                                              CustParameters::numRefCustCorrectInvoiceId_RU().NumberSequenceDatatype :
+        #                                                                              CustParameters::numRefCustInvoiceId().NumberSequenceDatatype,
+        #                                                                              scopeId).NumberSequenceId;
+        #                }
+        #                else
+        #                {
+        #                    invoiceNumberId = NumberSequenceReference::findNaturalKey(numberDatatype.RecId, scopeId).NumberSequenceId;
+        #                }
+        #            }
+        #
+        #            if (countryRegion_RU
+        #                    && custInvoiceTable.Correct_RU ?
+        #                CustParameters::numRefCustCorrectInvoiceVoucher_RU().AllowSameAs :
+        #                CustParameters::numRefCustInvoiceVoucher().AllowSameAs)
+        #            {
+        #                voucherEqualsNumber = true;
+        #                invoiceVoucherId      = invoiceNumberId;
+        #            }
+        #            else
+        #            {
+        #                if (countryRegion_RU)
+        #                {
+        #                    invoiceVoucherId = NumberSequenceGroupRef::findNaturalKey(custInvoiceTable.Correct_RU                                                 ?
+        #                                                                              CustParameters::numRefCustCorrectInvoiceVoucher_RU().NumberSequenceDatatype :
+        #                                                                              CustParameters::numRefCustInvoiceVoucher().NumberSequenceDatatype,
+        #                                                                              scopeId,
+        #                                                                              custInvoiceTable.NumberSequenceGroup).NumberSequenceId;
+        #                }
+        #                else
+        #                {
+        #                    invoiceVoucherId = NumberSequenceGroupRef::findNaturalKey(voucherDatatype.RecId, scopeId, custInvoiceTable.NumberSequenceGroup).NumberSequenceId;
+        #                }
+        #
+        #                if (!invoiceVoucherId)
+        #                {
+        #                    invoiceVoucherId = countryRegion_RU
+        #                                        && custInvoiceTable.Correct_RU ?
+        #                                        CustParameters::numRefCustCorrectInvoiceVoucher_RU().NumberSequenceId :
+        #                                        CustParameters::numRefCustInvoiceVoucher().NumberSequenceId;
+        #                }
+        #            }
+        #        }
+        #
+        #        tmpNumberSeq = NumberSeq::newGetNumAndVoucherFromId(invoiceNumberId, invoiceVoucherId, voucherEqualsNumber);
+        #    }
+        #    else
+        #    {
+        #        if (isConfigurationkeyEnabled(configurationKeyNum(PublicSector)) && custInvoiceTable.CustBillingClassification)
+        #        {
+        #             custBillingClassification = CustBillingClassification::find(custInvoiceTable.CustBillingClassification);
+        #        }
+        #
+        #        if (creditNote)
+        #        {
+        #            if (countryRegion_RU
+        #                && custInvoiceTable.Correct_RU)
+        #            {
+        #                tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustCorrectCreditNoteId_RU(),
+        #                                                                CustParameters::numRefCustCorrectCreditNoteVoucher_RU());
+        #            }
+        #            else
+        #            {
+        #                if (isConfigurationkeyEnabled(configurationKeyNum(PublicSector)) && custInvoiceTable.CustBillingClassification)
+        #                {
+        #                    if (custBillingClassification.CreditNoteNumberSeq)
+        #                    {
+        #                        if (!NumberSeqReference::findNumberSeqReference(custBillingClassification.CreditNoteNumberSeq))
+        #                        {
+        #                            numberSequenceTable = NumberSequenceTable::find(CustParameters::numRefCustCreditNoteVoucher().NumberSequenceId);
+        #                            tmpNumberSeq = NumberSeq::newGetNumAndVoucherFromCode(custBillingClassification.CreditNoteNumberSeq, numberSequenceTable.NumberSequence);
+        #                        }
+        #                        else
+        #                        {
+        #                            tmpNumberSeq = NumberSeq::newGetNumAndVoucher(NumberSeqReference::findNumberSeqReference(custBillingClassification.CreditNoteNumberSeq),
+        #                                                CustParameters::numRefCustCreditNoteVoucher());
+        #                        }
+        #                    }
+        #                    else
+        #                    {
+        #                        tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustCreditNoteId(),
+        #                                                              CustParameters::numRefCustCreditNoteVoucher());
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustCreditNoteId(),
+        #                                                            CustParameters::numRefCustCreditNoteVoucher());
+        #                }
+        #            }
+        #        }
+        #        else
+        #        {
+        #            if (countryRegion_RU
+        #                && custInvoiceTable.Correct_RU)
+        #            {
+        #                tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustCorrectInvoiceId_RU(),
+        #                                                                CustParameters::numRefCustCorrectInvoiceVoucher_RU());
+        #            }
+        #            else
+        #            {
+        #                if (isConfigurationkeyEnabled(configurationKeyNum(PublicSector)) && custInvoiceTable.CustBillingClassification)
+        #                {
+        #                    if (custBillingClassification.InvoiceNumberSeq)
+        #                    {
+        #                        if (! NumberSeqReference::findNumberSeqReference(custBillingClassification.InvoiceNumberSeq))
+        #                        {
+        #                            numberSequenceTable = NumberSequenceTable::find(CustParameters::numRefCustInvoiceVoucher().NumberSequenceId);
+        #                            tmpNumberSeq = NumberSeq::newGetNumAndVoucherFromCode(custBillingClassification.InvoiceNumberSeq, numberSequenceTable.NumberSequence);
+        #                        }
+        #                        else
+        #                        {
+        #                            tmpNumberSeq = NumberSeq::newGetNumAndVoucher(NumberSeqReference::findNumberSeqReference(
+        #                                                custBillingClassification.InvoiceNumberSeq), CustParameters::numRefCustInvoiceVoucher());
+        #                        }
+        #                    }
+        #                    else
+        #                    {
+        #                        tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustInvoiceId(),
+        #                                        CustParameters::numRefCustInvoiceVoucher());
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    if (isUnrealizedVATEnabled
+        #                        && this.isDebitNote())
+        #                    {
+        #                        // Debit note sequence will be generated.
+        #                        tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustDebitNoteId(),
+        #                            CustParameters::numRefCustDebitNoteVoucher());
+        #                    }
+        #                    // <GMY>
+        #                    else if (isIsoMY && this.isDebitNote_MY())
+        #                    {
+        #                        // Debit note sequence will be generated.
+        #                        tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustDebitNoteId_MY(),
+        #                            CustParameters::numRefCustDebitNoteVoucher_MY());
+        #                    }
+        #                    // </GMY>
+        #                    else
+        #                    {
+        #                        if (isUnrealizedVATEnabled
+        #                            && this.isNoneFormatWithRealizedVAT())
+        #                        {
+        #                            // Free text tax invoice sequence will be generated.
+        #                            tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustTaxInvoiceId(),
+        #                                CustParameters::numRefCustTaxInvoiceVoucher());
+        #                        }
+        #                        else
+        #                        {
+        #                            tmpNumberSeq = NumberSeq::newGetNumAndVoucher(CustParameters::numRefCustInvoiceId(),
+        #                                CustParameters::numRefCustInvoiceVoucher());
+        #                        }
+        #                    }
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    // Italian functionality of VAT books and VAT book sections
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIT]))
+        #    {
+        #        if(! TaxBookSection::checkTaxBookSection(
+        #                tmpNumberSeq.parmVoucherSequenceId(),
+        #                custInvoiceTable.InvoiceDate))
+        #        {
+        #            throw error("@SYS21533");
+        #        }
+        #        while select * from tmpCustInvoiceLine
+        #        index hint ParentRecIdIdx
+        #        where tmpCustInvoiceLine.ParentRecId == custInvoiceTable.RecId
+        #        {
+        #            if (! TaxGroupData::checkTaxGroups(tmpCustInvoiceLine.TaxGroup, tmpCustInvoiceLine.TaxItemGroup))
+        #            {
+        #                throw error("@SYS21533");
+        #            }
+        #        }
+        #    }
+        #
+        #    if (BrazilParameters::isEnabled() && !this.parmIsCustInterestAdjustment_BR())
+        #    {
+        #        return this.postAllocateNumAndVoucherBR(tmpNumberSeq);
+        #    }
+        #
+        #    return tmpNumberSeq;
+        #}
+        #
+        #
+        #
+      ENDSOURCE
+      SOURCE #checkPaymentSlipDK
+        #/// <summary>
+        #///    Checks for a valid FI-Creditor ID for a payment slip of type FIK 751 or FIK 752.
+        #/// </summary>
+        #/// <returns>
+        #///    true if the transaction is valid for FIK 751 and FIK 752; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///    If the transaction is in a currency that is not DKK, an error message is displayed.If the
+        #///    transaction is in a currency other than DKK but still uses FIK 752 and FIK 752, an error message
+        #///    will be displayed.
+        #/// </remarks>
+        #protected boolean checkPaymentSlipDK()
+        #{
+        #    #define.DKKCurrency('DKK')
+        #
+        #    boolean ok = true;
+        #    if((custInvoiceTable.GiroType == PaymentStub::FIK751
+        #        || custInvoiceTable.GiroType == PaymentStub::FIK752)
+        #        && CompanyInfo::checkFICreditorIDEmpty(CompanyInfo::find().fiCreditorID_DK))
+        #    {
+        #        ok = false;
+        #    }
+        #    if((custInvoiceTable.GiroType == PaymentStub::FIK751
+        #        || custInvoiceTable.GiroType == PaymentStub::FIK752)
+        #        && custInvoiceTable.CurrencyCode != #DKKCurrency)
+        #    {
+        #
+        #        ok = checkFailed("@SYS314488");
+        #    }
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #checkSalesBook_RU
+        #private boolean checkSalesBook_RU()
+        #{
+        #    TmpTaxWorkTrans tmpTaxWorkTrans;
+        #
+        #    boolean         exportJour;
+        #    boolean         ret = true;
+        #
+        #    if(this.tax())
+        #    {
+        #        tmpTaxWorkTrans = this.tax().tmpTaxWorkTrans();
+        #        while select tmpTaxWorkTrans
+        #            group by TaxCode
+        #        {
+        #            if(TaxTable::find(tmpTaxWorkTrans.TaxCode).isExportVAT_RU())
+        #            {
+        #                exportJour = true;
+        #                break;
+        #            }
+        #        }
+        #    }
+        #
+        #    if (CustParameters::taxation_RU(custInvoiceTable.InvoiceDate) == CustTaxation_RU::OnDelivery &&
+        #        ! custInvoiceTable.vatOnPayment_RU &&
+        #        ! exportJour)
+        #    {
+        #        ret = SalesBookTable_RU::canProcessDate(custInvoiceTable.InvoiceDate);
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class  CustPostInvoice
+        #{
+        #    CustInvoiceTable            custInvoiceTable;
+        #    CustInvoiceLine             custInvoiceLine;
+        #
+        #    CustFreeInvoiceCalcTotals   custFreeInvoiceCalcTotals;
+        #    Tax                         tax;
+        #
+        #    MarkupTrans                 markupTrans;
+        #
+        #    TypeOfCreditmaxCheck        typeOfCreditmaxCheck;
+        #
+        #    boolean                     update;
+        #    boolean                     creditNote;
+        #    boolean                     creditError;
+        #    boolean                     isPostingOK;
+        #    NoYes                       sendByEmail;
+        #
+        #    boolean                     areDistributionsNeeded;
+        #    RefRecId                    accountingEventId;
+        #    TransferPolicy              transferPolicy;
+        #    PaymTerm                    paymTerm;
+        #
+        #    boolean                     isUnrealizedVATEnabled;
+        #    // Indicates whether realized or unrealized VAT exists in current posting invoice.
+        #    // Value is set when method isSingleTaxType_TH is called.
+        #    boolean                     isRealizedVAT;
+        #    PrintInMST_RU               printInMST;
+        #    Storno_RU                   storno_RU;
+        #    container                   custInvoiceLineRec;
+        #    container                   custInvoiceTransRec;
+        #    TaxWithholdCalcFreeInvoice_IN taxWithholdCalcFreeInvoice;
+        #    #ISOCountryRegionCodes
+        #
+        #    //Bill of lading info which will be posted
+        #    WMSCarrierName              carrierName;
+        #    WMSFreightChargeTerms       freightChargeTerms;
+        #    DlvNoOfCarrier_BR           dlvNoOfCarrier;
+        #    DlvStateRegistered_BR       dlvStateRegistered;
+        #    PackingName_BR              dlvPackingName;
+        #    DlvTransportBrand_BR        dlvTransportBrand;
+        #    VolumeType_BR               volumeType;
+        #    VolumeQty_BR                volumeQty;
+        #    ItemNetWeight               netWeight;
+        #    GrossWeight                 grossWeight;
+        #    boolean                     custInterestAdjustmentAction;
+        #
+        #    PlFiscalDocType             fiscalDocType;
+        #
+        #    AdvanceInvoiceSettlement_FreeText_W advanceInvoiceSettlement;
+        #    #EECountryRegionCodes
+        #
+        #    SettlementType              settlementType;
+        #    #define.UnknownEnumValue(255)
+        #    #DEFINE.CurrentVersion(2)
+        #    #LOCALMACRO.CurrentList
+        #        creditError,
+        #        typeOfCreditmaxCheck,
+        #        settlementType,
+        #        accountingEventId,
+        #        areDistributionsNeeded
+        #        //<GMX>
+        #        , sendByEmail
+        #        //</GMX>
+        #        // <GEERU>
+        #        , printInMST
+        #        , storno_RU
+        #        // </GEERU>
+        #        // <GBR>
+        #        , carrierName,
+        #        freightChargeTerms,
+        #        dlvNoOfCarrier,
+        #        dlvStateRegistered,
+        #        dlvPackingName,
+        #        dlvTransportBrand,
+        #        volumeType,
+        #        volumeQty,
+        #        netWeight,
+        #        grossWeight
+        #        // </GBR>
+        #        // <GEEPL>
+        #        ,fiscalDocType
+        #        // </GEEPL>
+        #        // <GBR>
+        #        ,custInterestAdjustmentAction
+        #        // </GBR>
+        #    #ENDMACRO
+        #}
+      ENDSOURCE
+      SOURCE #createExportDocument_CN
+        #/// <summary>
+        #/// Creates export document.
+        #/// </summary>
+        #/// <param name="_custInvoiceTableRecId">
+        #/// The record id of free text invoice.
+        #/// </param>
+        #/// <param name="_custInvoiceJourRecId">
+        #/// The record id of customer invoice.
+        #/// </param>
+        #protected void createExportDocument_CN(
+        #    RefRecId    _custInvoiceTableRecId,
+        #    RefRecId    _custInvoiceJourRecId)
+        #{
+        #    TaxIntgrExportDocumentGenerator_CN::generate(
+        #        _custInvoiceJourRecId,
+        #        tableNum(CustInvoiceJour),
+        #        _custInvoiceTableRecId,
+        #        tableNum(CustInvoiceTable));
+        #}
+      ENDSOURCE
+      SOURCE #createTransLink_RU
+        #private void createTransLink_RU(CustInvoiceJour _custInvoiceJour)
+        #{
+        #    LedgerTransLink_RU  ledgerTransLink;
+        #    CustInvoiceJour     correctedInvoiceJour;
+        #    CustInvoiceJour     custInvoiceJour = _custInvoiceJour;
+        #    CustInvoiceJour_RU  custInvoiceJour_RU = custInvoiceJour.custInvoiceJour_RU();
+        #
+        #    if (! custInvoiceJour_RU.CorrectedInvoiceId_RU)
+        #    {
+        #        return;
+        #    }
+        #
+        #    correctedInvoiceJour = CustInvoiceJour::findFromCustTrans(custInvoiceJour_RU.CorrectedInvoiceId_RU,
+        #                                                              custInvoiceJour_RU.CorrectedInvoiceDate_RU,
+        #                                                              custInvoiceJour.InvoiceAccount);
+        #
+        #    ledgerTransLink = LedgerTransLink_RU::newTrans(custInvoiceJour, correctedInvoiceJour);
+        #    ledgerTransLink.parmReportingDate(custInvoiceJour_RU.CorrectedInvoiceDate_RU);
+        #    ledgerTransLink.parmVoucherField(fieldnum(CustInvoiceJour, LedgerVoucher));
+        #    ledgerTransLink.parmAccountingDateField(fieldnum(CustInvoiceJour, InvoiceDate));
+        #    ledgerTransLink.run();
+        #}
+      ENDSOURCE
+      SOURCE #fiscalDocType2State_PL
+        #private PlFiscalDocState fiscalDocType2State_PL(PlFiscalDocType _docType)
+        #{
+        #    return _docType == PlFiscalDocType::FiscalDocument?PlFiscalDocState::FiscalDocument:PlFiscalDocState::Invoice;
+        #}
+      ENDSOURCE
+      SOURCE #getInclTaxAmount_IN
+        #/// <summary>
+        #/// Reads the table buffer and updates the field with required value.
+        #/// </summary>
+        #/// <param name="_custInvoiceJour">
+        #/// The buffer is used to find the record.
+        #/// </param>
+        #public void getInclTaxAmount_IN(CustInvoiceJour    _custInvoiceJour)
+        #{
+        #    TaxAmountCur        inclTaxAmount;
+        #    TmpTaxWorkTrans     tmpTaxWorkTrans;
+        #    CustInvoiceLine     custInvoicelineloc;
+        #    FormulaDesigner_IN  formulaDesigner;
+        #    TaxableBasis_IN     taxBasis;
+        #    TmpTaxCalc_IN       tmpTaxCalc;
+        #
+        #    while select RecId, TableId, TaxItemGroup from custInvoicelineloc
+        #        index hint ParentRecIdIdx
+        #        where custInvoicelineloc.ParentRecId == custInvoiceTable.RecId
+        #    {
+        #        if (FormulaDesigner_IN::isPriceInclTaxLine(custInvoicelineloc.TaxItemGroup))
+        #        {
+        #            tmpTaxWorkTrans = this.tax().tmpTaxWorkTrans();
+        #            tmpTaxCalc      = this.tax().tmpTaxCalc_IN();
+        #            while select tmpTaxWorkTrans
+        #                where tmpTaxWorkTrans.SourceRecId   == custInvoicelineloc.RecId   &&
+        #                      tmpTaxWorkTrans.SourceTableId == custInvoicelineloc.TableId &&
+        #                      tmpTaxWorkTrans.TaxDirection  != TaxDirection::UseTax       &&
+        #                      tmpTaxWorkTrans.TaxOrigin     != TaxOrigin::TaxReversed
+        #            {
+        #                formulaDesigner = FormulaDesigner_IN::findByTaxCode(tmpTaxWorkTrans.TaxItemGroup, tmpTaxWorkTrans.TaxCode);
+        #                if(formulaDesigner.PriceInclTax)
+        #                {
+        #                    select tmpTaxCalc
+        #                        where  tmpTaxCalc.TaxCode         == tmpTaxWorkTrans.TaxCode    &&
+        #                               tmpTaxCalc.SourceTableID   == custInvoicelineloc.TableId &&
+        #                               tmpTaxCalc.SourceRecID     == custInvoicelineloc.RecId;
+        #
+        #                    taxBasis = formulaDesigner.TaxableBasis;
+        #                    if(taxBasis == TaxableBasis_IN::ExclAmount)
+        #                    {
+        #                        taxBasis = Tax::getTaxableBasis_IN(formulaDesigner);
+        #                    }
+        #                    if (TaxTable::find(tmpTaxWorkTrans.TaxCode).TaxType_IN != TaxType_IN::None
+        #                        && (taxBasis == TaxableBasis_IN::LineAmount
+        #                            || taxBasis == TaxableBasis_IN::Assessable))
+        #                    {
+        #                        if (!tmpTaxWorkTrans.SourceRegulateAmountCur)
+        #                        {
+        #                             inclTaxAmount += tmpTaxWorkTrans.SourceTaxAmountCur;
+        #                        }
+        #                        else
+        #                        {
+        #                             inclTaxAmount += tmpTaxWorkTrans.SourceRegulateAmountCur;
+        #                        }
+        #                        if (inclTaxAmount < 0)
+        #                        {
+        #                            inclTaxAmount += tmpTaxCalc.TaxOnCharges;
+        #                        }
+        #                        else
+        #                        {
+        #                            inclTaxAmount -= tmpTaxCalc.TaxOnCharges;
+        #                        }
+        #                    }
+        #                }
+        #            }
+        #        }
+        #    }
+        #    if (inclTaxAmount)
+        #    {
+        #        _custInvoiceJour.InvoiceAmount = Currency::amount(_custInvoiceJour.InvoiceAmount - abs(inclTaxAmount));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getNumAndVoucher_W
+        #/// <summary>
+        #///     This method is used to get invoice number and voucher. This can be from the general number sequence or user defined auto numbering or it can be manual.
+        #/// </summary>
+        #/// <param name="_numberSeq">
+        #///     The NumberSeq object from which invoice number and voucher can be obtained.
+        #/// </param>
+        #/// <returns>
+        #///     The method always returns the voucher from the _numberSeq object, but gets the invoice id depending on the ManualInvoiceID_W or ManualNumbering_W field.
+        #/// </returns>
+        #private container getNumAndVoucher_W(NumberSeq _numberSeq)
+        #{
+        #    container ret;
+        #
+        #    if (custInvoiceTable.ManualInvoiceID_W != '')
+        #    {
+        #        _numberSeq.parmNumberSequenceCode('');
+        #        _numberSeq.parmNumberSequenceId(0);
+        #
+        #        ret = [custInvoiceTable.ManualInvoiceID_W, _numberSeq.voucher()];
+        #    }
+        #    else
+        #    {
+        #        if (custInvoiceTable.ManualNumbering_W)
+        #        {
+        #            if (! LtInvoiceAutoNumberingTable::checkLastDate(custInvoiceTable.DocNumberingCode_LT , custInvoiceTable.InvoiceDate, true))
+        #            {
+        #                throw error("@SYS25904");
+        #            }
+        #
+        #            _numberSeq.parmNumberSequenceCode('');
+        #            _numberSeq.parmNumberSequenceId(0);
+        #            ret = [NumberSeq::newGetNumFromCode(LtInvoiceAutoNumberingTable::find(custInvoiceTable.DocNumberingCode_LT).NumberSequenceCode).num(),
+        #                   _numberSeq.voucher()];
+        #
+        #            LtInvoiceAutoNumberingTable::updateLastDate(custInvoiceTable.DocNumberingCode_LT , custInvoiceTable.InvoiceDate);
+        #        }
+        #        else
+        #        {
+        #            ret = _numberSeq.numAndVoucher();
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #initBillOfLadingParameters_BR
+        #/// <summary>
+        #///    Sets the parameters used for bill of lading in free text invoice. They will be propagated until
+        #///    post in fiscalDocJour.
+        #/// </summary>
+        #/// <param name="_carrierName">Carrier name</param>
+        #/// <param name="_freightChargeTerms">Freight Terms</param>
+        #/// <param name="_dlvNoOfCarrier">Vehicle license plate number</param>
+        #/// <param name="_dlvStateRegistered">Vehicle license plate state</param>
+        #/// <param name="_dlvPackingName">Packing description</param>
+        #/// <param name="_dlvTransportBrand">Packing brand</param>
+        #/// <param name="_volumeType">Packing type</param>
+        #/// <param name="_volumeQty">Packing quantity</param>
+        #/// <param name="_netWeight">Packing net weight</param>
+        #/// <param name="_grossWeight">Packing gross weight</param>
+        #public void initBillOfLadingParameters_BR(WMSCarrierName          _carrierName        = '',
+        #                                          WMSFreightChargeTerms   _freightChargeTerms = WMSFreightChargeTerms::Nofreight,
+        #                                          DlvNoOfCarrier_BR       _dlvNoOfCarrier     = '',
+        #                                          DlvStateRegistered_BR   _dlvStateRegistered = '',
+        #                                          PackingName_BR          _dlvPackingName     = '',
+        #                                          DlvTransportBrand_BR    _dlvTransportBrand  = '',
+        #                                          VolumeType_BR           _volumeType         = '',
+        #                                          VolumeQty_BR            _volumeQty          = 0,
+        #                                          ItemNetWeight           _netWeight          = 0,
+        #                                          GrossWeight             _grossWeight        = 0)
+        #{
+        #    carrierName         = _carrierName;
+        #    freightChargeTerms  = _freightChargeTerms;
+        #    dlvNoOfCarrier      = _dlvNoOfCarrier;
+        #    dlvStateRegistered  = _dlvStateRegistered;
+        #    dlvPackingName      = _dlvPackingName;
+        #    dlvTransportBrand   = _dlvTransportBrand;
+        #    volumeType          = _volumeType;
+        #    volumeQty           = _volumeQty;
+        #    netWeight           = _netWeight;
+        #    grossWeight         = _grossWeight;
+        #}
+      ENDSOURCE
+      SOURCE #insertCustCreditInvoicingJour
+        #/// <summary>
+        #///    Creates the <c>custVendCreditInvoicingJour</c> records.
+        #/// </summary>
+        #/// <param name="_custInvoiceTable">
+        #///    The invoice record to link to an invoice journal record.
+        #/// </param>
+        #/// <param name="_custInvoiceJour">
+        #///    The invoice journal record to link to an invoice table record.
+        #/// </param>
+        #
+        #protected void insertCustCreditInvoicingJour(CustInvoiceTable     _custInvoiceTable,
+        #                                             CustInvoiceJour      _custInvoiceJour)
+        #{
+        #    CustVendCreditInvoicingTable    custVendCreditInvoicingTable;
+        #    CustVendCreditInvoicingJour     custVendCreditInvoicingJour;
+        #
+        #    if (CustVendCreditInvoicingTable::useCreditInvoicingReporting())
+        #    {
+        #        if(_custInvoiceTable)
+        #        {
+        #            custVendCreditInvoicingTable = CustVendCreditInvoicingTable::findRefId(_custInvoiceTable.TableId,
+        #                                                                                   _custInvoiceTable.RecId);
+        #            if(custVendCreditInvoicingTable)
+        #            {
+        #                custVendCreditInvoicingJour.insertFromCustVendCreditInvoicingTable(custVendCreditInvoicingTable,
+        #                                                                                   _custInvoiceJour);
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insertCustCreditInvoicingTrans
+        #protected void insertCustCreditInvoicingTrans(CustInvoiceLine         _custInvoiceLine,
+        #                                              CustInvoiceTrans        _custInvoiceTrans)
+        #{
+        #    CustVendCreditInvoicingLine     custVendCreditInvoicingLine;
+        #    CustVendCreditInvoicingTrans    custVendCreditInvoicingTrans;
+        #    #ISOCountryRegionCodes
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES, #isoSE, #isoPL]))
+        #    {
+        #        if(_custInvoiceLine)
+        #        {
+        #            custVendCreditInvoicingLine = CustVendCreditInvoicingLine::findRefId(_custInvoiceLine.TableId,
+        #                                                                                 _custInvoiceLine.RecId);
+        #            if(custVendCreditInvoicingLine)
+        #            {
+        #                custVendCreditInvoicingTrans.insertFromCustVendCreditInvoicingLine(custVendCreditInvoicingLine,
+        #                                                                                   _custInvoiceTrans);
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insertCustInvoiceJourExtensionCN
+        #/// <summary>
+        #///    Creates the <c>custVendCreditInvoicingJour</c> records.
+        #/// </summary>
+        #/// <param name="_custInvoiceTableRecId">
+        #///    The invoice record to link to an invoice journal record.
+        #/// </param>
+        #/// <param name="_custInvoiceJourRecId">
+        #///    The invoice journal record to link to an invoice table record.
+        #/// </param>
+        #protected void insertCustInvoiceJourExtensionCN(RecId     _custInvoiceTableRecId,
+        #                                                RecId     _custInvoiceJourRecId)
+        #{
+        #    CustInvoiceJourExtension_CN    custInvoiceJourExtensionCN;
+        #
+        #    if (CustParameters::isTaxIntegrationSystem_CN())
+        #    {
+        #        if(_custInvoiceTableRecId)
+        #        {
+        #            custInvoiceJourExtensionCN.insertFromCustInvoiceTable(_custInvoiceTableRecId,
+        #                                                                  _custInvoiceJourRecId);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insertCustInvoiceTrasAsset
+        #private void insertCustInvoiceTrasAsset(RefRecId _custInvoiceTransRecid)
+        #{
+        #    CustInvoiceTransAsset       custInvoiceTransAsset;
+        #    CustInvoiceLineAsset        custInvoiceLineAsset;
+        #
+        #    custInvoiceLineAsset = CustInvoiceLineAsset::findByCustInvoiceLineId(custInvoiceLine.RecId);
+        #    if (custInvoiceLineAsset)
+        #    {
+        #        custInvoiceTransAsset.clear();
+        #        custInvoiceTransAsset.AssetSaleFactor = custInvoiceLineAsset.AssetSaleFactor;
+        #        custInvoiceTransAsset.CustInvoiceTrans = _custInvoiceTransRecid;
+        #        custInvoiceTransAsset.insert();
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #insertElectronicInvoice_MX
+        #/// <summary>
+        #/// Creates the electronic invoice information.
+        #/// </summary>
+        #/// <param name="_custInvoiceJour">
+        #/// The document source to create the electronic invoice information.
+        #/// </param>
+        #/// <param name="_numberSequenceTable">
+        #/// The record ID of a <c>numberSequenceTable</c> table that is used to get the invoice ID.
+        #/// </param>
+        #protected void insertElectronicInvoice_MX(
+        #    CustInvoiceJour     _custInvoiceJour,
+        #    RefRecId            _numberSequenceTable)
+        #{
+        #    EInvoicePost_MX   eInvoicePost;
+        #
+        #    eInvoicePost = EInvoicePost_MX::construct(_custInvoiceJour, _numberSequenceTable);
+        #
+        #    eInvoicePost.createElectronicInvoiceJour();
+        #
+        #    if (this.parmSendByEmail_MX())
+        #    {
+        #        eInvoicePost.createXMLFileAndPopulateSysMailTable();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #isDebitNote
+        #/// <summary>
+        #///     Indicates whether current free text invoice is debit note format.
+        #/// </summary>
+        #/// <returns>
+        #///     Returns true if free text invoice is debit note format. Otherwise, returns false.
+        #/// </returns>
+        #private boolean isDebitNote()
+        #{
+        #    CustInvoiceTableExtensionTH custInvoiceTableExtensionTH = custInvoiceTable.custInvoiceTableExtensionTH();
+        #    return (custInvoiceTableExtensionTH.NoteFormat == TaxUnrealizedSalesNoteFormat::DebitNoteQuantity
+        #        || custInvoiceTableExtensionTH.NoteFormat  == TaxUnrealizedSalesNoteFormat::DebitNoteValue);
+        #}
+      ENDSOURCE
+      SOURCE #isDebitNote_MY
+        #/// <summary>
+        #///     Indicates whether current sales invoice is debit note format for MalaySia.
+        #/// </summary>
+        #/// <returns>
+        #///     Returns true if sales invoice is debit note format. Otherwise, returns false.
+        #/// </returns>
+        #// <GMY>
+        #private boolean isDebitNote_MY()
+        #{
+        #    return (!creditNote && custInvoiceTable.hasLinesWithRefrence_MY());
+        #}
+        #// </GMY>
+      ENDSOURCE
+      SOURCE #isNoneFormatWithRealizedVAT
+        #/// <summary>
+        #///     Indicates whether current free text invoice is NONE format and with realized VAT.
+        #/// </summary>
+        #/// <returns>
+        #///     Returns true if free text invoice is NONE format and with realized VAT. Otherwise, returns false.
+        #/// </returns>
+        #private boolean isNoneFormatWithRealizedVAT()
+        #{
+        #    return (custInvoiceTable.custInvoiceTableExtensionTH().NoteFormat == TaxUnrealizedSalesNoteFormat::None
+        #        && isRealizedVAT);
+        #}
+      ENDSOURCE
+      SOURCE #isPostingOK
+        #boolean  isPostingOK()
+        #{
+        #    return isPostingOK;
+        #}
+      ENDSOURCE
+      SOURCE #isSingleTaxType
+        #/// <summary>
+        #///     Indicates whether only either realized VAT or unrealized VAT exists in current posting invoice.
+        #/// </summary>
+        #/// <returns>
+        #///     Returns false if both realized and unrealized VAT exist. Otherwise, returns true.
+        #/// </returns>
+        #private boolean isSingleTaxType()
+        #{
+        #    TaxTable        taxTableRealized;
+        #    TaxTable        taxTableUnrealized;
+        #    TaxGroupData    taxGroupData;
+        #    TaxOnItem       taxOnItem;
+        #    CustInvoiceLine custInvoiceLineLocal;
+        #    boolean         ret = true;
+        #
+        #    // Tries to find realized tax.
+        #    select firstonly TaxCode from taxTableRealized
+        #        where (taxTableRealized.TaxType_TH          == TaxType_TH::Normal
+        #                && taxTableRealized.PaymentTaxCode  == '')
+        #            || taxTableRealized.TaxType_TH == TaxType_TH::AverageRealized
+        #        exists join taxGroupData
+        #            where taxTableRealized.TaxCode == taxGroupData.TaxCode
+        #        exists join taxOnItem
+        #            where taxTableRealized.TaxCode == taxOnItem.TaxCode
+        #        exists join custInvoiceLineLocal
+        #            where taxGroupData.TaxGroup == custInvoiceLineLocal.TaxGroup
+        #                && taxOnItem.TaxItemGroup == custInvoiceLineLocal.TaxItemGroup
+        #                && custInvoiceLineLocal.ParentRecId == custInvoiceTable.RecId;
+        #    if (taxTableRealized)
+        #    {
+        #        isRealizedVAT = true;
+        #    }
+        #
+        #    select firstonly TaxCode from taxTableUnrealized
+        #        where (taxTableUnrealized.TaxType_TH            == TaxType_TH::Normal
+        #                && taxTableUnrealized.PaymentTaxCode    != '')
+        #            || taxTableUnrealized.TaxType_TH == TaxType_TH::AverageUnrealized
+        #        exists join taxGroupData
+        #            where taxTableUnrealized.TaxCode == taxGroupData.TaxCode
+        #        exists join taxOnItem
+        #            where taxTableUnrealized.TaxCode == taxOnItem.TaxCode
+        #        exists join custInvoiceLineLocal
+        #            where taxGroupData.TaxGroup == custInvoiceLineLocal.TaxGroup
+        #                && taxOnItem.TaxItemGroup == custInvoiceLineLocal.TaxItemGroup
+        #                && custInvoiceLineLocal.ParentRecId == custInvoiceTable.RecId;
+        #
+        #    if (taxTableRealized && taxTableUnrealized)
+        #    {
+        #        // Both realized VAT and unrealized VAT exist in current posting invoice.
+        #        ret = checkFailed("@SYS4082809");
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #mcrChangePostingProfile
+        #/// <summary>
+        #/// Checks the posting profile on the payments , if the payments are prepay - then check
+        #/// the posting profile on the customer parameters. If that is different than the
+        #/// posting profile on the <c>CustInvoiceJour</c>, assign the posting profile found in the
+        #/// cust parameters.
+        #/// </summary>
+        #/// <returns>
+        #/// A record in the <c>PostingProfile</c> table.
+        #/// </returns>
+        #PostingProfile mcrChangePostingProfile()
+        #{
+        #    int paymcount;
+        #    boolean allPrepay = false;
+        #
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #    CustParameters custParameters;
+        #    PostingProfile postingProfileUsed;
+        #    postingProfileUsed = custInvoiceTable.PostingProfile;
+        #
+        #    paymCount =MCRCustPaymTable::count(custInvoiceTable.TableId, custInvoiceTable.RecId);
+        #
+        #    select firstonly mcrCustPaymTable
+        #        where mcrCustPaymTable.RefRecId ==custInvoiceTable.RecId
+        #        && mcrCustPaymTable.RefTableId == custInvoiceTable.TableId
+        #        && mcrCustPaymTable.Amount > 0
+        #        && mcrCustPaymTable.IsPrepay == NoYes::No;
+        #    if (mcrCustPaymTable)
+        #    {
+        #        allPrepay= false;
+        #    }
+        #
+        #    if ((paymCount == 1)
+        #        || (paymCount > 1 && allPrepay == true))
+        #    {
+        #        //Once in this loop means that all payments be it single or multiple are prepays.
+        #        mcrCustPaymTable = MCRCustPaymTable::findByRefRecIDRefTableID(custInvoiceTable.RecId, custInvoiceTable.TableId);
+        #        if (mcrCustPaymTable.IsPrepay == NoYes::Yes)
+        #        {
+        #            custParameters = CustParameters::find();
+        #            if (custParameters.PostingProfile != custParameters.PrepaymentPostingProfile)
+        #            {
+        #                if (custInvoiceTable.PostingProfile != custParameters.PrepaymentPostingProfile)
+        #                {
+        #                    postingProfileUsed = custParameters.PrepaymentPostingProfile;
+        #                }
+        #            }
+        #        }
+        #    }
+        #    return postingProfileUsed;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #void new(CustInvoiceTable       _custInvoiceTable,
+        #         TypeOfCreditmaxCheck   _typeOfCreditmaxCheck   = CustParameters::find().CreditMaxCheck,
+        #         NoYes                  _creditError            = NoYes::No,
+        #         SettlementType         _settlementType         = #UnknownEnumValue)
+        #{
+        #    ;
+        #    update                  = true;
+        #    custInvoiceTable        = _custInvoiceTable;
+        #    typeOfCreditmaxCheck    = _typeOfCreditmaxCheck;
+        #    creditError             = _creditError;
+        #    settlementType          = _settlementType;
+        #}
+      ENDSOURCE
+      SOURCE #newTransactionTxt_RU
+        #/// <summary>
+        #/// Creates and initializes new <c>TransactionTxt</c> object
+        #/// </summary>
+        #/// <param name="_custInvoiceJour">
+        #/// <c>CustInvoiceJour</c> record which is source of data for <c>TransactionTxt</c> object
+        #/// </param>
+        #/// <returns>
+        #/// New <c>TransactionTxt</c> object
+        #/// </returns>
+        #/// <remarks>
+        #/// Copied from \Classes\CustInvoiceTableSourceDocument\getTransactoionTxt
+        #/// </remarks>
+        #TransactionTxt newTransactionTxt_RU(CustInvoiceJour _custInvoiceJour)
+        #{
+        #    TransactionTxt ret  = new TransactionTxt();
+        #    ret.setType(creditNote ? LedgerTransTxt::CustCreditNoteLedger : LedgerTransTxt::CustInvoiceLedger);
+        #    ret.setLanguage(_custInvoiceJour.LanguageId);
+        #    ret.setVoucher(_custInvoiceJour.LedgerVoucher);
+        #    ret.setFormLetter(_custInvoiceJour.InvoiceId);
+        #    ret.setKey1(_custInvoiceJour.InvoiceAccount);
+        #    ret.setKey2(CustTable::groupId(_custInvoiceJour.InvoiceAccount));
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #pack
+        #public container pack()
+        #{
+        #    return [#CurrentVersion, #CurrentList,
+        #    // <GEEU>
+        #    advanceInvoiceSettlement ? advanceInvoiceSettlement.pack() : conNull()
+        #    // </GEEU>
+        #    ];
+        #}
+      ENDSOURCE
+      SOURCE #parmAccountingEvent
+        #public RefRecId  parmAccountingEvent(RefRecId  _accountingEventId = accountingEventId)
+        #{
+        #    ;
+        #    accountingEventId = _accountingEventId;
+        #    return accountingEventId;
+        #}
+      ENDSOURCE
+      SOURCE #parmAdvanceInvoiceSettlement_W
+        #public AdvanceInvoiceSettlement_FreeText_W parmAdvanceInvoiceSettlement_W(
+        #    AdvanceInvoiceSettlement_FreeText_W _advanceInvoiceSettlement = advanceInvoiceSettlement)
+        #{
+        #    advanceInvoiceSettlement = _advanceInvoiceSettlement;
+        #    return advanceInvoiceSettlement;
+        #}
+      ENDSOURCE
+      SOURCE #parmAreDistributionsNeeded
+        #public boolean  parmAreDistributionsNeeded(boolean  _areDistributionsNeeded = areDistributionsNeeded)
+        #{
+        #    ;
+        #    areDistributionsNeeded = _areDistributionsNeeded;
+        #    return areDistributionsNeeded;
+        #}
+      ENDSOURCE
+      SOURCE #parmCustInvoiceTable
+        #CustInvoiceTable  parmCustInvoiceTable(CustInvoiceTable  _custInvoiceTable = custInvoiceTable)
+        #{
+        #    ;
+        #    custInvoiceTable = _custInvoiceTable;
+        #    return custInvoiceTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmFiscalDocType_PL
+        #public PlFiscalDocType parmFiscalDocType_PL(PlFiscalDocType _fiscalDocType = fiscalDocType)
+        #{
+        #    fiscalDocType = _fiscalDocType;
+        #    return fiscalDocType;
+        #}
+      ENDSOURCE
+      SOURCE #parmIsCustInterestAdjustment_BR
+        #/// <summary>
+        #/// Determine whether the cust interest note adjustment action is performed or not.
+        #/// </summary>
+        #/// <param name="_custInterestAdjustmentAction">
+        #/// parm _custInterestAdjustmentAction holds the interest note action.
+        #/// </param>
+        #/// <returns>
+        #/// If interest note adjustment action performed then it returns TRUE,otherwise returns FALSE
+        #/// </returns>
+        #public boolean parmIsCustInterestAdjustment_BR(boolean _custInterestAdjustmentAction = custInterestAdjustmentAction)
+        #{
+        #    custInterestAdjustmentAction = _custInterestAdjustmentAction;
+        #
+        #    return custInterestAdjustmentAction;
+        #}
+      ENDSOURCE
+      SOURCE #parmPrintFacture_RU
+        #public NoYes parmPrintFacture_RU(NoYes _printFacture = false)
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #parmPrintInMST_RU
+        #public PrintInMST_RU parmPrintInMST_RU(PrintInMST_RU _printInMST = printInMST)
+        #{
+        #    printInMST = _printInMST;
+        #
+        #    return printInMST;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmSendByEmail_MX
+        #/// <summary>
+        #///     Gets or sets the <paramref name="sendByEmail" /> parameter.
+        #/// </summary>
+        #/// <param name="_sendByEmail">
+        #///     The value to set; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The value of the <paramref name="sendByEmail" /> parameter.
+        #/// </returns>
+        #public NoYes parmSendByEmail_MX(NoYes _sendByEmail = sendByEmail)
+        #{
+        #    sendByEmail = _sendByEmail;
+        #
+        #    return sendByEmail;
+        #}
+      ENDSOURCE
+      SOURCE #parmStorno_RU
+        #public Storno_RU parmStorno_RU(Storno_RU _storno_RU = storno_RU)
+        #{
+        #    storno_RU = _storno_RU;
+        #
+        #    return storno_RU;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postAllocateNumAndVoucherBR
+        #/// <summary>
+        #/// Allocates Brazilian specific journal and voucher number from the corresponding number sequences after
+        #/// the <c>CustPostInvoice.allocateNumAndVoucher</c> method.
+        #/// </summary>
+        #/// <param name="_returnValue">
+        #/// The return value of the <c>CustPostInvoice.allocateNumAndVoucher</c> method; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A <c>NumberSeq</c> object.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// The fiscal document type is not specified.
+        #/// </exception>
+        #public NumberSeq postAllocateNumAndVoucherBR(NumberSeq _returnValue = null)
+        #{
+        #    NumberSeq               tmpNumberSeq = _returnValue;
+        #    NumberSequenceTable     numberSequenceTableNum;
+        #
+        #    if (CustRelatedInvoice::findByCustInvoice(custInvoiceTable.RecId).InvoiceAssociationType == InvoiceAssociationType::AdjustingInvoice
+        #            || custInvoiceTable.MCRGiftCard == NoYes::Yes)
+        #    {
+        #        return _returnValue;
+        #    }
+        #
+        #    if(!custInvoiceTable.FiscalDocumentType_BR)
+        #    {
+        #        throw error("@GLS62");
+        #    }
+        #
+        #    numberSequenceTableNum = FiscalDocumentType_BR::getFiscalDocumentNumberSequence(custInvoiceTable.FiscalDocumentType_BR);
+        #
+        #    tmpNumberSeq.parmNumberSequenceId(numberSequenceTableNum.RecId);
+        #    tmpNumberSeq.parmNumberSequenceCode(numberSequenceTableNum.NumberSequence);
+        #    tmpNumberSeq.parmNumTableNum(numberSequenceTableNum);
+        #
+        #    return tmpNumberSeq;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postFacture_RU
+        #/// <summary>
+        #/// Creates facture by given <c>CustInvoiceJour</c> record
+        #/// </summary>
+        #/// <param name="_custInvoiceJour">
+        #/// <c>CustInvoiceJour</c> record facture based upon
+        #/// </param>
+        #public void postFacture_RU(CustInvoiceJour _custInvoiceJour)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #postFiscalDocument_BR
+        #/// <summary>
+        #/// Posts the Brazilian fiscal document.
+        #/// </summary>
+        #/// <param name="_custFreeInvoiceCalcTotals">
+        #/// The <c>CustFreeInvoiceCalcTotals</c> class instance to construct the <c>FiscalDocumentPost_BR</c> class instance.
+        #/// </param>
+        #/// <param name="_custInvoiceTable">
+        #/// The <c>CustInvoiceTable</c> table record to construct the <c>FiscalDocumentPost_BR</c> class instance.
+        #/// </param>
+        #/// <remarks>
+        #/// If the invoice amount is negative, this method cancels a fiscal document.
+        #/// </remarks>
+        #protected void postFiscalDocument_BR(CustFreeInvoiceCalcTotals _custFreeInvoiceCalcTotals, CustInvoiceTable _custInvoiceTable)
+        #{
+        #    CustInvoiceJour         custInvoiceJour = _custInvoiceTable.custInvoiceJour();
+        #    FiscalDocumentPost_BR   fiscalDocumentPost;
+        #
+        #    if (_custInvoiceTable.MCRGiftCard == NoYes::Yes)
+        #    {
+        #        return;
+        #    }
+        #
+        #    if (custInvoiceJour.InvoiceAmount >= 0)
+        #    {
+        #        fiscalDocumentPost = new FiscalDocumentPost_BR(
+        #                FiscalDocumentParmDataCreator_BR::fromFreeTextInvoice(_custFreeInvoiceCalcTotals,
+        #                                                               _custInvoiceTable,
+        #                                                               carrierName,
+        #                                                               freightChargeTerms,
+        #                                                               dlvNoOfCarrier,
+        #                                                               dlvStateRegistered,
+        #                                                               dlvPackingName,
+        #                                                               dlvTransportBrand,
+        #                                                               volumeType,
+        #                                                               volumeQty,
+        #                                                               netWeight,
+        #                                                               grossWeight));
+        #
+        #        fiscalDocumentPost.run();
+        #    }
+        #    else
+        #    {
+        #        FiscalDocumentPost_BR::cancelFiscalDocument(
+        #            CustRelatedInvoice::findParentInvoiceForChild(custInvoiceTable.RecId).custInvoiceJour().fiscalDocument_BR(),
+        #            custInvoiceJour.LedgerVoucher,
+        #            custInvoiceJour.InvoiceDate,
+        #            '',
+        #            ReasonTableRef::find(custInvoiceJour.ReasonTableRef).ReasonComment);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #/// <summary>
+        #/// Contains the code that does the actual job of the class.
+        #/// </summary>
+        #/// <remarks>
+        #/// After an IL transition is done the posting results are returned to this instance in a result container.
+        #/// In addition to this the contents of the custInvoiceTable buffer is reread to let the callers of this class to use it after posting is done.
+        #/// In case there is a need to use some other values stored in this instance, make sure the code in this method is modified
+        #/// to refresh them here after <c>CustPostInvoice::staticRunIL</c> or return the needed results in the container.
+        #/// </remarks>
+        #public void run()
+        #{
+        #    [isPostingOK] = CustPostInvoice::staticRunIL(custInvoiceTable.RecId, this.pack());
+        #    custInvoiceTable.reread();
+        #}
+      ENDSOURCE
+      SOURCE #runInternal
+        #/// <summary>
+        #/// Executes the posting logic for the Free text invoice.
+        #/// </summary>
+        #protected void runInternal()
+        #{
+        #    #OCCRetryCount
+        #    CustTrans                   custTrans;
+        #    CustInvoiceJour             custInvoiceJour;
+        #    CustInvoiceTrans            custInvoiceTrans;
+        #    SourceDocumentHeader        sourceDocumentHeader;
+        #
+        #    NumberSeq                   numberSeq;
+        #    LedgerVoucher               ledgerVoucher;
+        #    Markup                      markup;
+        #    CustVoucher                 custVoucher;
+        #
+        #    InvoiceId                   invoiceId;
+        #    InvoiceId                   parentInvoiceID;
+        #    Voucher                     voucher;
+        #
+        #    NoYes                       correct;
+        #    LedgerTransTxt              ledgerTransTxt;
+        #    LedgerVoucherObject         ledgerVoucherObject;
+        #    CustInvoiceCalcTax          custInvoiceCalcTax;
+        #
+        #    AssetPost                   assetPost;
+        #    PaymMoneyTransferSlip       moneyTransferSlip = new PaymMoneyTransferSlip();
+        #    PaymId                      paymId;
+        #
+        #    SourceDocument              sourceDocument;
+        #    AccountingEvent             accountingEvent;
+        #    ReasonRefRecID              reasonRefRecID;
+        #    boolean                     mcrCallCenterComplete;
+        #
+        #    #ISOCountryRegionCodes
+        #
+        #    CustInvoiceTableExtensionTH custInvoiceTableExtensionTH;
+        #    TransitDocumentManager_IN       transitDocManager;
+        #
+        #    CustInvoiceJour_RU          custInvoiceJour_RU;
+        #    LedgerBondClient_RU         ledgerBondClient;
+        #    OfficialsServ_RU            officialsServ;
+        #    LedgerVoucher               assetLedgerVoucherBase;
+        #    RAssetTable                 assetTable;
+        #    RAssetStandards             assetStandardsDefault;
+        #    boolean                     countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #
+        #    CustInvoiceJourCorrectionType_RU    custInvoiceJourCorrType;
+        #    TaxAmount                   localTaxAmount;
+        #    boolean                     taxSpecifyLine = countryRegion_RU && TaxParameters::find().TaxSpecifyLine;
+        #
+        #    #EECountryRegionCodes
+        #    boolean                     countryRegion_EE = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoCZ, #isoEE, #isoHU, #isoLT, #isoLV, #isoPL]);
+        #    boolean                     countryRegion_LTLV = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoLT, #isoLV]);
+        #    CustInvoiceJour_Officials   custInvoiceJour_Officials;
+        #
+        #    CustInvoiceJour_PL          custInvoiceJour_PL;
+        #    boolean                     countryRegion_PL = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]);
+        #
+        #    CustInvoiceJourSymbol       custInvoiceJourSymbol;
+        #
+        #    TaxUncommitted                  taxUncommitted;
+        #    List                            taxUncommittedHUList;
+        #    SourceDocumentLine              sourceDocumentLine;
+        #    boolean                         isContinuousHU;
+        #
+        #    TmpTaxWorkTrans                 tmpTaxWorkTransLoc;
+        #    TaxAmount                       customsDuty;
+        #    LineAmountTax                   lineAmountTax;
+        #    boolean                         taxParametersChecked;
+        #    Map                             lineAmountTaxMap = new Map(Types::Int64, Types::Real);
+        #    boolean                         isCustoms;
+        #    CustInvoiceLine                 custInvoiceLineLoc;
+        #    int                             sign = 1;
+        #    Counter                         countI = 1;
+        #    boolean                         checkWithholdTaxParameter;
+        #    boolean                         countryRegion_IN = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIN]);
+        #    CustInvoiceTransTaxExtensionIN  custInvoiceTransTaxExtensionIN;
+        #    checkWithholdTaxParameter       = TaxWithholdParameters_IN::checkTaxParameters();
+        #    taxParametersChecked            = TaxParameters::checkTaxParameters_IN();
+        #
+        #    isPostingOK = false;
+        #    isUnrealizedVATEnabled  = TaxThaiGovCertificationFeatureChecker::isUnrealizedVATEnabled();
+        #
+        #    if (!this.validateEInvoiceParameters_MX())
+        #    {
+        #        throw error("@SYS25904");
+        #    }
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #
+        #        custInvoiceTable        = CustInvoiceTable::findRecId(custInvoiceTable.RecId,update);
+        #        sourceDocumentHeader    = SourceDocumentHeader::find(custInvoiceTable.SourceDocumentHeader);
+        #
+        #        // Calculate the taxes for the invoice.
+        #        // This will create TaxUncommitted records for the invoice lines and markups.
+        #        custFreeInvoiceCalcTotals = new CustFreeInvoiceCalcTotals(custInvoiceTable);
+        #        custFreeInvoiceCalcTotals.calc();
+        #        this.tax(custFreeInvoiceCalcTotals.tax());
+        #
+        #        if (checkWithholdTaxParameter)
+        #        {
+        #            this.taxWithholdCalcFreeInvoice_IN(custFreeInvoiceCalcTotals.taxWithholdCalcFreeInvoice_IN());
+        #        }
+        #        if (!countryRegion_RU
+        #            && ! this.validate(custFreeInvoiceCalcTotals.custFreeInvoiceInvoiceAmount()))
+        #        {
+        #            throw error("@SYS25904");
+        #        }
+        #
+        #        if (storno_RU && countryRegion_RU)
+        #        {
+        #            creditError = true;
+        #        }
+        #        else if (custFreeInvoiceCalcTotals.custFreeInvoiceInvoiceAmount() < 0
+        #                 || custInvoiceTable.creditNote_W())
+        #        {
+        #            creditNote = NoYes::Yes;
+        #        }
+        #        else
+        #        {
+        #            if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoTH]))
+        #            {
+        #                custInvoiceTableExtensionTH = custInvoiceTable.custInvoiceTableExtensionTH();
+        #                if (isUnrealizedVATEnabled
+        #                    && (custInvoiceTableExtensionTH.NoteFormat == TaxUnrealizedSalesNoteFormat::CreditNoteQuantity
+        #                    || custInvoiceTableExtensionTH.NoteFormat == TaxUnrealizedSalesNoteFormat::CreditNoteValue))
+        #                {
+        #                    creditNote = NoYes::Yes;
+        #                }
+        #                else
+        #                {
+        #                    creditNote = NoYes::No;
+        #                }
+        #            }
+        #            else
+        #            {
+        #                creditNote = NoYes::No;
+        #            }
+        #        }
+        #
+        #        // any invoice can be a correction not just negative invoices
+        #        correct    = creditError;
+        #
+        #        if (countryRegion_RU
+        #            && ! this.validate(custFreeInvoiceCalcTotals.custFreeInvoiceInvoiceAmount()))
+        #        {
+        #            throw error("@SYS25904");
+        #        }
+        #
+        #        custInvoiceTable.checkCreditNoteReason();
+        #
+        #        numberSeq = this.allocateNumAndVoucher();
+        #
+        #        if (countryRegion_LTLV)
+        #        {
+        #            [invoiceId, voucher] = this.getNumAndVoucher_W(numberSeq);
+        #            if (! CustInvoiceJour::checkDuplicateNum_W(invoiceId, '', custInvoiceTable.InvoiceDate))
+        #            {
+        #                throw error("@SYS25904");
+        #            }
+        #        }
+        #        else
+        #        {
+        #            [invoiceId, voucher] = numberSeq.numAndVoucher();
+        #        }
+        #
+        #        if (custInvoiceTable.InvoiceId
+        #                && RetailMCRChannelTable::findForCurrentUser().mcrEnableOrderCompletion)
+        #        {
+        #            mcrCallCenterComplete = true;
+        #            invoiceId = custInvoiceTable.InvoiceId;
+        #            voucher = custInvoiceTable.mcrLedgerVoucher;
+        #        }
+        #        if (!voucher)
+        #        {
+        #            throw error("@SYS71652");
+        #        }
+        #        if (TaxParameters::isCustomsEnable_IN())
+        #        {
+        #            while select TableId, RecId from custInvoiceLineLoc
+        #                    where  custInvoiceLineLoc.ParentRecId == custInvoiceTable.RecId
+        #            {
+        #                tmpTaxWorkTransLoc = this.tax().tmpTaxWorkTrans();
+        #                while select tmpTaxWorkTransLoc
+        #                    where   tmpTaxWorkTransLoc.SourceTableId == custInvoiceLineLoc.TableId
+        #                    && tmpTaxWorkTransLoc.SourceRecId   == custInvoiceLineLoc.RecId
+        #                {
+        #                    if (TaxTable::find(tmpTaxWorkTransLoc.TaxCode).TaxType_IN == TaxType_IN::Customs)
+        #                    {
+        #                        isCustoms = true;
+        #                        if (tmpTaxWorkTransLoc.SourceRegulateAmountCur)
+        #                        {
+        #                            customsDuty += tmpTaxWorkTransLoc.SourceRegulateAmountCur;
+        #                        }
+        #                        else
+        #                        {
+        #                            customsDuty += tmpTaxWorkTransLoc.SourceTaxAmountCur;
+        #                        }
+        #                    }
+        #                }
+        #            }
+        #        }
+        #
+        #        custInvoiceJour.clear();
+        #        custInvoiceJour.initValue();
+        #        custInvoiceJour.initFromCustInvoiceTable(custInvoiceTable);
+        #        custInvoiceJour.initFromCustFreeInvoiceCalcTotals(custFreeInvoiceCalcTotals);
+        #
+        #        // Use the method MCRChangePostingProfile to determine what the posting
+        #        // profile should be. If the payments are all prepays then the custinvoicejour
+        #        // should have the prepayment posting profile specified on the custparameters.
+        #        if (mcrCallCenterComplete)
+        #        {
+        #            custInvoiceJour.PostingProfile=this.mcrChangePostingProfile();
+        #        }
+        #
+        #        custInvoiceJour.InvoiceId          = invoiceId;
+        #        custInvoiceJour.LedgerVoucher      = voucher;
+        #        custInvoiceJour.Updated            = NoYes::Yes;
+        #
+        #        custInvoiceJour.calcDue();
+        #        custInvoiceJour.calcCashDiscDate();
+        #        custInvoiceJour.IsCorrection = correct;
+        #
+        #        if (numberSeq && SysCountryRegionCode::isLegalEntityInCountryRegion([#isoNO]))
+        #        {
+        #            moneyTransferSlip = PaymMoneyTransferSlip::construct(custInvoiceJour.GiroType);
+        #            moneyTransferSlip.init(custInvoiceJour.GiroType);
+        #            moneyTransferSlip.parmNumSeqCode(numberSeq.parmNumberSequenceCode());
+        #            paymId = moneyTransferSlip.ocrField(custInvoiceJour.InvoiceAccount, custInvoiceJour.InvoiceId,
+        #                                                strLen(int2str(NumberSeq::highest(numberSeq.parmNumberSequenceId()))));
+        #            custInvoiceJour.PaymId = strLTrim(paymId);
+        #        }
+        #
+        #        if (EInvoiceParameters_MX::isElectronicInvoiceEnabled())
+        #        {
+        #            EInvoicePost_MX::validateInvoiceIDForEInvoice_MX(custInvoiceJour.InvoiceId, numberSeq.parmNumberSequenceId());
+        #        }
+        #        if (EInvoiceCFDIParameters_MX::isElectronicInvoiceEnabled())
+        #        {
+        #            EInvoicePost_MX::validateInvoiceDateForCFDI_MX(custInvoiceJour.InvoiceDate);
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion(#easternEuropeAllandRU))
+        #        {
+        #            officialsServ = new OfficialsServ_RU();
+        #            officialsServ.initTableCustInvoice(custInvoiceJour);
+        #
+        #            custInvoiceJour_Officials = custInvoiceJour.custInvoiceJour_Officials();
+        #            custInvoiceJour_Officials.OffSessionId = officialsServ.newId();
+        #            custInvoiceJour.packCustInvoiceJour_Officials(custInvoiceJour_Officials);
+        #        }
+        #        if (countryRegion_RU)
+        #        {
+        #            custInvoiceJour_RU = custInvoiceJour.custInvoiceJour_RU();
+        #            custInvoiceJour_RU.PrintStandardCurrency_RU = this.parmPrintInMST_RU();
+        #            custInvoiceJour.packCustInvoiceJour_RU(custInvoiceJour_RU);
+        #        }
+        #
+        #        if (countryRegion_PL)
+        #        {
+        #            custInvoiceJour_PL = custInvoiceJour.custInvoiceJour_PL();
+        #            custInvoiceJour_PL.FiscalDocState_PL = this.fiscalDocType2State_PL(fiscalDocType);
+        #            custInvoiceJour.packCustInvoiceJour_PL(custInvoiceJour_PL);
+        #        }
+        #
+        #        custInvoiceJour.insert();
+        #
+        #        EInvoice_IT::newCustInvoice(custInvoiceJour);
+        #
+        #        if (TaxParameters::isBankExchRateEnabled_W())
+        #        {
+        #            SalesTaxExchangeRateHelper::changeSourceRecord(custInvoiceTable.TableId, custInvoiceTable.RecId, custInvoiceJour.TableId, custInvoiceJour.RecId);
+        #        }
+        #
+        #        if (CustParameters::isTaxIntegrationSystem_CN())
+        #        {
+        #            this.insertCustInvoiceJourExtensionCN(custInvoiceTable.RecId, custInvoiceJour.RecId);
+        #        }
+        #
+        #        this.insertCustCreditInvoicingJour(custInvoiceTable, custInvoiceJour);
+        #
+        #        if (countryRegion_RU)
+        #        {
+        #            CustInvoiceSalesLink::newFromInvoiceJour_RU(custInvoiceJour);
+        #
+        #            custInvoiceJourCorrType.CustInvoiceJour = custInvoiceJour.RecId;
+        #            custInvoiceJourCorrType.CorrectionType  = custInvoiceTable.CorrectionType_RU;
+        #            custInvoiceJourCorrType.insert();
+        #        }
+        #
+        #        Docu::copy(custInvoiceTable, custInvoiceJour);
+        #
+        #        custInvoiceTable.Posted     = NoYes::Yes;
+        #        custInvoiceTable.InvoiceId  = custInvoiceJour.InvoiceId;
+        #        custInvoiceTable.update();
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoCZ]))
+        #        {
+        #            custInvoiceJourSymbol.initFromCustInvoiceJourCust(custInvoiceJour);
+        #            if(custInvoiceJourSymbol.CustInvoiceJour)
+        #            {
+        #                custInvoiceJourSymbol.insert();
+        #            }
+        #        }
+        #
+        #        if (countryRegion_RU)
+        #        {
+        #            RestoredVATLogTable_RU::setRecalcAll(custInvoiceTable.InvoiceDate);
+        #        }
+        #
+        #        //If the payment term option to post offsetting a/r entries is selected
+        #        //then make sure this transaction posts in detail so records are present
+        #        //in the general journal even if the offsetting entries cancel out.
+        #        //This is an Italian legal requirement for their fiscal journal (GFR 11110)
+        #
+        #        paymTerm = PaymTerm::find(custInvoiceJour.Payment, false);
+        #
+        #        if (paymTerm.PostOffsettingAR == NoYes::Yes)
+        #        {
+        #            ledgerVoucher = LedgerVoucher::newLedgerPost(DetailSummary::Detail,
+        #                                                                 SysModule::Cust,
+        #                                                                 numberSeq.parmVoucherSequenceCode());
+        #            transferPolicy = TransferPolicy::TransferIndividual;
+        #        }
+        #        else
+        #        {
+        #
+        #            if (isCustoms)
+        #            {
+        #                ledgerVoucher = LedgerVoucher::newLedgerPost(DetailSummary::Detail,
+        #                                                                    SysModule::Cust,
+        #                                                                    numberSeq.parmVoucherSequenceCode());
+        #            }
+        #            else
+        #            {
+        #            ledgerVoucher = LedgerVoucher::newLedgerPost(DetailSummary::Summary,
+        #                                                                    SysModule::Cust,
+        #                                                                    numberSeq.parmVoucherSequenceCode());
+        #            }
+        #            transferPolicy = TransferPolicy::Summarize;
+        #        }
+        #
+        #        ledgerVoucherObject = LedgerVoucherObject::newVoucher(custInvoiceJour.LedgerVoucher,
+        #                                                              custInvoiceJour.InvoiceDate,
+        #                                                              SysModule::Cust,
+        #                                                              LedgerTransType::Cust,
+        #                                                              correct);
+        #        ledgerVoucherObject.parmDocumentNumber(custInvoiceJour.DocumentNum);
+        #        ledgerVoucherObject.parmDocumentDate(custInvoiceJour.DocumentDate);
+        #
+        #        ledgerVoucher.addVoucher(ledgerVoucherObject);
+        #
+        #        markup = new Markup(custInvoiceJour.CurrencyCode);
+        #        // Markups in cust invoices
+        #        if (countryRegion_RU)
+        #        {
+        #            markup.setTax(this.tax());
+        #
+        #            ledgerBondClient = ledgerVoucher.findLedgerVoucherObject().ledgerBondClient_RU();
+        #            if (ledgerBondClient)
+        #            {
+        #                ledgerBondClient.addNewLogObject();
+        #            }
+        #        }
+        #
+        #        markup.parmExchRate(custInvoiceJour.ExchRate,
+        #                            custInvoiceJour.ExchRateSecondary,
+        #                            Currency::noYes2UnknownNoYes(custInvoiceJour.Triangulation));
+        #
+        #
+        #        while select custInvoiceLine order by RecId
+        #            where custInvoiceLine.ParentRecId == custInvoiceTable.RecId
+        #        {
+        #            if (countryRegion_RU && custInvoiceLine.AssetId_RU)
+        #            {
+        #                assetTable            = RAssetTable::find(custInvoiceLine.AssetId_RU);
+        #                assetStandardsDefault = RAssetStandards::find(custInvoiceLine.AssetId_RU,
+        #                                                                RAssetParameters::find().StandardIdDefault);
+        #
+        #                if (assetStandardsDefault && assetStandardsDefault.Depreciation)
+        #                {
+        #                    assetLedgerVoucherBase      = ledgerVoucher;
+        #                }
+        #            }
+        #
+        #            if (countryRegion_IN
+        #                && taxParametersChecked)
+        #            {
+        #                lineAmountTax = 0;
+        #                if (FormulaDesigner_IN::isPriceInclTaxLine(custInvoiceLine.TaxItemGroup))
+        #                {
+        #                    lineAmountTax              = Tax::getpriceInclTaxAmount_IN(tableNum(CustInvoiceLine), custInvoiceLine.RecId, custInvoiceLine.TaxItemGroup, this.tax().tmpTaxWorkTrans(), this.tax().tmpTaxCalc_IN());
+        #                    lineAmountTaxMap.insert(custInvoiceLine.RecId, lineAmountTax);
+        #                }
+        #            }
+        #
+        #            custInvoiceTrans.clear();
+        #            custInvoiceTrans.initFromCustInvoiceJour(custInvoiceJour);
+        #
+        #            if (countryRegion_RU)
+        #            {
+        #                custInvoiceTrans.initFromTaxWorkTrans_RU(this.tmpTaxWorkTrans_W(this.tax().tmpTaxWorkTrans(),
+        #                                                            custInvoiceJour,
+        #                                                            custInvoiceLine),
+        #                                                            custInvoiceLine.TableId,
+        #                                                            custInvoiceLine.RecId);
+        #                localTaxAmount = custInvoiceTrans.TaxAmount;
+        #            }
+        #
+        #            custInvoiceTrans.initFromCustInvoiceLine(custInvoiceLine, this.tax());
+        #            if (countryRegion_RU && taxSpecifyLine)
+        #            {
+        #                custInvoiceTrans.TaxAmount      = localTaxAmount;
+        #            }
+        #            if ((countryRegion_RU || countryRegion_EE)
+        #                && custInvoiceTable.InclTax_W)
+        #            {
+        #                custInvoiceTrans.LineAmountTax  = custInvoiceLine.AmountCur - custInvoiceTrans.LineAmount;
+        #            }
+        #            custInvoiceTrans.LineAmountMST      = custInvoiceJour.amountMST(custInvoiceTrans.LineAmount);
+        #            custInvoiceTrans.LineAmountTaxMST   = custInvoiceJour.amountMST(custInvoiceTrans.LineAmountTax);
+        #
+        #            if (countryRegion_IN
+        #                && taxParametersChecked)
+        #            {
+        #                custInvoiceTrans.LineAmountTax      = -lineAmountTax;
+        #            }
+        #            custInvoiceTrans.insert();
+        #
+        #            if (countryRegion_IN)
+        #            {
+        #                custInvoiceTransTaxExtensionIN.TaxModelDocLineExtensionIN::initFromBaseTable(custInvoiceTrans);
+        #                custInvoiceTransTaxExtensionIN.TaxModelDocLineExtensionIN::initFromExtensionTable(CustInvoiceLineTaxExtensionIN::findByCustInvoiceLine(custInvoiceLine.RecId));
+        #                custInvoiceTransTaxExtensionIN.insert();
+        #
+        #                // Form tracking
+        #                transitDocManager = TransitDocumentManager_IN::newManager();
+        #                if (transitDocManager.existsAnyTransitDocType() &&
+        #                    transitDocManager.existTransitRuleForTransType(tableNum(CustInvoiceTable)))
+        #                {
+        #                    transitDocManager.transit(custInvoiceTable, custInvoiceTrans);
+        #                }
+        #            }
+        #
+        #            if (countryRegion_PL)
+        #            {
+        #                TaxServiceTariff::insertTaxServiceTariffForNewParent(custInvoiceLine.TableId, custInvoiceLine.RecId, custInvoiceTrans.TableId, custInvoiceTrans.RecId);
+        #                this.insertCustInvoiceTrasAsset(custInvoiceTrans.RecId);
+        #            }
+        #
+        #            this.insertCustCreditInvoicingTrans(custInvoiceLine, custInvoiceTrans);
+        #
+        #            if (countryRegion_RU)
+        #            {
+        #                if(custInvoiceTrans.custInvoiceTrans_RU().AssetId_RU)
+        #                {
+        #                    if (custInvoiceTrans.LineAmount < 0)
+        #                    {
+        #                        this.updateAssetReverse_RU();
+        #                    }
+        #                    else
+        #                    {
+        #                        this.updateAsset_RU(assetLedgerVoucherBase,
+        #                                            custInvoiceTrans,
+        #                                            custInvoiceJour,
+        #                                            this.newTransactionTxt_RU(custInvoiceJour),
+        #                                            assetStandardsDefault);
+        #                    }
+        #                }
+        #                if (custInvoiceLine.existsCorrLink_RU())
+        #                {
+        #                    CustInvoiceTransCorrLink_RU::createLink(
+        #                        custInvoiceTrans.RecId,
+        #                        custInvoiceLine.custInvoiceLineCorrLink_RU().CorrTransRecId);
+        #                }
+        #            }
+        #
+        #            Docu::copy(custInvoiceLine, custInvoiceTrans);
+        #
+        #            // If the transaction line is for a fixed asset make sure the selected asset passes validation
+        #            // prior to posting the asset transaction. This will prevent the sale of any assets which do
+        #            // not have a status that allows it to be sold.
+        #            if (custInvoiceTrans.AssetId
+        #                && (!BrazilParameters::isEnabled() || custInvoiceTable.createCustTrans_BR()))
+        #            {
+        #                assetPost = AssetPost::newCustInvoiceTrans(ledgerVoucher, custInvoiceTrans);
+        #
+        #                if (SysCountryRegionCode::isLegalEntityInCountryRegion([#IsoEE, #IsoLT])
+        #                    && custInvoiceLine.RefReturnInvoiceTrans_W)
+        #                {
+        #                    assetPost.parmIsCreditNote(true);
+        #                    assetPost.post(false);
+        #                }
+        #                else
+        #                {
+        #                    if (assetPost.check(false, false))
+        #                    {
+        #                        assetPost.post(false);
+        #                    }
+        #                    else
+        #                    {
+        #                        throw error("@SYS25904");
+        #                    }
+        #                }
+        #            }
+        #
+        #            //Store the first reason code on a line for use on the header
+        #            if(!reasonRefRecID && custInvoiceLine.ReasonRefRecId)
+        #            {
+        #                reasonRefRecID = custInvoiceLine.ReasonRefRecId;
+        #            }
+        #        }
+        #
+        #        if (custInvoiceTable.PaymentSched && !CustPaymSched::exist(custInvoiceTable.TableId, custInvoiceTable.RecId))
+        #        {
+        #            custInvoiceTable.createPaymentSched();
+        #        }
+        #
+        #        if (CustPaymSched::exist(custInvoiceTable.TableId, custInvoiceTable.RecId))
+        #        {
+        #            custInvoiceTable.copyPaymentSched(custInvoiceJour);
+        #        }
+        #
+        #        if (!custInvoiceJour.validatePaymentSched())
+        #            throw error("@SYS25904");
+        #
+        #        if (countryRegion_RU && TaxParameters::find().TaxSpecPosting_RU)
+        #        {
+        #            markup.parmCustInvoiceAccount_RU(custInvoiceTable.InvoiceAccount);
+        #        }
+        #        markup.postInvoice(1,
+        #                           custInvoiceJour.SalesBalance,
+        #                           custInvoiceTable,
+        #                           ledgerVoucher,
+        #                           custInvoiceTable.DefaultDimension,
+        #                           custInvoiceJour,
+        #                           0,
+        #                           '',
+        #                           true);
+        #
+        #        // Process Charges on FTI line level
+        #        if (SysCountryRegionCode::isLegalEntityInConsolidatedCountryRegion())
+        #        {
+        #            while select custInvoiceTrans
+        #                where custInvoiceTrans.SalesId      == custInvoiceJour.SalesId
+        #                &&  custInvoiceTrans.InvoiceId      == custInvoiceJour.InvoiceId
+        #                &&  custInvoiceTrans.InvoiceDate    == custInvoiceJour.InvoiceDate
+        #                &&  custInvoiceTrans.NumberSequenceGroup == custInvoiceJour.NumberSequenceGroup
+        #                join custInvoiceLine
+        #                    where custInvoiceLine.SourceDocumentLine == custInvoiceTrans.SourceDocumentLine
+        #            {
+        #                markup.postInvoice(custInvoiceTrans.Qty,
+        #                               custInvoiceTrans.LineAmount,
+        #                               custInvoiceLine,
+        #                               ledgerVoucher,
+        #                               custInvoiceTrans.DefaultDimension,
+        #                               custInvoiceTrans,
+        #                               0,
+        #                               '',
+        #                               true);
+        #            }
+        #        }
+        #
+        #        custInvoiceCalcTax = CustInvoiceCalcTax::construct(custInvoiceJour);
+        #
+        #        if (countryRegion_RU)
+        #        {
+        #            AmountAdjustEngineCustInvoice_W::adjustInvoiceJour(custInvoiceJour);
+        #        }
+        #
+        #        if (TaxWithholdParameters_IN::checkTaxParameters())
+        #        {
+        #            custInvoiceCalcTax.taxWithholdCalcFreeInvoice_IN(taxWithholdCalcFreeInvoice);
+        #        }
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion(#easternEuropeAllandRU) || BrazilParameters::isEnabled())
+        #        {
+        #            custInvoiceCalcTax.tax(this.tax());
+        #        }
+        #
+        #        if (!SysCountryRegionCode::isLegalEntityInCountryRegion([#isoHU]))
+        #        {
+        #            custInvoiceCalcTax.post(LedgerPostingController::newForLedgerPostingJournal(ledgerVoucher),
+        #                            NoYes::Yes);
+        #        }
+        #
+        #        ledgerTransTxt = creditNote ?  LedgerTransTxt::CustCreditNoteCust  :  LedgerTransTxt::CustInvoiceCust;
+        #
+        #        custVoucher = CustVoucher::newCustVoucherFreeInvoice(
+        #            ledgerTransTxt,
+        #            custInvoiceJour,
+        #            custInvoiceTable);
+        #
+        #        // Set settlement type if variable is set to a valid value
+        #        if (settlementType != #UnknownEnumValue)
+        #        {
+        #            custVoucher.parmSettlementType(settlementType);
+        #        }
+        #
+        #        custVoucher.parmTypeOfCreditmaxCheck(typeOfCreditmaxCheck);
+        #
+        #        custVoucher.parmReasonRefRecID(reasonRefRecID);
+        #
+        #        if (custInvoiceTrans.AssetId)
+        #        {
+        #            custVoucher.parmExchangeRateDate(AssetBook::find(custInvoiceTrans.AssetId, custInvoiceTrans.AssetBookId).exchangeRateDate());
+        #        }
+        #
+        #        // set taxWithholdAmount, TDSGroup, TCSGroup on the CustVoucher object.
+        #        // This are used for population of CustTrans and CustOpenTrans tables.
+        #        if (TaxWithholdParameters_IN::checkTaxParameters())
+        #        {
+        #            select firstonly RecId, tdsGroup_IN, tcsGroup_IN from custInvoiceLineLoc
+        #                    where (custInvoiceLineLoc.tdsGroup_IN != '' || custInvoiceLineLoc.tcsGroup_IN != '')
+        #                        && custInvoiceLineLoc.ParentRecId == custInvoiceTable.RecId;
+        #
+        #            if (custFreeInvoiceCalcTotals)
+        #            {
+        #                custVoucher.parmTaxWithholdAmount_IN(custFreeInvoiceCalcTotals.custFreeInvoiceTaxWithholdTotal_IN());
+        #                custVoucher.parmTaxWithholdAmountOriginCur_IN(custFreeInvoiceCalcTotals.taxWithholdCalcFreeInvoice_IN().totalTaxAmountOriginCur());
+        #                custVoucher.parmIsTDSApplicable_IN(custInvoiceLineLoc.tdsGroup_IN != '');
+        #                custVoucher.parmIsTCSApplicable_IN(custInvoiceLineLoc.tcsGroup_IN != '');
+        #            }
+        #        }
+        #
+        #        if (EInvoiceParameters_MX::isElectronicInvoiceEnabled() || EInvoiceCFDIParameters_MX::isElectronicInvoiceEnabled())
+        #        {
+        #            this.insertElectronicInvoice_MX(custInvoiceJour, numberSeq.parmNumberSequenceId());
+        #        }
+        #
+        #        if (creditNote)
+        #        {
+        #            custVoucher.parmTransRefType(CustTransRefType::CreditNote);
+        #        }
+        #        else
+        #        {
+        #            custVoucher.parmTransRefType(CustTransRefType::Invoice);
+        #        }
+        #
+        #        custVoucher.parmTransRefId(custInvoiceTable.InvoiceId);
+        #
+        #        custVoucher.parmExchRate(custInvoiceJour.ExchRate);
+        #
+        #        custVoucher.parmExchRateSecondary(custInvoiceJour.ExchRateSecondary);
+        #
+        #        if (countryRegion_RU
+        #            && ledgerBondClient)
+        #        {
+        #            if (ledgerBondClient.findVRefByPostingType(LedgerPostingType::CustBalance))
+        #            {
+        #                ledgerBondClient.bondVRef2Log(ledgerBondClient.findVRefByPostingType(LedgerPostingType::CustBalance));
+        #            }
+        #        }
+        #
+        #        sourceDocument = SourceDocument::newFromSourceDocumentImplementation(custInvoiceTable);
+        #
+        #        if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #        {
+        #            // The paymorderID was getting lost when calling the post
+        #            // on the cust voucher.
+        #            custTrans.mcrPaymOrderID=custInvoiceJour.InvoiceId;
+        #        }
+        #        //Process the source document
+        #        SourceDocumentProcessor::submitSourceDocumentImplementation(custInvoiceTable, false, SourceDocumentAccountingStatus::Completed);
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoHU]))
+        #        {
+        #            taxUncommittedHUList = new List(Types::Int64);
+        #
+        #            ttsbegin;
+        #
+        #            while select forupdate taxUncommitted
+        #                join sourceDocumentLine
+        #                where sourceDocumentLine.RecId == taxUncommitted.SourceDocumentLine &&
+        #                      sourceDocumentLine.SourceDocumentHeader == custInvoiceTable.SourceDocumentHeader
+        #            {
+        #                if (TaxContinuousHUHelper::isTransactionContinuousHU(taxUncommitted.TaxItemGroup))
+        #                {
+        #                    TaxUncommitted_HU::insertTaxUncommittedHU(sourceDocumentLine.RecId);
+        #                    taxUncommittedHUList.addEnd(sourceDocumentLine.RecId);
+        #                    isContinuousHU = true;
+        #                    // For hungarian deferred taxes, the tax has to be posted to a deferred tax account until the vat due date
+        #                    // when it is reversed out of the deferred tax account and posted to the sales tax account
+        #                    // The source document tax lines for which Hungarian Subscription is enabled is submitted to the Source Document
+        #                    // Processor Facade for fully distributed state processing. The change in state from Completed to FullyDistributed
+        #                    // causes the reversal on the VAT due date to occur
+        #                    SourceDocumentProcessorFacade::submitSourceDocumentLineImplementation(taxUncommitted, false, SourceDocumentLineAccountingStatus::FullyDistributed);
+        #                }
+        #            }
+        #            if (isContinuousHU)
+        #            {
+        #                SourceDocumentProcessorFacade::submitSourceDocumentImplementation(custInvoiceTable, false, SourceDocumentAccountingStatus::Completed);
+        #                TaxContinuousHUHelper::deleteTaxUncommittedHURecords(taxUncommittedHUList);
+        #            }
+        #            custInvoiceCalcTax.post(LedgerPostingController::newForLedgerPostingJournal(ledgerVoucher),
+        #                                NoYes::Yes);
+        #
+        #            ttscommit;
+        #
+        #        }
+        #
+        #        sourceDocument = SourceDocument::newFromSourceDocumentImplementation(custInvoiceTable);
+        #        if(sourceDocument.parmSourceDocumentHeader().AccountingStatus != SourceDocumentAccountingStatus::Completed)
+        #        {
+        #            throw error("@SYS25904");
+        #        }
+        #
+        #        // The CustVoucher.post() call subsequently invokes settlement functionality if the document being posted was marked for settlement.
+        #        // Settlement depends upon the existance of the source document data produced by the "journalize" step, thus invocation of CustVoucher.post()
+        #        // must come after the call to SourceDocumentHeaderType::journalize().
+        #        accountingEvent = AccountingEvent::getLastEvent(custInvoiceTable.SourceDocumentHeader);
+        #        custVoucher.parmAccountingEventReference(accountingEvent.RecId);
+        #
+        #        if (!BrazilParameters::isEnabled() || custInvoiceTable.createCustTrans_BR())
+        #        {
+        #            custVoucher.post(ledgerVoucher, custTrans, NoYes::No, Currency::noYes2UnknownNoYes(custInvoiceJour.Triangulation), false, true);
+        #        }
+        #
+        #        if (this.parmAdvanceInvoiceSettlement_W())
+        #        {
+        #            this.parmAdvanceInvoiceSettlement_W().reverseSettlement(custInvoiceJour);
+        #            this.parmAdvanceInvoiceSettlement_W().settleNow(custInvoiceJour);
+        #        }
+        #
+        #        ledgerVoucher.end();
+        #
+        #        if (countryRegion_RU)
+        #        {
+        #            this.createTransLink_RU(custInvoiceJour);
+        #        }
+        #
+        #        if (BrazilParameters::isEnabled() && !this.parmIsCustInterestAdjustment_BR())
+        #        {
+        #            this.postFiscalDocument_BR(custFreeInvoiceCalcTotals, custInvoiceTable);
+        #        }
+        #
+        #        TransactionLog::create(TransactionLogType::CustFreeInvoice,"@SYS60858");
+        #        this.postFacture_RU(custInvoiceJour);
+        #
+        #        if (CustParameters::isTaxIntegrationSystem_CN())
+        #        {
+        #            this.createExportDocument_CN(custInvoiceTable.RecId, custInvoiceJour.RecId);
+        #        }
+        #
+        #        if (ProjIntercompanyVendorInvoiceCreator::isProjIntercompany(custInvoiceTable))
+        #        {
+        #            ProjIntercompanyVendorInvoiceCreator::construct(custInvoiceTable).createVendorInvoice();
+        #        }
+        #
+        #        if (! RecurrenceInvoice::existsByCustInvoiceTable(custInvoiceTable.RecId))
+        #        {
+        #            if (isConfigurationkeyEnabled(configurationKeyNum(FreeTextInvoiceCorrection)))
+        #            {
+        #                if (CustRelatedInvoice::doesInvoiceExistForType(custInvoiceTable.RecId, InvoiceAssociationType::AdjustingInvoice))
+        #                {
+        #                    info(strFmt("@SYS308704", custInvoiceJour.InvoiceId));
+        #                }
+        #                else if (custInvoiceTable.isCorrectedInvoice())
+        #                {
+        #                    parentInvoiceID = CustRelatedInvoice::findParentInvoiceForChild(custInvoiceTable.RecId).InvoiceId;
+        #                    info(strFmt("@SYS311111", custInvoiceJour.InvoiceId, parentInvoiceID));
+        #                }
+        #                else
+        #                {
+        #                    info(strFmt("@SYS25683", custInvoiceJour.InvoiceId));
+        #                }
+        #            }
+        #            else
+        #            {
+        #                info(strFmt("@SYS25683", custInvoiceJour.InvoiceId));
+        #            }
+        #        }
+        #
+        #        //--> Credit Card Begin
+        #        CreditCardPosting::ApplyPaymentFreeText(custInvoiceJour,CustInvoiceTable);
+        #        //<-- Credit Card End
+        #
+        #        ttscommit;
+        #        isPostingOK = true;
+        #
+        #        TradeBLWIFormCodes::initClassFromCust(custInvoiceJour, TradeBLWITypeOfForm::CustInvoiceJour, TradeBLWITypeOfForm::CustFreeInvoice);
+        #    }
+        #
+        #
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    catch (Exception::UpdateConflict)
+        #    {
+        #        if (appl.ttsLevel() == 0)
+        #        {
+        #            if (xSession::currentRetryCount() >= #RetryNum)
+        #            {
+        #                throw Exception::UpdateConflictNotRecovered;
+        #            }
+        #            else
+        #            {
+        #                retry;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            throw Exception::UpdateConflict;
+        #        }
+        #    }
+        #
+        #    catch (Exception::Error)
+        #    {
+        #        ttsbegin;
+        #
+        #        sourceDocumentHeader = SourceDocumentHeader::find(custInvoiceTable.SourceDocumentHeader, true);
+        #        sourceDocumentHeader.update();
+        #
+        #        ttscommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #tax
+        #Tax tax(Tax _tax = tax)
+        #{
+        #    ;
+        #    tax = _tax;
+        #    return tax;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #taxWithholdCalcFreeInvoice_IN
+        #/// <summary>
+        #/// Sets tax withhold calculation of free invoice.
+        #/// </summary>
+        #/// <param name="_taxWithholdCalcFreeInvoice">
+        #/// The instance of the <c>TaxWithholdCalcFreeInvoice_IN</c> class.
+        #/// </param>
+        #/// <returns>
+        #/// The instance of the <c>TaxWithholdCalcFreeInvoice_IN</c> class.
+        #/// </returns>
+        #TaxWithholdCalcFreeInvoice_IN taxWithholdCalcFreeInvoice_IN(TaxWithholdCalcFreeInvoice_IN _taxWithholdCalcFreeInvoice = taxWithholdCalcFreeInvoice)
+        #{
+        #    taxWithholdCalcFreeInvoice = _taxWithholdCalcFreeInvoice;
+        #    return taxWithholdCalcFreeInvoice;
+        #}
+      ENDSOURCE
+      SOURCE #tmpTaxWorkTrans_W
+        #private TmpTaxWorkTrans tmpTaxWorkTrans_W(TmpTaxWorkTrans _taxWorkTrans,
+        #                                          CustInvoiceJour _custInvoiceJour,
+        #                                          CustInvoiceLine _custInvoiceLine)
+        #{
+        #    CurrencyCode companyCurrency= CompanyInfo::standardCurrency();
+        #
+        #    ttsbegin;
+        #
+        #    while select forupdate _taxWorkTrans
+        #        where ! _taxWorkTrans.TaxAutogenerated                          &&
+        #                _taxWorkTrans.SourceTableId == _custInvoiceLine.TableId &&
+        #                _taxWorkTrans.SourceRecId   == _custInvoiceLine.RecId
+        #    {
+        #        if (_taxWorkTrans.SourceCurrencyCode == companyCurrency)
+        #        {
+        #            _taxWorkTrans.TaxAmount = _taxWorkTrans.transactionCurrencyTaxAmount();
+        #        }
+        #        else
+        #        {
+        #            _taxWorkTrans.TaxAmount = Currency::mstAmount(_taxWorkTrans.transactionCurrencyTaxAmount(),
+        #                                                          _taxWorkTrans.SourceCurrencyCode,
+        #                                                          _taxWorkTrans.TransDate,
+        #                                                          _taxWorkTrans.euroTriangulation ?  UnknownNoYes::Unknown : UnknownNoYes::No,
+        #                                                          _custInvoiceJour.ExchRate,
+        #                                                          _custInvoiceJour.ExchRateSecondary);
+        #        }
+        #
+        #        _taxWorkTrans.doUpdate();
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    return _taxWorkTrans;
+        #}
+      ENDSOURCE
+      SOURCE #unpack
+        #public boolean unpack(container packedClass)
+        #{
+        #    Version version = RunBase::getVersion(packedClass);
+        #    // <GEEU>
+        #    container packedMap;
+        #    // </GEEU>
+        #
+        #    switch (version)
+        #    {
+        #        case #CurrentVersion:
+        #            // Extract the version and values from the packed class.
+        #            [version, #CurrentList
+        #            // <GEEU>
+        #            , packedMap
+        #            // </GEEU>
+        #            ] = packedClass;
+        #            // <GEEU>
+        #            advanceInvoiceSettlement = AdvanceInvoiceSettlement_W::newUnpack(tableNum(CustInvoiceTable), packedMap);
+        #            // </GEEU>
+        #            break;
+        #
+        #        default:
+        #            return false;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #updateAsset_RU
+        #private void updateAsset_RU(LedgerVoucher       _assetLedgerVoucherBase,
+        #                            CustInvoiceTrans    _custInvoiceTrans,
+        #                            CustInvoiceJour     _custInvoiceJour,
+        #                            TransactionTxt      _transTxt,
+        #                            RAssetStandards     _assetStandardsDefault)
+        #{
+        #    CustInvoiceTrans_RU     custInvoiceTrans_RU;
+        #    LedgerVoucher           assetLedgerVoucherOthers;
+        #    LedgerVoucherObject     assetLedgerVoucherObjectOthers;
+        #    Voucher                 assetVoucher;
+        #    RAssetStandards         assetStandards;
+        #    RefRecId                numberRefRecId;
+        #    RAssetPost              rAssetPost;
+        #    RAssetOperationType     rAssetOperationType;
+        #    RAssetTrans             rAssetTrans;
+        #
+        #    if (_assetLedgerVoucherBase)
+        #    {
+        #        rAssetPost = RAssetPost::construct(_custInvoiceTrans,
+        #                                           _assetLedgerVoucherBase,
+        #                                           _assetStandardsDefault.AssetStandardId);
+        #        rAssetPost.run();
+        #        _assetLedgerVoucherBase = null;
+        #        custInvoiceTrans_RU = _custInvoiceTrans.custInvoiceTrans_RU();
+        #
+        #        while select AssetStandardId from assetStandards
+        #            where assetStandards.AssetId         == custInvoiceTrans_RU.AssetId_RU &&
+        #                  assetStandards.AssetStandardId != _assetStandardsDefault.AssetStandardId &&
+        #                  assetStandards.Depreciation
+        #        exists join rAssetTrans
+        #            where rAssetTrans.AccountNum      == assetStandards.AssetId         &&
+        #                  rAssetTrans.AssetStandardId == assetStandards.AssetStandardId &&
+        #                  rAssetTrans.AssetTransType  == RAssetTransType::Acquisition   &&
+        #                  ! rAssetTrans.StornoRecId
+        #        {
+        #            rAssetOperationType = RAssetOperationType::construct(RAssetTransType::DisposalSale,
+        #                                                                 custInvoiceLine,
+        #                                                                 _custInvoiceJour.InvoiceDate,
+        #                                                                 assetStandards.AssetStandardId);
+        #
+        #            if (!rAssetOperationType.check())
+        #            {
+        #                throw error("@SYS25904");
+        #            }
+        #
+        #            numberRefRecId = (select firstonly NumberSequenceTable from ledgerJournalName
+        #                                  where ledgerJournalName.JournalType == LedgerJournalType::Assets_RU).NumberSequenceTable;
+        #
+        #            assetVoucher             =  NumberSeq::newGetVoucherFromId(numberRefRecId, true).voucher();
+        #
+        #            assetLedgerVoucherOthers = LedgerVoucher::newLedgerPost(DetailSummary::Summary,
+        #                                                                    SysModule::FixedAssets_RU,
+        #                                                                    NumberSequenceTable::find(numberRefRecId).NumberSequence);
+        #
+        #            assetLedgerVoucherObjectOthers = LedgerVoucherObject::newVoucher(assetVoucher,
+        #                                                                             _custInvoiceJour.InvoiceDate,
+        #                                                                             SysModule::FixedAssets_RU,
+        #                                                                             LedgerTransType::FixedAssets_RU,
+        #                                                                             NoYes::No);
+        #
+        #            assetLedgerVoucherObjectOthers.lastTransTxt(_transTxt.txt());
+        #            assetLedgerVoucherOthers.addVoucher(assetLedgerVoucherObjectOthers);
+        #
+        #            if (assetLedgerVoucherOthers)
+        #            {
+        #                rAssetPost = RAssetPost::construct(_custInvoiceTrans,
+        #                                                   assetLedgerVoucherOthers,
+        #                                                   assetStandards.AssetStandardId);
+        #                rAssetPost.run();
+        #
+        #                assetLedgerVoucherOthers.end();
+        #                assetLedgerVoucherOthers.finalize();
+        #            }
+        #        }
+        #        RAssetTable::updateCustInfo(custInvoiceTrans_RU.AssetId_RU, _custInvoiceJour.InvoiceAccount, '', _custInvoiceJour.InvoiceId);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateAssetReverse_RU
+        #private void updateAssetReverse_RU()
+        #{
+        #    RAssetTransactionReversal  rAssetTransactionReversal;
+        #    RAssetStandards            rAssetStandards;
+        #    RAssetTrans                rAssetTrans;
+        #    ;
+        #
+        #    while select AssetStandardId from rAssetStandards
+        #        where rAssetStandards.AssetId  == custInvoiceLine.AssetId_RU &&
+        #              rAssetStandards.Depreciation
+        #    {
+        #        rAssetTrans = RAssetTrans::findLastType(custInvoiceLine.AssetId_RU,
+        #                                                rAssetStandards.AssetStandardId,
+        #                                                RAssetTransType::DisposalSale,
+        #                                                false,
+        #                                                maxDate(),
+        #                                                true);
+        #        rAssetTransactionReversal = RAssetTransactionReversal::construct(rAssetTrans);
+        #        rAssetTransactionReversal.initValue(rAssetTrans);
+        #        rAssetTransactionReversal.parmReversalDate(custInvoiceTable.InvoiceDate);
+        #        rAssetTransactionReversal.run();
+        #    }
+        #    RAssetTable::updateCustInfo(custInvoiceLine.AssetId_RU, '', '');
+        #}
+        #
+      ENDSOURCE
+      SOURCE #validate
+        #boolean  validate(AmountCur _invoiceAmount)
+        #{
+        #    boolean                 ok              = true;
+        #    Counter                 numberOfLines   = 0;
+        #    CustTable               custTable;
+        #
+        #    #ISOCountryRegionCodes
+        #    boolean                 countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([ #isoRU ]);
+        #    // <GMY>
+        #    boolean                 countryRegion_MY = SysCountryRegionCode::isLegalEntityInCountryRegion([ #isoMY ]);
+        #    // </GMY>
+        #    boolean                 countryRegion_PL = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]);
+        #    boolean                 firstPKWiUNotFound;
+        #    CustPKWiUErrorLevel     pkwiuErrorLevel;
+        #
+        #    utcdatetime             localDT;
+        #    TaxParameters           taxParameters;
+        #    MainAccount             mainAccount;
+        #    TransDate               lastValidDate;
+        #    boolean                 countryRegion_LTHU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoLT, #isoHU]);
+        #
+        #    if (countryRegion_PL)
+        #    {
+        #        firstPKWiUNotFound = true;
+        #        pkwiuErrorLevel = CustParameters::find().pkWiUCodeRequirement;
+        #    }
+        #
+        #    if (!custInvoiceTable)
+        #    {
+        #        throw error(strFmt("@SYS26860"));
+        #    }
+        #    if (custInvoiceTable.Posted)
+        #    {
+        #        ok = checkFailed(strFmt("@SYS23025"));
+        #    }
+        #    if (custInvoiceTable.ReleaseDate != utcDateTimeNull() && custInvoiceTable.ReleaseDate > DateTimeUtil::utcNow())
+        #    {
+        #        localDT = DateTimeUtil::applyTimeZoneOffset(custInvoiceTable.ReleaseDate, DateTimeUtil::getUserPreferredTimeZone());
+        #        ok = checkFailed(strFmt("@SYS114593", datetime2str(localDT, DateFlags::FormatAll)));
+        #    }
+        #
+        #    if (countryRegion_RU
+        #        && ! CustInvoiceLine::checkLines_RU(custInvoiceTable.RecId))
+        #    {
+        #        ok = checkFailed(strFmt("@GLS102161"));
+        #    }
+        #
+        #    if (!CustTable::exist(custInvoiceTable.OrderAccount))
+        #    {
+        #        ok = checkFailed(strFmt(CustTable::txtNotExist(), custInvoiceTable.InvoiceAccount));
+        #    }
+        #    custTable = custInvoiceTable.custTable_InvoiceAccount();
+        #
+        #    if (! custTable)
+        #    {
+        #        ok = checkFailed(strFmt(CustTable::txtNotExist(), custInvoiceTable.InvoiceAccount));
+        #    }
+        #    if (ok)
+        #    {
+        #        if (!custTable.checkAccountBlocked(_invoiceAmount))
+        #        {
+        #            ok = false;
+        #        }
+        #        if (!CustTable::checkCreditLimit(custInvoiceTable.InvoiceAccount,
+        #                                        typeOfCreditmaxCheck,
+        #                                        custInvoiceTable.amountMST(_invoiceAmount),
+        #                                        CustParameters::find().CreditLineError == CreditLineErrorType::Warning,
+        #                                        custInvoiceTable.AgreementHeaderExt_RU,
+        #                                        custInvoiceTable.TableId,
+        #                                        custInvoiceTable.RecId
+        #                                        ))
+        #        {
+        #            ok = false;
+        #        }
+        #    }
+        #
+        #    taxParameters = TaxParameters::find();
+        #    while select custInvoiceLine
+        #        where custInvoiceLine.ParentRecId == custInvoiceTable.RecId
+        #    {
+        #
+        #        // Check if the account exists.
+        #        mainAccount = DimensionStorage::getMainAccountFromLedgerDimension(custInvoiceLine.LedgerDimension);
+        #        if (! MainAccount::checkExist(mainAccount.RecId))
+        #            ok = checkFailed(strFmt("@SYS9779", mainAccount.MainAccountId));
+        #
+        #
+        #        //checkTax to check if no tax is allowed.
+        #        if (ok && taxParameters.ValidateTaxCode)
+        #        {
+        #            ok = Tax::checkNoTax(mainAccount,
+        #                                custInvoiceLine.TaxGroup,
+        #                                custInvoiceLine.TaxItemGroup);
+        #        }
+        #
+        #        if (ok)
+        #        {
+        #            ok = MainAccount::checkAllowPosting(mainAccount.MainAccountId,
+        #                                                LedgerPostingType::LedgerJournal);
+        #        }
+        #
+        #        if (pkwiuErrorLevel != CustPKWiUErrorLevel::None
+        #            && countryRegion_PL
+        #            && !custInvoiceLine.pkWiUCode_PL)
+        #        {
+        #            if (firstPKWiUNotFound)
+        #            {
+        #                switch (pkwiuErrorLevel)
+        #                {
+        #                    case CustPKWiUErrorLevel::Warning :
+        #                        warning("@GLS220259");
+        #                        break;
+        #                    case CustPKWiUErrorLevel::Error :
+        #                        ok = false;
+        #                        error("@GLS220259");
+        #                        break;
+        #                }
+        #
+        #                firstPKWiUNotFound = false;
+        #            }
+        #
+        #            info(strFmt("@GLS220277", mainAccount.MainAccountId, custInvoiceLine.Description));
+        #        }
+        #
+        #        if (ok && countryRegion_LTHU && custInvoiceTable.InclTax_W)
+        #        {
+        #            ok = custInvoiceLine.validateExcludeTaxFromInvoice(custInvoiceTable.InclTax_W);
+        #        }
+        #
+        #        numberOfLines++;
+        #    }
+        #
+        #    if (!numberOfLines)
+        #        ok = checkFailed("@SYS69823");
+        #
+        #    if (TaxVATNumTable::isVATNumMandatory(CustParameters::find().MandatoryInvoiceVATNum, custInvoiceTable))
+        #    {
+        #        ok = checkFailed("@SYS55694");
+        #    }
+        #
+        #    if (countryRegion_RU
+        #        && ! this.checkSalesBook_RU())
+        #    {
+        #        warning(strFmt("@GLS101326",
+        #                       custInvoiceTable.InvoiceId,
+        #                       custInvoiceTable.InvoiceDate));
+        #        ok = checkFailed("@GLS101992");
+        #    }
+        #
+        #    if (countryRegion_RU && RestoredVATLogTable_RU::checkApproved(custInvoiceTable.InvoiceDate))
+        #    {
+        #        ok = checkFailed(RestoredVATLogTable_RU::txtApprovedMsg(custInvoiceTable.InvoiceDate));
+        #    }
+        #
+        #    ok = ok && TradeBLWIParameters::checkBLWI(custInvoiceTable.RecId, TradeBLWITypeOfForm::CustFreeInvoice);
+        #
+        #    ok = ok && this.validateEInvoiceFields();
+        #
+        #    ok = ok && this.checkPaymentSlipDK();
+        #
+        #    if (isUnrealizedVATEnabled)
+        #    {
+        #        ok = ok && this.isSingleTaxType();
+        #    }
+        #
+        #    if (custInvoiceTable.Payment && SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #    {
+        #        paymTerm = PaymTerm::find(custInvoiceTable.Payment);
+        #        if (!custInvoiceTable.DeliveryDate_ES && paymTerm.UseDeliveryDateForDueDate_ES)
+        #        {
+        #            ok = checkFailed("@SYS4001053");
+        #        }
+        #        else
+        #        {
+        #            lastValidDate = PaymDueDateLimit_ES::getCurrentValues(paymTerm.DueDateLimitGroupId_ES).getLastValidDate(
+        #                paymTerm.UseDeliveryDateForDueDate_ES ? custInvoiceTable.DeliveryDate_ES : custInvoiceTable.InvoiceDate);
+        #            if (custInvoiceTable.DueDate > lastValidDate)
+        #            {
+        #                ok = checkFailed("@SYS4001058");
+        #            }
+        #        }
+        #    }
+        #
+        #    if (fiscalDocType == PlFiscalDocType::FiscalDocument &&
+        #        ! custInvoiceTable.InclTax_W)
+        #    {
+        #        ok = checkFailed("@GLS109942");
+        #    }
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#IsoHU]))
+        #    {
+        #        ok = SalesInvoiceJournalCreate::checkDocumentDate_W(custInvoiceTable.PostalAddress,
+        #                                                            custInvoiceTable.DocumentDate,
+        #                                                            custInvoiceTable.InvoiceDate,
+        #                                                            creditNote,
+        #                                                            fieldPName(CustInvoiceTable, DocumentDate),
+        #                                                            fieldPName(CustInvoiceTable, InvoiceDate)) && ok;
+        #    }
+        #
+        #    if (countryRegion_MY)
+        #    {
+        #        if (custFreeInvoiceCalcTotals.custFreeInvoiceInvoiceAmount() < 0
+        #        || (custFreeInvoiceCalcTotals.custFreeInvoiceInvoiceAmount() >= 0 && custInvoiceTable.hasLinesWithRefrence_MY()))
+        #        {
+        #            if(!custInvoiceTable.CorrectionReasonCode)
+        #            {
+        #                throw error("@SYP4860740");
+        #            }
+        #        }
+        #    }
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #validateEInvoiceFields
+        #private boolean validateEInvoiceFields()
+        #{
+        #    boolean                 ok = true;
+        #    LogisticsPostalAddress  postalAddress;
+        #    AmountMST               lineAmount;
+        #
+        #    if (CustTable::isCustDKPublic(custInvoiceTable.InvoiceAccount) == NoYes::Yes)
+        #    {
+        #        if (!custInvoiceTable.contactPersonName())
+        #        {
+        #            ok = checkFailed(strFmt("@SYS26332", "@SYS100792"));
+        #        }
+        #
+        #        postalAddress = LogisticsPostalAddress::findRecId(custInvoiceTable.PostalAddress);
+        #        if (!postalAddress.Street)
+        #        {
+        #            ok = checkFailed(strFmt("@SYS26332", "@SYS23438"));
+        #        }
+        #
+        #        if (!postalAddress.ZipCode)
+        #        {
+        #            ok = checkFailed(strFmt("@SYS26332", "@SYS12463"));
+        #        }
+        #
+        #        if (!postalAddress.City)
+        #        {
+        #            ok = checkFailed(strFmt("@SYS26332", "@SYS22249"));
+        #        }
+        #
+        #        if (!postalAddress.CountryRegionId)
+        #        {
+        #            ok = checkFailed(strFmt("@SYS26332", "@SYS7437"));
+        #        }
+        #
+        #        if (!CompanyInfo::find().CoRegNum)
+        #        {
+        #            ok = checkFailed(strFmt("@SYS26332", "@SYS969"));
+        #        }
+        #
+        #        if (LogisticsAddressCountryRegion::find(postalAddress.CountryRegionId).isOcode)
+        #        {
+        #            if (strLen(LogisticsAddressCountryRegion::find(postalAddress.CountryRegionId).isOcode) != 2)
+        #            {
+        #                ok = checkFailed(strFmt("@SYS101033", postalAddress.CountryRegionId));
+        #            }
+        #        }
+        #        else
+        #        {
+        #            ok = checkFailed(strFmt("@SYS101034", postalAddress.CountryRegionId));
+        #        }
+        #
+        #        if (Currency::find(custInvoiceTable.CurrencyCode).CurrencyCodeISO)
+        #        {
+        #            if (strLen(Currency::find(custInvoiceTable.CurrencyCode).CurrencyCodeISO) != 3)
+        #            {
+        #                ok = checkFailed(strFmt("@SYS101035", custInvoiceTable.CurrencyCode));
+        #            }
+        #        }
+        #        else
+        #        {
+        #            ok = checkFailed(strFmt("@SYS101036", custInvoiceTable.CurrencyCode));
+        #        }
+        #
+        #        while select custInvoiceLine
+        #            where custInvoiceLine.ParentRecId == custInvoiceTable.RecId
+        #        {
+        #            if (custInvoiceLine.Description == '')
+        #            {
+        #                ok = checkFailed("@SYS344734");
+        #                break;
+        #            }
+        #
+        #            lineAmount  += custInvoiceLine.AmountCur;
+        #        }
+        #    }
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #validateEInvoiceParameters_MX
+        #private boolean validateEInvoiceParameters_MX()
+        #{
+        #    boolean ok = true;
+        #
+        #
+        #    if(EInvoiceParameters_MX::isElectronicInvoiceEnabled())
+        #    {
+        #        if(!DigitalCertificateManager::isCurrentPrivateKeyReadable())
+        #        {
+        #            ok = checkFailed("@SYS341994");
+        #        }
+        #
+        #        if(!EInvoiceParameters_MX::schemaFileExists())
+        #        {
+        #            ok = checkFailed(strFmt("@SYS109820", EInvoiceParameters_MX::find().cfdXsdFile));
+        #        }
+        #    }
+        #
+        #    if(EInvoiceCFDIParameters_MX::isElectronicInvoiceEnabled())
+        #    {
+        #        if (!DigitalCertificateManager::isCurrentCFDIPACPrivateKeyReadable() || !DigitalCertificateManager::isCurrentPrivateKeyReadable())
+        #        {
+        #            ok = checkFailed("@SYS341994");
+        #        }
+        #
+        #        if (!EInvoiceCFDIParameters_MX::schemaFileExists())
+        #        {
+        #            ok = checkFailed(strFmt("@SYS109820", EInvoiceCFDIParameters_MX::find().cfdiXsdFile));
+        #        }
+        #    }
+        #
+        #    return ok;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #vatRegData_W
+        #public container vatRegData_W(InvoiceId _invoiceId = "")
+        #{
+        #    VatDueDate_W           vatDate;
+        #    DocumentDate           documentDate;
+        #    PlCustVendName         custVendName;
+        #    VATNum                 vatNum;
+        #    Addressing             addressing;
+        #    CustTable              custTable;
+        #    PlTaxPeriodPaymentCode taxPeriodPaymentCode;
+        #    CzPostponeVAT          postponeVAT;
+        #
+        #    vatDate      = custInvoiceTable.VatDueDate_W;
+        #    documentDate = custInvoiceTable.DocumentDate;
+        #    postponeVAT  = custInvoiceTable.PostponeVAT && custInvoiceTable.creditNote_W();
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #    {
+        #        taxPeriodPaymentCode = custInvoiceTable.TaxPeriodPaymentCode_PL;
+        #        custTable            = CustTable::find(custInvoiceTable.InvoiceAccount);
+        #        custVendName         = custTable.name();
+        #        addressing           = custTable.address();
+        #        vatNum               = custTable.vatNum;
+        #    }
+        #
+        #    return [ vatDate,
+        #             documentDate,
+        #             custVendName,
+        #             vatNum,
+        #             addressing,
+        #             taxPeriodPaymentCode,
+        #             postponeVAT,
+        #             NoYes::No ];
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #static void  main(Args  args)
+        #{
+        #    CustInvoiceTable    custInvoiceTable;
+        #    CustPostInvoice     custPostInvoice;
+        #    SettlementType      settlementType;
+        #
+        #    custInvoiceTable = args.record() as CustInvoiceTable;
+        #
+        #    settlementType = #UnknownEnumValue;
+        #    if (args.parmEnumType() == enumNum(SettlementType))
+        #    {
+        #        settlementType = args.parmEnum();
+        #    }
+        #
+        #    custPostInvoice = new CustPostInvoice(custInvoiceTable,
+        #                                          CustParameters::find().CreditMaxCheck,
+        #                                          NoYes::No,
+        #                                          settlementType);
+        #
+        #    custPostInvoice.run();
+        #}
+      ENDSOURCE
+      SOURCE #staticRun
+        #/// <summary>
+        #/// Runs the specified packed instance of the <c>CustPostInvoice</c> class.
+        #/// </summary>
+        #/// <param name="_params">
+        #/// A container of <c>CustInvoiceTable</c> record id, packed <c>CustPostInvoice</c> values and boolean value specifying if facture is posted after the invoice.
+        #/// </param>
+        #/// <returns>
+        #/// A container holding boolean value that indicates if the posting was ok.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is called only internally from <c>CustPostInvoice.staticRunIL</c> method.
+        #/// </remarks>
+        #protected server static container staticRun(container _params)
+        #{
+        #    RecId custInvoiceTableRecId;
+        #    container packedCustPostInvoice;
+        #    CustInvoiceTable custInvoiceTable;
+        #    CustPostInvoice custPostInvoice;
+        #    // <GEERU>
+        #    boolean postFacture;
+        #    // </GEERU>
+        #
+        #    [ custInvoiceTableRecId, packedCustPostInvoice
+        #    // <GEERU>
+        #        , postFacture
+        #    // </GEERU>
+        #    ] = _params;
+        #
+        #    custInvoiceTable = CustInvoiceTable::findRecId(custInvoiceTableRecId);
+        #
+        #    // <GEERU>
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]) && postFacture)
+        #    {
+        #        custPostInvoice = new CustPostFactureFreeTxt_RU(custInvoiceTable);
+        #    }
+        #    else
+        #    {
+        #    // </GEERU>
+        #        custPostInvoice = new CustPostInvoice(custInvoiceTable);
+        #    // <GEERU>
+        #    }
+        #    // </GEERU>
+        #
+        #    custPostInvoice.unpack(packedCustPostInvoice);
+        #    custPostInvoice.runInternal();
+        #    return [custPostInvoice.isPostingOK()];
+        #}
+      ENDSOURCE
+      SOURCE #staticRunIL
+        #/// <summary>
+        #/// Runs the <c>CustPostInvoice.staticRun</c> method, ensuring it is executed under Xpp IL.
+        #/// </summary>
+        #/// <param name="_custInvoiceTableRecId">
+        #/// The record id of <c>CustInvoiceTable</c>.
+        #/// </param>
+        #/// <param name="_packedCustPostInvoice">
+        #/// A container holding <c>CustPostInvoice</c> parameters.
+        #/// </param>
+        #/// <param name="_postFacture">
+        #/// A Boolean value that specified whether facture is posted after the invoice; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A container holding boolean value that indicates if the posting was ok.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is called internally from <c>CustPostInvoice.run</c> method.
+        #/// </remarks>
+        #protected server static container staticRunIL(
+        #    RecId _custInvoiceTableRecId,
+        #    container _packedCustPostInvoice
+        #    // <GEERU>
+        #    , boolean _postFacture = false
+        #    // </GEERU>
+        #    )
+        #{
+        #    container results;
+        #    XppILExecutePermission xppILExecutePermission = new XppILExecutePermission();
+        #    xppILExecutePermission.assert();
+        #
+        #    results = runClassMethodIL(
+        #        classStr(CustPostInvoice), staticMethodStr(CustPostInvoice, staticRun), [_custInvoiceTableRecId, _packedCustPostInvoice, _postFacture]);
+        #
+        #    CodeAccessPermission::revertAssert();
+        #    return results;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+    EVENTS
+      METHOD #validate
+        EVENTHANDLERS
+          EVENTHANDLER #CustPostInvoiceEventHandlerEEFeatures
+            PROPERTIES
+              CalledWhen          #Post
+              Class               #CustPostInvoiceEventHandlerEEFeatures
+              Method              #validateEEFeatures
+              AOTlink             #\Classes\CustPostInvoiceEventHandlerEEFeatures\validateEEFeatures
+            ENDPROPERTIES
+            
+          ENDEVENTHANDLER
+        ENDEVENTHANDLERS
+      ENDMETHOD
+    ENDEVENTS
+  ENDCLASS
+
+***Element: END

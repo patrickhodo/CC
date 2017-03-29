@@ -1,0 +1,1456 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CustBankAccount
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CustBankAccount
+      Label               #@SYS24208
+      FormRef             #CustBankAccounts
+      TitleField1         #AccountID
+      TitleField2         #Name
+      ConfigurationKey    #LedgerBasic
+      SecurityKey         #CustTables
+      AOSAuthorization    #CreateReadUpdateDelete
+      CacheLookup         #Found
+      CreateRecIdIndex    #Yes
+      TableGroup          #Main
+      PrimaryIndex        #AccountIdx
+      ClusterIndex        #AccountIdx
+      DeveloperDocumentation  #@SYS127230
+      Origin              #{2C0F0032-0000-1000-1ED4-0D589DEB8934}
+      LegacyId            #50
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AccountID
+        STRING
+        PROPERTIES
+          Name                #AccountID
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CustBankAccount
+          Origin              #{FF0C20C1-7951-493C-9E8B-B11D27DAA791}
+          LegacyId            #1
+          ExtendedDataType    #CustBankAccountId
+        ENDPROPERTIES
+        
+      FIELD #AccountNum
+        STRING
+        PROPERTIES
+          Name                #AccountNum
+          AOSAuthorization    #Yes
+          Table               #CustBankAccount
+          Origin              #{96287533-3967-45C2-8F2C-E0DD894BBA7D}
+          LegacyId            #8
+          ExtendedDataType    #BankAccount
+          StringSize          #35
+        ENDPROPERTIES
+        
+      FIELD #BankAccountType
+        ENUM
+        PROPERTIES
+          Name                #BankAccountType
+          Table               #CustBankAccount
+          CountryRegionContextField     #Location
+          Origin              #{A57C30FE-C31A-434E-B155-041BFE78090E}
+          LegacyId            #10
+          EnumType            #BankAccountType
+        ENDPROPERTIES
+        
+      FIELD #BankCIN
+        STRING
+        PROPERTIES
+          Name                #BankCIN
+          Table               #CustBankAccount
+          CountryRegionContextField     #Location
+          Origin              #{72CA71EA-30EA-404F-AE3D-6C4A7254662C}
+          LegacyId            #9
+          ExtendedDataType    #BankCIN
+          StringSize          #1
+        ENDPROPERTIES
+        
+      FIELD #BankCodeType
+        ENUM
+        PROPERTIES
+          Name                #BankCodeType
+          Table               #CustBankAccount
+          Origin              #{A8EA7356-122A-4B1A-AF4D-E78E9E85A3F6}
+          LegacyId            #43
+          EnumType            #BankCodeType
+        ENDPROPERTIES
+        
+      FIELD #BankConstantSymbol
+        INT64
+        PROPERTIES
+          Name                #BankConstantSymbol
+          Label               #@GLS108021
+          HelpText            #@GLS108074
+          Table               #CustBankAccount
+          CountryRegionCodes  #CZ
+          Origin              #{F21DF1F8-1153-437F-BF1E-B240614195EE}
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #BankContractAccount
+        STRING
+        PROPERTIES
+          Name                #BankContractAccount
+          Table               #CustBankAccount
+          Origin              #{D959C57F-8834-445B-BF30-A367E714BE9F}
+          LegacyId            #38
+          ExtendedDataType    #GiroContractAccount
+          StringSize          #11
+        ENDPROPERTIES
+        
+      FIELD #BankGroupId
+        STRING
+        PROPERTIES
+          Name                #BankGroupId
+          Table               #CustBankAccount
+          Origin              #{BD97EAF4-C508-426D-8C5B-A52EEA49733C}
+          LegacyId            #29
+          ExtendedDataType    #BankGroupId
+        ENDPROPERTIES
+        
+      FIELD #BankIBAN
+        STRING
+        PROPERTIES
+          Name                #BankIBAN
+          AOSAuthorization    #Yes
+          Table               #CustBankAccount
+          Origin              #{82628818-2002-4AD1-91B4-4334F02FA649}
+          LegacyId            #44
+          ExtendedDataType    #BankIBAN
+          StringSize          #35
+        ENDPROPERTIES
+        
+      FIELD #BankSortCode_RU
+        STRING
+        PROPERTIES
+          Name                #BankSortCode_RU
+          Table               #CustBankAccount
+          CountryRegionCodes  #RU
+          Origin              #{2A0F3E82-0032-1000-5352-F969D5A7FE7C}
+          LegacyId            #16002
+          ExtendedDataType    #BankSortCode
+        ENDPROPERTIES
+        
+      FIELD #CellularPhone
+        STRING
+        PROPERTIES
+          Name                #CellularPhone
+          Table               #CustBankAccount
+          Origin              #{28965C76-803B-40D6-892F-5F1E9FB47BA6}
+          LegacyId            #23
+          ExtendedDataType    #PhoneMobile
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #ContactPerson
+        STRING
+        PROPERTIES
+          Name                #ContactPerson
+          HelpText            #@SYS13368
+          Table               #CustBankAccount
+          Origin              #{E05BA15D-4342-40C1-A09C-276DF408A130}
+          LegacyId            #18
+          ExtendedDataType    #PersonName
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #CorrAccount_W
+        STRING
+        PROPERTIES
+          Name                #CorrAccount_W
+          Table               #CustBankAccount
+          Origin              #{2A0D3E83-0032-1000-9AE8-8D4003BC706F}
+          LegacyId            #16003
+          ExtendedDataType    #BankCorrAccount_W
+          StringSize          #35
+        ENDPROPERTIES
+        
+      FIELD #CorrespondentBankAccount_LT
+        STRING
+        PROPERTIES
+          Name                #CorrespondentBankAccount_LT
+          Table               #CustBankAccount
+          Origin              #{2A1B1F4A-0032-1000-2B83-66046F8D5C00}
+          LegacyId            #8010
+          ExtendedDataType    #LtCorrespondentBankAccount
+          StringSize          #35
+        ENDPROPERTIES
+        
+      FIELD #CorrespondentBankAddress_LT
+        STRING
+        PROPERTIES
+          Name                #CorrespondentBankAddress_LT
+          Table               #CustBankAccount
+          Origin              #{2A1B1F44-0032-1000-2B83-8146E75272A6}
+          LegacyId            #8004
+          ExtendedDataType    #LtCorrespondentBankAddress
+          StringSize          #250
+        ENDPROPERTIES
+        
+      FIELD #CorrespondentBankName_LT
+        STRING
+        PROPERTIES
+          Name                #CorrespondentBankName_LT
+          Table               #CustBankAccount
+          Origin              #{2A181F43-0032-1000-265B-A6E5DAB5686B}
+          LegacyId            #8003
+          ExtendedDataType    #LtCorrespondentBankName
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #CorrespondentBankSWIFT_LT
+        STRING
+        PROPERTIES
+          Name                #CorrespondentBankSWIFT_LT
+          Table               #CustBankAccount
+          Origin              #{2A191F45-0032-1000-02B7-689314CBB678}
+          LegacyId            #8005
+          ExtendedDataType    #LtCorrespondentBankSWIFT
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CreditCardECPAuthMethod
+        ENUM
+        PROPERTIES
+          Name                #CreditCardECPAuthMethod
+          Table               #CustBankAccount
+          Origin              #{65432951-502C-40AE-882C-0FCA65040CC5}
+          LegacyId            #20001
+          EnumType            #CreditCardECPAuthMethod
+        ENDPROPERTIES
+        
+      FIELD #CurrencyCode
+        STRING
+        PROPERTIES
+          Name                #CurrencyCode
+          Table               #CustBankAccount
+          Origin              #{F33F6F9B-9A9B-4231-9799-0D9B47AFC77D}
+          LegacyId            #13
+          ExtendedDataType    #CurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #CustAccount
+        STRING
+        PROPERTIES
+          Name                #CustAccount
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CustBankAccount
+          Origin              #{FED67C42-8619-427C-9E28-81A8C9CFB310}
+          LegacyId            #25
+          ExtendedDataType    #CustAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CustDomNumber_BE
+        STRING
+        PROPERTIES
+          Name                #CustDomNumber_BE
+          Table               #CustBankAccount
+          CountryRegionContextField     #Location
+          Origin              #{3D1EA061-4B98-446C-93E4-5BF61BF55F9E}
+          LegacyId            #2
+          ExtendedDataType    #CustDomNumber_BE
+          StringSize          #15
+        ENDPROPERTIES
+        
+      FIELD #CustPaymentTextCode
+        STRING
+        PROPERTIES
+          Name                #CustPaymentTextCode
+          Table               #CustBankAccount
+          Origin              #{8DBBB7FA-5958-4497-B990-1B05CBB26FAB}
+          LegacyId            #30
+          ExtendedDataType    #CustPaymTextCode
+        ENDPROPERTIES
+        
+      FIELD #Email
+        STRING
+        PROPERTIES
+          Name                #Email
+          Table               #CustBankAccount
+          Origin              #{031DCA6B-8387-46D9-A048-B00B8614E06B}
+          LegacyId            #19
+          ExtendedDataType    #Email
+          StringSize          #80
+        ENDPROPERTIES
+        
+      FIELD #EUDDBankSortCode
+        STRING
+        PROPERTIES
+          Name                #EUDDBankSortCode
+          Table               #CustBankAccount
+          Origin              #{F000797F-4B9B-4BB8-8492-2E85620F6444}
+          LegacyId            #20003
+          ExtendedDataType    #CreditCardEUDDBankSortCode
+        ENDPROPERTIES
+        
+      FIELD #EUDDCountryCode
+        ENUM
+        PROPERTIES
+          Name                #EUDDCountryCode
+          Table               #CustBankAccount
+          Origin              #{AEC19C9E-2DC9-40CB-9D3C-3316DF505644}
+          LegacyId            #20002
+          EnumType            #CreditCardEUDDCountryCode
+        ENDPROPERTIES
+        
+      FIELD #ExchRate
+        REAL
+        PROPERTIES
+          Name                #ExchRate
+          Table               #CustBankAccount
+          Origin              #{C4FCF19F-C4AE-4164-A97F-7140178016C2}
+          LegacyId            #34
+          ExtendedDataType    #CrossExchRate
+        ENDPROPERTIES
+        
+      FIELD #ExchRateRef
+        STRING
+        PROPERTIES
+          Name                #ExchRateRef
+          Table               #CustBankAccount
+          Origin              #{33251D06-F2BE-4760-815E-0C40D6055383}
+          LegacyId            #35
+          ExtendedDataType    #ExchRateRef
+          StringSize          #11
+        ENDPROPERTIES
+        
+      FIELD #ForeignAccount_RU
+        STRING
+        PROPERTIES
+          Name                #ForeignAccount_RU
+          HelpText            #@GLS223928
+          Table               #CustBankAccount
+          CountryRegionCodes  #RU
+          Origin              #{F31D1558-7DEE-4929-AC29-B54551253010}
+          LegacyId            #8016
+          ExtendedDataType    #BankAccount
+          StringSize          #35
+        ENDPROPERTIES
+        
+      FIELD #ForeignBank_RU
+        STRING
+        PROPERTIES
+          Name                #ForeignBank_RU
+          HelpText            #@GLS223929
+          Table               #CustBankAccount
+          CountryRegionCodes  #RU
+          IgnoreEDTRelation   #Yes
+          RelationContext     #BankGroupForeign_RU
+          Origin              #{20EAE0A9-7481-45A0-A90A-F5E57823C6E4}
+          LegacyId            #8015
+          ExtendedDataType    #BankGroupId
+        ENDPROPERTIES
+        
+      FIELD #ForeignSWIFT_RU
+        STRING
+        PROPERTIES
+          Name                #ForeignSWIFT_RU
+          Label               #@SYS9360
+          Table               #CustBankAccount
+          CountryRegionCodes  #RU
+          Origin              #{B5716166-1413-4616-A2E0-7AF6A983AFAE}
+          LegacyId            #8017
+          ExtendedDataType    #SWIFTNo
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #IntermediateBankAccount_LT
+        STRING
+        PROPERTIES
+          Name                #IntermediateBankAccount_LT
+          Table               #CustBankAccount
+          Origin              #{2A1A1F4B-0032-1000-3B8A-0CC44257F657}
+          LegacyId            #8011
+          ExtendedDataType    #LtIntermediateBankAccount
+          StringSize          #35
+        ENDPROPERTIES
+        
+      FIELD #IntermediateBankAddress_LT
+        STRING
+        PROPERTIES
+          Name                #IntermediateBankAddress_LT
+          Table               #CustBankAccount
+          Origin              #{2A1A1F47-0032-1000-3BA5-4E3C086D9C31}
+          LegacyId            #8007
+          ExtendedDataType    #LtIntermediateBankAddress
+          StringSize          #250
+        ENDPROPERTIES
+        
+      FIELD #IntermediateBankName_LT
+        STRING
+        PROPERTIES
+          Name                #IntermediateBankName_LT
+          Table               #CustBankAccount
+          Origin              #{2A171F46-0032-1000-96D8-ED2F6B63616A}
+          LegacyId            #8006
+          ExtendedDataType    #LtIntermediateBankName
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #IntermediateBankSWIFT_LT
+        STRING
+        PROPERTIES
+          Name                #IntermediateBankSWIFT_LT
+          Table               #CustBankAccount
+          Origin              #{2A181F48-0032-1000-1D8E-9B6980B16E10}
+          LegacyId            #8008
+          ExtendedDataType    #LtIntermediateBankSWIFT
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #Location
+        INT64
+        PROPERTIES
+          Name                #Location
+          AllowEdit           #No
+          Visible             #No
+          Table               #CustBankAccount
+          Origin              #{C3770131-1EA2-4FB4-9366-76DC131BB994}
+          LegacyId            #11
+          ExtendedDataType    #LogisticsLocationRecId
+        ENDPROPERTIES
+        
+      FIELD #LvDefaultBank
+        ENUM
+        PROPERTIES
+          Name                #LvDefaultBank
+          HelpText            #@GLS220785
+          Table               #CustBankAccount
+          Origin              #{2A0D0000-0032-1000-8824-A6DA8BCA856C}
+          LegacyId            #16019
+          ExtendedDataType    #LVDefaultBank
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #MsgToBank
+        STRING
+        PROPERTIES
+          Name                #MsgToBank
+          Table               #CustBankAccount
+          Origin              #{270D33A7-E607-45E8-9BA7-465408CC39F5}
+          LegacyId            #33
+          ExtendedDataType    #BankMsgToBank
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #Name
+        STRING
+        PROPERTIES
+          Name                #Name
+          HelpText            #@SYS24871
+          Table               #CustBankAccount
+          Origin              #{142EFDD1-D9C4-4479-99FA-3416630E1B91}
+          LegacyId            #3
+          ExtendedDataType    #Name
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #Pager
+        STRING
+        PROPERTIES
+          Name                #Pager
+          Table               #CustBankAccount
+          Origin              #{A367919C-97B4-4213-9EEF-38523F004E9F}
+          LegacyId            #39
+          ExtendedDataType    #Pager
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #Phone
+        STRING
+        PROPERTIES
+          Name                #Phone
+          HelpText            #@SYS24869
+          Table               #CustBankAccount
+          Origin              #{B461F3BD-7BD3-489E-8185-3E12B5394182}
+          LegacyId            #16
+          ExtendedDataType    #Phone
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #PhoneLocal
+        STRING
+        PROPERTIES
+          Name                #PhoneLocal
+          Table               #CustBankAccount
+          Origin              #{86BD59BB-3634-4421-9FBD-FD38EC5FD1DE}
+          LegacyId            #24
+          ExtendedDataType    #PhoneLocal
+        ENDPROPERTIES
+        
+      FIELD #RegistrationNum
+        STRING
+        PROPERTIES
+          Name                #RegistrationNum
+          Table               #CustBankAccount
+          Origin              #{407D463B-6E67-499D-91E9-4AAEE71237ED}
+          LegacyId            #15
+          ExtendedDataType    #BankRegNum
+          StringSize          #12
+        ENDPROPERTIES
+        
+      FIELD #SMS
+        STRING
+        PROPERTIES
+          Name                #SMS
+          Table               #CustBankAccount
+          Origin              #{6025CD19-7E43-453F-A6CA-FFAD87969569}
+          LegacyId            #40
+          ExtendedDataType    #SMS
+          StringSize          #80
+        ENDPROPERTIES
+        
+      FIELD #SpecificSymbol
+        STRING
+        PROPERTIES
+          Name                #SpecificSymbol
+          Table               #CustBankAccount
+          CountryRegionCodes  #CZ
+          Origin              #{8F386124-92E5-48EF-9CDE-BBE7798A11B8}
+          ExtendedDataType    #SpecificSymbol
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #SWIFTNo
+        STRING
+        PROPERTIES
+          Name                #SWIFTNo
+          Table               #CustBankAccount
+          Origin              #{F806F6EB-512B-4B9C-9222-699FD0182848}
+          LegacyId            #32
+          ExtendedDataType    #SWIFTNo
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #TeleFax
+        STRING
+        PROPERTIES
+          Name                #TeleFax
+          HelpText            #@SYS24866
+          Table               #CustBankAccount
+          Origin              #{6FF1C34A-033C-4063-BFB0-E6FE230B79C0}
+          LegacyId            #17
+          ExtendedDataType    #TeleFax
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #Telex
+        STRING
+        PROPERTIES
+          Name                #Telex
+          Table               #CustBankAccount
+          Origin              #{16EC3AFA-44CA-42D0-A026-318BFEA1CA4B}
+          LegacyId            #22
+          ExtendedDataType    #Telex
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #URL
+        STRING
+        PROPERTIES
+          Name                #URL
+          Table               #CustBankAccount
+          Origin              #{467EA015-09FA-49C1-BBA6-8F54A8C24BD7}
+          LegacyId            #21
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccountID
+          #Name
+          #RegistrationNum
+          #AccountNum
+          #ContactPerson
+          #Location
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Administration
+        PROPERTIES
+          Name                #Administration
+          Label               #@SYS9853
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BankGroupId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Bank_RU
+        PROPERTIES
+          Name                #Bank_RU
+          Label               #@GLS100629
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BankGroupId
+          #bankName_RU
+          #bankBIC_RU
+          #CorrAccount_W
+          #bankAccountOpenedIn_RU
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #BankConstantSymbol
+        PROPERTIES
+          Name                #BankConstantSymbol
+          Label               #@GLS107997
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BankConstantSymbol
+          #SpecificSymbol
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #ContactInfo
+        PROPERTIES
+          Name                #ContactInfo
+          Label               #@SYS21663
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ContactPerson
+          #Phone
+          #PhoneLocal
+          #CellularPhone
+          #Pager
+          #TeleFax
+          #Email
+          #SMS
+          #URL
+          #Telex
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #CorrespondentBank_LT
+        PROPERTIES
+          Name                #CorrespondentBank_LT
+          Label               #@GLS113356
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CorrespondentBankName_LT
+          #CorrespondentBankAddress_LT
+          #CorrespondentBankSWIFT_LT
+          #CorrespondentBankAccount_LT
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Description
+        PROPERTIES
+          Name                #Description
+          Label               #@SYS7576
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Name
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #EUDD
+        PROPERTIES
+          Name                #EUDD
+          Label               #@ACC1189
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #EUDDCountryCode
+          #EUDDBankSortCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #ForeignBank_RU
+        PROPERTIES
+          Name                #ForeignBank_RU
+          Label               #@GLS223927
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ForeignBank_RU
+          #foreignBankName_RU
+          #ForeignAccount_RU
+          #ForeignSWIFT_RU
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS5711
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccountID
+          #Name
+          #CustAccount
+          #BankCodeType
+          #RegistrationNum
+          #AccountNum
+          #BankCIN
+          #SWIFTNo
+          #BankIBAN
+          #CustDomNumber_BE
+          #BankAccountType
+          #CorrAccount_W
+          #CreditCardECPAuthMethod
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #IntermediateBank_LT
+        PROPERTIES
+          Name                #IntermediateBank_LT
+          Label               #@GLS113357
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #IntermediateBankName_LT
+          #IntermediateBankAddress_LT
+          #IntermediateBankSWIFT_LT
+          #IntermediateBankAccount_LT
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Overview
+        PROPERTIES
+          Name                #Overview
+          Label               #@SYS9039
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccountID
+          #Name
+          #BankGroupId
+          #RegistrationNum
+          #bankBIC_RU
+          #AccountNum
+          #CorrAccount_W
+          #bankAccountOpenedIn_RU
+          #BankCIN
+          #BankContractAccount
+          #CurrencyCode
+          #LvDefaultBank
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Payment
+        PROPERTIES
+          Name                #Payment
+          Label               #@SYS828
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CustPaymentTextCode
+          #MsgToBank
+          #ExchRateRef
+          #ExchRate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #PaymentShow
+        PROPERTIES
+          Name                #PaymentShow
+          Label               #@SYS828
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CustPaymentTextCode
+          #MsgToBank
+          #ExchRateRef
+          #editExchRate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Setup
+        PROPERTIES
+          Name                #Setup
+          Label               #@SYS2186
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BankSortCode_RU
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #AccountIdx
+      PROPERTIES
+        Name                #AccountIdx
+        AllowDuplicates     #No
+        Origin              #{2B0A0001-0032-1000-CD51-C781756E7449}
+        LegacyId            #1
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CustAccount
+        #AccountID
+      ENDINDEXFIELDS
+      
+      #BankConstantSymbolIdx
+      PROPERTIES
+        Name                #BankConstantSymbolIdx
+        Origin              #{C09A3B6E-AD19-4D65-AB9B-CA0205AA6DD2}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #BankConstantSymbol
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #BankConstantSymbol
+        PROPERTIES
+          Name                #BankConstantSymbol
+          Table               #BankConstantSymbol
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #BankConstantSymbol
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #BankGroup
+        PROPERTIES
+          Name                #BankGroup
+          Table               #BankGroup
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #BankGroupId
+            RelatedField        #BankGroupId
+            SourceEDT           #BankGroupId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #BankGroupForeign_RU
+        PROPERTIES
+          Name                #BankGroupForeign_RU
+          Table               #BankGroup
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #BankGroupForeign_RU
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE EXTERNFIXED
+          PROPERTIES
+            Value               #2
+            Table               #BankGroup
+            RelatedField        #BankType_RU
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #ForeignBank_RU
+            RelatedField        #BankGroupId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CurrencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustBankAccount
+        PROPERTIES
+          Name                #CustBankAccount
+          Table               #CustBankAccount
+          Validate            #No
+          EntityRelationshipRole  #@SYS123434
+          RelationshipType    #Link
+          RelatedTableRole    #CustBankAccount
+          Role                #CustBankAccount
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #AccountID
+            RelatedField        #AccountID
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustTable
+        PROPERTIES
+          Name                #CustTable
+          Table               #CustTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #AccountNum
+            SourceEDT           #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Location_FK
+        PROPERTIES
+          Name                #Location_FK
+          Table               #LogisticsLocation
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          RelatedTableRole    #Location_FK
+          Role                #CustBankAccount
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #Location
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #CustDirectDebitMandate(CustBankAccount)
+      PROPERTIES
+        Table               #CustDirectDebitMandate
+        DeleteAction        #Restricted
+        Relation            #CustBankAccount
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #addressing
+        #//BP deviation documented
+        #display LogisticsAddressing addressing()
+        #{
+        #    ;
+        #    return LogisticsLocationEntity::location2PostalAddress(this.Location).Address;
+        #}
+      ENDSOURCE
+      SOURCE #bankAccountOpenedIn_RU
+        #//BP deviation documented
+        #public display BankAccountOpenedIn_RU bankAccountOpenedIn_RU()
+        #{
+        #    return this.BankAccountMap::bankAccountOpenedIn_RU();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #bankAccountValidation
+        #Bank bankAccountValidation()
+        #{
+        #    return this.BankAccountMap::bankAccountValidation();
+        #}
+      ENDSOURCE
+      SOURCE #bankBIC_RU
+        #//BP deviation documented
+        #public display BankBIC_RU bankBIC_RU()
+        #{
+        #    return this.BankAccountMap::bankBIC_RU();
+        #}
+      ENDSOURCE
+      SOURCE #bankIsBranch_RU
+        #public boolean bankIsBranch_RU()
+        #{
+        #    return this.BankAccountMap::bankIsBranch_RU();
+        #}
+      ENDSOURCE
+      SOURCE #bankName_RU
+        #//BP deviation documented
+        #public display BankName_RU bankName_RU()
+        #{
+        #    return this.BankAccountMap::bankName_RU();
+        #}
+      ENDSOURCE
+      SOURCE #bankShortAddressing_RU
+        #public BankShortAddressing_RU bankShortAddressing_RU()
+        #{
+        #    return this.BankAccountMap::bankShortAddressing_RU();
+        #}
+      ENDSOURCE
+      SOURCE #baseBankName_RU
+        #public Description baseBankName_RU()
+        #{
+        #    return this.BankAccountMap::baseBankName_RU();
+        #}
+      ENDSOURCE
+      SOURCE #baseBankShortAddressing_RU
+        #public BankShortAddressing_RU baseBankShortAddressing_RU()
+        #{
+        #    return this.BankAccountMap::baseBankShortAddressing_RU();
+        #}
+      ENDSOURCE
+      SOURCE #checkDefault_LV
+        #server private boolean checkDefault_LV()
+        #{
+        #    CustBankAccount custBankAccount;
+        #
+        #    if(this.LvDefaultBank)
+        #    {
+        #        select firstonly RecId from custBankAccount
+        #            where custBankAccount.CustAccount == this.CustAccount &&
+        #                  custBankAccount.CurrencyCode == this.CurrencyCode &&
+        #                  custBankAccount.LvDefaultBank == NoYes::Yes &&
+        #                  custBankAccount.RecId != this.RecId;
+        #    }
+        #
+        #    return custBankAccount.RecId ? checkFailed("@GLS108523") : true;
+        #}
+      ENDSOURCE
+      SOURCE #countryRegionId
+        #/// <summary>
+        #/// Retrieves the bank account postal address country region identifier.
+        #/// </summary>
+        #/// <returns>
+        #/// The bank account country region identifier.
+        #/// </returns>
+        #LogisticsAddressCountryRegionId countryRegionId()
+        #{
+        #    return LogisticsLocationEntity::location2PostalAddress(this.Location).CountryRegionId;
+        #}
+      ENDSOURCE
+      SOURCE #editExchRate
+        #//BP Deviation Documented
+        #public edit CrossExchRate editExchRate(boolean set, CrossExchRate _exchRate)
+        #{
+        #    if (set)
+        #    {
+        #        this.ExchRate = ExchangeRateHelper::prepareExchangeRateForStorage_Static(_exchRate, ExchangeRateDisplayFactor::One);
+        #    }
+        #    else
+        #    {
+        #        _exchRate = ExchangeRateHelper::displayStoredExchangeRate_Static(this.ExchRate, ExchangeRateDisplayFactor::One);
+        #    }
+        #
+        #    return _exchRate;
+        #}
+      ENDSOURCE
+      SOURCE #foreignBankName_RU
+        #/// <summary>
+        #/// Gets the foreign bank name.
+        #/// </summary>
+        #/// <returns>
+        #/// The foreign bank name.
+        #/// </returns>
+        #//BP deviation documented
+        #public display BankName_RU foreignBankName_RU()
+        #{
+        #    return this.BankAccountMap::foreignBankName_RU();
+        #}
+      ENDSOURCE
+      SOURCE #initFromBankGroup
+        #void initFromBankGroup(BankGroup _bankGroup)
+        #{
+        #    ;
+        #    this.BankAccountMap::initFromBankGroup(_bankGroup);
+        #}
+      ENDSOURCE
+      SOURCE #modifiedField
+        #public void modifiedField(FieldId _fieldId)
+        #{
+        #    super(_fieldId);
+        #
+        #    this.BankAccountMap::modifiedField(_fieldId);
+        #
+        #    switch (_fieldId)
+        #    {
+        #        case fieldNum(CustBankAccount, BankIBAN) :
+        #            CustDirectDebitMandate::modifiedCustBankAccount(this);
+        #            break;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validateDelete
+        #public boolean validateDelete()
+        #{
+        #    boolean ret;
+        #
+        #    ret = super();
+        #
+        #    if(ret && CustPrenote::existBankPrenotes(this.CustAccount,this.AccountID))
+        #    {
+        #        if(Box::yesNo(strFmt("@SYS127532",this.AccountID),DialogButton::Yes))
+        #        {
+        #            CustPrenote::deletePrenotes(this.AccountID, this.CustAccount);
+        #            ret = true;
+        #        }
+        #        else
+        #        {
+        #            ret = false;
+        #        }
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateField
+        #public boolean validateField(FieldId _fieldId)
+        #{
+        #    boolean ret;
+        #
+        #    ;
+        #
+        #    ret = super(_fieldId);
+        #    if (ret)
+        #    {
+        #        switch (_fieldId)
+        #        {
+        #            case (fieldNum(CustBankAccount, BankIBAN)) :
+        #                if (Bank::checkBankIBAN(this.BankIBAN) &&
+        #                    CustDirectDebitMandate::validateCustBankAccount(this))
+        #                {
+        #                    this.BankIBAN = strUpr(this.BankIBAN);
+        #                    ret = true;
+        #                }
+        #                else
+        #                {
+        #                    ret = false;
+        #                }
+        #                break;
+        #
+        #            case fieldNum(CustBankAccount, AccountNum) :
+        #                ret = this.BankAccountMap::bankAccountValidation().checkBankAccountNum(this.AccountNum);
+        #                if (ret)
+        #                {
+        #                    ret = this.validatePrenote();
+        #                }
+        #                break;
+        #
+        #            case fieldNum(CustBankAccount,Name) ,fieldNum(CustBankAccount,RegistrationNum):
+        #                ret = this.validatePrenote();
+        #                break;
+        #        }
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validatePrenote
+        #private boolean validatePrenote()
+        #{
+        #    boolean ret = true;
+        #
+        #    if(CustPrenote::existBankPrenotes(this.CustAccount,this.AccountID))
+        #    {
+        #        if(Box::yesNo(strFmt("@SYS127532",this.AccountID),DialogButton::Yes))
+        #        {
+        #            CustPrenote::deletePrenotes(this.AccountID, this.CustAccount);
+        #            ret = true;
+        #        }
+        #        else
+        #        {
+        #            ret = false;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #public boolean validateWrite()
+        #{
+        #    // <GEELV>
+        #    #ISOCountryRegionCodes
+        #    // </GEELV>
+        #    boolean ret;
+        #
+        #    ret = super();
+        #
+        #    if (ret)
+        #    {
+        #        ret = this.BankAccountMap::validateWrite();
+        #    }
+        #
+        #    // <GEELV>
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoLV]))
+        #    {
+        #        if (this.LvDefaultBank && !this.CurrencyCode)
+        #        {
+        #            ret = checkFailed(strFmt("@SYS84378", fieldId2pname(tableNum(CustBankAccount), fieldNum(CustBankAccount, CurrencyCode))));
+        #        }
+        #        ret = ret && this.checkDefault_LV();
+        #    }
+        #    // </GEELV>
+        #
+        #    ret = ret && Bank_BE::checkDom(this.CustDomNumber_BE);
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #checkBankAccountReference
+        #static boolean checkBankAccountReference(CustAccount        _custAccount,
+        #                                         CustBankAccountId  _custBankAccountId,
+        #                                         CompanyId          _company = curext())
+        #{
+        #    CompanyId   companyId;
+        #    ;
+        #
+        #    if (_custBankAccountId)
+        #    {
+        #        if (!_company)
+        #        {
+        #            companyId = curext();
+        #        }
+        #        else
+        #        {
+        #            companyId = _company;
+        #
+        #            if (! xDataArea::exist(companyId))
+        #            {
+        #                return checkFailed(strFmt("@SYS10666", companyId));
+        #            }
+        #        }
+        #
+        #        changecompany(companyId)
+        #        {
+        #            if (!CustBankAccount::find(_custAccount, _custBankAccountId))
+        #            {
+        #                return checkFailed(strFmt("@SYS27061", _custBankAccountId));
+        #            }
+        #        }
+        #    }
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #checkExist
+        #public static boolean checkExist(CustAccount _custAccount, CustBankAccountId _custBankAccountId )
+        #{
+        #    boolean ret = true;
+        #    ;
+        #
+        #    if (!CustBankAccount::exist(_custAccount, _custBankAccountId))
+        #    {
+        #        ret = checkFailed(strFmt(CustBankAccount::txtNotExist(), _custAccount, _custBankAccountId));
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #exist
+        #public static boolean exist(CustAccount _custAccount, CustBankAccountId _custBankAccountId )
+        #{
+        #    boolean found;
+        #    ;
+        #
+        #    found = (select firstonly
+        #                 RecId
+        #            from
+        #                 custBankAccount
+        #             where
+        #                 custBankAccount.CustAccount == _custAccount &&
+        #                custBankAccount.AccountID == _custBankAccountId).RecId != 0;
+        #
+        #    return found;
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #public static CustBankAccount find(
+        #    CustAccount _custAccount,
+        #    CustBankAccountId _custBankAccountId ,
+        #    boolean                 _forupdate = false,
+        #    ConcurrencyModel        _concurrencyModel = ConcurrencyModel::Auto)
+        #{
+        #    CustBankAccount custBankAccount;
+        #    ;
+        #
+        #    custBankAccount.selectForUpdate(_forupdate);
+        #    if (_forupdate  && _concurrencyModel != ConcurrencyModel::Auto)
+        #    {
+        #        custBankAccount.concurrencyModel(_concurrencyModel);
+        #    }
+        #
+        #    select firstonly
+        #        custBankAccount
+        #        where
+        #        custBankAccount.CustAccount == _custAccount &&
+        #                custBankAccount.AccountID == _custBankAccountId;
+        #
+        #    return custBankAccount;
+        #}
+      ENDSOURCE
+      SOURCE #findByCompany
+        #/// <summary>
+        #///    Finds a <c>CustBankAccount</c> record in the given company.
+        #/// </summary>
+        #/// <param name="_companyId">
+        #///    The company in which to look for the record.
+        #/// </param>
+        #/// <param name="_custAccount">
+        #///    The customer account ID.
+        #/// </param>
+        #/// <param name="_custBankAccountId">
+        #///    The bank account ID.
+        #/// </param>
+        #/// <param name="_forupdate">
+        #///    Determines whether the returned <c>CustBankAccount</c> record is selected for update; optional.
+        #/// </param>
+        #/// <param name="_concurrencyModel">
+        #///    The concurrency model to use; optional.
+        #/// </param>
+        #/// <returns>
+        #///    Returns the <c>VendBankAccount</c> record, if found.
+        #/// </returns>
+        #
+        #public static CustBankAccount findByCompany(
+        #    CompanyId _companyId,
+        #    CustAccount _custAccount,
+        #    CustBankAccountId _custBankAccountId ,
+        #    boolean                 _forupdate = false,
+        #    ConcurrencyModel        _concurrencyModel = ConcurrencyModel::Auto)
+        #{
+        #    CustBankAccount custBankAccount;
+        #    ;
+        #
+        #    changecompany (_companyId)
+        #    {
+        #        custBankAccount = CustBankAccount::find(_custAccount, _custBankAccountId, _forupdate, _concurrencyModel);
+        #    }
+        #
+        #
+        #    return custBankAccount;
+        #}
+      ENDSOURCE
+      SOURCE #findDefault_LV
+        #public server static CustBankAccount findDefault_LV(CustAccount _custAccount, CurrencyCode _currencyCode)
+        #{
+        #    CustBankAccount custBankAccount;
+        #
+        #    select firstonly custBankAccount
+        #        where custBankAccount.CustAccount == _custAccount  &&
+        #                custBankAccount.CurrencyCode == _currencyCode &&
+        #                custBankAccount.LvDefaultBank == NoYes::Yes;
+        #
+        #    return custBankAccount;
+        #}
+      ENDSOURCE
+      SOURCE #findDefaultByCompany_LV
+        #public static CustBankAccount findDefaultByCompany_LV(CompanyId          _companyId,
+        #                                                      CustAccount        _custAccount,
+        #                                                      CurrencyCode       _currencyCode,
+        #                                                      boolean            _forUpdate          = false,
+        #                                                      ConcurrencyModel   _concurrencyModel   = ConcurrencyModel::Auto)
+        #{
+        #    CustBankAccount custBankAccount;
+        #
+        #    changecompany(_companyId)
+        #    {
+        #        custBankAccount.selectForUpdate(_forUpdate);
+        #        if (_forUpdate  && _concurrencyModel != ConcurrencyModel::Auto)
+        #        {
+        #            custBankAccount.concurrencyModel(_concurrencyModel);
+        #        }
+        #
+        #        select firstonly custBankAccount
+        #            where custBankAccount.CustAccount     == _custAccount  &&
+        #                  custBankAccount.CurrencyCode    == _currencyCode &&
+        #                  custBankAccount.LvDefaultBank   == NoYes::Yes;
+        #    }
+        #
+        #    return custBankAccount;
+        #}
+      ENDSOURCE
+      SOURCE #lookupBankAccount
+        #client static void lookupBankAccount(FormStringControl   _ctrl,
+        #                                     CustAccount         _custAccount,
+        #                                     CompanyId           _company = curext())
+        #{
+        #    SysTableLookup          sysTableLookup = SysTableLookup::newParameters(tableNum(CustBankAccount), _ctrl);
+        #    Query                   query = new Query();
+        #    QueryBuildDataSource    qbds;
+        #    CompanyId               companyId;
+        #    ;
+        #
+        #    if (!_company)
+        #    {
+        #        companyId = curext();
+        #    }
+        #    else
+        #    {
+        #        companyId = _company;
+        #
+        #        if (! xDataArea::exist(companyId))
+        #        {
+        #            throw error(strFmt("@SYS10666", companyId));
+        #        }
+        #    }
+        #
+        #    changecompany(companyId)
+        #    {
+        #        sysTableLookup.addLookupfield(fieldNum(CustBankAccount, CustAccount));
+        #        sysTableLookup.addLookupfield(fieldNum(CustBankAccount, AccountID), true);
+        #        sysTableLookup.addLookupfield(fieldNum(CustBankAccount, Name));
+        #
+        #        qbds = query.addDataSource(tableNum(CustBankAccount));
+        #        qbds.addRange(fieldNum(CustBankAccount, CustAccount)).value(queryValue(_custAccount));
+        #        sysTableLookup.parmQuery(query);
+        #        sysTableLookup.performFormLookup();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #txtNotExist
+        #static TxtNotExist txtNotExist()
+        #{
+        #    return "@SYS9779";
+        #}
+        #
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

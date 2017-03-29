@@ -1,0 +1,106 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #NumberSeqModuleCreditCard
+    PROPERTIES
+      Name                #NumberSeqModuleCreditCard
+      Extends             #NumberSeqApplicationModule
+      RunOn               #Server
+      Origin              #{2527E23B-D45A-4715-9F4B-526BFF707890}
+      LegacyId            #20029
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #public class NumberSeqModuleCreditCard extends NumberSeqApplicationModule
+        #{
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #loadModule
+        #/// <summary>
+        #///    Configures all the data types that are being used by the module.
+        #/// </summary>
+        #/*
+        #Detailed description of how to setup references for number sequences can
+        #be found i method loadModule() on the 'father' class: NumberSeqApplicationModule.
+        #*/
+        #protected void loadModule()
+        #{
+        #    NumberSeqDatatype datatype = NumberSeqDatatype::construct();
+        #    ;
+        #
+        #    datatype.parmDatatypeId(extendedTypeNum(CreditCardId));
+        #    datatype.parmReferenceHelp(literalStr("@ACC151"));
+        #    datatype.parmWizardIsContinuous(false);
+        #    datatype.parmWizardfetchAheadQty(10);
+        #    datatype.parmWizardIsManual(NoYes::No);
+        #    datatype.parmWizardIsChangeDownAllowed(NoYes::No);
+        #    datatype.parmWizardIsChangeUpAllowed(NoYes::No);
+        #    datatype.parmSortField(1);
+        #
+        #    datatype.addParameterType(NumberSeqParameterType::DataArea, true, false);
+        #    this.create(datatype);
+        #
+        #    datatype.parmDatatypeId(extendedTypeNum(CreditCardTransId));
+        #    datatype.parmReferenceHelp(literalStr("@ACC209"));
+        #    datatype.parmWizardIsContinuous(false);
+        #    datatype.parmWizardfetchAheadQty(10);
+        #    datatype.parmWizardIsManual(NoYes::No);
+        #    datatype.parmWizardIsChangeDownAllowed(NoYes::No);
+        #    datatype.parmWizardIsChangeUpAllowed(NoYes::No);
+        #    datatype.parmSortField(2);
+        #
+        #    datatype.addParameterType(NumberSeqParameterType::DataArea, true, false);
+        #    this.create(datatype);
+        #
+        #    datatype.parmDatatypeId(extendedTypeNum(CreditCardVoucherId));
+        #    datatype.parmReferenceHelp(literalStr("@ACC217"));
+        #    datatype.parmWizardIsContinuous(false);
+        #    datatype.parmWizardfetchAheadQty(10);
+        #    datatype.parmWizardIsManual(NoYes::No);
+        #    datatype.parmWizardIsChangeDownAllowed(NoYes::No);
+        #    datatype.parmWizardIsChangeUpAllowed(NoYes::No);
+        #    datatype.parmSortField(3);
+        #
+        #    datatype.addParameterType(NumberSeqParameterType::DataArea, true, false);
+        #    this.create(datatype);
+        #
+        #    datatype.parmDatatypeId(extendedTypeNum(CreditCardBatchNumber));
+        #    datatype.parmReferenceHelp(literalStr("@ACC652"));
+        #    datatype.parmWizardIsContinuous(false);
+        #    datatype.parmWizardfetchAheadQty(10);
+        #    datatype.parmWizardIsManual(NoYes::No);
+        #    datatype.parmWizardIsChangeDownAllowed(NoYes::No);
+        #    datatype.parmWizardIsChangeUpAllowed(NoYes::No);
+        #    datatype.parmSortField(4);
+        #
+        #    datatype.addParameterType(NumberSeqParameterType::DataArea, true, false);
+        #    this.create(datatype);
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #numberSeqModule
+        #/// <summary>
+        #///    Retrieves the ID of the application-specific module for this class.
+        #/// </summary>
+        #/// <returns>
+        #///    The module-specific ID.
+        #/// </returns>
+        #public NumberSeqModule numberSeqModule()
+        #{
+        #    return NumberSeqModule::CreditCard;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

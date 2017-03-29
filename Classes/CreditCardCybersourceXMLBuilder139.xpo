@@ -1,0 +1,4653 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardCybersourceXMLBuilder139
+    PROPERTIES
+      Name                #CreditCardCybersourceXMLBuilder139
+      Extends             #CreditCardCybersourceXMLBuilder
+      Origin              #{4D6C8661-6596-459E-88A8-AB14F847C36A}
+      LegacyId            #20034
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeCybersourceResponse
+        #CreditCardTrans analyzeCybersourceResponse(CreditCardStr                 msg,
+        #                                CreditCardTrans         ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i;
+        #    CreditCardStr                         tmpStr;
+        #    CreditCardStr                         node;
+        #    CreditCardStr                         errMsg;
+        #    boolean                         accepted;
+        #
+        #    ;
+        #    ttsbegin;
+        #    ccTRans.selectForUpdate(true);
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        //--> Second node should be the soap envelope body
+        #        if (cnt == 1)
+        #        {
+        #            //--> store in comment
+        #            ccTrans.Comment1 = tmpStr;
+        #        }
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'c:decision'   :
+        #                        switch (elementChild2.innerXml())
+        #                        {
+        #                            case 'ACCEPT'   :
+        #                                accepted = true;
+        #                                ccTrans.Result = '0';
+        #                                break;
+        #                            case 'ERROR'    :
+        #                                break;
+        #                            case 'REJECT'   :
+        #                                break;
+        #                        }
+        #
+        #
+        #                        break;
+        #                    case    'c:requestToken'       :
+        #                        ccTrans.CybersourceToken = elementChild2.innerXML();
+        #                        break;
+        #                    case    'c:requestID'           :
+        #                        ccTrans.PNRef = elementChild2.innerXml();
+        #                        break;
+        #                    case    'c:paySubscriptionCreateReply'       :
+        #                        childNodeLst2 = elementChild2.childNodes();
+        #                        for (childCnt2 = 0;childCnt2 < childNodeLst2.length();childCnt2++)
+        #                        {
+        #                            elementChild3 = childNodeLst2.item(childCnt2);
+        #                            switch (elementChild3.nodeName())
+        #                            {
+        #                                case 'c:reasonCode' :
+        #                                    tmpStr = elementChild3.innerXml();
+        #                                    if (elementChild3.innerXML() != '100')
+        #                                    {
+        #                                        ccTrans.RepMsg = elementChild3.innerXML();
+        #                                        ccTrans.PNRef = CreditCardCybersourceXMLBuilder::returnError(ccTrans.RepMsg);
+        #                                    }
+        #                                    else
+        #                                    {
+        #                                        ccTrans.Result = '0';
+        #                                    }
+        #                                    break;
+        #                                case    'c:authorizationCode'       :
+        #                                    cctrans.AuthCode = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:avsCode' :
+        #                                    ccTrans.AvsAddr = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:processorResponse'       :
+        #                                    ccTrans.RepMsg = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:subscriptionID'          :
+        #                                    ccTrans.ProfileId = elementChild3.innerXml();
+        #                                    break;
+        #                            }
+        #                        }
+        #                        break;
+        #                    //--> In case of errors or rejections
+        #                    case 'c:reasonCode' :
+        #                        tmpStr = elementChild2.innerXml();
+        #                        if (elementChild2.innerXML() != '100')
+        #                        {
+        #                            errMsg = elementChild2.innerXML();
+        #                            ccTrans.RepMsg = CreditCardCybersourceXMLBuilder::returnError(errMsg);
+        #                            ccTrans.Result = errMsg;
+        #                        }
+        #                        else
+        #                        {
+        #                            ccTrans.Result = '0';
+        #                        }
+        #                        break;
+        #                    case 'c:invalidField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        cctrans.comment2 += 'Invalid Field:' + tmpStr;
+        #                        break;
+        #                    case 'c:missingField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        ccTrans.comment2 += 'Missing Field:' + tmpStr;
+        #                        break;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    ccTrans.update();
+        #    ttscommit;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeCybersourceResponse3DAuthVer
+        #tmpCC3dAuthVerify analyzeCybersourceResponse3DAuthVer(str  msg,
+        #                                tmpCC3dAuthVerify  _tmpCC3dAuthVerify)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   errMsg;
+        #    boolean                         accepted;
+        #
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'c:decision'   :
+        #                        switch (elementChild2.innerXml())
+        #                        {
+        #                            case 'ACCEPT'   :
+        #                                accepted = true;
+        #                                _tmpCC3dAuthVerify.Result = '0';
+        #                                break;
+        #                            case 'ERROR'    :
+        #                                break;
+        #                            case 'REJECT'   :
+        #                                break;
+        #                        }
+        #
+        #
+        #                        break;
+        #                    case    'c:requestToken'       :
+        #                        _tmpCC3dAuthVerify.Token = elementChild2.innerXML();
+        #                        break;
+        #                    case    'c:requestID'           :
+        #                        break;
+        #                    case    'c:payerAuthValidateReply'       :
+        #                        childNodeLst2 = elementChild2.childNodes();
+        #                        for (childCnt2 = 0;childCnt2 < childNodeLst2.length();childCnt2++)
+        #                        {
+        #                            elementChild3 = childNodeLst2.item(childCnt2);
+        #                            tmpSTr = elementchild3.xml();
+        #                            switch (elementChild3.nodeName())
+        #                            {
+        #                                case 'c:reasonCode' :
+        #                                    tmpStr = elementChild3.innerXml();
+        #                                    if (elementChild3.innerXML() != '100')
+        #                                    {
+        #                                        errMsg = elementChild3.innerXML();
+        #                                        _tmpCC3dAuthVerify.RepMsg = CreditCardCybersourceXMLBuilder::returnError(errMsg);
+        #                                    }
+        #                                    break;
+        #                                case    'c:paReq'       :
+        #                                    _tmpCC3dAuthVerify.Token = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:acsURL' :
+        #                                    _tmpCC3dAuthVerify.URL = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:xid'       :
+        #                                    _tmpCC3dAuthVerify.xid = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:proofXML'          :
+        #                                    _tmpCC3dAuthVerify.proofXML = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:commerceIndicator'         :
+        #                                    _tmpCC3dAuthVerify.CommerceIndicator = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:ucafCollectionIndicator'         :
+        #                                    _tmpCC3dAuthVerify.CollectionInidicator = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:proxyPAN'         :
+        #                                    _tmpCC3dAuthVerify.CreditCardNum = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:veresEnrolled'         :
+        #                                    _tmpCC3dAuthVerify.VeresEnrolled = elementChild3.innerXml();
+        #                                    break;
+        #                            }
+        #                        }
+        #                        break;
+        #
+        #                    //--> In case of errors or rejections
+        #                    case 'c:reasonCode' :
+        #                        tmpStr = elementChild2.innerXml();
+        #                        if (elementChild2.innerXML() != '100')
+        #                        {
+        #                            errMsg = elementChild2.innerXML();
+        #                            _tmpCC3dAuthVerify.RepMsg = CreditCardCybersourceXMLBuilder::returnError(errMsg);
+        #                        }
+        #                        break;
+        #                    case 'c:invalidField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        _tmpCC3dAuthVerify.RepMsg += 'Invalid Field:' + tmpStr;
+        #                        break;
+        #                    case 'c:missingField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        _tmpCC3dAuthVerify.RepMsg += 'Missing Field:' + tmpStr;
+        #                        break;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return _tmpCC3dAuthVerify;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeCybersourceResponse3DCheck
+        #tmpCC3dEnrollCheck analyzeCybersourceResponse3DCheck(CreditCardStr           msg,
+        #                                tmpCC3dEnrollCheck         _tmpCC3dEnrollCheck)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   errMsg;
+        #    boolean                         accepted;
+        #
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'c:decision'   :
+        #                        switch (elementChild2.innerXml())
+        #                        {
+        #                            case 'ACCEPT'   :
+        #                                accepted = true;
+        #                                _tmpCC3dEnrollCheck.Result = '0';
+        #                                break;
+        #                            case 'ERROR'    :
+        #                                break;
+        #                            case 'REJECT'   :
+        #                                break;
+        #                        }
+        #                        break;
+        #                    case    'c:requestToken'       :
+        #                        _tmpCC3dEnrollCheck.Token = elementChild2.innerXML();
+        #                        break;
+        #                    case    'c:requestID'           :
+        #                        _tmpCC3dEnrollCheck.PNRef = elementChild2.innerXml();
+        #                        break;
+        #                    case    'c:payerAuthEnrollReply'       :
+        #                        childNodeLst2 = elementChild2.childNodes();
+        #                        for (childCnt2 = 0;childCnt2 < childNodeLst2.length();childCnt2++)
+        #                        {
+        #                            elementChild3 = childNodeLst2.item(childCnt2);
+        #                            tmpSTr = elementchild3.xml();
+        #                            switch (elementChild3.nodeName())
+        #                            {
+        #                                case 'c:reasonCode' :
+        #                                    _tmpCC3dEnrollCheck.RepMsg =elementChild3.innerXML();
+        #                                     break;
+        #                                case    'c:paReq'       :
+        #                                    _tmpCC3dEnrollCheck.Token = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:acsURL' :
+        #                                    _tmpCC3dEnrollCheck.URL = SysGsSearchStart::removeHTMLEncode(elementChild3.innerXML());
+        #                                    break;
+        #                                case    'c:xid'       :
+        #                                    _tmpCC3dEnrollCheck.xid = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:proofXML'          :
+        #                                    _tmpCC3dEnrollCheck.proofXML = SysGsSearchStart::removeHTMLEncode(elementChild3.innerXml());
+        #                                    break;
+        #                                case    'c:commerceIndicator'         :
+        #                                    _tmpCC3dEnrollCheck.CommerceIndicator = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:ucafCollectionIndicator'         :
+        #                                    _tmpCC3dEnrollCheck.CollectionInidicator = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:ucafAuthenticationData'          :
+        #                                    _tmpCC3dEnrollCheck.AAV = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:cavv'          :
+        #                                    _tmpCC3dEnrollCheck.CAVV = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:proxyPAN'         :
+        #                                    _tmpCC3dEnrollCheck.CreditCardNum = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:veresEnrolled'         :
+        #                                    _tmpCC3dEnrollCheck.VeresEnrolled = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:paresStatus'         :
+        #                                    _tmpCC3dEnrollCheck.ParesStatus = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:eci'         :
+        #                                    _tmpCC3dEnrollCheck.VeresEnrolled = elementChild3.innerXml();
+        #                                    break;
+        #                                case    'c:authorizationCode'       :
+        #                                    _tmpCC3dEnrollCheck.authcode = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:requestID'           :
+        #                                    _tmpCC3dEnrollCheck.PNRef = elementChild3.innerXml();
+        #                                    break;
+        #
+        #                            }
+        #                        }
+        #                        break;
+        #                    //--> In case of errors or rejections
+        #                    case 'c:reasonCode' :
+        #                        tmpStr = elementChild2.innerXml();
+        #                        if (elementChild2.innerXML() != '100')
+        #                        {
+        #                            errMsg = elementChild2.innerXML();
+        #                            _tmpCC3dEnrollCheck.RepMsg = CreditCardCybersourceXMLBuilder::returnError(errMsg);
+        #                        }
+        #                        break;
+        #                    case 'c:invalidField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        _tmpCC3dEnrollCheck.RepMsg += 'Invalid Field:' + tmpStr;
+        #                        break;
+        #                    case 'c:missingField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        _tmpCC3dEnrollCheck.RepMsg += 'Missing Field:' + tmpStr;
+        #                        break;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    //--> Remove credit card information
+        #    _tmpCC3dEnrollCheck.CreditCardNum = '';
+        #
+        #    if (_tmpCC3dEnrollCheck.RepMsg == '100' && _tmpCC3dEnrollCheck.runAuth == NoYes::Yes)
+        #    {
+        #        CreditCardTrans::createTransfrom3DCheck(_tmpCC3dEnrollCheck);
+        #    }
+        #
+        #    return _tmpCC3dEnrollCheck;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeCybersourceResponseForProfile
+        #CreditCardTable analyzeCybersourceResponseForProfile(CreditCardStr           msg,
+        #                                CreditCardTable         ccTable)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   errMsg;
+        #    boolean                         accepted;
+        #
+        #    ;
+        #    ttsbegin;
+        #    ccTable.selectForUpdate(true);
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'c:decision'   :
+        #                        switch (elementChild2.innerXml())
+        #                        {
+        #                            case 'ACCEPT'   :
+        #                                accepted = true;
+        #                                break;
+        #                            case 'ERROR'    :
+        #                                accepted = false;
+        #                                break;
+        #                            case 'REJECT'   :
+        #                                break;
+        #                        }
+        #
+        #
+        #                        break;
+        #                    case    'c:requestToken'       :
+        #                        //ccTable.ProfileId = elementChild2.innerXML();
+        #                        break;
+        #                    case    'c:paySubscriptionCreateReply'       :
+        #                        childNodeLst2 = elementChild2.childNodes();
+        #                        for (childCnt2 = 0;childCnt2 < childNodeLst2.length();childCnt2++)
+        #                        {
+        #                            elementChild3 = childNodeLst2.item(childCnt2);
+        #                            switch (elementChild3.nodeName())
+        #                            {
+        #                                case 'c:reasonCode' :
+        #                                    tmpStr = elementChild3.innerXml();
+        #                                    if (elementChild3.innerXML() != '100')
+        #                                    {
+        #                                        errMsg = elementChild3.innerXML();
+        #                                        errMsg += CreditCardCybersourceXMLBuilder::returnError(errMsg);
+        #                                    }
+        #                                    break;
+        #                                case    'c:subscriptionID'          :
+        #                                    ccTable.ProfileId = elementChild3.innerXml();
+        #                                    break;
+        #                            }
+        #                        }
+        #                        break;
+        #                    //--> In case of errors or rejections
+        #                    case 'c:reasonCode' :
+        #                        tmpStr = elementChild2.innerXml();
+        #                        if (elementChild2.innerXML() != '100')
+        #                        {
+        #                            errMsg = elementChild2.innerXML();
+        #                            errMsg += CreditCardCybersourceXMLBuilder::returnError(errMsg);
+        #                        }
+        #                        break;
+        #                    case 'c:invalidField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        errMsg += 'Invalid Field:' + tmpStr;
+        #                        break;
+        #                    case 'c:missingField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        errMsg += 'Missing Field:' + tmpStr;
+        #                        break;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    if (accepted)
+        #    {
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.CreditCardNum = '';
+        #        ccTable.update();
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        Throw error(strfmt(errMsg));
+        #    }
+        #
+        #
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #xml build(CreditCardTrans   ccTrans)
+        #{
+        #    xml                     xml;
+        #    CreditCardTrans         origCCTrans;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            //-->Cybersource allows for recurring transactions
+        #            if (ccTrans.RecurringToken == CreditCardRecurringToken::First)
+        #            {
+        #                xml = this.buildNewSubscription(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                if (ccTrans.Profile == NoYes::Yes)
+        #                {
+        #                    xml = this.buildProfileAuth(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    xml= this.buildNewAuth(ccTrans);
+        #                }
+        #            }
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.OrigID)
+        #            {
+        #                if (ccTrans.Profile == NoYes::Yes)
+        #                {
+        #                     xml = this.buildProfileFollowonReturn(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    xml = this.buildFollowOnCredit(ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (ccTrans.Profile == NoYes::Yes)
+        #                {
+        #                     xml = this.BuildNewProfileReturn(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                     xml = this.buildNewReturn(ccTrans);
+        #                }
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D     :
+        #            xml = this.buildCapture(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                 xml = this.BuildProfileSale(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                 xml = this.buildSale(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            select TransType,PNRef from origCCTrans
+        #                where origCCTrans.PNRef == ccTrans.OrigID;
+        #
+        #            if (origCCTrans.TransType == CreditCardTrxType::A)
+        #            {
+        #                xml = this.buildAuthVoid(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                xml = this.buildVoid(ccTrans);
+        #            }
+        #            break;
+        #    }
+        #
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #build3DAuthVerify
+        #xml build3DAuthVerify(tmpCC3dAuthVerify       _tmpCC3dAuthVerify)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    ;
+        #    //--> Set Terminal type
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == _tmpCC3dAuthVerify.TerminalId;
+        #
+        #    if (!ccCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(_tmpCC3dAuthVerify.RecId));
+        #    request.appendChild(xmlGen);
+        #
+        #
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(_tmpCC3dAuthVerify.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('accountNumber');
+        #    billTo.innerText(_tmpCC3dAuthVerify.CreditCardNum);
+        #
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    month =  int2str(Mthofyr(_tmpCC3dAuthVerify.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    billTo.innerText(month);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    ccYear = int2str(Year(_tmpCC3dAuthVerify.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #    billTo.innerText(ccyear);
+        #    xmlGen.appendChild(billto);
+        #
+        #    billTo = xmlDocument.createElement('cardType');
+        #    billTo.innerText(this.returnCardTypebyType(_tmpCC3dAuthVerify.CardType));
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #
+        #
+        #    xmlGen = xmlDocument.createElement('payerAuthValidateService');
+        #    xmlGen.setAttribute('run','true');
+        #
+        #    billTo = xmlDocument.createElement('signedPARes');
+        #    billTo.innerText(_tmpCC3dAuthVerify.Token);
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #build3DCheck
+        #xml build3DCheck(tmpCC3dEnrollCheck       _tmpCC3dEnrollCheck)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    ;
+        #    //--> Set Terminal type
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == _tmpCC3dEnrollCheck.TerminalId;
+        #
+        #    if (!ccCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #        //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(_tmpCC3dEnrollCheck.RecId));
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    billTo.innerText(this.parmFirstName(_tmpCC3dEnrollCheck.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    billTo.innerText(this.parmLastName(_tmpCC3dEnrollCheck.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('street1');
+        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    billTO.innerText(this.parmPostalAddress().City);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    billTo.innerText(this.parmPostalAddress().State);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('postalCode');
+        #    billTo.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    billTo.innerText(this.parmPostalAddress().CountryRegionId);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    billTo.innerText(_tmpCC3dEnrollCheck.AVSPhone);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('email');
+        #    if (_tmpCC3dEnrollCheck.AVSEmail)
+        #    {
+        #        billTo.innerText(_tmpCC3dEnrollCheck.AVSEmail);
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('null@cybersource.com');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('item');
+        #    xmlGen.setAttribute('id','0');
+        #    billTo = xmlDocument.createElement('unitPrice');
+        #    billTo.innerText(num2str(_tmpCC3dEnrollCheck.AmountCur,9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(_tmpCC3dEnrollCheck.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('accountNumber');
+        #    billTo.innerText(_tmpCC3dEnrollCheck.CreditCardNum);
+        #
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    month =  int2str(Mthofyr(_tmpCC3dEnrollCheck.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    billTo.innerText(month);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    ccYear = int2str(Year(_tmpCC3dEnrollCheck.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #    billTo.innerText(ccyear);
+        #    xmlGen.appendChild(billto);
+        #
+        #    billTo = xmlDocument.createElement('cardType');
+        #    billTo.innerText(this.returnCardTypebyType(_tmpCC3dEnrollCheck.CardType));
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    if (_tmpCC3dEnrollCheck.runAuth)
+        #    {
+        #        xmlGen = xmlDocument.createElement('ccAuthService');
+        #        xmlGen.setAttribute('run','true');
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #
+        #    xmlGen = xmlDocument.createElement('payerAuthEnrollService');
+        #    xmlGen.setAttribute('run','true');
+        #    request.appendChild(xmlGen);
+        #
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildAddress
+        #XMLElement buildAddress(CreditCardTrans     ccTrans,
+        #                        XMLElement          newOrder)
+        #{
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> AVS Information
+        #    if (ccTrans.Location && creditCardParameters::findParameter().AVS)
+        #    {
+        #        xmlGen = xmlDocument.createElement('AVSzip');
+        #        xmlGen.innerText(this.parmPostalAddress().ZipCode);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        if (creditCardParameters::findParameter().AVSZipOnly == NoYes::No)
+        #        {
+        #            xmlGen = xmlDocument.createElement('AVSaddress1');
+        #            xmlGen.innerText(this.parmPostalAddress().Street);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScity');
+        #            xmlGen.innerText(this.parmPostalAddress().City);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #
+        #            xmlGen = xmlDocument.createElement('AVSstate');
+        #            xmlGen.innerText(this.parmPostalAddress().State);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            if (ccTrans.AVSPhone)
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVSphoneNum');
+        #                xmlGen.innerText(ccTrans.AVSPhone);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #
+        #            xmlGen = xmlDocument.createElement('AVSname');
+        #            xmlGen.innerText(ccTrans.NameOnCard);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScountryCode');
+        #            xmlGen.innerText(this.parmPostalAddress().CountryRegionId);
+        #            newOrder.appendChild(xmlGen);
+        #        }
+        #        else
+        #        {
+        #            if (this.parmPostalAddress().CountryRegionId == 'UK' || this.parmPostalAddress().CountryRegionId == 'GB')
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVScountryCode');
+        #                xmlGen.innerText(this.parmPostalAddress().CountryRegionId);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #        }
+        #    }
+        #
+        #    return newOrder;
+        #}
+      ENDSOURCE
+      SOURCE #buildAuthVoid
+        #xml buildAuthVoid(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('grandTotalAmount');
+        #    billTo.innerText(num2str(abs(this.parmProcessAmt()),9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccAuthReversalService');
+        #    xmlGen.setAttribute('run','true');
+        #    billTo = xmlDocument.createElement('authRequestID');
+        #    billTo.innerText(ccTrans.OrigID);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('authRequestToken');
+        #    billTo.innerText(ccTrans.CybersourceToken);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #    //body.appendChild(request);
+        #    //envelope.appendChild(body);
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #xml buildCapture(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   ParmList,parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(ccTrans.CustomerRef);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Level II and III information.  Ignored by processor if not signed up
+        #    if (ccTrans.CustomerRef && (ccCybersource.LevelType == CreditCardLevelType::Level2
+        #        || ccCybersource.LevelType == CreditCardLevelType::Level3))
+        #    {
+        #        xmlGen = xmlDocument.createElement('invoiceHeader');
+        #        xmlGen = this.buildLevelIIIOrderLevel(ccTrans,ccCybersource,xmlGen);
+        #        request.appendChild(xmlGen);
+        #
+        #        //--> Bill to informatin
+        #        xmlGen = xmlDocument.createElement('billTo');
+        #
+        #        billTo = xmlDocument.createElement('customerID');
+        #        billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #        xmlGen.appendChild(billTo);
+        #
+        #        if (ccCybersource.LevelType == CreditCardLevelType::Level2)
+        #        {
+        #            billTo = xmlDocument.createElement('firstName');
+        #            billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #            xmlGen.appendChild(billTo);
+        #
+        #            billTo = xmlDocument.createElement('lastName');
+        #            billTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #            xmlGen.appendChild(billTo);
+        #        }
+        #
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> Level II and II information
+        #    if (ccCybersource.LevelType == CreditCardLevelType::Level2
+        #        || ccCybersource.LevelType == CreditCardLevelType::Level3)
+        #    {
+        #
+        #        xmlGen = this.buildLevelIIIItemLevel(ccTrans,ccCybersource,xmlGen);
+        #        request.appendChild(xmlGen);
+        #        parmRequest = request.xml();
+        #    }
+        #    else
+        #    {
+        #        xmlGen = xmlDocument.createElement('item');
+        #        xmlGen.setAttribute('id','0');
+        #        billTo = xmlDocument.createElement('unitPrice');
+        #        billTo.innerText(num2str(this.parmProcessAmt(),9,2,1,0));
+        #        xmlGen.appendChild(billTo);
+        #
+        #        billTo = xmlDocument.createElement('quantity');
+        #        billTo.innerText('1');
+        #        xmlGen.appendChild(billTo);
+        #        request.appendChild(xmlGen);
+        #        parmList = request.xml();
+        #    }
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    if (ccCybersource.LevelType == CreditCardLevelType::Level2
+        #        || ccCybersource.LevelType == CreditCardLevelType::Level3)
+        #    {
+        #        billTo = xmlDocument.createElement('grandTotalAmount');
+        #        billTo.innerText(num2str(this.parmProcessAmt(),-1,-1,-1,-1));
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('orderRequestToken');
+        #    xmlGen.innerText(ccTrans.CybersourceToken);
+        #    request.appendChild(xmlGen);
+        #
+        #
+        #    xmlGen = xmlDocument.createElement('ccCaptureService');
+        #    xmlGen.setAttribute('run','true');
+        #    billTo = xmlDocument.createElement('authRequestID');
+        #    billTo.innerText(ccTrans.OrigID);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    /*billTo = xmlDocument.createElement('authRequestToken');
+        #    billTo.innerText(ccTrans.CybersourceToken);
+        #    xmlGen.appendChild(billTo);*/
+        #
+        #    if (ccCybersource.LevelType == CreditCardLevelType::Level2
+        #        || ccCybersource.LevelType == CreditCardLevelType::Level3)
+        #    {
+        #        billTo = xmlDocument.createElement('purchasingLevel');
+        #        if (ccCyberSource.LevelType == CreditCardLevelType::Level2)
+        #        {
+        #            billTo.innerText('2');
+        #        }
+        #        else
+        #        {
+        #            billTo.innerText('3');
+        #        }
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (ccTrans.VoiceAuth ==NoYes::Yes)
+        #    {
+        #        billTo = xmlDocument.createElement('authType');
+        #        billTo.innerText('verbal');
+        #        xmlGen.appendChild(billTo);
+        #
+        #        billTo = xmlDocument.createElement('verbalAuthCode');
+        #        billTo.innerText(ccTrans.AuthCode);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDeleteProfile
+        #xml buildDeleteProfile(CreditCardTable       ccTable)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #        //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(ccTable.CreditCardId);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billto = xmlDocument.createElement('subscriptionID');
+        #    billTo.innerText(ccTable.ProfileId);
+        #    xmlgen.appendChild(billto);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('paySubscriptionDeleteService');
+        #    xmlGen.setAttribute('run','true');
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #    //instruction = xmlDocument.createProcessingInstruction('xml-stylesheet',
+        #        //'type="text/xsl" href="www.redmaple.com"');
+        #
+        #    //xmlDocument.appendChild(instruction);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelope
+        #str buildEnvelope(CreditCardMerchantCybersource  ccCybersource)
+        #{
+        #    CreditCardStr                   tmpstr;
+        #    ;
+        #
+        #    tmpStr = '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
+        #    tmpStr +=' xmlns="urn:schemas-cybersource-com:transaction-data-';
+        #    tmpStr += num2str(ccCybersource.APIVersion,3,2,1,0) + '">';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelopeHeader
+        #str buildEnvelopeHeader(CreditCardMerchantCybersource  ccCybersource)
+        #{
+        #    CreditCardStr                   tmpstr;
+        #    ;
+        #    /*header = xmlDocument.createElement3('SOAP-ENV','Header','wsse');
+        #    header.setAttribute('xmlns:wsse', 'http://docs.oasis-open.org/wss/2004/01/' +
+        #            'oasis-200401-wss-wssecurity-secext-1.0.xsd');
+        #    tmpStr = header.xml();
+        #    security = xmlDocument.createElement('wsse:Security');
+        #    security.setAttribute2('SOAPP-ENV:mustUnderstand','1');
+        #
+        #    tmpStr = security.xml();
+        #    xmlGen = xmlDocument.createElement('wsse:UsernameToken');
+        #    xmlGen2 = xmlDocument.createElement('wsse:Username');
+        #    xmlGen2.innerText(ccCybersource.MerchantId);
+        #
+        #    xmlGen.appendChild(xmlGen2);
+        #
+        #    xmlGen2 = xmlDocument.createElement('wsse:Password');
+        #    xmlGen2.setAttribute('Type','http://docs.oasis-open.org/wss/2004/01/oasis-200401-wssusername-' +
+        #            'token-profile-1.0#PasswordText');
+        #    xmlGen2.innerText(ccCybersource.Key);
+        #
+        #    xmlGen.appendChild(xmlGen2);
+        #
+        #    security.appendChild(xmlGen);
+        #
+        #    header.appendChild(security);
+        #
+        #    //print header.xml();*/
+        #
+        #    tmpStr = '<SOAP-ENV:Header xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">';
+        #    tmpStr+= '<wsse:Security SOAP-ENV:mustUnderstand="1">';
+        #    tmpStr+= '<wsse:UsernameToken>';
+        #    tmpStr+= '<wsse:Username>' + ccCybersource.MerchantId +'</wsse:Username>';
+        #    tmpStr+= '<wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">';
+        #    tmpStr+= ccCybersource.Key;
+        #    tmpStr+= '</wsse:Password>';
+        #    tmpStr+= '</wsse:UsernameToken>';
+        #    tmpStr+= '</wsse:Security>';
+        #    tmpStr+= '</SOAP-ENV:Header>';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildFollowOnCredit
+        #xml buildFollowOnCredit(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    real                            tmpAmt;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    billTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('street1');
+        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    billTO.innerText(this.parmPostalAddress().City);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    billTo.innerText(this.parmPostalAddress().State);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('postalCode');
+        #    billTo.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    billTo.innerText(this.parmPostalAddress().CountryRegionId);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    billTo.innerText(ccTrans.AVSPhone);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('email');
+        #    billTo.innerText('test@test.com');
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('grandTotalAmount');
+        #    tmpAmt = abs(this.parmProcessAmt());
+        #    billTo.innerText(num2str(tmpAmt,9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('accountNumber');
+        #    billTo.innerText(this.returnAccount(ccTrans));
+        #
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    billTo.innerText(this.returnMonth(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    billTo.innerText(this.returnYear(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccCreditService');
+        #    xmlGen.setAttribute('run','true');
+        #    billTo = xmlDocument.createElement('captureRequestID');
+        #    billTo.innerText(ccTrans.OrigID);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    //--> Used in new authorizatoins
+        #    billTo = xmlDocument.createElement('commerceIndicator');
+        #    if (this.parmMerchantCybersource().Industry == CreditCardIndustryCybersource::EC)
+        #    {
+        #        billTo.innerText('internet');
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('moto');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildLevel
+        #XMLElement buildLevel(xmlElement    xmlGen)
+        #{
+        #    ;
+        #    return xmlGen;
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIIAmexDirectItemLevel
+        #xmlElement buildLevelIIAmexDirectItemLevel(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #
+        #    XMLElement                      body;
+        #    XMLElement                      xmlLineNum;
+        #    xml                             testXML;
+        #    CustInvoiceTrans                custInvoiceTrans;
+        #    CustPackingSlipTrans            custPackingSlipTrans;
+        #    int                             lineNum = 0;
+        #    ;
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        xmlGen = xmlDocument.createElement('item');
+        #
+        #        while select QtyPhysical,taxAmount,SalesPrice
+        #            from custInvoiceTrans
+        #            where custInvoiceTrans.InvoiceId == ccTrans.InvoiceId
+        #        {
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('quantity');
+        #            xmlLineNum.innerText(num2str(custInvoiceTrans.QtyPhysical,9,2,0,0));
+        #            body.appendChild(xmlLineNum);
+        #             xmlGen.appendChild(body);
+        #
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('taxAmount');
+        #            xmlLineNum.innerText(num2str(custInvoiceTrans.TaxAmount,9,2,0,0));
+        #            body.appendChild(xmlLineNum);
+        #             xmlGen.appendChild(body);
+        #
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('unitPrice');
+        #            xmlLineNum.innerText(num2str(custInvoiceTrans.SalesPrice,9,2,0,0));
+        #            body.appendChild(xmlLineNum);
+        #            xmlGen.appendChild(body);
+        #            lineNum++;
+        #        }
+        #    }
+        #    else if (ccTrans.PackingSlipId)
+        #    {
+        #        xmlGen = xmlDocument.createElement('item');
+        #
+        #        while select Qty,ValueMST from custPackingSlipTrans
+        #            where custPackingSlipTrans.PackingSlipId == ccTrans.PackingSlipId
+        #        {
+        #
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('quantity');
+        #            xmlLineNum.innerText(num2str(custPackingSlipTrans.Qty,9,2,0,0));
+        #            body.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('taxAmount');
+        #            xmlLineNum.innerText(strLRTrim(num2str(ccTrans.CommercialSalesTax,9,2,0,0)));
+        #            body.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('unitPrice');
+        #            //--> Packing slip does not have unit price.  We have to calcultate it.
+        #            xmlLineNum.innerText(strLRTrim(num2str(
+        #                Currency::amount(custPackingSlipTrans.ValueMST/custPackingSlipTrans.Qty),9,2,0,0)));
+        #            body.appendChild(xmlLineNum);
+        #            xmlGen.appendChild(body);
+        #            lineNum++;
+        #        }
+        #
+        #    }
+        #
+        #    testXML = xmlGen.xml();
+        #
+        #
+        #    return xmlGen;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIIAmexDirectOrderLevel
+        #xmlElement buildLevelIIAmexDirectOrderLevel(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #    XMLElement                      body;
+        #    ;
+        #    body = xmlDocument.createElement('amexDataTAA1');
+        #    body.innerText(ccTrans.CustomerRef);
+        #    xmlGen.appendChild(body);
+        #
+        #    body = xmlDocument.createElement('userPO');
+        #    body.innerText(ccTrans.CustomerRef);
+        #    xmlGen.appendChild(body);
+        #
+        #    return xmlGen;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIIIGPNItemLevel
+        #xmlElement buildLevelIIIGPNItemLevel(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #    XMLElement                      xmlLineNum;
+        #    xml                             testXML;
+        #    CustInvoiceTrans                custInvoiceTrans;
+        #    CustPackingSlipTrans            custPackingSlipTrans;
+        #    int                             lineNum = 0;
+        #    ;
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        while select salesPrice,qtyPhysical,TaxAmount,salesUnit,itemId from custInvoiceTrans
+        #            where custInvoiceTrans.InvoiceId == ccTrans.InvoiceId
+        #        {
+        #            xmlGen = xmlDocument.createElement('item');
+        #            xmlGen.setAttribute('id',int2str(linenum));
+        #
+        #            xmlLineNum = xmlDocument.createElement('unitPrice');
+        #            xmlLineNum.innerText(num2str(custInvoiceTrans.SalesPrice,9,2,0,0));
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('quantity');
+        #            xmlLineNum.innerText(strlrtrim(num2str(custInvoiceTrans.QtyPhysical,9,0,0,0)));
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('productCode');
+        #            xmlLineNum.innerText(custInvoiceTrans.ItemId);
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('productName');
+        #            xmlLineNum.innerText(custInvoiceTrans.itemName());
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('taxAmount');
+        #            xmlLineNum.innerText(num2str(custInvoiceTrans.TaxAmount,9,2,0,0));
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('unitOfMeasure');
+        #            xmlLineNum.innerText(custInvoiceTrans.SalesUnit);
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #
+        #
+        #
+        #
+        #            lineNum++;
+        #        }
+        #    }
+        #    else if (ccTrans.PackingSlipId)
+        #    {
+        #
+        #
+        #        while select Qty,ValueMST from custPackingSlipTrans
+        #            where custPackingSlipTrans.PackingSlipId == ccTrans.PackingSlipId
+        #        {
+        #            xmlGen = xmlDocument.createElement('item');
+        #            xmlGen.setAttribute('id',int2str(linenum));
+        #
+        #            xmlLineNum = xmlDocument.createElement('unitPrice');
+        #            //--> Packing slip does not have unit price.  We have to calcultate it.
+        #            xmlLineNum.innerText(strLRTrim(num2str(
+        #                Currency::amount(custPackingSlipTrans.ValueMST/custPackingSlipTrans.Qty),9,2,0,0)));
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('quantity');
+        #            xmlLineNum.innerText(strlrtrim(num2str(custPackingSlipTrans.Qty,9,0,0,0)));
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('productCode');
+        #            xmlLineNum.innerText(custPackingSlipTrans.ItemId);
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('productName');
+        #            xmlLineNum.innerText(custPackingSlipTrans.itemName());
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('taxAmount');
+        #            xmlLineNum.innerText(strLRTrim(num2str(ccTrans.CommercialSalesTax,9,2,0,0)));
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('unitOfMeasure');
+        #            xmlLineNum.innerText(custPackingSlipTrans.SalesUnit);
+        #            xmlGen.appendChild(xmlLineNum);
+        #
+        #
+        #            lineNum++;
+        #        }
+        #
+        #    }
+        #
+        #    testXML = xmlGen.xml();
+        #
+        #
+        #    return xmlGen;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIIIGPNOrderLevel
+        #xmlElement buildLevelIIIGPNOrderLevel(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #    XMLElement                      body;
+        #    ;
+        #    body = xmlDocument.createElement('purchaserOrderDate');
+        #    body.innerText(date2str(SalesTable::find(ccTrans.SalesId).DeliveryDate,321,2,0,2,0,4,0));
+        #    xmlGen.appendChild(body);
+        #
+        #    body = xmlDocument.createElement('userPO');
+        #    body.innerText(ccTrans.CustomerRef);
+        #    xmlGen.appendChild(body);
+        #
+        #    return xmlGen;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIIIItemLevel
+        #XMLElement buildLevelIIIItemLevel(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #    ;
+        #    switch (ccCybersource.Processor)
+        #    {
+        #        case    CreditCardCybersourceProcessor::TSYS    :
+        #            xmlGen = this.buildLevelIIITSYSItemLevel(ccTrans,ccCybersource,xmlGen);
+        #            break;
+        #        case    CreditCardCybersourceProcessor::AMEXDIRECT  :
+        #            xmlGen = this.buildLevelIIAmexDirectItemLevel(ccTrans,ccCybersource,xmlGen);
+        #            break;
+        #        case    CreditCardCybersourceProcessor::GPN  :
+        #            xmlGen = this.buildLevelIIIGPNItemLevel(ccTrans,ccCybersource,xmlGen);
+        #            break;
+        #    }
+        #
+        #    return xmlGen;
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIIIOrderLevel
+        #XMLElement buildLevelIIIOrderLevel(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #    ;
+        #    switch (ccCybersource.Processor)
+        #    {
+        #        case    CreditCardCybersourceProcessor::TSYS    :
+        #            xmlGen = this.buildLevelIIITSYSOrderLevel(ccTrans,ccCybersource,xmlGen);
+        #            break;
+        #        case    CreditCardCybersourceProcessor::AMEXDIRECT  :
+        #            xmlGen = this.buildLevelIIAmexDirectOrderLevel(ccTrans,ccCybersource,xmlGen);
+        #            break;
+        #        case    CreditCardCybersourceProcessor::GPN  :
+        #            xmlGen = this.buildLevelIIIGPNOrderLevel(ccTrans,ccCybersource,xmlGen);
+        #            break;
+        #    }
+        #
+        #    return xmlGen;
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIIITSYSItemLevel
+        #xmlElement buildLevelIIITSYSItemLevel(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #
+        #    XMLElement                      body;
+        #    XMLElement                      xmlLineNum;
+        #    xml                             testXML;
+        #    CustInvoiceTrans                custInvoiceTrans;
+        #    CustPackingSlipTrans            custPackingSlipTrans;
+        #    int                             lineNum = 0;
+        #    ;
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        xmlGen = xmlDocument.createElement('item');
+        #
+        #        while select salesPrice,qtyPhysical,TaxAmount,salesUnit from custInvoiceTrans
+        #            where custInvoiceTrans.InvoiceId == ccTrans.InvoiceId
+        #        {
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('quantity');
+        #            xmlLineNum.innerText(num2str(custInvoiceTrans.QtyPhysical,9,2,0,0));
+        #            body.appendChild(xmlLineNum);
+        #            xmlGen.appendChild(body);
+        #
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('taxAmount');
+        #            xmlLineNum.innerText(num2str(custInvoiceTrans.TaxAmount,9,2,0,0));
+        #            body.appendChild(xmlLineNum);
+        #            xmlGen.appendChild(body);
+        #
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('unitOfMeasure');
+        #            xmlLineNum.innerText(custInvoiceTrans.SalesUnit);
+        #            body.appendChild(xmlLineNum);
+        #            xmlGen.appendChild(body);
+        #
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('unitPrice');
+        #            xmlLineNum.innerText(num2str(custInvoiceTrans.SalesPrice,9,2,0,0));
+        #            body.appendChild(xmlLineNum);
+        #            xmlGen.appendChild(body);
+        #
+        #
+        #            lineNum++;
+        #        }
+        #    }
+        #    else if (ccTrans.PackingSlipId)
+        #    {
+        #        xmlGen = xmlDocument.createElement('item');
+        #
+        #        while select Qty,ValueMST from custPackingSlipTrans
+        #            where custPackingSlipTrans.PackingSlipId == ccTrans.PackingSlipId
+        #        {
+        #
+        #            body = xmlDocument.createElement(int2str(lineNum));
+        #            xmlLineNum = xmlDocument.createElement('quantity');
+        #            xmlLineNum.innerText(num2str(custPackingSlipTrans.Qty,9,2,0,0));
+        #            body.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('taxAmount');
+        #            xmlLineNum.innerText(strLRTrim(num2str(ccTrans.CommercialSalesTax,9,2,0,0)));
+        #            body.appendChild(xmlLineNum);
+        #
+        #            xmlLineNum = xmlDocument.createElement('unitPrice');
+        #            //--> Packing slip does not have unit price.  We have to calcultate it.
+        #            xmlLineNum.innerText(strLRTrim(num2str(
+        #                Currency::amount(custPackingSlipTrans.ValueMST/custPackingSlipTrans.Qty),9,2,0,0)));
+        #            body.appendChild(xmlLineNum);
+        #            xmlGen.appendChild(body);
+        #            lineNum++;
+        #        }
+        #
+        #    }
+        #
+        #    testXML = xmlGen.xml();
+        #
+        #
+        #    return xmlGen;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIIITSYSOrderLevel
+        #xmlElement buildLevelIIITSYSOrderLevel(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #    XMLElement                      body;
+        #    ;
+        #    body = xmlDocument.createElement('purchaserOrderDate');
+        #    body.innerText(date2str(SalesTable::find(ccTrans.SalesId).DeliveryDate,321,2,0,2,0,4,0));
+        #    xmlGen.appendChild(body);
+        #
+        #    body = xmlDocument.createElement('userPO');
+        #    body.innerText(ccTrans.CustomerRef);
+        #    xmlGen.appendChild(body);
+        #
+        #    return xmlGen;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuth
+        #xml buildNewAuth(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(ccTrans.CustomerRef);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    billTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    if (this.parmPostalAddress().Street)
+        #    {
+        #        billTo = xmlDocument.createElement('street1');
+        #        billTo.innerText(this.parmPostalAddress().Street);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #    else
+        #    {
+        #        billTo = xmlDocument.createElement('street1');
+        #        billTo.innerText('null');
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().City)
+        #    {
+        #        billTo = xmlDocument.createElement('city');
+        #        billTO.innerText(this.parmPostalAddress().City);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #    else
+        #    {
+        #        billTo = xmlDocument.createElement('city');
+        #        billTo.innerText('null');
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().State)
+        #    {
+        #        billTo = xmlDocument.createElement('state');
+        #        billTo.innerText(this.parmPostalAddress().State);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #    else
+        #    {
+        #        billTo = xmlDocument.createElement('state');
+        #        billTo.innerText('null');
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        billTo = xmlDocument.createElement('postalCode');
+        #        billTo.innerText(this.parmPostalAddress().ZipCode);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #    else
+        #    {
+        #        billTo = xmlDocument.createElement('postalCode');
+        #        billTo.innerText('null');
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        billTo = xmlDocument.createElement('country');
+        #        billTo.innerText(this.parmPostalAddress().CountryRegionId);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #    else
+        #    {
+        #        billTo = xmlDocument.createElement('country');
+        #        billTo.innerText('null');
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (ccTrans.AVSPhone)
+        #    {
+        #        billTo = xmlDocument.createElement('phoneNumber');
+        #        billTo.innerText(ccTrans.AVSPhone);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    billTo = xmlDocument.createElement('email');
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        billTo.innerText(ccTrans.AVSEmail);
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('null@cybersource.com');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    request = this.buildShipTo(ccTrans,request);
+        #
+        #
+        #    xmlGen = xmlDocument.createElement('item');
+        #    xmlGen.setAttribute('id','0');
+        #    billTo = xmlDocument.createElement('unitPrice');
+        #    billTo.innerText(num2str(this.parmProcessAmt(),9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('quantity');
+        #    billTo.innerText('1');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Payer Authentication
+        #    if (ccTrans.CollectionInidicator)
+        #    {
+        #        if (ccTrans.AAV)
+        #        {
+        #            billTo = xmlDocument.createElement('ucafAuthenticationData');
+        #            billTo.innerText(ccTrans.AAV);
+        #            xmlGen.appendChild(billTo);
+        #        }
+        #
+        #        xmlGen = xmlDocument.createElement('ucaf');
+        #        billTo = xmlDocument.createElement('collectionIndicator');
+        #        billTo.innerText(ccTrans.CollectionInidicator);
+        #        xmlGen.appendChild(billTo);
+        #
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('accountNumber');
+        #    billTo.innerText(this.returnAccount(ccTrans));
+        #
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    billTo.innerText(this.returnMonth(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    billTo.innerText(this.returnYear(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        billTo = xmlDocument.createElement('cvNumber');
+        #        billTo.innerText(ccTrans.CID);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccAuthService');
+        #    xmlGen.setAttribute('run','true');
+        #    request.appendChild(xmlGen);
+        #
+        #    if (SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::No)
+        #    {
+        #        xmlGen = xmlDocument.createElement('businessRules');
+        #        billTo = xmlDocument.createElement('ignoreAVSResult');
+        #        billTo.innerText('true');
+        #        xmlGen.appendChild(billTo);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> Payer Authentication
+        #    if (ccTrans.CollectionInidicator != '')
+        #    {
+        #        //--> Check authorization
+        #        if (ccTrans.VeresEnrolled != '')
+        #        {
+        #            xmlGen = xmlDocument.createElement('commerceIndicator');
+        #            xmlGen.innerText(ccTrans.VeresEnrolled);
+        #            request.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('veresEnrolled');
+        #            xmlGen.innerText(ccTrans.VeresEnrolled);
+        #            request.appendChild(xmlGen);
+        #        }
+        #        //--> auth verify authorization
+        #        else if (ccTrans.ParesStatus != '')
+        #        {
+        #            xmlGen = xmlDocument.createElement('paresStatus');
+        #            xmlGen.innerText(ccTrans.ParesStatus);
+        #            request.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('xid');
+        #            xmlGen.innerText(ccTrans.xid);
+        #            request.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('commerceIndicator');
+        #            xmlGen.innerText(ccTrans.VeresEnrolled);
+        #            request.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('eciRaw');
+        #            xmlGen.innerText(ccTrans.ECIRaw);
+        #            request.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('cavv');
+        #            xmlGen.innerText(ccTrans.CAVV);
+        #            request.appendChild(xmlGen);
+        #
+        #        }
+        #    }
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewProfileReturn
+        #xml buildNewProfileReturn(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    real                            tmpAmt;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #    ///  request.appendChild(xmlGen);
+        #
+        #   //--------------------------
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('grandTotalAmount');
+        #    tmpAmt = abs(this.parmProcessAmt());
+        #    billTo.innerText(num2str(tmpAmt,9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billTo = xmlDocument.createElement('subscriptionID');
+        #    billTo.innerText(ccTrans.ProfileId);
+        #
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccCreditService');
+        #    //--> Set the run element
+        #    xmlGen.setAttribute('run','true');
+        #
+        #    //--> Used in new authorizatoins
+        #    billTo = xmlDocument.createElement('commerceIndicator');
+        #    if (this.parmMerchantCybersource().Industry == CreditCardIndustryCybersource::EC)
+        #    {
+        #        billTo.innerText('internet');
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('moto');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewReturn
+        #xml buildNewReturn(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    real                            tmpAmt;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    billTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('street1');
+        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    billTO.innerText(this.parmPostalAddress().City);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    billTo.innerText(this.parmPostalAddress().State);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('postalCode');
+        #    billTo.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    billTo.innerText(this.parmPostalAddress().CountryRegionId);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    billTo.innerText(ccTrans.AVSPhone);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('email');
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        billTo.innerText(ccTrans.AVSEmail);
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('null@cybersource.com');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('grandTotalAmount');
+        #    tmpAmt = abs(this.parmProcessAmt());
+        #    billTo.innerText(num2str(tmpAmt,9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('accountNumber');
+        #    billTo.innerText(this.returnAccount(ccTrans));
+        #
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    billTo.innerText(this.returnMonth(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    billTo.innerText(this.returnYear(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccCreditService');
+        #    //--> Set the run element
+        #    xmlGen.setAttribute('run','true');
+        #
+        #    //--> Used in new authorizatoins
+        #    billTo = xmlDocument.createElement('commerceIndicator');
+        #    if (this.parmMerchantCybersource().Industry == CreditCardIndustryCybersource::EC)
+        #    {
+        #        billTo.innerText('internet');
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('moto');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewSubscription
+        #xml buildNewSubscription(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #
+        #    //--> Payment Schedule
+        #    SalesTable                      salesTable = SalesTable::find(ccTrans.SalesId);
+        #    CustPaymSched                   custPaymSched = CustPaymSched::find(salesTable.TableId,salesTable.RecId);
+        #    ;
+        #    //--> Check if we have our info
+        #    if (!salesTable || !custPaymSched)
+        #    {
+        #        throw error("@ACC1231");
+        #    }
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    billTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('street1');
+        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    billTO.innerText(this.parmPostalAddress().City);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    billTo.innerText(this.parmPostalAddress().State);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('postalCode');
+        #    billTo.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    billTo.innerText(this.parmPostalAddress().CountryRegionId);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    billTo.innerText(ccTrans.AVSPhone);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('email');
+        #    billTo.innerText(ccTrans.AVSEmail);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('accountNumber');
+        #    billTo.innerText(this.returnAccount(ccTrans));
+        #
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    billTo.innerText(this.returnMonth(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    billTo.innerText(this.returnYear(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        billTo = xmlDocument.createElement('cvNumber');
+        #        billTo.innerText(ccTrans.CID);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Subscription payments
+        #
+        #    xmlGen = xmlDocument.createElement('subscription');
+        #    billTo = xmlDocument.createElement('title');
+        #    billTo.innerText(custPaymSched.Description);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('paymentMethod');
+        #    billTo.innerText('Credit Card');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billTo = xmlDocument.createElement('amount');
+        #    billTo.innerText(num2str(this.parmProcessAmt(),9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('numberOfPayments');
+        #    billTo.innerText(int2str(custPaymSched.NumOfPayment));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('automaticRenew');
+        #    billTo.innerText('false');
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('frequency');
+        #    billTo.innerText('monthly');
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #
+        #    xmlGen = xmlDocument.createElement('paySubscriptionCreateService');
+        #    xmlGen.setAttribute('run','true');
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #    //body.appendChild(request);
+        #    //envelope.appendChild(body);
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfile
+        #xml buildProfile(CreditCardTable       ccTable)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    ;
+        #    //--> Set Terminal type
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #        //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(ccTable.CreditCardId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    billTo.innerText(this.parmFirstName(ccTable.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    billTo.innerText(this.parmLastName(ccTable.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('street1');
+        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    billTO.innerText(this.parmPostalAddress().City);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    billTo.innerText(this.parmPostalAddress().State);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('postalCode');
+        #    billTo.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    billTo.innerText(this.parmPostalAddress().CountryRegionId);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    billTo.innerText(ccTable.Phone);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('email');
+        #    if (ccTable.Email)
+        #    {
+        #        billTo.innerText(ccTable.Email);
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('null@cybersource.com');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('item');
+        #    xmlGen.setAttribute('id','0');
+        #    billTo = xmlDocument.createElement('unitPrice');
+        #    billTo.innerText(num2str(1.00,9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('quantity');
+        #    billTo.innerText('1');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(companyInfo::standardCurrency());
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('accountNumber');
+        #    billTo.innerText(CreditCardTable::retrieveValue(ccTable));
+        #
+        #    xmlGen.appendChild(billTo);
+        #
+        #
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    billTo.innerText(month);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #    billTo.innerText(ccyear);
+        #    xmlGen.appendChild(billto);
+        #
+        #    billTo = xmlDocument.createElement('cardType');
+        #    billTo.innerText(this.returnCardType(ccTable));
+        #    xmlGen.appendChild(billTo);
+        #
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('subscription');
+        #    billTo = xmlDocument.createElement('title');
+        #    billTo.innerText('Profile setup');
+        #    xmlGen.appendChild(billTo);
+        #    billTo = xmlDocument.createElement('paymentMethod');
+        #    billTo.innerText('credit card');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billTo = xmlDocument.createElement('frequency');
+        #    billTo.innerText('on-demand');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('paySubscriptionCreateService');
+        #    xmlGen.setAttribute('run','true');
+        #    //billto = xmlDocument.createElement('paymentRequestID');
+        #    //billTo.innerText(ccTrans.PNRef);
+        #    //xmlgen.appendChild(billto);
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfileAuth
+        #xml buildProfileAuth(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(ccTrans.CustomerRef);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('item');
+        #    xmlGen.setAttribute('id','0');
+        #    billTo = xmlDocument.createElement('unitPrice');
+        #    billTo.innerText(num2str(this.parmProcessAmt(),9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('quantity');
+        #    billTo.innerText('1');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billTo = xmlDocument.createElement('subscriptionID');
+        #    billTo.innerText(ccTrans.ProfileId);
+        #
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccAuthService');
+        #    xmlGen.setAttribute('run','true');
+        #    request.appendChild(xmlGen);
+        #
+        #    if (SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::No)
+        #    {
+        #        xmlGen = xmlDocument.createElement('businessRules');
+        #        billTo = xmlDocument.createElement('ignoreAVSResult');
+        #        billTo.innerText('true');
+        #        xmlGen.appendChild(billTo);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfileFollowonReturn
+        #xml buildProfileFollowonReturn(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    real                            tmpAmt;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #    ///  request.appendChild(xmlGen);
+        #
+        #   //--------------------------
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('grandTotalAmount');
+        #    tmpAmt = abs(this.parmProcessAmt());
+        #    billTo.innerText(num2str(tmpAmt,9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billTo = xmlDocument.createElement('subscriptionID');
+        #    billTo.innerText(ccTrans.ProfileId);
+        #
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccCreditService');
+        #    xmlGen.setAttribute('run','true');
+        #    billTo = xmlDocument.createElement('captureRequestID');
+        #    billTo.innerText(ccTrans.OrigID);
+        #    xmlGen.appendChild(billTo);
+        #
+        #
+        #    //--> Used in new authorizatoins
+        #    billTo = xmlDocument.createElement('commerceIndicator');
+        #    if (this.parmMerchantCybersource().Industry == CreditCardIndustryCybersource::EC)
+        #    {
+        #        billTo.innerText('internet');
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('moto');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfileFromAuth
+        #xml buildProfileFromAuth(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    xmlGen = xmlDocument.createElement('subscription');
+        #    billTo = xmlDocument.createElement('title');
+        #    billTo.innerText('Profile setup');
+        #    xmlGen.appendChild(billTo);
+        #    billTo = xmlDocument.createElement('paymentMethod');
+        #    billTo.innerText('credit card');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billTo = xmlDocument.createElement('frequency');
+        #    billTo.innerText('on-demand');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('paySubscriptionCreateService');
+        #    xmlGen.setAttribute('run','true');
+        #    billto = xmlDocument.createElement('paymentRequestID');
+        #    billTo.innerText(ccTrans.PNRef);
+        #    xmlgen.appendChild(billto);
+        #
+        #    /*billTo = xmlDocument.createElement('orderRequestToken');
+        #    billTo.innerText(ccTrans.CybersourceToken);
+        #    xmlGen.appendChild(billTo);*/
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #BuildProfileSale
+        #xml BuildProfileSale(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(ccTrans.CustomerRef);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('item');
+        #    xmlGen.setAttribute('id','0');
+        #    billTo = xmlDocument.createElement('unitPrice');
+        #    billTo.innerText(num2str(this.parmProcessAmt(),9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('quantity');
+        #    billTo.innerText('1');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billTo = xmlDocument.createElement('subscriptionID');
+        #    billTo.innerText(ccTrans.ProfileId);
+        #
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccAuthService');
+        #    xmlGen.setAttribute('run','true');
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccCaptureService');
+        #    xmlGen.setAttribute('run','true');
+        #    request.appendChild(xmlGen);
+        #
+        #
+        #    if (SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::No)
+        #    {
+        #        xmlGen = xmlDocument.createElement('businessRules');
+        #        billTo = xmlDocument.createElement('ignoreAVSResult');
+        #        billTo.innerText('true');
+        #        xmlGen.appendChild(billTo);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildRetailSale
+        #xml buildRetailSale(CreditCardTrans     ccTrans)
+        #{
+        #    //--> placement.  Coming in the future.
+        #    xml             xmlGen;
+        #    ;
+        #
+        #    /*switch (this.parmMerchantCybersource().RetailProcessor)
+        #    {
+        #        case    CreditCardCybersourceRetailProcessor::TSYS    :
+        #        {
+        #
+        #            break;
+        #        }
+        #        case    CreditCardCybersourceRetailProcessor::AMEXDIRECT  :
+        #        {
+        #
+        #            break;
+        #        }
+        #        case    CreditCardCybersourceRetailProcessor::GPN  :
+        #        {
+        #
+        #            break;
+        #        }
+        #    }*/
+        #
+        #    return xmlGen;
+        #}
+      ENDSOURCE
+      SOURCE #buildSale
+        #xml buildSale(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    //--> Bill to information
+        #
+        #    xmlGen = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    billTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('street1');
+        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    billTO.innerText(this.parmPostalAddress().City);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    billTo.innerText(this.parmPostalAddress().State);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('postalCode');
+        #    billTo.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    billTo.innerText(this.parmPostalAddress().CountryRegionId);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    billTo.innerText(ccTrans.AVSPhone);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('email');
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        billTo.innerText(ccTrans.AVSEmail);
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('null@cybersource.com');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('item');
+        #    xmlGen.setAttribute('id','0');
+        #    billTo = xmlDocument.createElement('unitPrice');
+        #    billTo.innerText(num2str(this.parmProcessAmt(),9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('quantity');
+        #    billTo.innerText('1');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(ccTrans.CurrencyCode);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('accountNumber');
+        #    billTo.innerText(this.returnAccount(ccTrans));
+        #
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    billTo.innerText(this.returnMonth(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    billTo.innerText(this.returnYear(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        billTo = xmlDocument.createElement('cvNumber');
+        #        billTo.innerText(ccTrans.CID);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccAuthService');
+        #    xmlGen.setAttribute('run','true');
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ccCaptureService');
+        #    xmlGen.setAttribute('run','true');
+        #    request.appendChild(xmlGen);
+        #
+        #    if (SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::No)
+        #    {
+        #        xmlGen = xmlDocument.createElement('businessRules');
+        #        billTo = xmlDocument.createElement('ignoreAVSResult');
+        #        billTo.innerText('true');
+        #        xmlGen.appendChild(billTo);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildShipTo
+        #XMLElement buildShipTo(CreditCardTrans     ccTrans,
+        #                        XMLElement          newOrder)
+        #{
+        #    SalesTable                      salesTable = SalesTable::find(ccTrans.SalesId);
+        #    LogisticsPostalAddress          shipAddress= LogisticsPostalAddress::findRecId(salesTable.DeliveryPostalAddress);
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      shipTo;
+        #    ;
+        #    if (salesTable)
+        #    {
+        #        //--> ship to informatin
+        #        xmlGen = xmlDocument.createElement('shipTo');
+        #
+        #        shipTo = xmlDocument.createElement('firstName');
+        #        shipTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #        xmlGen.appendChild(shipTo);
+        #
+        #        shipTo = xmlDocument.createElement('lastName');
+        #        shipTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #        xmlGen.appendChild(shipTo);
+        #
+        #        shipTo = xmlDocument.createElement('street1');
+        #        shipTo.innerText(shipAddress.Street);
+        #        xmlGen.appendChild(shipTo);
+        #
+        #        shipTo = xmlDocument.createElement('city');
+        #        shipTO.innerText(shipAddress.City);
+        #        xmlGen.appendChild(shipTo);
+        #
+        #        shipTo = xmlDocument.createElement('state');
+        #        shipTo.innerText(shipAddress.State);
+        #        xmlGen.appendChild(shipTo);
+        #
+        #        shipTo = xmlDocument.createElement('postalCode');
+        #        shipTo.innerText(shipAddress.ZipCode);
+        #        xmlGen.appendChild(shipTo);
+        #
+        #        shipTo = xmlDocument.createElement('country');
+        #        shipTo.innerText(shipAddress.CountryRegionId);
+        #        xmlGen.appendChild(shipTo);
+        #
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    return newOrder;
+        #}
+      ENDSOURCE
+      SOURCE #buildTsys
+        #XMLElement buildTsys(CreditCardTrans                  ccTrans,
+        #                    CreditCardMerchantCybersource   ccCybersource,
+        #                    XMLElement                      xmlGen)
+        #{
+        #
+        #    ;
+        #    switch (ccCybersource.LevelType)
+        #    {
+        #        case    CreditCardLevelType::Level3 :
+        #            break;
+        #    }
+        #
+        #    return xmlGen;
+        #}
+      ENDSOURCE
+      SOURCE #buildUpdateProfile
+        #xml buildUpdateProfile(CreditCardTable       ccTable)
+        #{
+        #    str                             parmHeader,parmRequest,parmAll;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    str                             month;
+        #    str                             ccYear;
+        #    ;
+        #    //--> Set Terminal type
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #        //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(ccTable.CreditCardId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    billTo.innerText(this.parmFirstName(ccTable.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    billTo.innerText(this.parmLastName(ccTable.NameOnCard));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('street1');
+        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    billTO.innerText(this.parmPostalAddress().City);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    if (this.parmPostalAddress().State)
+        #    {
+        #        billTo = xmlDocument.createElement('state');
+        #        billTo.innerText(this.parmPostalAddress().State);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        billTo = xmlDocument.createElement('postalCode');
+        #        billTo.innerText(this.parmPostalAddress().ZipCode);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        billTo = xmlDocument.createElement('country');
+        #        billTo.innerText(this.parmPostalAddress().CountryRegionId);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (ccTable.Phone)
+        #    {
+        #        billTo = xmlDocument.createElement('phoneNumber');
+        #        billTo.innerText(ccTable.Phone);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    billTo = xmlDocument.createElement('email');
+        #    if (ccTable.Email)
+        #    {
+        #        billTo.innerText(ccTable.Email);
+        #    }
+        #    else
+        #    {
+        #        billTo.innerText('null@cybersource.com');
+        #    }
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('item');
+        #    xmlGen.setAttribute('id','0');
+        #    billTo = xmlDocument.createElement('unitPrice');
+        #    billTo.innerText(num2str(1.00,9,2,1,0));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('quantity');
+        #    billTo.innerText('1');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #    //parmList = request.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('purchaseTotals');
+        #    billTo = xmlDocument.createElement('currency');
+        #    billTo.innerText(companyInfo::standardCurrency());
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('card');
+        #
+        #    billTo = xmlDocument.createElement('expirationMonth');
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    billTo.innerText(month);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationYear');
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #    billTo.innerText(ccyear);
+        #    xmlGen.appendChild(billto);
+        #
+        #    billTo = xmlDocument.createElement('cardType');
+        #    billTo.innerText(this.returnCardType(ccTable));
+        #    xmlGen.appendChild(billTo);
+        #
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('subscription');
+        #    billTo = xmlDocument.createElement('title');
+        #    billTo.innerText('Profile setup');
+        #    xmlGen.appendChild(billTo);
+        #    billTo = xmlDocument.createElement('paymentMethod');
+        #    billTo.innerText('credit card');
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('recurringSubscriptionInfo');
+        #    billto = xmlDocument.createElement('subscriptionID');
+        #    billTo.innerText(ccTable.ProfileId);
+        #    xmlgen.appendChild(billto);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('paySubscriptionUpdateService');
+        #    xmlGen.setAttribute('run','true');
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #xml buildVoid(CreditCardTrans     ccTrans)
+        #{
+        #    str                             parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccCybersource
+        #        where ccCybersource.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccCybersource);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccCybersource);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    request = xmlDocument.createElement('requestMessage');
+        #    //request.setAttribute('xmlns','urn:schemas-cybersource-com:transaction-data-1.39');
+        #    //parmList = request.xml();
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantID');
+        #    xmlGen.innerText(ccCybersource.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant reference
+        #    xmlGen = xmlDocument.createElement('merchantReferenceCode');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('voidService');
+        #    xmlGen.setAttribute('run','true');
+        #    billTo = xmlDocument.createElement('voidRequestID');
+        #    billTo.innerText(ccTrans.OrigID);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('voidRequestToken');
+        #    billTo.innerText(ccTrans.CybersourceToken);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #    //body.appendChild(request);
+        #    //envelope.appendChild(body);
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardCybersourceXMLBuilder139 extends CreditCardCybersourceXMLBuilder
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardMerchantCybersource   c;
+        #    SalesPrice                      salesPrice;
+        #    SalesQty                        salesQty;
+        #    ItemName                        itemName;
+        #    TaxAmount                       taxAmount;
+        #    SalesUnit                       salesUnit;
+        #    Percent                         taxRate;
+        #    LineAmount                      lineAmount;
+        #    LogisticsPostalAddress          postalAddress;
+        #    CreditCardAdv                   creditCardAdv;
+        #    Amount                          processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #IndustryType
+        #str 2 IndustryType(CreditCardTerminalTable   terminalTable)
+        #{
+        #    str 2                       industry;
+        #    CreditCardMerchantCybersource    ccOrbital;
+        #    ;
+        #    select industry from ccOrbital
+        #        where ccOrbital.TerminalId == terminalTable.TerminalId;
+        #
+        #    switch  (ccOrbital.Industry)
+        #    {
+        #        case CreditCardIndustryCybersource::EC  :
+        #            industry = 'EC';
+        #            break;
+        #        case CreditCardIndustryCybersource::Mail    :
+        #            industry = 'MO';
+        #            break;
+        #    }
+        #
+        #    return industry;
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardAdv
+        #CreditCardADV parmCreditCardAdv(CreditCardADV   _creditCardADV = creditCardADV)
+        #{
+        #    ;
+        #    creditCardADV = _creditCardADV;
+        #    return creditCardADV;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #firstName parmFirstName(Name     _name)
+        #{
+        #    TempStr     tmpStr;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmItemName
+        #ItemName parmItemName(ItemName _itemName = itemName)
+        #{
+        #    ;
+        #    itemName = _itemName;
+        #    return itemName;
+        #}
+      ENDSOURCE
+      SOURCE #parmLastName
+        #firstName parmLastName(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    str         reduction;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker+1);
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantCybersource
+        #CreditCardMerchantCybersource parmMerchantCybersource(CreditCardMerchantCybersource _c = c)
+        #{
+        #    ;
+        #    c = _c;
+        #    return c;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmProcessAmt
+        #public Amount parmProcessAmt(Amount     _processAmt = processAmt)
+        #{
+        #    ;
+        #    processAmt = _processAmt;
+        #    return processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesPrice
+        #SalesPrice parmSalesPrice(SalesPrice _salesPrice = salesPrice)
+        #{
+        #    ;
+        #    salesPrice = _salesPrice;
+        #    return salesPrice;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesQty
+        #SalesQty parmSalesQty(SalesQty  _salesQty = salesQty)
+        #{
+        #    ;
+        #    salesQty = _salesQty;
+        #    return salesQty;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesUnit
+        #SalesUnit parmSalesUnit(SalesUnit _salesUnit = salesUnit)
+        #{
+        #    ;
+        #    salesUnit = _salesUnit;
+        #    return salesUnit;
+        #}
+      ENDSOURCE
+      SOURCE #parmTaxAmount
+        #TaxAmount parmTaxAmount(TaxAmount _taxAmount = taxAmount)
+        #{
+        #    ;
+        #    taxAmount = _taxAmount;
+        #    return taxAmount;
+        #}
+      ENDSOURCE
+      SOURCE #parmTaxRate
+        #Percent parmTaxRate(Percent _taxRate = taxRate)
+        #{
+        #    ;
+        #    taxRate = _taxRate;
+        #    return taxRate;
+        #}
+      ENDSOURCE
+      SOURCE #resolveCountry
+        #str resolveCountry(AddressZipcodeId   zipCodeId)
+        #{
+        #    AddressCountryRegionId       countryId;
+        #    ;
+        #    countryId = this.parmPostalAddress().CountryRegionId;
+        #
+        #    if (countryId == 'USA')
+        #    {
+        #        countryId = 'US';
+        #    }
+        #
+        #    return countryId;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue(CreditCardTrans   ccTrans)
+        #{
+        #    str         returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccTrans.CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(ccTrans);
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumSecure)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(ccTrans);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnBankAccountType
+        #str returnBankAccountType(CustBankAccount       custBankAccount)
+        #{
+        #    str         parmList;
+        #    ;
+        #    switch (custBankAccount.BankAccountType)
+        #    {
+        #        case BankAccountType::CheckingAccount     :
+        #            parmList = 'C';
+        #            break;
+        #        case BankAccountType::SavingsAccount      :
+        #            parmList = 'S';
+        #            break;
+        #        case BankAccountType::CommercialChecking  :
+        #            parmList = 'X';
+        #            break;
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnCardType
+        #str returnCardType(CreditCardTable ccTable)
+        #{
+        #    str             ret;
+        #    ;
+        #    switch (ccTable.CreditCardType)
+        #    {
+        #        case CreditCardType::AmericanExpress    :
+        #            ret = '003';
+        #            break;
+        #        case CreditCardType::Diners    :
+        #            ret = '005';
+        #            break;
+        #        case CreditCardType::Discover    :
+        #            ret = '004';
+        #            break;
+        #        case CreditCardType::JCB    :
+        #            ret = '007';
+        #            break;
+        #        case CreditCardType::MasterCard    :
+        #            ret = '002';
+        #            break;
+        #        case CreditCardType::Solo    :
+        #            ret = '032';
+        #            break;
+        #        case CreditCardType::Visa    :
+        #            ret = '001';
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #returnCardTypebyType
+        #str returnCardTypebyType(CreditCardType ccType)
+        #{
+        #    str             ret;
+        #    ;
+        #    switch (ccType)
+        #    {
+        #        case CreditCardType::AmericanExpress    :
+        #            ret = '003';
+        #            break;
+        #        case CreditCardType::Diners    :
+        #            ret = '005';
+        #            break;
+        #        case CreditCardType::Discover    :
+        #            ret = '004';
+        #            break;
+        #        case CreditCardType::JCB    :
+        #            ret = '007';
+        #            break;
+        #        case CreditCardType::MasterCard    :
+        #            ret = '002';
+        #            break;
+        #        case CreditCardType::Solo    :
+        #            ret = '032';
+        #            break;
+        #        case CreditCardType::Visa    :
+        #            ret = '001';
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #returnExpDate
+        #str returnExpDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     month;
+        #    str                     ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonth
+        #str returnMonth(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnPaymSchedule
+        #str returnPaymSchedule(CustPaymSched        custPaymSched)
+        #{
+        #    str             ret;
+        #    ;
+        #    switch (custPaymSched.PeriodUnit)
+        #    {
+        #        case PeriodUnit::Month  :
+        #            switch (custPaymSched.NumOfPayment)
+        #            {
+        #                case    1   :
+        #                    ret = 'monthly';
+        #                    break;
+        #            }
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartDate
+        #str returnStartDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     month;
+        #    str                     ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.SoloStartDate));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.SoloStartDate));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.SoloStartDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear
+        #str returnYear(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #TransactionType
+        #str 2 TransactionType(CreditCardTrxType     ccTransType)
+        #{
+        #    str 2       transType;
+        #    ;
+        #    switch (cctransType)
+        #    {
+        #        case CreditCardTrxType::A   :
+        #            transType = 'A';
+        #            break;
+        #        case CreditCardTrxType::S   :
+        #            transType = 'AC';
+        #            break;
+        #        case CreditCardTrxType::D   :
+        #            transType = 'FC';
+        #            break;
+        #        case CreditCardTrxType::C   :
+        #            transType  = 'R';
+        #            break;
+        #    }
+        #
+        #    return transType;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static str construct(CreditCardTrans        ccTrans,
+        #                     CreditCardAdv          creditCardAdv)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCybersource       ccMerchantCybersource;
+        #    CreditCardParameters                ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #
+        #    //--> Cybersource Specific variables
+        #    //HttpRequest                         request;
+        #    CreditCardCybersourceXMLBuilder139  xmlBuilder = new CreditCardCybersourceXMLBuilder139();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    CreditCardStr                       parmList;
+        #    CreditCardStr                       response;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCybersource
+        #        where ccMerchantCybersource.TerminalId == ccTrans.TerminalId;
+        #
+        #    xmlBuilder.parmMerchantCybersource(ccMerchantCybersource);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTrans.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCybersource(ccMerchantCybersource);
+        #
+        #    //--> Retrieve Parameters
+        #    if (ccParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Specified)
+        #    {
+        #        if (!ccParameters.ProcessCurrencyCode)
+        #        {
+        #            throw error(strFmt("@ACC1835",ccTrans.TerminalId));
+        #        }
+        #
+        #        if (ccParameters.ProcessCurrencyCode != CompanyInfo::standardCurrency())
+        #        {
+        #            if (ccTrans.CurrencyCode != ccParameters.ProcessCurrencyCode)
+        #            {
+        #                throw error(strFmt("@ACC1836",
+        #                    ccTrans.TerminalId,
+        #                    ccParameters.ProcessCurrencyCode,
+        #                    ccTrans.CurrencyCode));
+        #            }
+        #
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountCur);
+        #        }
+        #        else
+        #        {
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #    }
+        #
+        #    parmList = xmlBuilder.build(ccTrans);
+        #
+        #    //request = new HTTPRequest();
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build(ccTrans);
+        #
+        #     try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantCybersource.URL);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    /*request.open('POST',ccMerchantCybersource.URL);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();*/
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #create3dAuthVerify
+        #static tmpCC3dAuthVerify create3dAuthVerify(tmpCC3dAuthVerify  _tmpCC3dAuthVerify)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCybersource       ccMerchantCybersource;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> Cybersource Specific variables
+        #    HttpRequest                         request;
+        #    CreditCardCybersourceXMLBuilder139  xmlBuilder = new CreditCardCybersourceXMLBuilder139();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCybersource
+        #        where ccMerchantCybersource.TerminalId ==  _tmpCC3dAuthVerify.TerminalId;
+        #
+        #    if (!ccMerchantCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantCybersource(ccMerchantCybersource);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCybersource(ccMerchantCybersource);
+        #
+        #    request = new HTTPRequest();
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build3DAuthVerify(_tmpCC3dAuthVerify);
+        #
+        #    request.open('POST',ccMerchantCybersource.URL);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    _tmpCC3dAuthVerify = xmlBuilder.analyzeCybersourceResponse3dAuthVer(response,_tmpCC3dAuthVerify);
+        #
+        #    return _tmpCC3dAuthVerify;
+        #}
+      ENDSOURCE
+      SOURCE #create3dCheck
+        #static tmpCC3dEnrollCheck create3dCheck(tmpCC3dEnrollCheck  _tmpCC3dEnrollCheck)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCybersource       ccMerchantCybersource;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> Cybersource Specific variables
+        #    HttpRequest                         request;
+        #    CreditCardCybersourceXMLBuilder139  xmlBuilder = new CreditCardCybersourceXMLBuilder139();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCybersource
+        #        where ccMerchantCybersource.TerminalId ==  _tmpCC3dEnrollCheck.TerminalId;
+        #
+        #    if (!ccMerchantCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantCybersource(ccMerchantCybersource);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(_tmpCC3dEnrollCheck.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCybersource(ccMerchantCybersource);
+        #
+        #    request = new HTTPRequest();
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build3DCheck(_tmpCC3dEnrollCheck);
+        #
+        #    request.open('POST',ccMerchantCybersource.URL);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    _tmpCC3dEnrollCheck = xmlBuilder.analyzeCybersourceResponse3dCheck(response,_tmpCC3dEnrollCheck);
+        #
+        #    return _tmpCC3dEnrollCheck;
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #static void createProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCybersource       ccMerchantCybersource;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> Cybersource Specific variables
+        #    CreditCardCybersourceXMLBuilder139  xmlBuilder = new CreditCardCybersourceXMLBuilder139();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    CreditCardStr                       parmList;
+        #    CreditCardStr                       response;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCybersource
+        #        where ccMerchantCybersource.TerminalId ==  ccTable.ProfileTerminalId;
+        #
+        #    if (!ccMerchantCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantCybersource(ccMerchantCybersource);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCybersource(ccMerchantCybersource);
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildProfile(ccTable);
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantCybersource.URL);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeCybersourceResponseForProfile(response,ccTable);
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createProfileFromAuth
+        #static void createProfileFromAuth(CreditCardTrans       ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCybersource       ccMerchantCybersource;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> Cybersource Specific variables
+        #    HttpRequest                         request;
+        #    CreditCardCybersourceXMLBuilder139  xmlBuilder = new CreditCardCybersourceXMLBuilder139();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    ttsbegin;
+        #    ccTrans.selectForUpdate(true);
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCybersource
+        #        where ccMerchantCybersource.TerminalId ==  ccTrans.TerminalId;
+        #
+        #    if (!ccMerchantCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantCybersource(ccMerchantCybersource);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCybersource(ccMerchantCybersource);
+        #
+        #    request = new HTTPRequest();
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildProfilefromAuth(ccTrans);
+        #
+        #    request.open('POST',ccMerchantCybersource.URL);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    ccTrans = xmlBuilder.analyzeCybersourceResponse(response,ccTrans);
+        #
+        #    if (ccTrans.Result == '0')
+        #    {
+        #        CreditCardTable::createProfileFromTrans(ccTrans);
+        #        info(strFmt("@ACC1335",ccTrans.ProfileId));
+        #    }
+        #    else
+        #    {
+        #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+        #    }
+        #
+        #    ccTrans.update();
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #deleteeProfile
+        #static void deleteeProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCybersource       ccMerchantCybersource;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> Cybersource Specific variables
+        #    CreditCardCybersourceXMLBuilder139  xmlBuilder = new CreditCardCybersourceXMLBuilder139();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    CreditCardStr                       parmList;
+        #    CreditCardStr                       response;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCybersource
+        #        where ccMerchantCybersource.TerminalId ==  ccTable.ProfileTerminalId;
+        #
+        #    if (!ccMerchantCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantCybersource(ccMerchantCybersource);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCybersource(ccMerchantCybersource);
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildDeleteProfile(ccTable);
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantCybersource.URL);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeCybersourceResponseForProfile(response,ccTable);
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #updateProfile
+        #static void updateProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCybersource       ccMerchantCybersource;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> Cybersource Specific variables
+        #    CreditCardCybersourceXMLBuilder139  xmlBuilder = new CreditCardCybersourceXMLBuilder139();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    CreditCardStr                       parmList;
+        #    CreditCardStr                       response;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCybersource
+        #        where ccMerchantCybersource.TerminalId ==  ccTable.ProfileTerminalId;
+        #
+        #    if (!ccMerchantCybersource)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantCybersource(ccMerchantCybersource);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCybersource(ccMerchantCybersource);
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildUpdateProfile(ccTable);
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantCybersource.URL);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeCybersourceResponseForProfile(response,ccTable);
+        #
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

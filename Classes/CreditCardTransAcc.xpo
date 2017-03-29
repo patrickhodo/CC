@@ -1,0 +1,99 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardTransAcc
+    PROPERTIES
+      Name                #CreditCardTransAcc
+      Extends             #AifDocument
+      Origin              #{7221611D-730A-49EF-A175-E4D51F24B97A}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///    The <c>CreditCardTransAcc</c> class is the data object class that is exposed through the <c>CreditCardTransAccService</c> class.
+        #/// </summary>
+        ##AxdCreditCardTransDCT
+        #[AifDataContainerTypeAttribute(#CreditCardTrans)]
+        #class CreditCardTransAcc extends AifDocument
+        #{
+        #    #define.SenderId('SenderId')
+        #    #define.DocPurpose('DocPurpose')
+        #    #define.CreditCardTrans_1('CreditCardTrans_1')
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createCreditCardTrans_1
+        #public AfStronglyTypedDataContainerList createCreditCardTrans_1()
+        #{
+        #    return this.get_NewList(#CreditCardTrans_1);
+        #}
+      ENDSOURCE
+      SOURCE #existsCreditCardTrans_1
+        #public boolean existsCreditCardTrans_1()
+        #{
+        #    return this.exists(#CreditCardTrans_1);
+        #}
+      ENDSOURCE
+      SOURCE #existsDocPurpose
+        #public boolean existsDocPurpose()
+        #{
+        #    return this.exists(#DocPurpose);
+        #}
+      ENDSOURCE
+      SOURCE #existsSenderId
+        #public boolean existsSenderId()
+        #{
+        #    return this.exists(#SenderId);
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #public void new()
+        #{
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardTrans_1
+        #public AfStronglyTypedDataContainerList parmCreditCardTrans_1(AfStronglyTypedDataContainerList _value = null)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_List(#CreditCardTrans_1, _value);
+        #    }
+        #
+        #    return this.get_List(#CreditCardTrans_1);
+        #}
+      ENDSOURCE
+      SOURCE #parmDocPurpose
+        #public XMLDocPurpose parmDocPurpose(XMLDocPurpose _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#DocPurpose, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#DocPurpose);
+        #}
+      ENDSOURCE
+      SOURCE #parmSenderId
+        #public DataAreaId parmSenderId(DataAreaId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#SenderId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#SenderId);
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

@@ -1,0 +1,638 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #tmpCreditCardTable
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #tmpCreditCardTable
+      Label               #@ACC12
+      TitleField1         #CreditCardId
+      TitleField2         #Name
+      TableType           #TempDB
+      TableContents       #Base data
+      SecurityKey         #CreditCardTables
+      TableGroup          #Main
+      PrimaryIndex        #CCIdx
+      ClusterIndex        #CCIdx
+      ModifiedDateTime    #Yes
+      ModifiedBy          #Yes
+      CreatedDateTime     #Yes
+      CreatedBy           #Yes
+      DeveloperDocumentation  #@ACC1428
+      Origin              #{642DE451-9055-4197-9D12-128469D328D3}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #BusRelAccount
+        STRING
+        PROPERTIES
+          Name                #BusRelAccount
+          Table               #tmpCreditCardTable
+          Origin              #{DFEDCBAC-B3C0-4213-9E78-CA4AE881EC3C}
+          ExtendedDataType    #smmBusRelAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CreditCardId
+        STRING
+        PROPERTIES
+          Name                #CreditCardId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #tmpCreditCardTable
+          Origin              #{C828A95B-57A0-4AC4-9C27-A0B50DC03F6B}
+          ExtendedDataType    #CreditCardId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardNum
+        STRING
+        PROPERTIES
+          Name                #CreditCardNum
+          Label               #@SYS112023
+          AllowEdit           #No
+          Table               #tmpCreditCardTable
+          Origin              #{A1EC0FB1-FBAB-4FA9-BA9A-24587F7A6593}
+          ExtendedDataType    #CreditCardNumEncrypt
+          StringSize          #100
+        ENDPROPERTIES
+        
+      FIELD #CreditCardNumSecure
+        STRING
+        PROPERTIES
+          Name                #CreditCardNumSecure
+          Label               #@ACC227
+          Table               #tmpCreditCardTable
+          Origin              #{EA6D0FBB-AA63-4641-9992-8FBB3943B888}
+          ExtendedDataType    #CreditCardNum
+          StringSize          #22
+        ENDPROPERTIES
+        
+      FIELD #CreditCardType
+        ENUM
+        PROPERTIES
+          Name                #CreditCardType
+          Table               #tmpCreditCardTable
+          Origin              #{90DE6B40-F045-4408-A9E3-9C4E11A697B5}
+          EnumType            #CreditCardType
+        ENDPROPERTIES
+        
+      FIELD #CustAccount
+        STRING
+        PROPERTIES
+          Name                #CustAccount
+          Table               #tmpCreditCardTable
+          Origin              #{A927F8B3-F3E8-44A8-9BDF-A44DD581C622}
+          ExtendedDataType    #CustAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #del_Address
+        STRING
+        PROPERTIES
+          Name                #del_Address
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #tmpCreditCardTable
+          Origin              #{8ABBFBA8-1474-44AF-8563-201C11064002}
+          ExtendedDataType    #Addressing
+          StringSize          #250
+        ENDPROPERTIES
+        
+      FIELD #del_City
+        STRING
+        PROPERTIES
+          Name                #del_City
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #tmpCreditCardTable
+          Origin              #{7C8564BD-2172-4FEA-8B39-FA25EA8F016A}
+          ExtendedDataType    #AddressCity
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #Del_Country
+        STRING
+        PROPERTIES
+          Name                #Del_Country
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #tmpCreditCardTable
+          Origin              #{8619B4C9-6986-410A-89DE-A50E49F2C65A}
+          ExtendedDataType    #AddressCountryRegionId
+        ENDPROPERTIES
+        
+      FIELD #del_County
+        STRING
+        PROPERTIES
+          Name                #del_County
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #tmpCreditCardTable
+          Origin              #{435121E2-FE41-4261-B854-D425814CBC6B}
+          ExtendedDataType    #AddressCountyId
+        ENDPROPERTIES
+        
+      FIELD #del_State
+        STRING
+        PROPERTIES
+          Name                #del_State
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #tmpCreditCardTable
+          Origin              #{AC313536-47F1-4A29-AE3F-98C81A250F75}
+          ExtendedDataType    #AddressStateId
+        ENDPROPERTIES
+        
+      FIELD #del_Street
+        STRING
+        PROPERTIES
+          Name                #del_Street
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #tmpCreditCardTable
+          Origin              #{B5D731A0-EA1D-4152-BBA1-C855ACEDEE6B}
+          ExtendedDataType    #AddressStreet
+          StringSize          #250
+        ENDPROPERTIES
+        
+      FIELD #del_ZipCode
+        STRING
+        PROPERTIES
+          Name                #del_ZipCode
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #tmpCreditCardTable
+          Origin              #{9C68D28D-7237-4197-A31A-FF6BAE1A048D}
+          ExtendedDataType    #AddressZipCodeId
+        ENDPROPERTIES
+        
+      FIELD #Email
+        STRING
+        PROPERTIES
+          Name                #Email
+          Table               #tmpCreditCardTable
+          Origin              #{64BC60D6-0321-4722-B26C-BCED7003DF33}
+          ExtendedDataType    #Email
+          StringSize          #80
+        ENDPROPERTIES
+        
+      FIELD #ExpirationDate
+        DATE
+        PROPERTIES
+          Name                #ExpirationDate
+          Table               #tmpCreditCardTable
+          Origin              #{ADDFF2F8-7254-4800-9B8F-652AC896F36E}
+          ExtendedDataType    #CreditCardExpirationDate
+        ENDPROPERTIES
+        
+      FIELD #Inactive
+        ENUM
+        PROPERTIES
+          Name                #Inactive
+          Label               #@SYS77615
+          HelpText            #@ACC163
+          Table               #tmpCreditCardTable
+          Origin              #{00BC2B3E-223E-4B6B-B4ED-8776AAFACB1C}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Location
+        INT64
+        PROPERTIES
+          Name                #Location
+          Visible             #No
+          Table               #tmpCreditCardTable
+          Origin              #{F787DFAD-46A8-4760-8DF3-037D820409C2}
+          ExtendedDataType    #LogisticsLocationRecId
+        ENDPROPERTIES
+        
+      FIELD #Name
+        STRING
+        PROPERTIES
+          Name                #Name
+          Table               #tmpCreditCardTable
+          Origin              #{0649AF08-4DCB-43EF-91FB-2E0FDF174919}
+          ExtendedDataType    #Name
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #NameOnCard
+        STRING
+        PROPERTIES
+          Name                #NameOnCard
+          Label               #@ACC14
+          HelpText            #@ACC15
+          Table               #tmpCreditCardTable
+          Origin              #{06FFD31C-49C0-43DD-877C-C0B4FEBF1DB1}
+          ExtendedDataType    #Name
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #PaymentProfileId
+        STRING
+        PROPERTIES
+          Name                #PaymentProfileId
+          Label               #@ACC1398
+          Table               #tmpCreditCardTable
+          Origin              #{6AB4D5C8-92DA-469A-8D57-0794EBC21F95}
+          ExtendedDataType    #CreditCardProfileId
+          StringSize          #40
+        ENDPROPERTIES
+        
+      FIELD #Phone
+        STRING
+        PROPERTIES
+          Name                #Phone
+          Table               #tmpCreditCardTable
+          Origin              #{058B5FAC-3D99-4987-94C6-184C2EC00859}
+          ExtendedDataType    #Phone
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #PrimaryCard
+        ENUM
+        PROPERTIES
+          Name                #PrimaryCard
+          Label               #@SYS80168
+          HelpText            #@ACC1369
+          Table               #tmpCreditCardTable
+          Origin              #{FD90911F-2127-4AC2-895E-737D0F617F55}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Profile
+        ENUM
+        PROPERTIES
+          Name                #Profile
+          Label               #@SYS40276
+          HelpText            #@ACC1320
+          Table               #tmpCreditCardTable
+          Origin              #{1CEDD2FD-D463-47BA-A63E-691B51D4BA1F}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #ProfileId
+        STRING
+        PROPERTIES
+          Name                #ProfileId
+          Table               #tmpCreditCardTable
+          Origin              #{FA9FD277-9C19-479F-BEB8-A299FD96909A}
+          ExtendedDataType    #CreditCardProfileId
+          StringSize          #40
+        ENDPROPERTIES
+        
+      FIELD #ProfileTerminalId
+        STRING
+        PROPERTIES
+          Name                #ProfileTerminalId
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #tmpCreditCardTable
+          Origin              #{1EAF78FC-BADE-4B8C-A59F-1A2B3D65C627}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #SoloIssueNum
+        STRING
+        PROPERTIES
+          Name                #SoloIssueNum
+          Table               #tmpCreditCardTable
+          Origin              #{C4B8DA58-605E-4396-B167-2E34B176DCC6}
+          ExtendedDataType    #CreditCardSoloIssueNum
+          StringSize          #2
+        ENDPROPERTIES
+        
+      FIELD #SoloStartDate
+        DATE
+        PROPERTIES
+          Name                #SoloStartDate
+          Table               #tmpCreditCardTable
+          Origin              #{3E64E1B8-CEF3-45B4-9F3A-D1966ED395F5}
+          ExtendedDataType    #CreditCardSoloStartDate
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+          #Name
+          #CreditCardType
+          #CreditCardNumSecure
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+          #Name
+          #CreditCardType
+          #CreditCardNumSecure
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Cardholder
+        PROPERTIES
+          Name                #Cardholder
+          Label               #@ACC28
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CustAccount
+          #BusRelAccount
+          #Phone
+          #Email
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #CVD
+        PROPERTIES
+          Name                #CVD
+          Label               #@ACC632
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Information
+        PROPERTIES
+          Name                #Information
+          Label               #@SYS60385
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+          #Name
+          #CreditCardType
+          #Inactive
+          #PrimaryCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Payment
+        PROPERTIES
+          Name                #Payment
+          Label               #@SYS55132
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Profile
+        PROPERTIES
+          Name                #Profile
+          Label               #@SYS40276
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Profile
+          #ProfileId
+          #PaymentProfileId
+          #ProfileTerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #SecureInfo
+        PROPERTIES
+          Name                #SecureInfo
+          Label               #@ACC26
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardNum
+          #CreditCardNumSecure
+          #ExpirationDate
+          #NameOnCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Solo
+        PROPERTIES
+          Name                #Solo
+          Label               #@ACC1254
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SoloIssueNum
+          #SoloStartDate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #WEbSecure
+        PROPERTIES
+          Name                #WEbSecure
+          Label               #@ACC26
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardType
+          #CreditCardNum
+          #ExpirationDate
+          #NameOnCard
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #CCIdx
+      PROPERTIES
+        Name                #CCIdx
+        AllowDuplicates     #No
+        Origin              #{113E3110-CAAF-40B7-B166-98E97238EB04}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CreditCardId
+      ENDINDEXFIELDS
+      
+      #RecidIdx
+      PROPERTIES
+        Name                #RecidIdx
+        Origin              #{9EF430AF-353B-4874-AF92-38A9C582DBBE}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #RecId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTable
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CreditCardId
+            RelatedField        #CreditCardId
+            SourceEDT           #CreditCardId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #ProfileTerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustTable
+        PROPERTIES
+          Name                #CustTable
+          Table               #CustTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #AccountNum
+            SourceEDT           #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Location_FK
+        PROPERTIES
+          Name                #Location_FK
+          Table               #LogisticsPostalAddress
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #Location
+            RelatedField        #RecId
+            SourceEDT           #LogisticsLocationRecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #smmBusRelTable
+        PROPERTIES
+          Name                #smmBusRelTable
+          Table               #smmBusRelTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #BusRelAccount
+            RelatedField        #BusRelAccount
+            SourceEDT           #smmBusRelAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #CreditCardTrans
+      PROPERTIES
+        Table               #CreditCardTrans
+        DeleteAction        #Restricted
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #createRecord
+        #static TmpCreditCardTable createRecord(CreditCardTable    ccTable)
+        #{
+        #    TmpCreditCardTable  tmpCCTable;
+        #    int i, n, k, p;
+        #    DictTable dt,dtmp;
+        #    str                 fieldName;
+        #
+        #    dt=new DictTable(ccTable.TableId);
+        #    n=dt.fieldCnt();
+        #
+        #    dtmp=new DictTable(tableNum(tmpCreditCardTable));
+        #
+        #
+        #    for(i=1; i<=25; i++)
+        #    {
+        #
+        #        k=dt.fieldCnt2Id(i);
+        #        fieldname = dt.fieldName(k);
+        #        p=dtmp.fieldName2Id(dt.fieldName(k));
+        #
+        #        tmpCCTable.(p) = ccTable.(k);
+        #    }
+        #
+        #    tmpCCTable.insert();
+        #
+        #    return tmpCCTable;
+        #}
+      ENDSOURCE
+      SOURCE #transferRecord
+        #static CreditCardTable transferRecord(TmpCreditCardTable    tmpCCTable)
+        #{
+        #    CreditCardTable     ccTable;
+        #    int         i, n, k;
+        #    DictTable   dt;
+        #    DictField   df;
+        #    FieldName   fieldName;
+        #
+        #    dt=new DictTable(tmpCCTable.TableId);
+        #    n=dt.fieldCnt();
+        #
+        #    for(i=1; i<=25; i++)
+        #    {
+        #
+        #        k=dt.fieldCnt2Id(i);
+        #        df = new DictField(tmpCCTable.TableId,k);
+        #        fieldName = fieldId2Name(tmpCCTable.TableId,k);
+        #
+        #        CCTable.(fieldname2id(ccTable.TableId,fieldName)) = tmpCCTable.(k);
+        #    }
+        #
+        #    CCTable.insert();
+        #
+        #    return CCTable;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

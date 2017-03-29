@@ -1,0 +1,328 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardFirstDataCompass
+    PROPERTIES
+      Name                #CreditCardFirstDataCompass
+      Extends             #CreditCardFirstData
+      Origin              #{BEA58808-0FC7-4C11-BEC8-89BE03177505}
+      LegacyId            #20076
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #buildDetailRecord
+        #str buildDetailRecord()
+        #{
+        #    #define.ETX(3)
+        #    #define.FS(28)
+        #    #define.CR(13)
+        #    TempStr         parmAll;
+        #    Counter         len;
+        #    ;
+        #    //--> POS 1,1
+        #    parmAll =   'P';
+        #
+        #    //--> POS 2,3
+        #    parmAll +=  '74';
+        #
+        #    //--> POS 4
+        #    parmAll +=  'V';
+        #
+        #    //--> POS 5,26 Merchant order number
+        #    parmAll +=  this.fillRightValue(this.parmCCTrans().CustomerRef,22,' ');
+        #    len = strLen(parmalL);
+        #
+        #    //--> POS 27.28 Method of paymet
+        #    parmAll += this.methodOfPayment();
+        #
+        #    //--> POS 28,47 PAN
+        #    parmAll += this.fillLeftValue(this.returnAccount(this.parmCCTrans()),19,' ');
+        #    len = strLen(parmAll);
+        #
+        #    //--> POS 48,51 Expiration Date
+        #    parmAll += this.returnExpDate(this.parmCCTrans());
+        #
+        #    //-- POS 52, 61 DIvision number
+        #    parmAll += this.fillRightValue(this.parmMerchantFirstData().MerchantId,10,'0');
+        #    len = strLen(parmAll);
+        #
+        #    //--> POS 62,73 Amount
+        #    parmAll += this.fillLeftValue(this.parmccAmountStr(this.parmCCTrans().AmountCur),12,'0');
+        #    len = strLen(parmAll);
+        #
+        #    //--> POS 74.75 Currency Code.  We assume that ISO codes are already used
+        #    parmAll += this.parmCCTrans().CurrencyCode;
+        #
+        #    //--> POS 77 Transaction Type.  MOTO until further notice
+        #    parmAll += '1';
+        #
+        #    //--> POS 78,80 Tokenization
+        #    parmAll += '   ';
+        #
+        #    //--> POS 81, Bill Payment Indicator
+        #    parmAll += 'N';
+        #
+        #    //--> POS 82,83.  Action Code
+        #    parmAll += 'AU';
+        #
+        #    //--> POS 84,  Reserviced
+        #    parmAll += ' ';
+        #
+        #    len = strLen(parmAll);
+        #    //--> Carriage retun
+        #    parmAll += num2char(#CR);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardFirstDataCompass extends CreditCardFirstData
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #fillLeftValue
+        #creditCardStr fillLeftValue(creditCardStr value,
+        #                   Counter  len,
+        #                   creditCardStr  fill)
+        #{
+        #    Counter     i;
+        #    creditCardStr     ret = value;
+        #    Counter     initLength = strLen(value);
+        #    ;
+        #    for (i=0;i<(len-initLength);i++)
+        #    {
+        #        ret = fill + ret;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #fillRightValue
+        #TempStr fillRightValue(TempStr value,
+        #                   Counter  len,
+        #                   TempStr  fill)
+        #{
+        #    Counter     i;
+        #    TempStr     ret = value;
+        #    Counter     initLength = strLen(value);
+        #    ;
+        #    for (i=0;i<(len-initLength);i++)
+        #    {
+        #        ret += fill;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #methodOfPayment
+        #TempStr methodOfPayment()
+        #{
+        #    TempStr     ret;
+        #    ;
+        #    switch (this.parmCCTrans().CreditCardType)
+        #    {
+        #        case    CreditCardType::AmericanExpress     :
+        #            ret = 'AX';
+        #            break;
+        #        case    CreditCardType::Diners     :
+        #            break;
+        #        case    CreditCardType::Discover     :
+        #            ret = 'DI';
+        #            break;
+        #        case    CreditCardType::JCB     :
+        #            ret = 'JC';
+        #            break;
+        #        case    CreditCardType::MasterCard     :
+        #            ret = 'MC';
+        #            break;
+        #        case    CreditCardType::PayPal     :
+        #            ret = 'PY';
+        #            break;
+        #        case    CreditCardType::Visa        :
+        #            ret = 'VI';
+        #            break;
+        #        default :
+        #            throw error(strFmt("@ACC584",enum2str(this.parmCCTrans().CreditCardType)));
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #parmServiceId
+        #TempStr parmServiceId()
+        #{
+        #    ;
+        #    return '130';
+        #}
+      ENDSOURCE
+      SOURCE #processResponse
+        #CreditCardStr processResponse(CreditCardStr        msg)
+        #{
+        #    return msg;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #TempStr retrieveValue(CreditCardTrans   _ccTrans)
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(_ccTrans.CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(_ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #TempStr returnAccount(CreditCardTrans      _ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(_ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(_ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(ccTrans);
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumSecure)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(ccTrans);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnExpDate
+        #TempStr returnExpDate(CreditCardTrans      _ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(_ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(_ccTrans.OneTimeDateExp));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #TempStr run()
+        #{
+        #    #define.pipe('7C')
+        #    TempStr                 payload;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    Counter                 strLength;
+        #    Counter                 i;
+        #    TempStr                 outputPayload;
+        #    TempStr                 peek;
+        #    Counter                 numpeek;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    payload = this.buildDetailRecord();
+        #
+        #    //-->  Begin Converting to Hex
+        #    strLength = strLen(payload);
+        #
+        #    for (i=1;i<=strLength;i++)
+        #    {
+        #        peek = subStr(payload,i,1);
+        #        numpeek = char2num((subStr(payload,i,1)),1);
+        #        if (i<strLength)
+        #        {
+        #            outputPayLoad += this.toHex(numPeek) + #pipe;
+        #        }
+        #        else
+        #        {
+        #            outputPayLoad += this.toHex(numPeek);
+        #        }
+        #    }
+        #
+        #    return outputPayLoad;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

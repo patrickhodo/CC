@@ -1,0 +1,671 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #SysModelElements
+  PROPERTIES
+    Name                #SysModelElements
+    Origin              #{E8C1C975-E4EE-4F24-828C-4A08E1CDEEC7}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    boolean baseLine;
+      #
+      #    SysProjectFilterRunbase projectFilter;
+      #}
+    ENDSOURCE
+    SOURCE #createPrivateProject
+      #/// <summary>
+      #///    Creates a private project.
+      #/// </summary>
+      #/// <param name="_projectName">
+      #///    The name of the project to create.
+      #/// </param>
+      #protected void createPrivateProject(SharedProjectName _projectName)
+      #{
+      #    ProjectNode projectNode;
+      #    SysTreenodeEnumerator   treeNodeEnumerator;
+      #
+      #    SysUpgradeProject::delete(_projectName, ProjectSharedPrivate::ProjPrivate);
+      #
+      #    projectNode = SysTreeNode::createProject(_projectName);
+      #    projectFilter.parmProjectNode(projectNode);
+      #
+      #    //projectNode = parentTreenode.AOTfindChild(_projectName);
+      #    treeNodeEnumerator = SysTreenodeEnumerator::newTreenode(projectNode);
+      #}
+    ENDSOURCE
+    SOURCE #createProject
+      #public void createProject()
+      #{
+      #    UtilElements utilElements;
+      #    SysModelElement         locElement,rootElement;
+      #    SysModelElementData     elementData;
+      #
+      #    MultiSelectionHelper    selectionHelper = MultiSelectionHelper::construct();
+      #    Set                     selectedRecords = new Set(Types::Record);
+      #    Common                  buffer;
+      #    PrivateProjectName      projectName = "Delta_"+date2str(systemDateGet(),123,2,0,2,0,4);
+      #    ModelRecid              modelId;
+      #    Dialog      dialog;
+      #    DialogField field;
+      #    TreeNode                treeNode;
+      #    str                     path;
+      #    ;
+      #    dialog = new Dialog("Project");
+      #    dialog.addText("Enter the name of the Project:");
+      #    field = dialog.addField(extendedTypeStr(PrivateProjectName));
+      #
+      #    dialog.run();
+      #    if (!dialog.closedOk())
+      #    {
+      #        info("Canceled by user");
+      #        return;
+      #    }
+      #    projectName = field.value();
+      #
+      #    startLengthyOperation();
+      #
+      #    projectFilter = new SysProjectFilterRunBase();
+      #    projectFilter.grouping(SysProjectGrouping::AOT);
+      #
+      #    selectionHelper.parmDataSource(SysModelElement_ds);
+      #
+      #    locElement = selectionHelper.getFirst();
+      #
+      #    while (locElement)
+      #    {
+      #
+      #        select rootElement
+      #            where rootElement.AxId == locElement.ParentId
+      #            && rootElement.RootModelElement == locElement.RootModelElement;
+      #
+      #        if (!rootElement)
+      #        {
+      #            utilElements = null;
+      #            utilElements.Name = locElement.Name;
+      #            utilElements.ParentID = locElement.ParentId;
+      #            utilElements.RecordType = locElement.ElementType;
+      #        }
+      #        else
+      #        {
+      #            utilElements = null;
+      #            utilElements.Name = rootElement.Name;
+      #            utilElements.ParentID = rootElement.ParentId;
+      #            utilElements.RecordType = rootElement.ElementType;
+      #        }
+      #
+      #        if (utilElements.RecordType == UtilElementType::SharedProject ||
+      #            utilElements.RecordType == UtilElementType::PrivateProject ||
+      #            utilElements.RecordType == UtilElementType::ClassInternalHeader ||
+      #            utilElements.RecordType == UtilElementType::TableInternalHeader ||
+      #            !projectFilter.doUtilElements(utilElements))
+      #        {
+      #            info(strfmt("@SYS316339", strfmt('%1 %2', utilElements.RecordType, utilElements.Name)));
+      #        }
+      #
+      #        locElement = selectionHelper.getNext();
+      #
+      #        path =xUtilElements::getNodePath(utilElements) + @"\" + rootElement.Name;
+      #
+      #        treeNode = TreeNode::findNode(path);
+      #
+      #    }
+      #
+      #    this.createPrivateProject(projectName);
+      #
+      #    projectFilter.write();
+      #
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    if (element.args() &&
+      #        element.args().parm() == 'baseline')
+      #    {
+      #        baseLine = true;
+      #    }
+      #
+      #    if (baseLine)
+      #    {
+      #        element.form().dataSource(1).table(tableNum(SysModelElementOld));
+      #        element.form().dataSource(2).table(tableNum(SysModelElementTypeOld));
+      #        element.form().dataSource(3).table(tableNum(SysModelElementDataOld));
+      #        element.form().dataSource(4).table(tableNum(SysModelLayerOld));
+      #        element.form().dataSource(5).table(tableNum(SysModelManifestOld));
+      #        element.form().dataSource(6).table(tableNum(SysModelElementOld));
+      #    }
+      #
+      #    super();
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SysModelElement
+          Table               #SysModelElement
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          MaxAccessRight      #View
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SysModelElementType
+          Table               #SysModelElementType
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          MaxAccessRight      #View
+          JoinSource          #SysModelElement
+          LinkType            #InnerJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SysModelElementData
+          Table               #SysModelElementData
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          MaxAccessRight      #View
+          JoinSource          #SysModelElement
+          LinkType            #OuterJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SysModelLayer
+          Table               #SysModelLayer
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          MaxAccessRight      #View
+          JoinSource          #SysModelElementData
+          LinkType            #InnerJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SysModelManifest
+          Table               #SysModelManifest
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          MaxAccessRight      #View
+          JoinSource          #SysModelElementData
+          LinkType            #InnerJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    QueryBuildDataSource qbds;
+          #    super();
+          #    qbds = this.query().dataSourceName(tableStr(SysModelManifest));
+          #    qbds.addLink(fieldNum(SysModelElementData, ModelId), fieldNum(SysModelManifest, RecId));
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SysModelElementRoot
+          Table               #SysModelElement
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          MaxAccessRight      #View
+          JoinSource          #SysModelElement
+          LinkType            #InnerJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    QueryBuildDataSource qbds;
+          #    super();
+          #    qbds = this.query().dataSourceName(identifierStr(SysModelElementRoot));
+          #    qbds.addLink(fieldNum(SysModelElement, RootModelElement), fieldNum(SysModelElement, RecId));
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+    SysModelElementType SysModelElement
+    SysModelElementData SysModelElement
+    SysModelLayer SysModelElementData
+    SysModelManifest SysModelElementData
+    SysModelElementRoot SysModelElement
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@SYS342350
+      UseCaptionFromMenuItem  #Yes
+      SetCompany          #No
+      DataSource          #SysModelElement
+      Style               #SimpleList
+      ViewEditMode        #View
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          ElementPosition     #715827882
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          AllowEdit           #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #GridContainer
+          ShowRowLabels       #No
+          DataSource          #SysModelElement
+          AlternateRowShading #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GridContainer
+          ElementPosition     #1431655764
+          Style               #BorderlessGridContainer
+          ViewEditMode        #View
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #CreateProject
+          ElementPosition     #1908874352
+          HierarchyParent     #ButtonGroup
+          Text                #Create project
+          MultiSelect         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    element.createProject();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #OpenNewWindow
+          HelpText            #@SYS57423
+          ElementPosition     #1431655764
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS53405
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    SysModelElement rootElement;
+            #    SysModelElementOld rootElementOld;
+            #    UtilElements utilElements;
+            #    TreeNode treeNode;
+            #
+            #    if (baseLine)
+            #    {
+            #        select firstonly rootElementOld
+            #            where rootElementOld.RecId == sysModelElement.getFieldValue(fieldStr(SysModelElementOld, RootModelElement));
+            #
+            #        treeNode = infolog.getNode(
+            #            rootElementOld.ElementType,
+            #            rootElementOld.Name,
+            #            rootElementOld.ParentId,
+            #            rootElementOld.AxId,
+            #            sysModelLayer.getFieldValue(fieldStr(SysModelLayerOld, Layer)),
+            #            true /*force*/,
+            #            0,
+            #            true /*old*/);
+            #    }
+            #    else
+            #    {
+            #        select firstonly rootElement
+            #            where rootElement.RecId == sysModelElement.RootModelElement;
+            #
+            #        utilElements.Name = rootElement.Name;
+            #        utilElements.ParentId = rootElement.ParentId;
+            #        utilElements.RecordType = rootElement.ElementType;
+            #
+            #        //Get node from highest layer
+            #        treeNode = xUtilElements::getNodeInTree(utilElements);
+            #
+            #        if (treeNode &&
+            #            treeNode.AOTLayer() != sysModelElementData.Layer - 1)
+            #        {
+            #            //A node from lower layer is request
+            #            treeNode = SysTreeNode::nodeInLayer(treeNode, sysModelElementData.Layer - 1, true /*force*/);
+            #        }
+            #    }
+            #
+            #    if (treeNode)
+            #    {
+            #        treeNode.AOTnewWindow();
+            #    }
+            #    else
+            #    {
+            #        warning("@SYS59028");
+            #    }
+            #    super();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #SysModelLayer_Layer
+          ElementPosition     #268435454
+          HierarchyParent     #Grid
+          DataSource          #SysModelLayer
+          DataField           #Layer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #ExportCommandButton
+          ElementPosition     #1670265058
+          HierarchyParent     #ButtonGroup
+          NormalImage         #10156
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Command             #4436
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SysModelElement_Name
+          ElementPosition     #1700091218
+          HierarchyParent     #Grid
+          Label               #@SYS31438
+          DataSource          #SysModelElement
+          DataField           #Name
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SysModelElementData_modifiedBy
+          ElementPosition     #2058005160
+          HierarchyParent     #Grid
+          DataSource          #SysModelElementData
+          DataField           #modifiedBy
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SysModelElementRoot_Name
+          ElementPosition     #1342177277
+          HierarchyParent     #Grid
+          Label               #@SYS76599
+          DataSource          #SysModelElementRoot
+          DataField           #Name
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SysModelElementType_Name
+          ElementPosition     #984263336
+          HierarchyParent     #Grid
+          Label               #@SYS1201
+          DataSource          #SysModelElementType
+          DataField           #Name
+          ViewEditMode        #Edit
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SysModelManifest_DisplayName
+          ElementPosition     #626349395
+          HierarchyParent     #Grid
+          Label               #@SYS9923
+          DataSource          #SysModelManifest
+          DataField           #DisplayName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL UTCDATETIMEEDIT
+        PROPERTIES
+          Name                #SysModelElementData_modifiedDateTime
+          ElementPosition     #2102744403
+          HierarchyParent     #Grid
+          DataSource          #SysModelElementData
+          DataField           #modifiedDateTime
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

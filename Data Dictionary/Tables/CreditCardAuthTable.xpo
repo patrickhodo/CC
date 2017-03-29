@@ -1,0 +1,434 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardAuthTable
+    EnforceFKRelation 1
+    PROPERTIES
+      Name                #CreditCardAuthTable
+      Label               #@ACC1772
+      TitleField1         #MarkupCategory
+      TitleField2         #SequenceNumber
+      ConfigurationKey    #CreditCardAdv
+      CreateRecIdIndex    #Yes
+      TableGroup          #Worksheet
+      PrimaryIndex        #SurrogateKey
+      DeveloperDocumentation  #@ACC1815
+      Origin              #{65EB760D-FFDC-43E8-AF46-0CD1A8592045}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AccountCode
+        ENUM
+        PROPERTIES
+          Name                #AccountCode
+          Table               #CreditCardAuthTable
+          Origin              #{38B7E12E-5552-4643-A7B5-EB7113E3396C}
+          ExtendedDataType    #MarkupAccountCode
+          EnumType            #TableGroupAll
+        ENDPROPERTIES
+        
+      FIELD #AuthContextType
+        ENUM
+        PROPERTIES
+          Name                #AuthContextType
+          Table               #CreditCardAuthTable
+          Origin              #{26610146-47F4-4282-B00A-4738BD7A22C0}
+          EnumType            #CreditCardAuthContextType
+        ENDPROPERTIES
+        
+      FIELD #CustAccount
+        STRING
+        PROPERTIES
+          Name                #CustAccount
+          Table               #CreditCardAuthTable
+          Origin              #{C3EF196B-5A73-4F5A-956D-D59D10F5B2C8}
+          ExtendedDataType    #CustAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CustGroupId
+        STRING
+        PROPERTIES
+          Name                #CustGroupId
+          Table               #CreditCardAuthTable
+          Origin              #{02CA0B41-CEE7-4CBA-ACA8-FFC68AFC659C}
+          ExtendedDataType    #CustGroupId
+        ENDPROPERTIES
+        
+      FIELD #ItemCode
+        ENUM
+        PROPERTIES
+          Name                #ItemCode
+          Visible             #No
+          Table               #CreditCardAuthTable
+          Origin              #{6D5A1396-4372-482B-8FED-915B8F70C8CF}
+          ExtendedDataType    #MarkupItemCode
+          EnumType            #TableGroupAll
+        ENDPROPERTIES
+        
+      FIELD #ItemRelation
+        STRING
+        PROPERTIES
+          Name                #ItemRelation
+          HelpText            #@SYS1016
+          Visible             #No
+          Table               #CreditCardAuthTable
+          Origin              #{52E79038-089C-4228-BECF-99EFDDA2CD1C}
+          ExtendedDataType    #ItemRelation
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #MarkupCategory
+        ENUM
+        PROPERTIES
+          Name                #MarkupCategory
+          Table               #CreditCardAuthTable
+          Origin              #{59F010AC-CDFE-40F9-9287-707C358CC517}
+          EnumType            #PercentAmount
+        ENDPROPERTIES
+        
+      FIELD #MaxAmount
+        REAL
+        PROPERTIES
+          Name                #MaxAmount
+          Label               #@SYS134341
+          HelpText            #@SYS134340
+          ConfigurationKey    #PurchInvoiceMatching
+          Table               #CreditCardAuthTable
+          Origin              #{468E9CCA-BBD4-4C5B-A56B-3CB8296EBC84}
+          ExtendedDataType    #AmountMST
+        ENDPROPERTIES
+        
+      FIELD #SearchAgain
+        ENUM
+        PROPERTIES
+          Name                #SearchAgain
+          HelpText            #@SYS6533
+          Table               #CreditCardAuthTable
+          Origin              #{FCF0E324-A60B-4A91-B3A1-0C85FD42E161}
+          ExtendedDataType    #SearchAgain
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #SequenceNumber
+        INT
+        PROPERTIES
+          Name                #SequenceNumber
+          Table               #CreditCardAuthTable
+          Origin              #{F97C1A98-FD7C-44D3-B004-D06588ED54AB}
+          ExtendedDataType    #SequenceNumber
+        ENDPROPERTIES
+        
+      FIELD #Value
+        REAL
+        PROPERTIES
+          Name                #Value
+          Table               #CreditCardAuthTable
+          Origin              #{F1D13347-D6FF-4946-8FB3-69CA5514A083}
+          ExtendedDataType    #MarkupValue
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AuthContextType
+          #AccountCode
+          #ItemCode
+          #ItemRelation
+          #MarkupCategory
+          #MaxAmount
+          #SequenceNumber
+          #Value
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Amount
+        PROPERTIES
+          Name                #Amount
+          Label               #@SYS62867
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #MarkupCategory
+          #Value
+          #MaxAmount
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Customer
+        PROPERTIES
+          Name                #Customer
+          Label               #@SYS302
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccountCode
+          #CustAccount
+          #CustGroupId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Item
+        PROPERTIES
+          Name                #Item
+          Label               #@SYS14428
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ItemCode
+          #ItemRelation
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Setup
+        PROPERTIES
+          Name                #Setup
+          Label               #@SYS12687
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SequenceNumber
+          #AuthContextType
+          #SearchAgain
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #CustTableIdx
+      PROPERTIES
+        Name                #CustTableIdx
+        AllowDuplicates     #No
+        Origin              #{EAE2AA4A-B8A3-4B07-A890-FBB59823C858}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CustAccount
+        #SequenceNumber
+      ENDINDEXFIELDS
+      
+      #CustGroupIdx
+      PROPERTIES
+        Name                #CustGroupIdx
+        AllowDuplicates     #No
+        AlternateKey        #Yes
+        Origin              #{CB5382FA-102D-48F7-82A7-E1D6F5A34DE7}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CustGroupId
+        #SequenceNumber
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CustGroup_FK
+        PROPERTIES
+          Name                #CustGroup_FK
+          Table               #CustGroup
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CustGroupId
+            RelatedField        #CustGroup
+            SourceEDT           #CustGroupId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustTable_FK
+        PROPERTIES
+          Name                #CustTable_FK
+          Table               #CustTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #AccountNum
+            SourceEDT           #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #checkAccountRelation
+        #server NoYes checkAccountRelation()
+        #{
+        #    NoYes  ok = true;
+        #    ;
+        #
+        #    switch(this.AccountCode)
+        #    {
+        #        case TableGroupAll::Table   :   if (!CustTable::exist(this.CustAccount))
+        #                                        //ok = checkFailed(strFmt("@SYS119849",this.CustAccount));
+        #                                        throw error(strFmt("@SYS119849",this.CustAccount));
+        #                                        break;
+        #
+        #        case TableGroupAll::GroupId :   if (! CustGroup::exist(this.CustGroupId))
+        #                                        {
+        #                                            //ok = checkFailed(strFmt("@SYS3493",this.CustGroupId));
+        #                                            throw error(strFmt("@SYS3493",this.CustGroupId));
+        #                                        }
+        #                                        break;
+        #
+        #        case TableGroupAll::All     :   if (this.CustAccount)
+        #                                            this.CustAccount = '';
+        #                                        break;
+        #    }
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #checkItemRelation
+        #NoYes  checkItemRelation()
+        #{
+        #    NoYes  ok = true;
+        #    ;
+        #
+        #    switch(this.ItemCode)
+        #    {
+        #        case TableGroupAll::Table   :   if (! InventTable::exist(this.ItemRelation))
+        #                                            //ok = checkFailed("@SYS17075");
+        #                                            throw error("@SYS17075");
+        #                                        break;
+        #
+        #        case TableGroupAll::GroupId :   if (! InventItemGroup::exist(this.ItemRelation))
+        #                                        {
+        #                                            //ok = checkFailed("@SYS17075");
+        #                                            throw error("@SYS17075");
+        #                                        }
+        #                                        break;
+        #
+        #        case TableGroupAll::All     :   if (this.ItemRelation)
+        #                                            //ok = checkFailed("@SYS17075");
+        #                                            throw error("@SYS17075");
+        #                                        break;
+        #    }
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #initValue
+        #public void initValue()
+        #{
+        #    ;
+        #    this.ItemCode = TableGroupAll::All;
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #boolean  validateWrite()
+        #{
+        #    NoYes  ok;
+        #    ;
+        #
+        #    ok = super();
+        #
+        #    if (! this.checkItemRelation())
+        #        ok = false;
+        #
+        #    if (! this.checkAccountRelation())
+        #        ok = false;
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #calculateAuthAmount
+        #static amountMST calculateAuthAmount(SalesTable                     salesTable,
+        #                                     AmountMST                      authAmount,
+        #                                     CreditCardAuthContextType      contextType = CreditCardAuthContextType::All)
+        #{
+        #    SalesLine                   salesLine;
+        #    CreditCardAuthTable         creditCardAuthTable;
+        #    AmountMST                   amountMST;
+        #    amountMST                   locAuthAmount = authAmount;
+        #    ;
+        #    //--> Placeholders for customers that want item specific auth amounts
+        #    //while select salesLine
+        #    //    where salesLine.SalesId == salesTable.SalesId
+        #    {
+        #        while select Value,MarkupCategory,MaxAmount,SearchAgain from CreditCardAuthTable
+        #            order by sequenceNumber
+        #            where ((creditCardAuthTable.AccountCode == TableGroupAll::Table
+        #            && creditCardAuthTable.CustAccount == salesTable.InvoiceAccount)
+        #            || (creditCardAuthTable.AccountCode == TableGroupAll::GroupId
+        #            && creditCardAuthTable.CustGroupId == salesTable.CustGroup)
+        #            || creditCardAuthTable.AccountCode == TableGroupAll::All)
+        #            && ((creditCardAuthTable.ItemCode == TableGroupAll::Table
+        #            && creditCardAuthTable.ItemRelation == salesLine.ItemId)
+        #            || (creditCardAuthTable.ItemCode == TableGroupAll::GroupId
+        #            && creditCardAuthTable.ItemRelation == InventItemGroup::find(salesLine.ItemId).ItemGroupId)
+        #            || creditCardAuthTable.ItemCode == TableGroupAll::All)
+        #            && (CreditCardAuthTable.AuthContextType == contextType
+        #            || creditCardAuthTable.AuthContextType == CreditCardAuthContextType::All)
+        #        {
+        #            switch (creditCardAuthTable.MarkupCategory)
+        #            {
+        #                case    PercentAmount::Amount   :
+        #                    amountMST += creditCardAuthTable.Value;
+        #                    break;
+        #                case    PercentAmount::Percent  :
+        #                    amountMST += locAuthAmount * (creditCardAuthTable.Value/100);
+        #                    break;
+        #
+        #            }
+        #
+        #            if (creditCardAuthTable.MaxAmount == 0)
+        #            {
+        #                warning(strFmt("@ACC1789"));
+        #            }
+        #
+        #            if (amountMST + locAuthAmount > creditCardAuthTable.MaxAmount)
+        #            {
+        #                locAuthAmount = creditCardAuthTable.MaxAmount;
+        #                break;
+        #            }
+        #            else
+        #            {
+        #                locAuthAmount += amountMST;
+        #            }
+        #
+        #            if (!creditCardAuthTable.SearchAgain)
+        #            {
+        #                break;
+        #            }
+        #        }
+        #    }
+        #
+        #
+        #
+        #    return locAuthAmount;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

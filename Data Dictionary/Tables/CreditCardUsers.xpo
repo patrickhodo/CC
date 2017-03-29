@@ -1,0 +1,156 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardUsers
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardUsers
+      Label               #@ACC593
+      FormRef             #creditCardusers
+      TitleField1         #UserId
+      TitleField2         #TerminalId
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #RecId
+      ClusterIndex        #RecId
+      DeveloperDocumentation  #@ACC1437
+      Origin              #{80F5B3BD-046F-4FD6-B0E2-40EB500FE082}
+      LegacyId            #20015
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Table               #CreditCardUsers
+          Origin              #{9F635436-0883-41B6-8787-B573523E7983}
+          LegacyId            #20002
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #UserId
+        STRING
+        PROPERTIES
+          Name                #UserId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardUsers
+          Origin              #{42EA412F-9123-43C4-9AF1-E8BFB59AED06}
+          LegacyId            #20001
+          ExtendedDataType    #UserId
+          StringSize          #8
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UserId
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UserId
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS104938
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UserId
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Users
+        PROPERTIES
+          Name                #Users
+          Label               #@ACC1538
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UserId
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #UserIdIdx
+      PROPERTIES
+        Name                #UserIdIdx
+        AllowDuplicates     #No
+        Origin              #{805513C6-FBBA-4A1B-965A-DD3342EF52CA}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #UserId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #find
+        #static CreditCardUsers find()
+        #{
+        #    CreditCardUsers     ccUsers;
+        #    ;
+        #    select firstonly ccUsers
+        #        where ccUsers.UserId == curUserId();
+        #
+        #    return ccUsers;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

@@ -1,0 +1,2600 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #ProjFundingSource
+    EnforceFKRelation 1
+    PROPERTIES
+      Name                #ProjFundingSource
+      Label               #@SYS133006
+      FormRef             #projfundingSourceDetail
+      TitleField1         #ContractId
+      TitleField2         #FundingSourceId
+      ConfigurationKey    #ProjBasic
+      SecurityKey         #ProjTables
+      CacheLookup         #FoundAndEmpty
+      CreateRecIdIndex    #Yes
+      TableGroup          #Main
+      PrimaryIndex        #SurrogateKey
+      ClusterIndex        #ContractFundingSourceIdx
+      ReplacementKey      #ContractFundingSourceIdx
+      DeveloperDocumentation  #@SYS133007
+      Origin              #{2C110978-0000-1000-0A84-39F8B8CD6451}
+      LegacyId            #2424
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #CashDiscountId
+        STRING
+        PROPERTIES
+          Name                #CashDiscountId
+          HelpText            #@SYS138622
+          Table               #ProjFundingSource
+          Origin              #{212598F1-3FC9-4607-BFEB-1D1BFD143936}
+          LegacyId            #29
+          ExtendedDataType    #ProjCashDiscCode
+        ENDPROPERTIES
+        
+      FIELD #ContactPersonId
+        STRING
+        PROPERTIES
+          Name                #ContactPersonId
+          HelpText            #@SYS26087
+          Table               #ProjFundingSource
+          Origin              #{EFA2715C-1A68-4B18-89C1-2186B3DACB9D}
+          LegacyId            #34
+          ExtendedDataType    #ContactPersonId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #ContractId
+        STRING
+        PROPERTIES
+          Name                #ContractId
+          Mandatory           #Yes
+          Table               #ProjFundingSource
+          Origin              #{61B4DD1B-A8E7-49D3-9718-93CAC8F3CAF4}
+          LegacyId            #9
+          ExtendedDataType    #ProjInvoiceProjId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CreditCardId
+        STRING
+        PROPERTIES
+          Name                #CreditCardId
+          Table               #ProjFundingSource
+          Origin              #{F72DFC27-3FB3-40A6-9548-C9D4901F9F75}
+          ExtendedDataType    #CreditCardId
+        ENDPROPERTIES
+        
+      FIELD #CustAccount
+        STRING
+        PROPERTIES
+          Name                #CustAccount
+          Label               #@SYS138628
+          HelpText            #@SYS138627
+          Visible             #No
+          Table               #ProjFundingSource
+          Origin              #{BDA2EE10-C7C3-46B4-A8A0-9D92EA849725}
+          LegacyId            #14
+          ExtendedDataType    #CustAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CustPurchaseOrder
+        STRING
+        PROPERTIES
+          Name                #CustPurchaseOrder
+          Table               #ProjFundingSource
+          Origin              #{B3521930-BE50-402E-AB64-F2F4AA5D8853}
+          LegacyId            #32
+          ExtendedDataType    #CustPurchaseOrder
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CustRef
+        STRING
+        PROPERTIES
+          Name                #CustRef
+          Table               #ProjFundingSource
+          Origin              #{89A2EF69-999D-4BB5-975B-D3682A9A6326}
+          LegacyId            #33
+          ExtendedDataType    #CustRef
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #DefaultDimension
+        INT64
+        PROPERTIES
+          Name                #DefaultDimension
+          Table               #ProjFundingSource
+          Origin              #{89D4EBBC-61D4-41C6-9C93-A35B2CD8DFCF}
+          LegacyId            #22
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #EInvoiceAccountCode
+        STRING
+        PROPERTIES
+          Name                #EInvoiceAccountCode
+          Table               #ProjFundingSource
+          Origin              #{8412CB4A-05DB-4CD0-872A-18EF53F71713}
+          LegacyId            #35
+          ExtendedDataType    #EInvoiceAccountCode
+          StringSize          #35
+        ENDPROPERTIES
+        
+      FIELD #EInvoiceLineSpec
+        ENUM
+        PROPERTIES
+          Name                #EInvoiceLineSpec
+          Table               #ProjFundingSource
+          Origin              #{1951A719-6BA7-45FF-87F3-9051CE8C9A5D}
+          LegacyId            #36
+          ExtendedDataType    #EInvoiceLineSpecific
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #FundingSourceId
+        STRING
+        PROPERTIES
+          Name                #FundingSourceId
+          Mandatory           #Yes
+          Table               #ProjFundingSource
+          Origin              #{D21724D1-567C-4742-A8FE-119D42EA8C3B}
+          LegacyId            #8
+          ExtendedDataType    #ProjFundingSourceId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #FundingType
+        ENUM
+        PROPERTIES
+          Name                #FundingType
+          Table               #ProjFundingSource
+          Origin              #{4DEC4D31-1FE9-4472-918E-A7B49A00BFDA}
+          LegacyId            #12
+          EnumType            #ProjFundingType
+        ENDPROPERTIES
+        
+      FIELD #GiroType
+        ENUM
+        PROPERTIES
+          Name                #GiroType
+          Table               #ProjFundingSource
+          Origin              #{DDAB361E-DD1F-443C-8023-7F2B5AF4D8E9}
+          LegacyId            #47
+          ExtendedDataType    #PaymentStubProjId
+          EnumType            #PaymentStub
+        ENDPROPERTIES
+        
+      FIELD #IndividualBuffer
+        STRING
+        PROPERTIES
+          Name                #IndividualBuffer
+          Label               #@SYS101816
+          HelpText            #@SYS138623
+          Table               #ProjFundingSource
+          Origin              #{1E0D3FE0-4B56-4FE3-8D4D-7033DAE2229C}
+          LegacyId            #30
+          ExtendedDataType    #Num
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #InvoiceLocation
+        INT64
+        PROPERTIES
+          Name                #InvoiceLocation
+          HelpText            #@SYS341945
+          Table               #ProjFundingSource
+          Origin              #{6EBC3A53-D165-4B1F-B462-599D8077317F}
+          LegacyId            #23
+          ExtendedDataType    #LogisticsLocationRecId
+        ENDPROPERTIES
+        
+      FIELD #InvoiceName
+        STRING
+        PROPERTIES
+          Name                #InvoiceName
+          Label               #@SYS312929
+          HelpText            #@SYS58064
+          Table               #ProjFundingSource
+          Origin              #{A6D9BC7C-E44E-448D-A1DF-F0D15A28CAE6}
+          LegacyId            #24
+          ExtendedDataType    #CompanyName
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #LanguageId
+        STRING
+        PROPERTIES
+          Name                #LanguageId
+          Table               #ProjFundingSource
+          Origin              #{D3608A40-82CC-42EF-A614-AB831C89DAB8}
+          LegacyId            #20
+          ExtendedDataType    #ProjLanguageId
+          StringSize          #7
+        ENDPROPERTIES
+        
+      FIELD #NumberSequenceGroupId
+        STRING
+        PROPERTIES
+          Name                #NumberSequenceGroupId
+          HelpText            #@SYS138620
+          Table               #ProjFundingSource
+          Origin              #{81E9D794-D647-4882-8B99-8E7D79054AE6}
+          LegacyId            #37
+          ExtendedDataType    #NumberSequenceGroupId
+        ENDPROPERTIES
+        
+      FIELD #Party
+        INT64
+        PROPERTIES
+          Name                #Party
+          AllowEdit           #No
+          Visible             #No
+          Table               #ProjFundingSource
+          Origin              #{79A4A3A5-63FD-4583-8047-CB3670264738}
+          LegacyId            #16
+          ExtendedDataType    #DirPartyRecId
+        ENDPROPERTIES
+        
+      FIELD #PaymentscheduleId
+        STRING
+        PROPERTIES
+          Name                #PaymentscheduleId
+          Table               #ProjFundingSource
+          Origin              #{6DAC2686-7B4B-49F7-ABD0-AF2CEFA9FEF8}
+          LegacyId            #28
+          ExtendedDataType    #PaymSchedId
+          StringSize          #30
+        ENDPROPERTIES
+        
+      FIELD #PaymentTermsId
+        STRING
+        PROPERTIES
+          Name                #PaymentTermsId
+          HelpText            #@SYS138621
+          Table               #ProjFundingSource
+          Origin              #{FC59F32D-56FA-4F40-882F-BBCC82055A90}
+          LegacyId            #27
+          ExtendedDataType    #PaymTermId
+        ENDPROPERTIES
+        
+      FIELD #PostingProfile
+        STRING
+        PROPERTIES
+          Name                #PostingProfile
+          HelpText            #@SYS138619
+          Table               #ProjFundingSource
+          Origin              #{095FCE36-3817-42DB-B45A-71E1DBF7499A}
+          LegacyId            #31
+          ExtendedDataType    #CustPostingProfile
+        ENDPROPERTIES
+        
+      FIELD #ProjGrant
+        INT64
+        PROPERTIES
+          Name                #ProjGrant
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Visible             #No
+          Table               #ProjFundingSource
+          Origin              #{92A66E68-8BB2-4619-B105-7B02FDCA00ED}
+          LegacyId            #18
+          ExtendedDataType    #ProjGrantRecId
+        ENDPROPERTIES
+        
+      FIELD #PSACustRetentionTermId
+        INT64
+        PROPERTIES
+          Name                #PSACustRetentionTermId
+          Label               #@PSA11205
+          ConfigurationKey    #PSAARRetainage
+          Table               #ProjFundingSource
+          Origin              #{077AF3F5-288B-4562-946A-FE265A8633F3}
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #PSAInvoiceFormats
+        ENUM
+        PROPERTIES
+          Name                #PSAInvoiceFormats
+          Table               #ProjFundingSource
+          Origin              #{A84C6BBC-D8E5-4CB3-95CF-6E09F15D283E}
+          EnumType            #PSAInvoiceFormats
+        ENDPROPERTIES
+        
+      FIELD #TaxPeriodPaymentCode_PL
+        STRING
+        PROPERTIES
+          Name                #TaxPeriodPaymentCode_PL
+          Table               #ProjFundingSource
+          Origin              #{2A170000-0978-1000-F108-86EFF0D4CC30}
+          ExtendedDataType    #PlTaxPeriodPaymentCode
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ContractId
+          #FundingSourceId
+          #FundingType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ContractId
+          #FundingSourceId
+          #FundingType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoIdentification
+        PROPERTIES
+          Name                #AutoIdentification
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ContractId
+          #FundingSourceId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Contact
+        PROPERTIES
+          Name                #Contact
+          Label               #@SYS60248
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ContactPersonId
+          #editContactPersonName
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #CreditCard
+        PROPERTIES
+          Name                #CreditCard
+          Label               #@ACC1423
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Dimension
+        PROPERTIES
+          Name                #Dimension
+          Label               #@SYS14926
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #DefaultDimension
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #EInvoice
+        PROPERTIES
+          Name                #EInvoice
+          Label               #@sys100769
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #EInvoiceLineSpec
+          #EInvoiceAccountCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #FundingSourceName
+        PROPERTIES
+          Name                #FundingSourceName
+          Label               #@SYS128116
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #FundingSourceId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #GiroMoneyTransferSlip
+        PROPERTIES
+          Name                #GiroMoneyTransferSlip
+          Label               #@SYS2723
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #GiroType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS115561
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #FundingSourceId
+          #ContractId
+          #FundingType
+          #editProjFunder
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Invoice
+        PROPERTIES
+          Name                #Invoice
+          Label               #@SYS12128
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #FundingSourceId
+          #PostingProfile
+          #NumberSequenceGroupId
+          #LanguageId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #InvoiceAddress
+        PROPERTIES
+          Name                #InvoiceAddress
+          Label               #@SYS58074
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #InvoiceName
+          #InvoiceLocation
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Payments
+        PROPERTIES
+          Name                #Payments
+          Label               #@SYS828
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #PaymentTermsId
+          #PaymentscheduleId
+          #CashDiscountId
+          #IndividualBuffer
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #PSA
+        PROPERTIES
+          Name                #PSA
+          Label               #@PSA2704
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #PSACustRetentionTermId
+          #PSAInvoiceFormats
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #References
+        PROPERTIES
+          Name                #References
+          Label               #@SYS14018
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CustPurchaseOrder
+          #CustRef
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #SalesTax_PL
+        PROPERTIES
+          Name                #SalesTax_PL
+          Label               #@SYS67871
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TaxPeriodPaymentCode_PL
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #ContractFundingSourceIdx
+      PROPERTIES
+        Name                #ContractFundingSourceIdx
+        AllowDuplicates     #No
+        AlternateKey        #Yes
+        Origin              #{2B180003-0978-1000-5AC3-E8CCB444E0FB}
+        LegacyId            #3
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #ContractId
+        #FundingSourceId
+      ENDINDEXFIELDS
+      
+      #PSACustomerRetentionTermTableIdx
+      PROPERTIES
+        Name                #PSACustomerRetentionTermTableIdx
+        Origin              #{D9B3A1C0-C6DF-4734-8E0B-CDDCA0386823}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #PSACustRetentionTermId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CashDiscount
+        PROPERTIES
+          Name                #CashDiscount
+          Table               #CashDisc
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CashDiscountId
+            RelatedField        #CashDiscCode
+            SourceEDT           #ProjCashDiscCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #ContactPerson
+        PROPERTIES
+          Name                #ContactPerson
+          Table               #ContactPerson
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #ContactPersonId
+            RelatedField        #ContactPersonId
+            SourceEDT           #ContactPersonId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTable
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CreditCardId
+            RelatedField        #CreditCardId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustTable
+        PROPERTIES
+          Name                #CustTable
+          Table               #CustTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          RelatedTableRole    #CustTable
+          Role                #ProjFundingSource
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #AccountNum
+            SourceEDT           #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #DefaultDimension
+        PROPERTIES
+          Name                #DefaultDimension
+          Table               #DimensionAttributeValueSet
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          RelatedTableRole    #DimensionAttributeValueSet
+          Role                #DimensionAttributeValueSet_ProjFundingSource
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #DefaultDimension
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #DirAddressBookParty
+        PROPERTIES
+          Name                #DirAddressBookParty
+          Table               #DirAddressBookPartyAllView
+          Validate            #No
+          RelationshipType    #Link
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #DirAddressBookPartyAllView
+          Role                #ProjFundingSource
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #Party
+            RelatedField        #Party
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #InvoiceLocation
+        PROPERTIES
+          Name                #InvoiceLocation
+          Table               #LogisticsLocation
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          RelatedTableRole    #LogisticsLocation
+          Role                #LogisticsLocation_ProjFundingSource
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #InvoiceLocation
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #LanguageTable
+        PROPERTIES
+          Name                #LanguageTable
+          Table               #LanguageTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #LanguageTabe
+          Role                #ProjFundingSource
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #LanguageId
+            RelatedField        #LanguageId
+            SourceEDT           #ProjLanguageId
+          ENDPROPERTIES
+          
+          REFERENCETYPE EXTERNFIXED
+          PROPERTIES
+            Value               #1
+            Table               #LanguageTable
+            RelatedField        #LabelFile
+            SourceEDT           #ProjLanguageId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #NumberSequenceGroup
+        PROPERTIES
+          Name                #NumberSequenceGroup
+          Table               #NumberSequenceGroup
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #NumberSequenceGroupId
+            RelatedField        #numberSequenceGroupId
+            SourceEDT           #NumberSequenceGroupId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Party_FK
+        PROPERTIES
+          Name                #Party_FK
+          Table               #DirPartyTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #OneMore
+          RelationshipType    #Association
+          RelatedTableRole    #DirPartyTable
+          Role                #DirPartyTable_ProjFundingSource
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #Party
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #PaymentSchedule
+        PROPERTIES
+          Name                #PaymentSchedule
+          Table               #PaymSched
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #PaymentscheduleId
+            RelatedField        #Name
+            SourceEDT           #PaymSchedId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #PaymentTerms
+        PROPERTIES
+          Name                #PaymentTerms
+          Table               #PaymTerm
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #PaymentTermsId
+            RelatedField        #PaymTermId
+            SourceEDT           #PaymTermId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #PlTaxDueTable
+        PROPERTIES
+          Name                #PlTaxDueTable
+          Table               #PlTaxDueTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #PlTaxDueTable
+          Role                #ProjFundingSource
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TaxPeriodPaymentCode_PL
+            RelatedField        #TaxPeriodPaymentCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #PostingProfile
+        PROPERTIES
+          Name                #PostingProfile
+          Table               #CustLedger
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #PostingProfile
+            RelatedField        #PostingProfile
+            SourceEDT           #CustPostingProfile
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #ProjGrant
+        PROPERTIES
+          Name                #ProjGrant
+          Table               #ProjGrant
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          RelatedTableRole    #ProjGrant
+          Role                #ProjGrant_ProjFundingSource
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #ProjGrant
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #ProjInvoiceTable
+        PROPERTIES
+          Name                #ProjInvoiceTable
+          Table               #ProjInvoiceTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Composition
+          RelatedTableRole    #ProjInvoiceTable
+          Role                #ProjFundingSource
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #ContractId
+            RelatedField        #ProjInvoiceProjId
+            SourceEDT           #ProjInvoiceProjId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #PSACustomerRetentionTermTable
+        PROPERTIES
+          Name                #PSACustomerRetentionTermTable
+          Table               #PSACustomerRetentionTermTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #PSACustRetentionTermId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #ProjPosting
+      PROPERTIES
+        Table               #ProjPosting
+        DeleteAction        #Restricted
+      ENDPROPERTIES
+      
+      #ProjTransPosting
+      PROPERTIES
+        Table               #ProjTransPosting
+        DeleteAction        #Restricted
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #address
+        #/// <summary>
+        #/// Gets the logistic postal address identified by the invoice location.
+        #/// </summary>
+        #/// <returns>
+        #/// The logistic postal address specified by the invoice location.
+        #/// </returns>
+        #public display LogisticsAddressing address()
+        #{
+        #    return LogisticsPostalAddress::findByLocation(this.InvoiceLocation).Address;
+        #}
+      ENDSOURCE
+      SOURCE #checkContactId
+        #private boolean checkContactId()
+        #{
+        #    boolean retValue = true;
+        #
+        #    if (!this.ContractId)
+        #    {
+        #        retValue = checkFailed("@SYS53031");
+        #    }
+        #
+        #    if (retValue && !ProjInvoiceTable::exist(this.ContractId))
+        #    {
+        #        retValue = checkFailed("@SYS133303");
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #checkContactPerson
+        #boolean checkContactPerson()
+        #{
+        #    ContactPerson   contactPerson;
+        #    CustTable       custTable;
+        #
+        #    // GDL code: depends on isCustDKPublic() to enable the fields
+        #    if (this.FundingType == ProjFundingType::Customer)
+        #    {
+        #        if (this.ContactPersonId)
+        #        {
+        #            contactPerson = ContactPerson::find(this.ContactPersonId);
+        #            custTable = CustTable::findByPartyRecId(this.Party);
+        #            if (contactPerson.CustAccount != custTable.AccountNum)
+        #            {
+        #                // Contact person "%1 - %2" must be attached to the customer "%3".
+        #                return checkFailed(strFmt("@SYS92800",this.ContactPersonId,contactPerson.personName(),custTable.AccountNum));
+        #            }
+        #        }
+        #    }
+        #
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkCustomerAccount
+        #private boolean checkCustomerAccount()
+        #{
+        #    CustVendorBlocked   blockLevel;
+        #    boolean             retValue = true;
+        #
+        #    if (!this.CustAccount)
+        #    {
+        #        retValue = checkFailed("@SYS184310");
+        #    }
+        #    else
+        #    {
+        #        if (!CustTable::exist(this.CustAccount))
+        #        {
+        #            retValue = checkFailed("@SYS184311");
+        #        }
+        #    }
+        #
+        #    if (retValue &&
+        #        ProjParameters::find().OneTimeCustOnInvoice &&
+        #        CustTable::find(this.CustAccount).OneTimeCustomer)
+        #    {
+        #        retValue = checkFailed("@SYS57673");
+        #    }
+        #
+        #    if (retValue)
+        #    {
+        #        blockLevel = CustTable::blocked(this.CustAccount);
+        #
+        #        switch (blockLevel)
+        #        {
+        #            case CustVendorBlocked::All:
+        #                retValue = checkFailed(strFmt("@SYS18389", this.CustAccount, enum2str(blockLevel)));
+        #
+        #            case CustVendorBlocked::Invoice:
+        #                retValue = checkFailed(strFmt("@SYS18389", this.CustAccount, enum2str(blockLevel)));
+        #        }
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #checkFundingSourceId
+        #private boolean checkFundingSourceId()
+        #{
+        #    boolean retValue = true;
+        #
+        #    if (!this.FundingSourceId)
+        #    {
+        #        retValue = checkFailed("@SYS133301");
+        #    }
+        #
+        #    // Check for duplicate record
+        #    if (this.RecId == 0)
+        #    {
+        #        if (ProjFundingSource::existContractFundingSource(this.ContractId, this.FundingSourceId))
+        #        {
+        #            retValue = checkFailed("@SYS134243");
+        #        }
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #checkFundingType
+        #private boolean checkFundingType()
+        #{
+        #    ProjFundingSource   projFundingSourceLocal;
+        #    boolean             retValue = true;
+        #
+        #    if (this.FundingType == ProjFundingType::OnHoldFundingSource)
+        #    {
+        #        select count(RecId) from projFundingSourceLocal where
+        #            projFundingSourceLocal.FundingType == ProjFundingType::OnHoldFundingSource &&
+        #            projFundingSourceLocal.ContractId == this.ContractId;
+        #        if (projFundingSourceLocal.RecId != 0)
+        #        {
+        #            retValue = checkFailed("@SYS319826");
+        #        }
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #checkParty
+        #private boolean checkParty()
+        #{
+        #    boolean retValue = true;
+        #
+        #    if (this.CustAccount && !DirPartyTable::findRec(this.Party))
+        #    {
+        #        retValue = checkFailed("@SYS133304");
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #checkProjGrant
+        #/// <summary>
+        #/// Validates the <c>ProjGrant</c> field.
+        #/// </summary>
+        #/// <param name="projGrantId">
+        #/// The <c>ProjGrantId</c> field value to validate.
+        #/// </param>
+        #/// <returns>
+        #/// true if the grant status is not closed or rejected; otherwise, false.
+        #/// </returns>
+        #public boolean checkProjGrant(ProjGrantId   projGrantId)
+        #{
+        #    boolean ret = true;
+        #    ProjGrant projGrant;
+        #
+        #    projGrant = ProjGrant::findByGrantId(projGrantId);
+        #
+        #    if (projGrant.GrantStatus != ProjGrantStatus::Awarded && projGrant.GrantStatus != ProjGrantStatus::Active)
+        #    {
+        #        ret = checkFailed(strFmt("@SYS300494", enum2str(projGrant.GrantStatus)));
+        #    }
+        #
+        #    return ret;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #contactPersonName
+        #/// <summary>
+        #/// Gets the contract name identified by the contact ID.
+        #/// </summary>
+        #/// <returns>
+        #/// The contact name specified by the contract ID.
+        #/// </returns>
+        #public display ContactPersonName contactPersonName()
+        #{
+        #    // GDL code: depends on isCustDKPublic() to enable the fields
+        #    if (this.ContactPersonId)
+        #    {
+        #        return ContactPerson::name(this.ContactPersonId);
+        #    }
+        #    else
+        #    {
+        #        return '';
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #currentLedgerCurrency
+        #/// <summary>
+        #/// Gets the accounting currency for the current company
+        #/// </summary>
+        #/// <returns>
+        #/// the accounting currency for the current company
+        #/// </returns>
+        #display public CurrencyCode currentLedgerCurrency()
+        #{
+        #    return Ledger::accountingCurrency(CompanyInfo::find().RecId);
+        #}
+      ENDSOURCE
+      SOURCE #delete
+        #public void delete()
+        #{
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAARRetainage)))
+        #    {
+        #        ttsbegin;
+        #
+        #        this.deleteRetentionFromProject();
+        #        this.deleteRetentionFromBillingRule();
+        #
+        #        ttscommit;
+        #    }
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #deleteRetentionFromBillingRule
+        #public void deleteRetentionFromBillingRule()
+        #{
+        #    PSAProjFundingSourceRetain  psaProjFundingSourceRetain;
+        #    PSAContractLineItems        psaContractLineItems;
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAARRetainage)))
+        #    {
+        #        while select forupdate psaProjFundingSourceRetain
+        #            join psaContractLineItems
+        #                where psaContractLineItems.ContractLineNum == psaProjFundingSourceRetain.BillingRuleId
+        #                    && psaProjFundingSourceRetain.ProjFundingSource == this.RecId
+        #        {
+        #            psaProjFundingSourceRetain.delete();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #deleteRetentionFromProject
+        #public void deleteRetentionFromProject()
+        #{
+        #    PSAProjFundingSourceRetain  psaProjFundingSourceRetain;
+        #    ProjTable                   projTable;
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAARRetainage)))
+        #    {
+        #        while select forupdate psaProjFundingSourceRetain
+        #            join projTable
+        #                where projTable.ProjId == psaProjFundingSourceRetain.ProjId
+        #                    && psaProjFundingSourceRetain.ProjFundingSource == this.RecId
+        #        {
+        #            psaProjFundingSourceRetain.delete();
+        #        }
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #editContactPersonName
+        #/// <summary>
+        #/// Gets or sets the contact name for the current contract ID.
+        #/// </summary>
+        #/// <param name="_set">
+        #/// A Boolean value to determine whether this is a set or get action.
+        #/// </param>
+        #/// <param name="_name">
+        #/// The contact name that will be used by a set operation.
+        #/// </param>
+        #/// <returns>
+        #/// The contact name specified by the contract ID.
+        #/// </returns>
+        #client server edit ContactPersonName  editContactPersonName(boolean _set, ContactPersonName _name)
+        #{
+        #    ContactPersonName   name = _name;
+        #    ContactPerson       contactPerson;
+        #    ContactPersonId     contactPersonId;
+        #    DirPartyTable       partyTable;
+        #    CustTable           custTable;
+        #
+        #    // GDL code: depends on isCustDKPublic() to enable the fields
+        #    if (_set)
+        #    {
+        #        if (name)
+        #        {
+        #            contactPersonId = this.ContactPersonId;
+        #            contactPerson = ContactPerson::find(_name);
+        #            this.ContactPersonId = contactPerson.ContactPersonId;
+        #            if (this.ContactPersonId)
+        #            {
+        #                name = contactPerson.personName();
+        #            }
+        #            else
+        #            {
+        #                custTable = CustTable::findByPartyRecId(this.Party);
+        #                select contactPerson
+        #                        where contactPerson.CustAccount ==   custTable.AccountNum
+        #                    join Name from partyTable
+        #                        where partyTable.RecId == contactPerson.Party &&
+        #                              partyTable.Name        like name;
+        #                if (contactPerson)
+        #                {
+        #                    this.ContactPersonId = contactPerson.ContactPersonId;
+        #                    name=partyTable.Name;
+        #                }
+        #            }
+        #
+        #            if (contactPersonId != this.ContactPersonId)
+        #            {
+        #
+        #                if (this.checkContactPerson())
+        #                {
+        #                    if (this.dataSource())
+        #                    {
+        #                        this.dataSource().refresh();
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    this.ContactPersonId = contactPersonId;
+        #                }
+        #            }
+        #        }
+        #        else
+        #        {
+        #            this.ContactPersonId = '';
+        #        }
+        #    }
+        #    else
+        #    {
+        #        name = this.contactPersonName();
+        #    }
+        #
+        #    return name;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #editProjFunder
+        #/// <summary>
+        #/// Gets and sets the <c>Party</c> and <c>CustAccount</c> field or the <c>ProjGrant</c> field.
+        #/// </summary>
+        #/// <param name="_set">
+        #/// true if the <c>CustAccount</c> field or the <c>ProjGrant</c> field is set; otherwise, false.
+        #/// </param>
+        #/// <param name="_projGrantFunder">
+        #/// The <c>ProjGrantFunder</c> field value that is selected by the user.
+        #/// </param>
+        #/// <returns>
+        #/// A <c>Party</c> field value or <c>CustAccount</c> field value or <c>ProjGrant</c> field value.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method gets or sets the <c>Party</c> and <c>CustAccount</c> field or <c>ProjGrant</c> field
+        #/// based on the funding type.
+        #/// </remarks>
+        #public edit DirPartyName editProjFunder(boolean _set, DirPartyName _projGrantFunder)
+        #{
+        #    DirPartyName    projGrantFunder = _projGrantFunder;
+        #    CustTable       custTable;
+        #    ProjGrant       grant;
+        #
+        #    if(_set)
+        #    {
+        #        switch (this.FundingType)
+        #        {
+        #            case ProjFundingType::Grant :
+        #                grant = ProjGrant::findByGrantId(projGrantFunder);
+        #
+        #                if (grant && this.checkProjGrant(projGrantFunder))
+        #                {
+        #                    this.ProjGrant = grant.RecId;
+        #                    custTable = CustTable::find(grant.CustAccount);
+        #                    this.transferCustAccount(grant.CustAccount);
+        #                    this.LanguageId = custTable.languageId();
+        #                    this.Party = custTable.Party;
+        #                    this.DefaultDimension = custTable.DefaultDimension;
+        #                    if (this.FundingSourceId == '')
+        #                    {
+        #                        this.FundingSourceId = ProjFundingSource::processFundingSourceId(projGrantFunder , this.ContractId);
+        #                    }
+        #                    this.setInvoiceLocation(custTable);
+        #                }
+        #                else
+        #                {
+        #                    projGrantFunder = ProjGrant::find(this.ProjGrant).GrantId;
+        #                }
+        #                break;
+        #
+        #            case ProjFundingType::Customer :
+        #                this.CustAccount = projGrantFunder;
+        #                custTable = CustTable::find(this.CustAccount);
+        #                this.Party = custTable.Party;
+        #                this.transferCustAccount(this.CustAccount);
+        #                if (this.FundingSourceId == '')
+        #                {
+        #                    this.FundingSourceId = ProjFundingSource::processFundingSourceId(custTable.name(), this.ContractId);
+        #                }
+        #                if (CustTable::isCustDKPublic(custTable.AccountNum))
+        #                {
+        #                    this.ContactPersonId = custTable.ContactPersonId;
+        #                }
+        #                this.setInvoiceLocation(custTable);
+        #                break;
+        #
+        #            case ProjFundingType::Organization :
+        #            case ProjFundingType::OnHoldFundingSource :
+        #                this.Party = DirPartyTable::findByName(projGrantFunder, DirPartyType::OperatingUnit, false).RecId;
+        #                this.LanguageId = '';
+        #                this.ProjGrant = 0;
+        #                if (this.FundingSourceId == '')
+        #                {
+        #                    this.FundingSourceId = ProjFundingSource::processFundingSourceId(projGrantFunder, this.ContractId);
+        #                }
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        switch (this.FundingType)
+        #        {
+        #            case ProjFundingType::Grant :
+        #                projGrantFunder = ProjGrant::find(this.ProjGrant).GrantId;
+        #                break;
+        #
+        #            case ProjFundingType::Customer :
+        #                projGrantFunder = CustTable::findByPartyRecId(this.Party).AccountNum;
+        #                break;
+        #
+        #            case ProjFundingType::Organization :
+        #            case ProjFundingType::OnHoldFundingSource :
+        #                projGrantFunder = DirPartyTable::findRec(this.Party).Name;
+        #                break;
+        #        }
+        #
+        #    }
+        #
+        #    return projGrantFunder;
+        #}
+      ENDSOURCE
+      SOURCE #existsOnFundingLimit
+        #private boolean existsOnFundingLimit()
+        #{
+        #    boolean                     retValue = false;
+        #    ProjFundingLimit            projFundingLimit;
+        #
+        #    select firstonly RecId from projFundingLimit where projFundingLimit.FundingSource == this.RecId;
+        #    if (projFundingLimit.RecId != 0)
+        #    {
+        #        retValue = true;
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #existsOnFundingRule
+        #private boolean existsOnFundingRule()
+        #{
+        #    boolean                     retValue = false;
+        #    ProjFundingRuleAllocation   projFundingRuleAllocation;
+        #
+        #    select firstonly RecId from projFundingRuleAllocation where projFundingRuleAllocation.FundingSource == this.RecId;
+        #    if (projFundingRuleAllocation.RecId != 0)
+        #    {
+        #        retValue = true;
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #existsPostedTrx
+        #/// <summary>
+        #/// Indicates whether the funding source has been used in a posted translation.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the funding source has been used in posted transaction; otherwise, false.
+        #/// </returns>
+        #public server boolean existsPostedTrx()
+        #{
+        #    boolean                     retValue = false;
+        #    ProjEmplTransCost           projEmplTransCost;
+        #    ProjEmplTransSale           projEmplTransSale;
+        #    ProjCostTransCost           projCostTransCost;
+        #    ProjCostTransSale           projCostTransSale;
+        #    ProjItemTransCost           projItemTransCost;
+        #    ProjItemTransSale           projItemTransSale;
+        #    ProjRevenueTransSale        projRevenueTransSale;
+        #    ProjOnAccTransSale          projOnAccTransSale;
+        #
+        #    // Check Hours
+        #    select firstonly RecId from projEmplTransCost where projEmplTransCost.FundingSource == this.RecId;
+        #    if (projEmplTransCost.RecId != 0)
+        #    {
+        #        retValue = true;
+        #    }
+        #
+        #    if (!retValue)
+        #    {
+        #        select firstonly RecId from projEmplTransSale where projEmplTransSale.FundingSource == this.RecId;
+        #        if (projEmplTransSale.RecId != 0)
+        #        {
+        #            retValue = true;
+        #        }
+        #    }
+        #
+        #    // Check Items
+        #    if (!retValue)
+        #    {
+        #        select firstonly RecId from projCostTransCost where projCostTransCost.FundingSource == this.RecId;
+        #        if (projCostTransCost.RecId != 0)
+        #        {
+        #            retValue = true;
+        #        }
+        #    }
+        #
+        #    if (!retValue)
+        #    {
+        #        select firstonly RecId from projCostTransSale where projCostTransSale.FundingSource == this.RecId;
+        #        if (projCostTransSale.RecId != 0)
+        #        {
+        #            retValue = true;
+        #        }
+        #    }
+        #
+        #    // Check Items
+        #    if (!retValue)
+        #    {
+        #        select firstonly RecId from projItemTransCost where projItemTransCost.FundingSource == this.RecId;
+        #        if (projItemTransCost.RecId != 0)
+        #        {
+        #            retValue = true;
+        #        }
+        #    }
+        #
+        #    if (!retValue)
+        #    {
+        #        select firstonly RecId from projItemTransSale where projItemTransSale.FundingSource == this.RecId;
+        #        if (projItemTransSale.RecId != 0)
+        #        {
+        #            retValue = true;
+        #        }
+        #    }
+        #
+        #    // Check Fees
+        #    if (!retValue)
+        #    {
+        #        select firstonly RecId from projRevenueTransSale where projRevenueTransSale.FundingSource == this.RecId;
+        #        if (projRevenueTransSale.RecId != 0)
+        #        {
+        #            retValue = true;
+        #        }
+        #    }
+        #
+        #    // Check On Account
+        #    if (!retValue)
+        #    {
+        #        select firstonly RecId from projOnAccTransSale where projOnAccTransSale.FundingSource == this.RecId;
+        #        if (projOnAccTransSale.RecId != 0)
+        #        {
+        #            retValue = true;
+        #        }
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #initFromCustTable
+        #/// <summary>
+        #///    Initializes address, payment, and other information for an invoice project from a customer.
+        #/// </summary>
+        #/// <param name="custTable">
+        #///    A customer record to use to initialize the invoice project.
+        #/// </param>
+        #public void initFromCustTable(CustTable custTable)
+        #{
+        #    CustTable                   invoiceAccount;
+        #    CustParameters              custParameters;
+        #
+        #    custParameters = CustParameters::find();
+        #
+        #    this.setInvoiceLocation(custTable);
+        #
+        #    invoiceAccount = CustTable::find(custTable.InvoiceAccount);
+        #    if (invoiceAccount)
+        #    {
+        #        this.PaymentTermsId         = invoiceAccount.PaymTermId;
+        #        this.PaymentscheduleId      = invoiceAccount.PaymSched;
+        #        this.NumberSequenceGroupId  = invoiceAccount.NumberSequenceGroup;
+        #        this.CashDiscountId         = invoiceAccount.CashDisc;
+        #        //<GEEPL>
+        #        this.TaxPeriodPaymentCode_PL    = invoiceAccount.TaxPeriodPaymentCode_PL;
+        #        //</GEEPL>
+        #    }
+        #    else
+        #    {
+        #        this.PaymentTermsId         = custTable.PaymTermId;
+        #        this.PaymentscheduleId      = custTable.PaymSched;
+        #        this.NumberSequenceGroupId  = custTable.NumberSequenceGroup;
+        #        this.CashDiscountId         = custTable.CashDisc;
+        #        //<GEEPL>
+        #        this.TaxPeriodPaymentCode_PL    = custTable.TaxPeriodPaymentCode_PL;
+        #        //</GEEPL>
+        #    }
+        #
+        #    this.LanguageId             = DirPartyTable::findRec(custTable.Party).LanguageId;
+        #    this.DefaultDimension       = custTable.DefaultDimension;
+        #    this.GiroType               = custTable.GiroTypeProjInvoice;
+        #
+        #    this.PostingProfile         = CustParameters::find().PostingProfile;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #insert
+        #public void insert()
+        #{
+        #    super();
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAARRetainage)))
+        #    {
+        #        this.retentionForProject();
+        #        this.retentionForBillingRule();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #modifiedField
+        #public void modifiedField(FieldId _fieldId)
+        #{
+        #    super(_fieldId);
+        #
+        #    switch(_fieldId)
+        #    {
+        #        case fieldNum(ProjFundingSource, FundingType) :
+        #            this.checkFundingType();
+        #            if (isConfigurationkeyEnabled(configurationKeyNum(Project3)) && this.FundingType != ProjFundingType::Customer)
+        #            {
+        #                this.psaCustRetentionTermId = 0;
+        #            }
+        #            break;
+        #
+        #/*
+        #       case fieldnum(ProjFundingSource, BankCentralBankPurposeCode):
+        #            this.BankcentralBankPurposeText = BankCentralBankPurpose::find(this.BankCentralBankPurposeCode).Text;
+        #            break;
+        #*/
+        #        case fieldNum(ProjFundingSource, PaymentTermsId):
+        #            this.PaymentscheduleId = PaymTerm::find(this.PaymentTermsId).PaymSched;
+        #            break;
+        #
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #name
+        #public display Name name()
+        #{
+        #    Name    retValue = '';
+        #
+        #    switch (this.FundingType)
+        #    {
+        #        case ProjFundingType::Customer :
+        #            retValue = CustTable::findByPartyRecId(this.Party).name();
+        #            break;
+        #
+        #        case ProjFundingType::Grant :
+        #            retValue = ProjGrant::find(this.ProjGrant).GrantName;
+        #            break;
+        #
+        #        case ProjFundingType::Organization :
+        #        case ProjFundingType::OnHoldFundingSource :
+        #            retValue = DirPartyTable::findRec(this.Party).Name;
+        #        break;
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #projFundingSourceSpentAmountMst
+        #/// <summary>
+        #/// Returns the amount spent of the corresponding funding source.
+        #/// </summary>
+        #/// <returns>
+        #/// The amount spent of the corresponding funding source.
+        #/// </returns>
+        #display AmountMST projFundingSourceSpentAmountMst()
+        #{
+        #    ProjItemTrans           projItemTrans;
+        #    ProjOnAccTrans          projOnAccTrans;
+        #    ProjRevenueTrans        projRevenueTrans;
+        #    ProjCostTrans           projCostTrans;
+        #    ProjEmplTrans           projEmplTrans;
+        #    ProjEmplTransSale       projEmplTransSale;
+        #    ProjOnAccTransSale       projOnAccTransSale;
+        #    ProjItemTransSale       projItemTransSale;
+        #    ProjCostTransSale       projCostTransSale;
+        #    ProjRevenueTransSale    projRevenueTransSale;
+        #    ProjTrans               projTransSale;
+        #
+        #    AmountMST totalSpentAmountMst;
+        #
+        #    while select projEmplTransSale
+        #                join projEmplTrans
+        #                where projEmplTransSale.TransId == projEmplTrans.TransId &&
+        #                projEmplTransSale.FundingSource == this.RecId
+        #    {
+        #            projTransSale = ProjTrans::newProjEmplTransSale(projEmplTrans, projEmplTransSale);
+        #            totalSpentAmountMst += projTransSale.transTurnoverMST();
+        #    }
+        #
+        #    while select projItemTransSale
+        #                join projItemTrans
+        #                where projItemTransSale.ProjTransId == projItemTrans.ProjTransId &&
+        #                projItemTransSale.FundingSource == this.RecId
+        #    {
+        #            projTransSale = ProjTrans::newProjItemTransSale(projItemTrans, projItemTransSale);
+        #            totalSpentAmountMst += projTransSale.transTurnoverMST();
+        #    }
+        #
+        #    while select projCostTransSale
+        #                join projCostTrans
+        #                where projCostTransSale.TransId == projCostTrans.TransId &&
+        #                projCostTransSale.FundingSource == this.RecId
+        #    {
+        #            projTransSale = ProjTrans::newProjCostTransSale(projCostTrans, projCostTransSale);
+        #            totalSpentAmountMst += projTransSale.transTurnoverMST();
+        #    }
+        #
+        #    while select projRevenueTransSale
+        #                join projRevenueTrans
+        #                where projRevenueTransSale.TransId == projRevenueTrans.TransId &&
+        #                projRevenueTransSale.FundingSource == this.RecId
+        #    {
+        #            projTransSale = ProjTrans::newProjRevenueTransSale(projRevenueTrans, projRevenueTransSale);
+        #            totalSpentAmountMst += projTransSale.transTurnoverMST();
+        #    }
+        #
+        #    while select projOnAccTransSale
+        #                join projOnAccTrans
+        #                where projOnAccTransSale.TransId == projOnAccTrans.TransId &&
+        #                projOnAccTransSale.FundingSource == this.RecId
+        #    {
+        #            projTransSale = ProjTrans::newProjOnAccTransSale(projOnAccTrans, projOnAccTransSale);
+        #            totalSpentAmountMst += projTransSale.transTurnoverMST();
+        #    }
+        #
+        #    return totalSpentAmountMst;
+        #}
+      ENDSOURCE
+      SOURCE #retentionForBillingRule
+        #public void retentionForBillingRule()
+        #{
+        #    PSAProjFundingSourceRetain  psaProjFundingSourceRetain;
+        #    ProjInvoiceTable            projInvoiceTable;
+        #    PSAContractLineItems        psaContractLineItems;
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAARRetainage)))
+        #    {
+        #        while select ContractLineNum from psaContractLineItems
+        #            join RecId from projInvoiceTable
+        #                where projInvoiceTable.ProjInvoiceProjId == psaContractLineItems.ProjInvoiceProjId
+        #                    && projInvoiceTable.ProjInvoiceProjId == this.ContractId
+        #        {
+        #            if (this.FundingType == ProjFundingType::Customer)
+        #            {
+        #                psaProjFundingSourceRetain.BillingRuleId       = psaContractLineItems.ContractLineNum;
+        #                psaProjFundingSourceRetain.ProjFundingSource   = this.RecId;
+        #                psaProjFundingSourceRetain.CustRetentionTermId = this.psaCustRetentionTermId;
+        #                psaProjFundingSourceRetain.insert();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #retentionForProject
+        #public void retentionForProject()
+        #{
+        #    PSAProjFundingSourceRetain  psaProjFundingSourceRetain;
+        #    ProjTable                   projTable;
+        #    ProjInvoiceTable            projInvoiceTable;
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAARRetainage)))
+        #    {
+        #    while select ProjId from projTable
+        #        join RecId from projInvoiceTable
+        #            where projInvoiceTable.ProjInvoiceProjId == projTable.ProjInvoiceProjId
+        #               && projInvoiceTable.ProjInvoiceProjId == this.ContractId
+        #               && (projTable.Type == ProjType::FixedPrice
+        #               || projTable.Type == ProjType::TimeMaterial)
+        #    {
+        #        if (this.FundingType == ProjFundingType::Customer)
+        #        {
+        #            psaProjFundingSourceRetain.ProjId = projTable.ProjId;
+        #            psaProjFundingSourceRetain.ProjFundingSource = this.RecId;
+        #            psaProjFundingSourceRetain.CustRetentionTermId = this.psaCustRetentionTermId;
+        #            psaProjFundingSourceRetain.insert();
+        #        }
+        #    }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #setInvoiceLocation
+        #private void setInvoiceLocation(CustTable _custTable)
+        #{
+        #    CustParameters              custParameters;
+        #    LogisticsLocationEntity     location;
+        #    LogisticsPostalAddress      postalAddress;
+        #    CustTable                   invoiceCustTable;
+        #
+        #    //Set the location field
+        #    custParameters = CustParameters::find();
+        #
+        #    if (_custTable.InvoiceAddress == InvoiceOrderAccount::InvoiceAccount &&
+        #        _custTable.InvoiceAccount &&
+        #        _custTable.InvoiceAccount != _custTable.AccountNum)
+        #    {
+        #        invoiceCustTable = CustTable::find(_custTable.InvoiceAccount);
+        #    }
+        #    else
+        #    {
+        #        invoiceCustTable = _custTable;
+        #    }
+        #
+        #    location = LogisticsLocationEntity::findLocation(invoiceCustTable, LogisticsLocationRoleType::Invoice);
+        #    if (location && location.parmLocationRecId())
+        #    {
+        #        // If an alt. invoice address exist, we will use this as invoice address
+        #        if (custParameters.CustNameFromVATNum)
+        #        {
+        #            this.setNameUsingVATNum( _custTable.vatNum,
+        #                                     _custTable.postalAddress().CountryRegionId,
+        #                                     location.parmLocationDescription(),
+        #                                     custParameters);
+        #        }
+        #        else
+        #        {
+        #            this.InvoiceName = location.parmLocationDescription();
+        #        }
+        #        this.InvoiceLocation = location.parmLocationRecId();
+        #    }
+        #    else
+        #    {
+        #        // Else we use the address on the customer
+        #        if (custParameters.CustNameFromVATNum)
+        #        {
+        #            this.setNameUsingVATNum(_custTable.vatNum,
+        #                                    _custTable.postalAddress().CountryRegionId,
+        #                                    _custTable.name(),
+        #                                    custParameters);
+        #        }
+        #        else
+        #        {
+        #            this.InvoiceName = invoiceCustTable.name();
+        #        }
+        #        postalAddress = DirParty::primaryPostalAddress(invoiceCustTable.Party);
+        #        this.InvoiceLocation =  postalAddress ? postalAddress.Location : 0;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #setNameUsingVATNum
+        #private void setNameUsingVATNum(VATNum                   _vatNum,
+        #                                AddressCountryRegionId   _countryRegionId,
+        #                                Name                     _name,
+        #                                CustParameters           _custParameters = CustParameters::find())
+        #{
+        #    TaxVATNumTable      taxVATNumTable;
+        #    CountryRegionType   countryRegionType;
+        #
+        #    taxVATNumTable = TaxVATNumTable::find(_vatNum, _countryRegionId);
+        #
+        #    if(taxVATNumTable.Name)
+        #    {
+        #        this.InvoiceName      = taxVATNumTable.Name;
+        #    }
+        #    else
+        #    {
+        #        switch(_custParameters.MandatoryInvoiceVATNum)
+        #        {
+        #            case TaxVATNumCountryRegionType::None:
+        #                this.InvoiceName = _name;
+        #                break;
+        #
+        #            case TaxVATNumCountryRegionType::DomesticEU:
+        #                countryRegionType = IntrastatCountryRegionParameters::type(_countryRegionId);
+        #                switch(countryRegionType)
+        #                {
+        #                    case CountryRegionType::Domestic:
+        #                    case CountryRegionType::EU:
+        #                        this.InvoiceName = '';
+        #                        break;
+        #
+        #                    default:
+        #                        this.InvoiceName = _name;
+        #                        break;
+        #                }
+        #                break;
+        #            case TaxVATNumCountryRegionType::EU:
+        #                countryRegionType = IntrastatCountryRegionParameters::type(_countryRegionId);
+        #                switch(countryRegionType)
+        #                {
+        #                    case CountryRegionType::EU:
+        #                        this.InvoiceName = '';
+        #                        break;
+        #
+        #                    default:
+        #                        this.InvoiceName = _name;
+        #                        break;
+        #                }
+        #                break;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #transferCustAccount
+        #/// <summary>
+        #///    Updates the address, payment, and other information for an invoice project from the customer associated with the invoice account for the invoice project.
+        #/// </summary>
+        #/// <param name="_custAccount">
+        #///    A customer account to use to initialize the invoice project.
+        #/// </param>
+        #/// <remarks>
+        #///    If the set up to prompt the user in project parameters, it asks whether to transfer the information.
+        #/// </remarks>
+        #public void transferCustAccount(CustAccount _custAccount)
+        #{
+        #    if (_custAccount)
+        #    {
+        #        if (ProjParameters::find().PromptTransfer)
+        #        {
+        #            if (Box::yesNo("@SYS418" + '\n\n' + CustTable::promptAddress(_custAccount), DialogButton::Yes) == DialogButton::Yes)
+        #            {
+        #                this.initFromCustTable(CustTable::find(_custAccount, false));
+        #            }
+        #        }
+        #        else
+        #        {
+        #            this.initFromCustTable(CustTable::find(_custAccount, false));
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validateDelete
+        #public boolean validateDelete()
+        #{
+        #    boolean ret = true;
+        #
+        #    // Trx exist with this funding source - don't delete
+        #    if (this.existsPostedTrx())
+        #    {
+        #        ret =  checkFailed("@SYS136417");
+        #    }
+        #
+        #    // Limits exist with this funding source
+        #    if (ret && this.existsOnFundingLimit())
+        #    {
+        #        ret =  checkFailed("@SYS136419");
+        #    }
+        #
+        #    if (ret && this.existsOnFundingRule())
+        #    {
+        #        ret =  checkFailed("@SYS136418");
+        #    }
+        #
+        #    if (ret)
+        #    {
+        #        ret = super();
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateField
+        #/// <summary>
+        #///     Validate a field for the current <c>ProjFundingsource</c> record.
+        #/// </summary>
+        #/// <param name="_fieldIdToCheck">
+        #///     The ID of the field to validate.
+        #/// </param>
+        #/// <returns>
+        #///     true if the field is valid; otherwise, false.
+        #/// </returns>
+        #public boolean validateField(FieldId _fieldIdToCheck)
+        #{
+        #    boolean retValue;
+        #
+        #    retValue = super(_fieldIdToCheck);
+        #
+        #    switch(_fieldIdToCheck)
+        #    {
+        #        case fieldNum(ProjFundingSource, ContractId) :
+        #            retValue = this.checkContactId();
+        #            break;
+        #
+        #        case fieldNum(ProjFundingSource, FundingType) :
+        #            retValue = this.checkFundingType();
+        #            break;
+        #
+        #        case fieldNum(ProjFundingSource, FundingSourceId) :
+        #            retValue = this.checkFundingSourceId();
+        #            break;
+        #
+        #        case fieldNum(ProjFundingSource, Party) :
+        #            retValue = this.checkParty();
+        #
+        #        case fieldNum(ProjFundingSource, CustAccount) :
+        #            retValue = this.checkCustomerAccount();
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #public boolean validateWrite()
+        #{
+        #    boolean ret = true;
+        #
+        #    ret = ret && this.checkFundingSourceId();
+        #
+        #    ret = ret && this.checkContactId();
+        #
+        #    if (this.FundingType == ProjFundingType::Customer)
+        #    {
+        #        ret = ret && this.checkCustomerAccount();
+        #        ret = ret && this.checkParty();
+        #    }
+        #
+        #    if (ret)
+        #    {
+        #        ret = super();
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #createFundingSource
+        #/// <summary>
+        #///     Creates a funding source for the given project contract and customer if there is not any already.
+        #/// </summary>
+        #/// <param name="_contractId">
+        #///     The contract ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_custAccount">
+        #///     The customer account of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="createDefaultFundingRule">
+        #///     Create the default funding rule for the contract.
+        #/// </param>
+        #/// <returns>
+        #///     The <c>RecID</c> of the newly created funding source if it is created; otherwise the <c>RecID</c> of the existing record found.
+        #/// </returns>
+        #public server static RecId createFundingSource(ProjInvoiceProjId _contractId, CustAccount _custAccount, NoYes createDefaultFundingRule = NoYes::Yes)
+        #{
+        #    ProjFundingSource           projFundingSourceLocal;
+        #    CustTable                   custTable;
+        #
+        #    if (_contractId && _custAccount)
+        #    {
+        #        projFundingSourceLocal = ProjFundingSource::findContractFundingSource(_contractId, _custAccount);
+        #        if (!projFundingSourceLocal)
+        #        {
+        #            ttsbegin;
+        #            custTable = CustTable::find(_custAccount);
+        #
+        #            projFundingSourceLocal.ContractId = _contractId;
+        #            projFundingSourceLocal.CustAccount = _custAccount;
+        #            projFundingSourceLocal.FundingType = ProjFundingType::Customer;
+        #            projFundingSourceLocal.FundingSourceId = ProjFundingSource::processFundingSourceId(custTable.name(), _contractId);
+        #            projFundingSourceLocal.Party = custTable.Party;
+        #            projFundingSourceLocal.transferCustAccount(_custAccount);
+        #            if (CustTable::isCustDKPublic(custTable.AccountNum))
+        #            {
+        #                projFundingSourceLocal.ContactPersonId = custTable.ContactPersonId;
+        #            }
+        #            projFundingSourceLocal.insert();
+        #            ttscommit;
+        #
+        #            if ((createDefaultFundingRule == NoYes::Yes)  && (ProjFundingRule::numberOfRulesForContract(_contractId) == 0))
+        #            {
+        #                ProjFundingRule::createDefaultFundingRule(_contractId, projFundingSourceLocal.RecId);
+        #            }
+        #        }
+        #    }
+        #
+        #    return projFundingSourceLocal.RecId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #exist
+        #/// <summary>
+        #/// Indicates whether the specified record in the <c>ProjFundingSource</c> table exists.
+        #/// </summary>
+        #/// <param name="_recId">
+        #/// The record ID of the <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// true if the specified record exists; otherwise, false.
+        #/// </returns>
+        #public static boolean exist(RecId _recId)
+        #{
+        #    if (_recId)
+        #    {
+        #        return (select projFundingSource where projFundingSource.RecId == _recId).RecId != 0;
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #existContractFundingSource
+        #/// <summary>
+        #/// Indicates whether the specified record in the <c>ProjFundingSource</c> table exists.
+        #/// </summary>
+        #/// <param name="_contractId">
+        #/// The contract ID of the <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_fundingSourceId">
+        #/// The funding source ID of the <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// true if the specified record exists; otherwise, false.
+        #/// </returns>
+        #public server static boolean existContractFundingSource(ProjInvoiceProjId _contractId, ProjFundingSourceId _fundingSourceId)
+        #{
+        #    if (_contractId && _fundingSourceId)
+        #    {
+        #        return (select firstonly projFundingSource where projFundingSource.ContractId == _contractId && projFundingSource.FundingSourceId == _fundingSourceId).RecId != 0;
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #/// <summary>
+        #/// Finds the specified record in the <c>ProjFundingSource</c> table.
+        #/// </summary>
+        #/// <param name="_recId">
+        #/// The record ID of the <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>ProjFundingSource</c> table; otherwise, an empty record.
+        #/// </returns>
+        #public static ProjFundingSource find(RecId _recId, boolean _forUpdate = false)
+        #{
+        #    ProjFundingSource   projFundingSource = null;
+        #
+        #    projFundingSource.selectForUpdate(_forUpdate);
+        #
+        #    if (_recId)
+        #    {
+        #        select projFundingSource where projFundingSource.RecId == _recId;
+        #    }
+        #
+        #    return projFundingSource;
+        #}
+      ENDSOURCE
+      SOURCE #findContractFundingSource
+        #/// <summary>
+        #/// Finds the specified record in the <c>ProjFundingSource</c> table.
+        #/// </summary>
+        #/// <param name="_contractId">
+        #/// The contract ID of the <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_fundingSourceId">
+        #/// The funding source ID of the <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>ProjFundingSource</c> table; otherwise, an empty record.
+        #/// </returns>
+        #public static ProjFundingSource findContractFundingSource(ProjInvoiceProjId _contractId, ProjFundingSourceId _fundingSourceId, boolean _forUpdate = false)
+        #{
+        #    ProjFundingSource   projFundingSource = null;
+        #
+        #    projFundingSource.selectForUpdate(_forUpdate);
+        #
+        #    if (_contractId && _fundingSourceId)
+        #    {
+        #        select projFundingSource where projFundingSource.ContractId == _contractId && projFundingSource.FundingSourceId == _fundingSourceId;
+        #    }
+        #
+        #    return projFundingSource;
+        #}
+      ENDSOURCE
+      SOURCE #findCustAccount
+        #public static ProjFundingSource findCustAccount(ProjInvoiceProjId _contractId, boolean _forUpdate = false)
+        #{
+        #    ProjFundingSource   projFundingSource = null;
+        #
+        #    projFundingSource.selectForUpdate(_forUpdate);
+        #
+        #    if (_contractId)
+        #    {
+        #        select firstonly projFundingSource
+        #            where projFundingSource.ContractId == _contractId &&
+        #                  projFundingSource.FundingType == ProjFundingType::Customer &&
+        #                  projFundingSource.CustAccount != '';
+        #    }
+        #
+        #    return projFundingSource;
+        #}
+      ENDSOURCE
+      SOURCE #fundingSourceForSalesOrder
+        #/// <summary>
+        #/// Retrieves the first funding source that is associated with the contract.
+        #/// </summary>
+        #/// <param name="_projInvoiceProjId">
+        #/// The contract ID of the <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// The first funding source record ID that is associated with the contract.
+        #/// </returns>
+        #public static ProjFundingSourceRefId fundingSourceForSalesOrder(ProjInvoiceProjId _projInvoiceProjId)
+        #{
+        #    ProjFundingSource   projFundingSource;
+        #
+        #    select firstonly FundingSourceId from projFundingSource
+        #            where projFundingSource.ContractId == _projInvoiceProjId;
+        #
+        #    return projFundingSource.RecId;
+        #}
+      ENDSOURCE
+      SOURCE #getCustomerDefaultFundingSource
+        #/// <summary>
+        #/// Gets the default funding sources by contract and customer.
+        #/// </summary>
+        #/// <param name="_contractId">
+        #///  The contract ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_custAccount">
+        #///  The customer ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <returns>
+        #///  The <c>RecID</c> of the default funding source.
+        #/// </returns>
+        #public static RefRecId getCustomerDefaultFundingSource(ProjInvoiceProjId _contractId, CustAccount _custAccount)
+        #{
+        #    RefRecId            projFundingSourceRefRecId;
+        #    List                projFundingSourceList = ProjFundingSource::getFundingSourcesByCustomer(_contractId, _custAccount);
+        #    ListEnumerator      projFundingSourceListEnumerator;
+        #
+        #    if (projFundingSourceList.elements() == 1)
+        #    {
+        #        projFundingSourceListEnumerator =   projFundingSourceList.getEnumerator();
+        #        projFundingSourceListEnumerator.moveNext();
+        #        projFundingSourceRefRecId  =   projFundingSourceListEnumerator.current();
+        #    }
+        #
+        #    return projFundingSourceRefRecId;
+        #}
+      ENDSOURCE
+      SOURCE #getFundingSources
+        #/// <summary>
+        #/// Retrieves a list of the funding sources that are associated with the project contract.
+        #/// </summary>
+        #/// <param name="_projTrans">
+        #/// The <c>projTrans</c> object that will be used by this transaction.
+        #/// </param>
+        #/// <returns>
+        #/// A list of funding sources that are associated to the project contract and are used in any funding
+        #/// rule.
+        #/// </returns>
+        #public static List getFundingSources( ProjTrans _projTrans )
+        #{
+        #    ProjFundingSource           projFundingSource;
+        #    ProjFundingRule             projFundingRule;
+        #    ProjFundingRuleAllocation   projFundingRuleAllocation;
+        #    ProjTable                   projTable;
+        #    ProjInvoiceTable            projInvoiceTable;
+        #    List                        projFundingSourceList = new List( Types::Int64 );
+        #
+        #    projTable = ProjTable::find(_projTrans.projId());
+        #    projInvoiceTable = ProjInvoiceTable::find(projTable.ProjInvoiceProjId);
+        #
+        #    while select RecId
+        #        from projFundingSource         group by projFundingSource.RecId  where ( projFundingSource.ContractId               == projInvoiceTable.ProjInvoiceProjId   )
+        #        join RecId,ContractId          from projFundingRule              where ( projFundingRule.ContractId                 == projFundingSource.ContractId         )
+        #        join FundingRule,FundingSource from projFundingRuleAllocation    where ( projFundingRuleAllocation.FundingRule      == projFundingRule.RecId                )
+        #    {
+        #        projFundingSourceList.addEnd( projFundingSource.RecId );
+        #    }
+        #
+        #    return  projFundingSourceList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getFundingSourcesByCustomer
+        #/// <summary>
+        #/// Gets the funding sources by contract, customer and grant.
+        #/// </summary>
+        #/// <param name="_contractId">
+        #/// The contract ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_custAccount">
+        #/// The account number of <c>CustTable</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// A List of funding sources associated to the project contract and customer; and those associated
+        #/// with the project grant.
+        #/// </returns>
+        #public static List getFundingSourcesByCustomer(ProjInvoiceProjId _contractId, CustAccount _custAccount)
+        #{
+        #    ProjFundingSource       projFundingSource;
+        #    List                    projFundingSourceList = new List(Types::Int64);
+        #    Query                   query;
+        #    QueryBuildDataSource    qbdsProjFundingSource;
+        #    QueryBuildDataSource    qbdsProjFundingSourceByGrant;
+        #    QueryBuildDataSource    qbdsProjGrant;
+        #    QueryBuildDataSource    qbdsCustTable;
+        #    QueryRun                queryRun;
+        #
+        #    if (_contractId && _custAccount)
+        #    {
+        #
+        #        query = new Query();
+        #        query.queryType(QueryType::Union);
+        #
+        #        qbdsProjFundingSource = query.addDataSource(tableNum(ProjFundingSource));
+        #        qbdsCustTable = qbdsProjFundingSource.addDataSource(tableNum(CustTable));
+        #        qbdsCustTable.joinMode(JoinMode::ExistsJoin);
+        #        qbdsCustTable.addLink(fieldNum(ProjFundingSource, Party),
+        #                                                fieldNum(CustTable, Party));
+        #        qbdsProjFundingSource.unionType(UnionType::Union);
+        #        qbdsProjFundingSource.fields().dynamic(false);  //This will enable to add the fields needed; if dynamics is yes all the fields will be automatically added
+        #        qbdsProjFundingSource.fields().clearFieldList();
+        #        qbdsProjFundingSource.fields().addField(fieldNum(ProjFundingSource, RecId));
+        #        qbdsProjFundingSource.addRange(fieldNum(ProjFundingSource, ContractId)).value(_contractId);
+        #        qbdsCustTable.addRange(fieldNum(CustTable, AccountNum)).value(_custAccount);
+        #        qbdsProjFundingSource.addRange(fieldNum(ProjFundingSource, FundingType)).value(enum2str(ProjFundingType::Customer));
+        #
+        #        qbdsProjFundingSourceByGrant = query.addDataSource(tableNum(ProjFundingSource));
+        #        qbdsProjFundingSourceByGrant.unionType(UnionType::Union);
+        #        qbdsProjFundingSourceByGrant.fields().dynamic(false);   //This will enable to add the fields needed; if dynamic is yes all the fields will be automatically added
+        #        qbdsProjFundingSourceByGrant.fields().clearFieldList();
+        #        qbdsProjFundingSourceByGrant.fields().addField(fieldNum(ProjFundingSource, RecId));
+        #        qbdsProjGrant = qbdsProjFundingSourceByGrant.addDataSource(tableNum(ProjGrant));
+        #        qbdsProjGrant.joinMode(JoinMode::ExistsJoin);
+        #        qbdsProjGrant.fetchMode(QueryFetchMode::One2One);
+        #        qbdsProjGrant.addLink(fieldNum(ProjFundingSource, ProjGrant),
+        #                                                    fieldNum(ProjGrant, RecId));
+        #        qbdsProjFundingSourceByGrant.addRange(fieldNum(ProjFundingSource, ContractId)).value(_contractId);
+        #        qbdsProjFundingSourceByGrant.addRange(fieldNum(ProjFundingSource, FundingType)).value(enum2str(ProjFundingType::Grant));
+        #        qbdsProjGrant.addRange(fieldNum(ProjGrant, CustAccount)).value(_custAccount);
+        #
+        #        queryRun = new QueryRun(query);
+        #        while (queryRun.next())
+        #        {
+        #            projFundingSource = queryRun.get(tableNum(ProjFundingSource));
+        #            projFundingSourceList.addEnd( projFundingSource.RecId );
+        #        }
+        #    }
+        #
+        #    return projFundingSourceList;
+        #}
+      ENDSOURCE
+      SOURCE #hasCustomerDefaultFundingSource
+        #/// <summary>
+        #/// Determines whether the funding source exists for the given contract and customer.
+        #/// </summary>
+        #/// <param name="_contractId">
+        #/// The contract ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_custAccount">
+        #/// The customer ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// true if funding source exist for the given contract and customer; otherwise, false.
+        #/// </returns>
+        #public static boolean hasCustomerDefaultFundingSource(ProjInvoiceProjId _contractId, CustAccount _custAccount)
+        #{
+        #    return ProjFundingSource::getFundingSourcesByCustomer(_contractId, _custAccount).elements() != 0;
+        #}
+      ENDSOURCE
+      SOURCE #isExternalFunding
+        #/// <summary>
+        #///     Determines whether the specified record in the <c>ProjFundingSource</c> table is an external funding source.
+        #/// </summary>
+        #/// <param name="projFundingSourceRefId">
+        #///     The record ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <returns>
+        #///     true if the funding source type is customer or grant; otherwise, false.
+        #/// </returns>
+        #public static boolean isExternalFunding(ProjFundingSourceRefId projFundingSourceRefId)
+        #{
+        #    ProjFundingSource   projFundingSource;
+        #    boolean             retValue = false;
+        #
+        #    // Do not generate a DB call for empty RefRecID
+        #    if (projFundingSourceRefId != 0)
+        #    {
+        #        select FundingType, RecId from projFundingSource where projFundingSource.RecId == projFundingSourceRefId;
+        #
+        #        if (projFundingSource)
+        #        {
+        #            // Grant and Customer are external funding source.  Organization and OnHold are internal
+        #            if ((projFundingSource.FundingType == ProjFundingType::Customer) || (projFundingSource.FundingType == ProjFundingType::Grant))
+        #            {
+        #                retValue = true;
+        #            }
+        #        }
+        #    }
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #lookupFundingSourceByContract
+        #/// <summary>
+        #/// Displays the lookup for a qualifying project funding source that is filtered by contract.
+        #/// </summary>
+        #/// <param name="_formReferenceControl">
+        #/// The calling reference control.
+        #/// </param>
+        #/// <param name="_contractID">
+        #/// The contract ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_custAccount">
+        #/// The account number of <c>CustTable</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// The List of funding sources associated to the project contract and customer;
+        #/// </returns>
+        #public client static ProjFundingSource lookupFundingSourceByContract(FormReferenceControl _formReferenceControl, ProjInvoiceProjId _contractID, CustAccount _custAccount = '')
+        #{
+        #    SysReferenceTableLookup     sysReferenceTableLookup;
+        #    Query                       query;
+        #    QueryBuildDataSource        queryBuildDataSource;
+        #
+        #    sysReferenceTableLookup = SysReferenceTableLookup::newParameters(tableNum(ProjFundingSource), _formReferenceControl);
+        #    sysReferenceTableLookup.addLookupfield(fieldNum(ProjFundingSource, FundingSourceId));
+        #    sysReferenceTableLookup.addLookupMethod(tableMethodStr(ProjFundingSource, name));
+        #    sysReferenceTableLookup.addLookupfield(fieldNum(ProjFundingSource, FundingType));
+        #    sysReferenceTableLookup.addLookupfield(fieldNum(ProjFundingSource, CustAccount));
+        #
+        #    query = new Query();
+        #    queryBuildDataSource = query.addDataSource(tableNum(ProjFundingSource));
+        #    queryBuildDataSource.addRange(fieldNum(ProjFundingSource, ContractId)).value(queryValue(_contractID));
+        #    queryBuildDataSource.addRange(fieldNum(ProjFundingSource, FundingType)).value(SysQuery::valueNot(ProjFundingType::OnHoldFundingSource));
+        #
+        #    if (_custAccount)
+        #    {
+        #        queryBuildDataSource.addRange(fieldNum(ProjFundingSource, CustAccount)).value(queryValue(_custAccount));
+        #        queryBuildDataSource.addRange(fieldNum(ProjFundingSource, FundingType)).value(queryValue(ProjFundingType::Customer));
+        #    }
+        #
+        #    sysReferenceTableLookup.parmQuery(query);
+        #
+        #    return sysReferenceTableLookup.performFormLookup() as ProjFundingSource;
+        #}
+      ENDSOURCE
+      SOURCE #lookupFundingSourceByContractAndCustomer
+        #/// <summary>
+        #/// Shows the lookup for the qualifying project funding source, filtered by contract and customer.
+        #/// </summary>
+        #/// <param name="_formReferenceControl">
+        #/// The calling reference control.
+        #/// </param>
+        #/// <param name="_contractID">
+        #/// The contract ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_custAccount">
+        #/// The account number of <c>CustTable</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// The list of funding sources that are associated to the project contract and customer and those
+        #/// associated with the project grant.
+        #/// </returns>
+        #public client static ProjFundingSource lookupFundingSourceByContractAndCustomer(FormReferenceControl _formReferenceControl, ProjInvoiceProjId _contractID, CustAccount _custAccount)
+        #{
+        #    SysReferenceTableLookup     sysReferenceTableLookup;
+        #    Query                       query;
+        #    QueryBuildDataSource        queryBuildDataSource;
+        #    QueryBuildDataSource        qbdsProjFundingSourceByGrant;
+        #    QueryBuildDataSource        qbdsProjGrant;
+        #    QueryBuildDataSource        qbdsCustTable;
+        #
+        #    sysReferenceTableLookup = SysReferenceTableLookup::newParameters(tableNum(ProjFundingSource), _formReferenceControl);
+        #    sysReferenceTableLookup.addLookupfield(fieldNum(ProjFundingSource, FundingSourceId));
+        #    sysReferenceTableLookup.addLookupMethod(tableMethodStr(ProjFundingSource, name));
+        #    sysReferenceTableLookup.addLookupfield(fieldNum(ProjFundingSource, FundingType));
+        #    sysReferenceTableLookup.addLookupfield(fieldNum(ProjFundingSource, CustAccount));
+        #
+        #    query = new Query();
+        #    queryBuildDataSource = query.addDataSource(tableNum(ProjFundingSource));
+        #    qbdsCustTable = queryBuildDataSource.addDataSource(tableNum(CustTable));
+        #    qbdsCustTable.joinMode(JoinMode::ExistsJoin);
+        #    qbdsCustTable.addLink(fieldNum(ProjFundingSource, Party),
+        #                                                fieldNum(CustTable, Party));
+        #    queryBuildDataSource.addRange(fieldNum(ProjFundingSource, ContractId)).value(queryValue(_contractID));
+        #    queryBuildDataSource.addRange(fieldNum(ProjFundingSource, FundingType)).value(queryValue(ProjFundingType::Customer));
+        #    qbdsCustTable.addRange(fieldNum(CustTable, AccountNum)).value(_custAccount);
+        #
+        #    query.queryType(QueryType::Union);
+        #
+        #    qbdsProjFundingSourceByGrant = query.addDataSource(tableNum(ProjFundingSource));
+        #    qbdsProjFundingSourceByGrant.unionType(UnionType::Union);
+        #    qbdsProjGrant = qbdsProjFundingSourceByGrant.addDataSource(tableNum(ProjGrant));
+        #    qbdsProjGrant.joinMode(JoinMode::ExistsJoin);
+        #    qbdsProjGrant.fetchMode(QueryFetchMode::One2One);
+        #    qbdsProjGrant.addLink(fieldNum(ProjFundingSource, ProjGrant),
+        #                                                fieldNum(ProjGrant, RecId));
+        #    qbdsProjFundingSourceByGrant.addRange(fieldNum(ProjFundingSource, ContractId)).value(_contractID);
+        #    qbdsProjFundingSourceByGrant.addRange(fieldNum(ProjFundingSource, FundingType)).value(enum2str(ProjFundingType::Grant));
+        #    qbdsProjGrant.addRange(fieldNum(ProjGrant, CustAccount)).value(_custAccount);
+        #
+        #    sysReferenceTableLookup.parmQuery(query);
+        #
+        #    return sysReferenceTableLookup.performFormLookup() as ProjFundingSource;
+        #}
+      ENDSOURCE
+      SOURCE #lookupFundingSourceByProjId
+        #/// <summary>
+        #/// Shows the lookup for a qualifying project funding source, filtered by the project ID.
+        #/// </summary>
+        #/// <param name="_caller">
+        #/// The calling string control.
+        #/// </param>
+        #/// <param name="_projId">
+        #/// The project ID of the <c>ProjFundingSource</c> record.
+        #/// </param>
+        #public client static void lookupFundingSourceByProjId(FormControl _caller, ProjId _projId)
+        #{
+        #    Query                       query;
+        #    ProjFundingSource           projFundingSource;
+        #    QueryBuildDataSource        queryBuildDataSource;
+        #    ProjInvoiceProjId           contractID = ProjTable::find(_projId).ProjInvoiceProjId;
+        #    SysTableLookup              sysTableLookup = SysTableLookup::newParameters(projFundingSource.TableId, _caller);
+        #
+        #    query = new Query();
+        #    queryBuildDataSource = query.addDataSource(tableNum(ProjFundingSource));
+        #    queryBuildDataSource.addSelectionField(fieldNum(ProjFundingSource, Party));
+        #    queryBuildDataSource.addSelectionField(fieldNum(ProjFundingSource, ProjGrant));
+        #    queryBuildDataSource.addRange(fieldNum(ProjFundingSource, ContractId)).value(queryValue(contractID));
+        #    queryBuildDataSource.addRange(fieldNum(ProjFundingSource, FundingType)).value(SysQuery::valueNot(ProjFundingType::OnHoldFundingSource));
+        #
+        #    sysTableLookup.addLookupfield(fieldNum(ProjFundingSource, FundingSourceId));
+        #    sysTableLookup.addLookupMethod(tableMethodStr(ProjFundingSource, name));
+        #    sysTableLookup.addLookupfield(fieldNum(ProjFundingSource, FundingType));
+        #
+        #    sysTableLookup.parmQuery(query);
+        #    sysTableLookup.performFormLookup();
+        #}
+      ENDSOURCE
+      SOURCE #lookupOrganization
+        #/// <summary>
+        #///    Provides a lookup of projects for the string control that is passed in as a parameter.
+        #/// </summary>
+        #/// <param name="ctrl">
+        #///    The string control on which to perform the lookup.
+        #/// </param>
+        #/// <remarks>
+        #///    The list of projects returned are WIP projects that are associated with the WIP project ID that is passed in as a parameter. The list displays the project ID, name and type fields.
+        #/// </remarks>
+        #public client static void lookupOrganization(FormStringControl ctrl)
+        #{
+        #    SysTableLookup       sysTableLookup = SysTableLookup::newParameters(tableNum(OMOperatingUnit), ctrl);
+        #    Query                query = new Query();
+        #    QueryBuildDataSource queryBuildDataSource;
+        #
+        #    queryBuildDataSource = query.addDataSource(tableNum(OMOperatingUnit));
+        #    queryBuildDataSource.addRange(fieldNum( OMOperatingUnit, omOperatingUnitType)).value(SysQuery::value(OMOperatingUnitType::OMBusinessUnit));
+        #
+        #    sysTableLookup.addLookupfield(fieldNum(OMOperatingUnit, Name));
+        #
+        #    sysTableLookup.parmQuery(query);
+        #    sysTableLookup.performFormLookup();
+        #}
+      ENDSOURCE
+      SOURCE #numberOfFundingSources
+        #/// <summary>
+        #/// Gets the number of funding source assigned to a contract.
+        #/// </summary>
+        #/// <param name="_contractId">
+        #/// The contract being processed.
+        #/// </param>
+        #/// <returns>
+        #/// The number of funding sources defined on the contract
+        #/// </returns>
+        #[SysClientCacheDataMethodAttribute(true)]
+        #public static int64 numberOfFundingSources(ProjInvoiceProjId _contractId)
+        #{
+        #    return (select count(RecId) from projFundingSource where projFundingSource.ContractId == _contractId).RecId;
+        #}
+      ENDSOURCE
+      SOURCE #numberOfFundingSourcesByFundingType
+        #/// <summary>
+        #/// Gets the number of funding sources that are assigned to a contract with the specified funding type.
+        #/// </summary>
+        #/// <param name="_contractId">
+        #/// The ID of the contract being processed.
+        #/// </param>
+        #/// <param name="_fundingType">
+        #/// The type of funding for which to check.
+        #/// </param>
+        #/// <returns>
+        #/// The number of funding sources that are assigned to a contract.
+        #/// </returns>
+        #public static int64 numberOfFundingSourcesByFundingType(ProjInvoiceProjId _contractId, ProjFundingType _fundingType = ProjFundingType::Customer)
+        #{
+        #    ProjFundingSource   projFundingSource;
+        #    int64               numberOfFundingSources = 0;
+        #
+        #    if (_contractId)
+        #    {
+        #        select count(RecId) from projFundingSource
+        #            where projFundingSource.ContractId == _contractId &&
+        #                projFundingSource.FundingType == _fundingType;
+        #
+        #        numberOfFundingSources =  projFundingSource.RecId;
+        #    }
+        #
+        #    return numberOfFundingSources;
+        #}
+      ENDSOURCE
+      SOURCE #processFundingSourceId
+        #/// <summary>
+        #///     This method is used to manipulate the projFundingSourceId if already exists.
+        #/// </summary>
+        #/// <param name="_fundingSourceId">
+        #///     The FundingSourceId of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <param name="_contractId">
+        #///     The contract ID of <c>ProjFundingSource</c> record.
+        #/// </param>
+        #/// <returns>
+        #///     return <c>ProjFundingSourceId</c> value.
+        #/// </returns>
+        #/// <remarks>
+        #///     Return manupulated <c>projFundingSourceId</c> if already exist Otherwise Original <c>projFundingSourceId</c>.
+        #/// </remarks>
+        #public server static ProjFundingSourceId processFundingSourceId(ProjFundingSourceId _fundingSourceId , ProjInvoiceProjId _contractId)
+        #{
+        #    ProjFundingSource    projFundingSourceLocal;
+        #    ProjFundingSourceId  fundingSourceId = _fundingSourceId;
+        #
+        #    if(strLen(fundingSourceId) >= 19)
+        #    {
+        #        fundingSourceId = subStr(fundingSourceId, 1, 18);
+        #    }
+        #
+        #    select count(RecId) from projFundingSourceLocal
+        #        where projFundingSourceLocal.ContractId == _contractId
+        #            && projFundingSourceLocal.FundingSourceId like fundingSourceId + '*';
+        #
+        #    if(projFundingSourceLocal.RecId > 0)
+        #    {
+        #        fundingSourceId = fundingSourceId + num2Str0(int642int(projFundingSourceLocal.RecId), 2);
+        #    }
+        #
+        #    return fundingSourceId;
+        #}
+        #
+        #
+        #
+        #
+        #
+        #
+      ENDSOURCE
+      SOURCE #resolveReferenceByContractFSName
+        #/// <summary>
+        #/// Resolves the lookup of a contract.
+        #/// </summary>
+        #/// <param name="_formReferenceControl">
+        #/// The control on the form being used.
+        #/// </param>
+        #/// <param name="_contractId">
+        #/// The contract ID that is being processed.
+        #/// </param>
+        #/// <returns>
+        #/// The reference record for the contract.
+        #/// </returns>
+        #public client static ProjFundingSource resolveReferenceByContractFSName(FormReferenceControl _formReferenceControl, ProjInvoiceProjId _contractId)
+        #{
+        #    ProjFundingSource   selectedRecord;
+        #    ProjFundingSourceId projFundingSourceId;
+        #
+        #    projFundingSourceId = _formReferenceControl.filterValue(AbsoluteFieldBinding::construct(fieldStr(ProjFundingSource, FundingSourceId), tableStr(ProjFundingSource))).value();
+        #
+        #    select selectedRecord where selectedRecord.FundingSourceId == projFundingSourceId && selectedRecord.ContractId == _contractId;
+        #
+        #    if (selectedRecord.RecId == 0)
+        #    {
+        #        return null;
+        #    }
+        #
+        #    return selectedRecord;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

@@ -1,0 +1,4246 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SalesInvoiceJournalPost
+    PROPERTIES
+      Name                #SalesInvoiceJournalPost
+      Extends             #SalesInvoiceJournalPostBase
+      RunOn               #Server
+      Origin              #{2D170000-0000-1000-A271-3E3ABC7DA336}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #addToInventReportDimHistory
+        #/// <summary>
+        #///    Adds the <c>InventReportDimHistory</c> records to a record sorted list.
+        #/// </summary>
+        #/// <param name="_journalLine">
+        #///    The customer invoice transaction for which to create the <c>InventReportDimHistory</c> records.
+        #/// </param>
+        #protected void addToInventReportDimHistory(Common _journalLine)
+        #{
+        #    super(_journalLine);
+        #}
+      ENDSOURCE
+      SOURCE #adjustAmountsMST_W
+        #/// <summary>
+        #/// Adjusts invoice amounts.
+        #/// </summary>
+        #protected void adjustAmountsMST_W()
+        #{
+        #    AmountAdjustEngineCustInvoice_W::adjustInvoiceJour(custInvoiceJour);
+        #}
+      ENDSOURCE
+      SOURCE #afterLinePost
+        #protected void afterLinePost()
+        #{
+        #    super();
+        #    if (countryRegionIsRU)
+        #    {
+        #        if (this.usePerLineCorrection_RU())
+        #        {
+        #            ledgerVoucher.findLedgerVoucherObject().parmCorrection(oldCorrection_RU);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #assetId_RU
+        #protected RAssetIdOpen assetId_RU()
+        #{
+        #    return salesLine.AssetId_RU;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #beforeLinePost
+        #protected void beforeLinePost()
+        #{
+        #    LedgerVoucherObject voucherObject;
+        #    super();
+        #
+        #    if (countryRegionIsRU)
+        #    {
+        #        if (this.usePerLineCorrection_RU())
+        #        {
+        #            voucherObject = ledgerVoucher.findLedgerVoucherObject();
+        #            oldCorrection_RU = voucherObject.parmCorrection();
+        #            voucherObject.parmCorrection(this.isCorrectionLine_RU());
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #bondMultipleLedgerBalances_RU
+        #private void bondMultipleLedgerBalances_RU(boolean _secondaryAmountPostingEnabled = false)
+        #{
+        #    LedgerBondClient_RU      ledgerBondClient = ledgerVoucher.findLedgerVoucherObject().ledgerBondClient_RU();
+        #    LedgerBondId_RU          vendBalanceVRefId;
+        #    TmpLedgerBondLogTable_RU logTable = ledgerBondClient.log2Table(ledgerBondClient.currentLog(ledgerVoucher.lastTransDate()));
+        #    TmpLedgerBondLogTable_RU balanceLogTable;
+        #    Amount                   amountToBond;
+        #    boolean                  isSecondaryAmount;
+        #    container                offsetLog;
+        #    LedgerBondId_RU          positiveDiscVrefID;
+        #    LedgerBondId_RU          negativeDiscVrefID;
+        #
+        #    void bondPair()
+        #    {
+        #        if (! isSecondaryAmount)
+        #        {
+        #            amountToBond = ledgerBondClient.bondTransObject(logTable.BondId).remainAmountCur();
+        #            if (amountToBond)
+        #            {
+        #                ledgerBondClient.bondVRef2VRef(vendBalanceVRefId,
+        #                                                logTable.BondId,
+        #                                                amountToBond,
+        #                                                LedgerBondAmountType_RU::Currency,
+        #                                                ! logTable.Crediting ?
+        #                                                LedgerBondOrder_RU::CreditToDebit :
+        #                                                LedgerBondOrder_RU::DebitToCredit);
+        #            }
+        #        }
+        #        else
+        #        {
+        #            ledgerBondClient.bondVRef2VRef(vendBalanceVRefId,
+        #                                        logTable.BondId,
+        #                                        logTable.AmountMSTSecondary,
+        #                                        LedgerBondAmountType_RU::MSTSecondary,
+        #                                        ! logTable.Crediting ?
+        #                                            LedgerBondOrder_RU::CreditToDebit :
+        #                                            LedgerBondOrder_RU::DebitToCredit);
+        #        }
+        #    }
+        #
+        #    if (ledgerBondClient
+        #        && ledgerBondClient.findVRefByPostingType(LedgerPostingType::CustBalance) != 0)
+        #    {
+        #        if (endDiscVrefIDs)
+        #        {
+        #            [positiveDiscVrefID, negativeDiscVrefID] = endDiscVrefIDs;
+        #        }
+        #        balanceLogTable.setTmpData(logTable);
+        #
+        #        while select balanceLogTable
+        #            where balanceLogTable.Posting == LedgerPostingType::CustBalance
+        #        {
+        #            isSecondaryAmount = _secondaryAmountPostingEnabled &&
+        #                                (! balanceLogTable.AmountMST && balanceLogTable.AmountMSTSecondary);
+        #
+        #            vendBalanceVRefId = balanceLogTable.BondId;
+        #
+        #            offsetLog = conNull();
+        #
+        #            while select logTable
+        #                where (!_secondaryAmountPostingEnabled ||
+        #                        (
+        #                            (!logTable.AmountMST  == isSecondaryAmount )  &&
+        #                            (logTable.AmountMST || logTable.AmountMSTSecondary)
+        #                        )
+        #                      ) &&
+        #                      logTable.CurrencyCode == balanceLogTable.CurrencyCode &&
+        #                      (logTable.Crediting    != balanceLogTable.Crediting
+        #                       // total discount should be corresponging to balance tansaction
+        #                       // but have the same direction
+        #                       || (
+        #                            positiveDiscVrefID
+        #                         && logTable.BondId == positiveDiscVrefID
+        #                         && logTable.Crediting == balanceLogTable.Crediting
+        #                       )
+        #                       || (
+        #                            negativeDiscVrefID
+        #                         && logTable.BondId == negativeDiscVrefID
+        #                         && logTable.Crediting == balanceLogTable.Crediting
+        #                       )
+        #                      )
+        #                      &&
+        #                      logTable.Correcting   == balanceLogTable.Correcting   &&
+        #                      logTable.BondId       != balanceLogTable.BondId       &&
+        #                      logTable.Posting      != LedgerPostingType::CustBalance
+        #            {
+        #                if (_secondaryAmountPostingEnabled)
+        #                {
+        #                    bondPair();
+        #                }
+        #                else
+        #                {
+        #                    offsetLog += logTable.BondId;
+        #                }
+        #            }
+        #
+        #            if (! _secondaryAmountPostingEnabled)
+        #            {
+        #                ledgerBondClient.bondVRef2Log(vendBalanceVRefId, offsetLog, true);
+        #            }
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #bypassCustomerCreditCheck
+        #/// <summary>
+        #/// Indicates whether a customer credit check should be bypassed.
+        #/// </summary>
+        #/// <returns>
+        #/// <c>NoYes::Yes</c> if the customer credit check should be bypassed; otherwise, <c>NoYes::No</c>.
+        #/// </returns>
+        #protected NoYes bypassCustomerCreditCheck()
+        #{
+        #    return salesTable.creditCardBypassCreditLimit();
+        #}
+      ENDSOURCE
+      SOURCE #canPostEndDisc
+        #/// <summary>
+        #/// Indicates whether end discounts can be posted.
+        #/// </summary>
+        #/// <returns>
+        #/// Always returns true.
+        #/// </returns>
+        #protected boolean canPostEndDisc()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #canPostLedger
+        #/// <summary>
+        #/// Indicates whether ledger postings can occur.
+        #/// </summary>
+        #/// <returns>
+        #/// Always returns true.
+        #/// </returns>
+        #protected boolean canPostLedger()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #canPostRoundOff
+        #/// <summary>
+        #/// Indicates whether end roundings can be posted.
+        #/// </summary>
+        #/// <returns>
+        #/// Always returns true.
+        #/// </returns>
+        #protected boolean canPostRoundOff()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #canPostTax
+        #/// <summary>
+        #/// Indicates whether tax can be posted.
+        #/// </summary>
+        #/// <returns>
+        #/// Always returns true.
+        #/// </returns>
+        #protected boolean canPostTax()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #cashDiscountAmount
+        #protected AmountCur cashDiscountAmount()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #cashDiscPercent
+        #/// <summary>
+        #/// Gets the cash discount percentage.
+        #/// </summary>
+        #/// <returns>
+        #/// A cash discount percentage.
+        #/// </returns>
+        #protected DiscPct cashDiscPercent()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #checkBeforePost_MY
+        #// <GMY>
+        #private void checkBeforePost_MY()
+        #{
+        #    AmountCur  totalAmount;
+        #    totalAmount = salesTotals.totalAmount();
+        #
+        #    if (totalAmount < 0 || (totalAmount >= 0 && salesTable.hasLinesWithRefrence_MY()))
+        #    {
+        #        if (!SalesTable.CreditNoteReasonCode)
+        #        {
+        #            throw error("@SYP4860740");
+        #        }
+        #    }
+        #}
+        #// </GMY>
+      ENDSOURCE
+      SOURCE #checkBeforePostingLine
+        #/// <summary>
+        #/// Performs validation before posting a line.
+        #/// </summary>
+        #protected void checkBeforePostingLine()
+        #{
+        #    RefRecId    psdsDocuRefRecId;
+        #
+        #    InventDim       inventDimCriteria;
+        #    InventDimParm   inventDimParm;
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]) && salesLine.isStocked())
+        #    {
+        #        if (SalesFormLetter::useInventOwnerIdRange_RU(salesParmTable.salesParmUpdate().SplitInventOwnerId_RU,
+        #                                                      this.documentStatus(),
+        #                                                      salesLine))
+        #        {
+        #            inventDimCriteria.InventOwnerId_RU = salesParmLine.InventOwnerId_RU;
+        #            inventDimParm.InventOwnerIdFlag_RU = NoYes::Yes;
+        #        }
+        #        if (salesParmLine.RemainBefore !=
+        #            (salesLine.remainSalesFinancial_RU(inventDimCriteria, inventDimParm) + salesLine.remainSalesPhysical_RU(inventDimCriteria, inventDimParm)))
+        #        {
+        #            throw error("@SYS23025");
+        #        }
+        #    }
+        #    else
+        #    {
+        #        if (custInvoiceTrans.RemainBefore  != (salesLine.RemainSalesFinancial + salesLine.RemainSalesPhysical) ||
+        #            salesLine.RemainInventPhysical != salesParmLine.RemainBeforeInventPhysical)
+        #        {
+        #            throw error("@SYS23025");
+        #        }
+        #    }
+        #
+        #    if (mrcPdsConfigurationKey)
+        #    {
+        #        psdsDocuRefRecId = PdsMRCRegulated_Sales_PackingSlip::checkWarnBreakAndPrint(
+        #            mrcPostingErr,
+        #            this.pdsMRCParameters().RegulationWarningOnPack,
+        #            mrcPrintOnPack,
+        #            salesLine);
+        #        if ( mrcPrintOnPack )
+        #        {
+        #            docuRefRecIdList.addEnd(psdsDocuRefRecId);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #checkCustInvoiceTrans_IN
+        #/// <summary>
+        #/// Checks if the cust invoice trans exists.
+        #/// </summary>
+        #/// <returns>
+        #/// Returns true if the cust invoice trans exists.
+        #/// </returns>
+        #protected boolean checkCustInvoiceTrans_IN()
+        #{
+        #    return CustInvoiceTrans::exist(salesLine.InventTransId);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkCustomJournalInventTransMarked_RU
+        #/// <summary>
+        #/// Checks if transaction included in custom journals marked
+        #/// </summary>
+        #/// <param name="_inventTransId">
+        #/// <c>InventTransId</c> to check
+        #/// </param>
+        #/// <returns>
+        #/// True, if records not marked, or if marked but user chosen to continue
+        #/// </returns>
+        #boolean checkCustomJournalInventTransMarked_RU(InventTransId _inventTransId)
+        #{
+        #    InventTrans             inventTrans;
+        #    InventTransOrigin       inventTransOrigin;
+        #    CustomJournalTrans_RU   customJournalTrans;
+        #    CustomJournalTable_RU   customJournalTable;
+        #    boolean                 ret = true;
+        #
+        #    select firstonly RecId from inventTrans
+        #        where inventTrans.MarkingRefInventTransOrigin                            &&
+        #              inventTrans.MarkingRefInventTransOrigin != inventTransOrigin.RecId &&
+        #              inventTrans.PackingSlipReturned         == NoYes::No
+        #        join RecId from inventTransOrigin
+        #            where inventTransOrigin.InventTransId == _inventTransId                &&
+        #                  inventTransOrigin.RecId         == inventTrans.InventTransOrigin
+        #            join CustomJournalId from customJournalTrans
+        #                where customJournalTrans.SalesPurchInventTransId == _inventTransId
+        #                exists join customJournalTable
+        #                    where customJournalTable.CustomJournalId     == customJournalTrans.CustomJournalId &&
+        #                          customJournalTable.CustomJournalStatus == CustomJournalStatus_RU::Open;
+        #
+        #    if (inventTrans.RecId)
+        #    {
+        #        if (Box::yesNo(strFmt("@GLS115378", customJournalTrans.CustomJournalId), DialogButton::Yes) == DialogButton::No)
+        #        {
+        #            return false;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkDateControl_W
+        #/// <summary>
+        #///     Verifies whether selected date more than invoice issue due date in selected customer packing slip.
+        #/// </summary>
+        #/// <param name="_custPackingSlipJour">
+        #///     The record of table <c>CustPackingSlipJour</c> where the information about value of invoice issue date and other is taken.
+        #/// </param>
+        #/// <param name="_verifiableDate">
+        #///     A date value that is checked.
+        #/// </param>
+        #/// <param name="_controlType">
+        #///     A enum value that specified type for check: Warning or Error.
+        #/// </param>
+        #/// <param name="_verifiableDateLabel">
+        #///     A string value that specified the name of verifiable date in UI.
+        #/// </param>
+        #/// <returns>
+        #///     true if all checks are successful; otherwise, false and displays warning or error message.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #///     Return Error if _controlType parameter has None value.
+        #/// </exception>
+        #protected boolean checkDateControl_W(
+        #    CustPackingSlipJour _custPackingSlipJour,
+        #    TransDate           _verifiableDate,
+        #    DateControlType_W   _controlType,
+        #    LabelString         _verifiableDateLabel)
+        #{
+        #    str     message;
+        #    boolean ret = true;
+        #
+        #    if (_verifiableDate > _custPackingSlipJour.InvoiceIssueDueDate_W)
+        #    {
+        #        message = strFmt("@SYS4009621",
+        #                         _custPackingSlipJour.PackingSlipId,
+        #                         _verifiableDateLabel,
+        #                         _verifiableDate,
+        #                         fieldPName(CustPackingSlipJour, InvoiceIssueDueDate_W),
+        #                         _custPackingSlipJour.InvoiceIssueDueDate_W);
+        #
+        #        switch (_controlType)
+        #        {
+        #            case DateControlType_W::Warning:
+        #                warning(message);
+        #            break;
+        #            case DateControlType_W::Error:
+        #                error(message);
+        #                ret    = false;
+        #            break;
+        #            default:
+        #                throw error(Error::wrongUseOfFunction(funcName()));
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkDrawbackFields_IN
+        #private void checkDrawbackFields_IN()
+        #{
+        #    EximSalesLine_IN eximSalesLine;
+        #
+        #    eximSalesLine = EximSalesLine_IN::findBySalesLineRecId(salesLine.RecId);
+        #
+        #    if (eximSalesLine && eximSalesLine.dbkCenvatStatus != EximDBKCenvatStatus_IN::None)
+        #    {
+        #        if (!salesLine.salesLine_IN().CustomsTariffCodeTable_IN)
+        #        {
+        #            throw error(strFmt("@SYS26332", fieldPName(SalesLine_IN, CustomsTariffCodeTable_IN)));
+        #        }
+        #        else if (!eximSalesLine.EximPorts)
+        #        {
+        #            throw error(strFmt("@SYS26332", fieldPName(EximSalesLine_IN, EximPorts)));
+        #        }
+        #        else if (!eximSalesLine.EximProductGroupTable)
+        #        {
+        #            throw error(strFmt("@SYS26332", fieldPName(EximSalesLine_IN, EximProductGroupTable)));
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkInvoiceIssueDueDate_W
+        #/// <summary>
+        #///     Verifies whether the posting dates on exceeding of the invoice issue date in the packing slips
+        #/// </summary>
+        #/// <returns>
+        #///     true if all checks are successful; otherwise, false
+        #/// </returns>
+        #protected boolean checkInvoiceIssueDueDate_W()
+        #{
+        #    CustPackingSlipJour     custPackingSlipJour;
+        #    CustPackingSlipTrans    custPackingSlipTrans;
+        #    CustInvoiceTrans        custInvoiceTransLocal;
+        #    SalesParameters         salesParameters = SalesParameters::find();
+        #    DateControlType_W       invoiceDateControlType  = this.creditNote() ? salesParameters.CreditNoteInvoiceDateControlType_W : salesParameters.InvoiceDateControlType_W;
+        #    DateControlType_W       documentDateControlType = this.creditNote() ? salesParameters.CreditNoteDocumentDateControlType_W : salesParameters.DocumentDateControlType_W;
+        #    boolean                 ret = true;
+        #
+        #    if (invoiceDateControlType == DateControlType_W::None && documentDateControlType == DateControlType_W::None)
+        #    {
+        #        return ret;
+        #    }
+        #
+        #    while select PackingSlipId, InvoiceIssueDueDate_W from custPackingSlipJour
+        #        group by PackingSlipId, InvoiceIssueDueDate_W
+        #            where custPackingSlipJour.InvoiceIssueDueDate_W
+        #        exists join custPackingSlipTrans
+        #            where   custPackingSlipTrans.SalesId    == custPackingSlipJour.SalesId
+        #               &&   custPackingSlipTrans.PackingSlipId  == custPackingSlipJour.PackingSlipId
+        #               &&   custPackingSlipTrans.DeliveryDate   == custPackingSlipJour.DeliveryDate
+        #               &&   custPackingSlipTrans.Qty        != 0
+        #        exists join custInvoiceTransLocal
+        #            where   custInvoiceTransLocal.InventTransId == custPackingSlipTrans.InventTransId
+        #               &&   custInvoiceTransLocal.SalesId   == custInvoiceJour.SalesId
+        #               &&   custInvoiceTransLocal.InvoiceId == custInvoiceJour.InvoiceId
+        #               &&   custInvoiceTransLocal.InvoiceDate   == custInvoiceJour.InvoiceDate
+        #               &&   custInvoiceTransLocal.NumberSequenceGroup   == custInvoiceJour.NumberSequenceGroup
+        #    {
+        #        if (invoiceDateControlType)
+        #        {
+        #            ret = this.checkDateControl_W(custPackingSlipJour, custInvoiceJour.InvoiceDate, invoiceDateControlType, "@SYS57610") && ret;
+        #        }
+        #        if (documentDateControlType)
+        #        {
+        #            ret = this.checkDateControl_W(custPackingSlipJour, custInvoiceJour.DocumentDate, documentDateControlType, fieldPName(CustInvoiceJour, DocumentDate)) && ret;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #checkNotStockedLineAfterPosting
+        #/// <summary>
+        #/// Verifies the not stocked order lines after posting.
+        #/// </summary>
+        #/// <param name="_notStockedPostCheck">
+        #/// The <c>TradeNotStockedPostCheck</c> object to use for verification.
+        #/// </param>
+        #/// <returns>
+        #/// true if the order line could be posted; otherwise, false.
+        #/// </returns>
+        #protected boolean checkNotStockedLineAfterPosting(TradeNotStockedPostCheck _notStockedPostCheck)
+        #{
+        #    _notStockedPostCheck.parmQtyPhysicalToBeJournalUpdated(invoiceUpdatedOnly);
+        #
+        #    return super(_notStockedPostCheck);
+        #}
+      ENDSOURCE
+      SOURCE #checkSalesBook_RU
+        #/// <summary>
+        #///     Determines if sales book is open.
+        #/// </summary>
+        #/// <returns>
+        #///     true if sales book is open; otherwise, false.
+        #/// </returns>
+        #protected boolean checkSalesBook_RU()
+        #{
+        #    #ISOCountryRegionCodes
+        #    TmpTaxWorkTrans tmpTaxWorkTrans;
+        #
+        #    boolean         exportJour;
+        #    boolean         ret = true;
+        #
+        #    if (this.tax())
+        #    {
+        #        tmpTaxWorkTrans = this.tax().tmpTaxWorkTrans();
+        #        while select tmpTaxWorkTrans
+        #            group by TaxCode
+        #        {
+        #            if (TaxTable::find(tmpTaxWorkTrans.TaxCode).isExportVAT_RU())
+        #            {
+        #                exportJour = true;
+        #                break;
+        #            }
+        #        }
+        #    }
+        #
+        #    if (CustParameters::taxation_RU(custInvoiceJour.InvoiceDate) == CustTaxation_RU::OnDelivery &&
+        #        !custInvoiceJour.custInvoiceJour_RU().vatOnPayment_RU &&
+        #        !exportJour)
+        #    {
+        #        ret = SalesBookTable_RU::canProcessDate(custInvoiceJour.InvoiceDate);
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #checkSourceLine
+        #/// <summary>
+        #/// Verifies the source line for the journal line.
+        #/// </summary>
+        #protected void checkSourceLine()
+        #{
+        #    MainAccount             postingMainAccount;
+        #    #ISOCountryRegionCodes
+        #
+        #    // Italian functionality of VAT books and VAT book sections
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIT]))
+        #    {
+        #        if (! TaxGroupData::checkTaxGroups(salesLine.TaxGroup, salesLine.TaxItemGroup))
+        #        {
+        #            throw error("@SYS21533");
+        #        }
+        #    }
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIN]))
+        #    {
+        #        if (salesTable.CustomsExportOrder_IN
+        #            && EximParameters_IN::checkDBKParameters())
+        #        {
+        #            this.checkDrawbackFields_IN();
+        #        }
+        #    }
+        #
+        #    if (taxParameters.ValidateTaxCode)
+        #    {
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #        {
+        #             postingMainAccount = DimensionStorage::getMainAccountFromLedgerDimension(
+        #                 InventPosting::accountItemLedgerDimension(InventAccountType::SalesRevenue,
+        #                         salesLine.ItemId,
+        #                         inventTable.itemGroupId(),
+        #                         salesLine.SalesCategory,
+        #                         salesLine.CustAccount,
+        #                         salesLine.CustGroup,
+        #                         salesLine.TaxGroup,
+        #                         salesLine.inventDim()));
+        #        }
+        #        else
+        #        {
+        #            postingMainAccount = DimensionStorage::getMainAccountFromLedgerDimension(
+        #                InventPosting::accountItemLedgerDimension(InventAccountType::SalesRevenue,
+        #                        salesLine.ItemId,
+        #                        inventTable.itemGroupId(),
+        #                        salesLine.SalesCategory,
+        #                        salesLine.CustAccount,
+        #                        salesLine.CustGroup,
+        #                        salesLine.TaxGroup ));
+        #
+        #            if (!Tax::checkNoTax(postingMainAccount,
+        #                                 salesLine.TaxGroup,
+        #                                 salesLine.TaxItemGroup))
+        #            {
+        #                throw error("@SYS21533");
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class SalesInvoiceJournalPost extends
+        #SalesInvoiceJournalPostBase
+        #{
+        #    SalesLine               salesLine;
+        #    SalesTable              salesTable;
+        #
+        #    SalesTotals             salesTotals;
+        #    RecordSortedList        recordListShippingLine;
+        #    RecordInsertList        recordInsertListCustInvoiceBackorderLine;
+        #    RecordViewCache         custInvoiceJourCache;
+        #
+        #    // Credit Card
+        #    SalesTable              creditCardSalesTable;
+        #    SalesTotals_Sales       creditCardSalesTotals;
+        #    boolean                 mrcPostingErr;
+        #    boolean                 mrcPrintOnPack;
+        #    PdsMRCParameters        pdsMRCParameters;
+        #    boolean                 mrcPdsConfigurationKey;
+        #
+        #    LedgerVoucher           assetLedgerVoucherBase;
+        #    LedgerVoucher           assetLedgerVoucherOthers;
+        #/* <SYS>
+        #//    boolean                 markupOfTypeCustVendExists;
+        #//    boolean                 extraPrintoutLineExists;
+        #//    SalesAmount             lineAmountExclTax;
+        #//    OfficialsServ_RU        offSrv;
+        #</SYS> */
+        #
+        #    boolean                 oldCorrection_RU;
+        #    boolean                 usePerLineCorrectionIsCached_RU;
+        #    boolean                 cachedUsePerLineCorrection_RU;
+        #    boolean                 useQualityManagement;
+        #    container               salesLineRec;
+        #    container               custInvoiceTransRec;
+        #    AmountCur               withholdingTax;
+        #
+        #    DlvTransitInventController_BR dlvTransitInventController_BR;
+        #
+        #    Set                     setSalesTableIntallmentEligible;
+        #    boolean                 installEligblePacked;
+        #    SalesQty                salesOrderQty;
+        #    MCRCustPaymTable        mcrCustPaymTable;
+        #}
+      ENDSOURCE
+      SOURCE #createBackorderLines
+        #protected void createBackorderLines()
+        #{
+        #    SalesLine       localSalesLine;
+        #    SalesParameters salesParameters = SalesParameters::find();
+        #    boolean         splitDeliveryInformation;
+        #    SalesFormletterParmData parmData = SalesFormletterParmData::newData(this.documentStatus());
+        #
+        #    splitDeliveryInformation   = salesParameters.splitDeliveryInformation(this.documentStatus());
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #    {
+        #        parmData.parmParmUpdate(salesParmTable.salesParmUpdate());
+        #    }
+        #
+        #    ttsbegin;
+        #
+        #    while select localSalesLine
+        #        where localSalesLine.SalesId                == salesTable.SalesId
+        #           && localSalesLine.SalesStatus            == SalesStatus::Backorder
+        #           && localSalesLine.RemainInventPhysical   != 0
+        #           && (localSalesLine.SalesType             != SalesType::Subscription  ||  // Only create backorders for subscriptions
+        #               localSalesLine.RemainInventPhysical  != localSalesLine.QtyOrdered)   // if the remaining quantity is different from the ordered quantity
+        #           && (splitDeliveryInformation                == NoYes::No            ||  // Only check the address if there is a split per address
+        #                 (localSalesLine.DeliveryPostalAddress == custInvoiceJour.DeliveryPostalAddress
+        #               && localSalesLine.DeliveryName          == custInvoiceJour.DeliveryName
+        #               && localSalesLine.DlvMode               == custInvoiceJour.DlvMode))
+        #    {
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #        {
+        #            if ((! salesParameters.splitSite(this.documentStatus()) ||
+        #                 localSalesLine.inventDim().InventSiteId               == salesParmTable.InventSiteId) &&
+        #                (! parmData.splitPostingProfile_RU()                ||
+        #                 parmData.postingProfile_RU(localSalesLine.PostingProfile_RU,
+        #                                            salesTable.PostingProfile) == salesParmTable.PostingProfile_RU) &&
+        #                (! parmData.splitInventProfileType_RU()             ||
+        #                 parmData.inventProfileType_RU(localSalesLine)         == salesParmTable.InventProfileType_RU))
+        #            {
+        #                this.insertBackorderLine(localSalesLine);
+        #            }
+        #        }
+        #        else
+        #        {
+        #            if (salesParameters.splitSite(this.documentStatus())) // if split on site
+        #            {
+        #                if (localSalesLine.inventDim().InventSiteId == salesParmTable.InventSiteId) // check for same site
+        #                {
+        #                    this.insertBackorderLine(localSalesLine);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                this.insertBackorderLine(localSalesLine);
+        #            }
+        #        }
+        #    }
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #createCustTrans_BR
+        #protected boolean createCustTrans_BR()
+        #{
+        #    return salesTable.createCustTrans_BR();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createExportDocument_CN
+        #/// <summary>
+        #/// Creates export document.
+        #/// </summary>
+        #protected void createExportDocument_CN()
+        #{
+        #    TaxIntgrExportDocumentGenerator_CN::generate(
+        #        custInvoiceJour.RecId,
+        #        custInvoiceJour.TableId,
+        #        salesParmTable.RecId,
+        #        salesParmTable.TableId);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createNotStockedPostCheck
+        #/// <summary>
+        #/// Retrieves a <c>TradeNotStockedPostCheck</c> object that is used to verify order lines during
+        #/// posting.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>TradeNotStockedPostCheck</c> object that is used to verify order lines during posting.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method will return null when no verification is necessary.
+        #/// </remarks>
+        #protected TradeNotStockedPostCheck createNotStockedPostCheck()
+        #{
+        #    return TradeNotStockedPostCheck::newSalesLine(salesLine, custInvoiceTrans.Qty, salesParmLine.RemainAfter, salesParmLine.RemainBefore);
+        #}
+      ENDSOURCE
+      SOURCE #createPayment
+        #/// <summary>
+        #/// Creates payments and prints payment proposals if it is needed.
+        #/// </summary>
+        #protected void createPayment()
+        #{
+        #    CustTrans custTrans;
+        #
+        #    custTrans = custInvoiceJour.custTrans();
+        #
+        #    if (custTrans.PaymMode &&
+        #        CustPaymModeTable::find(custTrans.PaymMode).PaymOnInvoice)
+        #    {
+        #        CustVendPaymInvoiceWithJournal::construct(custInvoiceJour).run();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createPaymentSched
+        #/// <summary>
+        #/// Creates a payment schedule.
+        #/// </summary>
+        #protected void createPaymentSched()
+        #{
+        #    CustVendPaymSched   custVendPaymSched;
+        #    CustPaymSched       custPaymSched;
+        #    AmountCur           paymScheduleAmount;
+        #    DueDate             paymScheduleDueDate;
+        #
+        #    if (BrazilParameters::isEnabled() && !this.createCustTrans_BR())
+        #    {
+        #        return;
+        #    }
+        #
+        #    if (salesTable.PaymentSched &&
+        #        ! CustPaymSched::exist(salesTable.TableId,
+        #                               salesTable.RecId) &&
+        #        ! CustPaymSched::exist(salesParmTable.TableId,
+        #                               salesParmTable.RecId))
+        #    {
+        #        custVendPaymSched = CustVendPaymSched::construct(SysModule::Cust,salesTable);
+        #        custVendPaymSched.setSalesTotals(salesTotals);
+        #        custVendPaymSched.createPaymSched(PaymSched::find(salesTable.PaymentSched));
+        #    }
+        #
+        #
+        #    if (CustPaymSched::exist(salesParmTable.TableId, salesParmTable.RecId))
+        #    {
+        #        salesParmTable.copyPaymentSched(custInvoiceJour);
+        #    }
+        #    else
+        #    {
+        #        custPaymSched = CustPaymSched::find(salesTable.TableId, salesTable.RecId);
+        #
+        #        if (custPaymSched)
+        #        {
+        #            paymScheduleAmount  = custPaymSched.paymScheduleAmount();
+        #            paymScheduleDueDate = custPaymSched.paymScheduleDueDate();
+        #
+        #            if (!CustPaymSched::isLinescreated(salesTable.TableId, salesTable.RecId) ||
+        #                paymScheduleAmount  != custInvoiceJour.InvoiceAmount                 ||
+        #                paymScheduleDueDate != custInvoiceJour.DueDate)
+        #            {
+        #                custInvoiceJour.createPaymentSched();
+        #            }
+        #            else
+        #            {
+        #                salesTable.copyPaymentSched(custInvoiceJour);
+        #            }
+        #        }
+        #    }
+        #
+        #    // check that schedule amount matches invoice amount
+        #    if (!custInvoiceJour.validatePaymentSched())
+        #        throw Exception::Error; // error message is added in validatePaymentSched()
+        #}
+      ENDSOURCE
+      SOURCE #createReportData
+        #public boolean createReportData(FormletterJournalPrint _formletterJournalPrint)
+        #{
+        #    boolean ret;
+        #    boolean salesTableAlreadyExists;
+        #
+        #    // If we create a paymSched on salesTable, clean it up now.
+        #    // PaymSched on custInvoiceJour is cleaned up by calling method formLetterService.run()
+        #    if (this.isProforma() && salesTable.PaymentSched)
+        #    {
+        #        salesTableAlreadyExists = CustPaymSched::exist(salesTable.TableId, salesTable.RecId);
+        #        this.createPaymentSched();
+        #
+        #        if (!salesTableAlreadyExists && CustPaymSched::exist(salesTable.TableId, salesTable.RecId))
+        #        {
+        #            CustPaymSched::deleteCustPaymSched(salesTable.TableId, salesTable.RecId);
+        #        }
+        #    }
+        #
+        #    ret = super(_formletterJournalPrint);
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #createScrapOnInventory
+        #/// <summary>
+        #/// Creates scrap on inventory.
+        #/// </summary>
+        #protected void createScrapOnInventory()
+        #{
+        #    super();
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createTransLink_RU
+        #private void createTransLink_RU()
+        #{
+        #    LedgerTransLink_RU  ledgerTransLink;
+        #    CustInvoiceJour     correctedInvoiceJour;
+        #    CustInvoiceTrans    invoiceTrans;
+        #    InventTrans         inventTrans;
+        #    InventTransOrigin   inventTransOrigin;
+        #    InventTrans         inventTransOrig;
+        #    TransLink_RU        transLink;
+        #    CustInvoiceJour_RU  custInvoiceJour_RU = custInvoiceJour.custInvoiceJour_RU();
+        #
+        #    if (custInvoiceJour_RU.CorrectedInvoiceId_RU)
+        #    {
+        #        correctedInvoiceJour = CustInvoiceJour::findFromCustTrans(custInvoiceJour_RU.CorrectedInvoiceId_RU,
+        #                                                                  custInvoiceJour_RU.CorrectedInvoiceDate_RU,
+        #                                                                  custInvoiceJour.InvoiceAccount);
+        #
+        #        ledgerTransLink = LedgerTransLink_RU::newTrans(custInvoiceJour, correctedInvoiceJour);
+        #        ledgerTransLink.parmReportingDate(custInvoiceJour_RU.CorrectedInvoiceDate_RU);
+        #        ledgerTransLink.parmVoucherField(fieldnum(CustInvoiceJour, LedgerVoucher));
+        #        ledgerTransLink.parmAccountingDateField(fieldnum(CustInvoiceJour, InvoiceDate));
+        #        ledgerTransLink.run();
+        #    }
+        #
+        #    while select inventTrans
+        #        join RefPri from transLink
+        #            where transLink.RefTableId  == tablenum(InventTrans)
+        #               && transLink.RefSec      == inventTrans.RecId
+        #        exists join inventTransOrigin
+        #            where inventTransOrigin.RecId == inventTrans.InventTransOrigin
+        #        exists join invoiceTrans
+        #            where invoiceTrans.InventTransId        == inventTransOrigin.InventTransId
+        #               && invoiceTrans.SalesId              == custInvoiceJour.SalesId
+        #               && invoiceTrans.InvoiceId            == custInvoiceJour.InvoiceId
+        #               && invoiceTrans.InvoiceDate          == custInvoiceJour.InvoiceDate
+        #               && invoiceTrans.numberSequenceGroup  == custInvoiceJour.numberSequenceGroup
+        #    {
+        #        inventTransOrig = InventTrans::findRecId(transLink.RefPri);
+        #        ledgerTransLink = LedgerTransLink_RU::newTrans(inventTrans, inventTransOrig);
+        #        ledgerTransLink.parmVoucherField(fieldnum(InventTrans, Voucher));
+        #        ledgerTransLink.parmAccountingDateField(fieldnum(InventTrans, DateFinancial));
+        #        ledgerTransLink.parmReportingDate(inventTransOrig.DateFinancial);
+        #        ledgerTransLink.run();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #creditCardDoCaptureOrPostAuthorize
+        #protected boolean creditCardDoCaptureOrPostAuthorize(SalesInvoiceId _salesInvoiceId, boolean _isRefund, CustInvoiceJour _custInvoiceJour)
+        #{
+        #    boolean success = true;
+        #
+        #    // Only if payment method is credit card
+        #    if (creditCardSalesTable.CreditCardCustRefId && creditCardSalesTable.isCreditCardPaymentType())
+        #    {
+        #        if (_isRefund)
+        #        {
+        #            success = CreditCardProcess::doRefund(creditCardSalesTable, creditCardSalesTotals, _salesInvoiceId, _custInvoiceJour);
+        #        }
+        #        else
+        #        {
+        #            success = CreditCardProcess::doCapture(creditCardSalesTable, creditCardSalesTotals, _salesInvoiceId, _custInvoiceJour);
+        #        }
+        #    }
+        #
+        #    return success;
+        #}
+      ENDSOURCE
+      SOURCE #creditCardDoPreAuthorize
+        #private boolean creditCardDoPreAuthorize()
+        #{
+        #    // Only pre-authorization credit card when needed
+        #    if (salesTable.CreditCardCustRefId && salesTable.isCreditCardPaymentType() && CustParameters::find().CreditCardPreAuthorization)
+        #    {
+        #        return CreditCardProcess::doPreAuth(salesTable, false);
+        #    }
+        #
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #creditNote
+        #/// <summary>
+        #/// Indicates whether the invoice that is being posted is a credit note.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the invoice is a credit notice that is posted; otherwise, false.
+        #/// </returns>
+        #protected NoYes creditNote()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #currencyCode
+        #/// <summary>
+        #/// Retrieves the currency code for a source line.
+        #/// </summary>
+        #/// <returns>
+        #/// The unit of currency for the source line.
+        #/// </returns>
+        #/// <remarks>
+        #/// Used for ledger posting of the source line.
+        #/// </remarks>
+        #protected CustCurrencyCode currencyCode()
+        #{
+        #    return salesParmTable.CurrencyCode;
+        #}
+      ENDSOURCE
+      SOURCE #custTransAmount_BR
+        #protected AmountCur custTransAmount_BR()
+        #{
+        #    return salesTotals.custTransAmount_BR();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #dealQualityOrderLine_IN
+        #/// <summary>
+        #/// Deals the quality order line.
+        #/// </summary>
+        #protected void dealQualityOrderLine_IN()
+        #{
+        #    if (TaxParameters::checkVatExciseParameters_IN()
+        #        && useQualityManagement
+        #        && InventQualityOrderTable::findSalesPurchRefTransId_IN(
+        #            salesLine.InventTransId,
+        #            InventTestReferenceType::Sales).ApplyIndiaTaxes_IN != ApplyIndiaTaxes_IN::None)
+        #    {
+        #        this.postQualityOrderTaxes_IN(ledgerVoucher, transactionTxt);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #defaultDimensionMarkupOnJour
+        #/// <summary>
+        #/// Retrieves the default dimension for a record.
+        #/// </summary>
+        #/// <param name="_source">
+        #/// The <c>Common</c> record for which to find the default dimension.
+        #/// </param>
+        #/// <returns>
+        #/// A <c>DimensionDefault</c> value.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used to calculate miscellaneous charges on the header level.
+        #/// </remarks>
+        #protected DimensionDefault defaultDimensionMarkupOnJour(Common _source)
+        #{
+        #    SalesTable salesTableMarkup = _source as SalesTable;
+        #    return salesTableMarkup.DefaultDimension;
+        #}
+      ENDSOURCE
+      SOURCE #defaultDimensionMarkupOnTrans
+        #/// <summary>
+        #/// Retrieves the default dimension when miscellaneous charges are posted on a line level.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>DimensionDefault</c> value.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used to post miscellaneous charges on the line level.
+        #/// </remarks>
+        #protected DimensionDefault defaultDimensionMarkupOnTrans()
+        #{
+        #    return salesLine.DefaultDimension;
+        #}
+      ENDSOURCE
+      SOURCE #defaultLedgerTransactionText
+        #/// <summary>
+        #/// Gets the default ledger transaction text.
+        #/// </summary>
+        #/// <returns>
+        #/// A transaction text.
+        #/// </returns>
+        #protected LedgerTransTxt defaultLedgerTransactionText()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #deleteFullyInvoiced
+        #protected void deleteFullyInvoiced()
+        #{
+        #    SalesLine               localSalesLine;
+        #    SalesId                 previousSalesId = '';
+        #    SalesId                 currentSalesId = '';
+        #    SalesDeliverySchedule   salesDeliverySchedule;
+        #    TradeInventTransId      orderLineTransId;
+        #    SalesLine               deliveryLine;
+        #    ListEnumerator          le;
+        #    SalesParameters         salesParameters = SalesParameters::find();
+        #    boolean     customsMarked = TaxParameters::isCustomsEnable_IN();
+        #
+        #    if (!journalLines.elements())
+        #        return;
+        #
+        #    le = journalLines.getEnumerator();
+        #    if (salesParameters.DeleteLine == NoYes::Yes)
+        #    {
+        #        while (le.moveNext())
+        #        {
+        #            salesLine = this.getSalesLine(le);
+        #            if (salesLine.SalesStatus == SalesStatus::Invoiced  &&  salesLine.validateDelete())
+        #            {
+        #                if (salesLine.LineDeliveryType == LineDeliveryType::DeliveryLine)
+        #                {
+        #                    // this is a fully invoiced delivery schedule - delete all delivery lines
+        #
+        #                    select firstonly salesDeliverySchedule
+        #                        where salesDeliverySchedule.DeliveryLine == salesLine.InventTransId;
+        #
+        #                    orderLineTransId = salesDeliverySchedule.OrderLine;
+        #
+        #                    delete_from deliveryLine
+        #                        exists join salesDeliverySchedule
+        #                        where salesDeliverySchedule.OrderLine     == orderLineTransId
+        #                          &&  salesDeliverySchedule.DeliveryLine  == deliveryLine.InventTransId;
+        #
+        #                    // then delete the order line
+        #                    delete_from deliveryLine where deliveryLine.InventTransId == orderLineTransId;
+        #                }
+        #                else
+        #                {
+        #                    salesLine.delete();
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    if (salesParameters.DeleteHeading == NoYes::Yes)
+        #    {
+        #        le.reset();
+        #
+        #        while (le.moveNext())
+        #        {
+        #
+        #            currentSalesId = this.getOrigSalesId(le);
+        #
+        #            if (currentSalesId != previousSalesId)
+        #            {
+        #                salesTable = SalesTable::find(currentSalesId, true);
+        #
+        #                if (salesTable)
+        #                {
+        #                    select firstonly localSalesLine
+        #                        where localSalesLine.SalesId        == currentSalesId
+        #                          &&  localSalesLine.SalesStatus    != SalesStatus::Invoiced
+        #                          &&  localSalesLine.SalesStatus    != SalesStatus::Canceled;
+        #
+        #                    if (customsMarked && salesTable.CustomsExportOrder_IN == NoYes::Yes)
+        #                    {
+        #                        previousSalesId = currentSalesId;
+        #                        le.moveNext();
+        #                    }
+        #                    else
+        #                    {
+        #                        if (!localSalesLine  &&  salesTable.validateDelete())
+        #                            salesTable.delete();
+        #                    }
+        #                }
+        #            }
+        #
+        #            previousSalesId = currentSalesId;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #discAmountExclTaxcInventoryPosted
+        #/// <summary>
+        #/// Calculates the discount amount excluded tax for a quantity updated in inventory.
+        #/// </summary>
+        #/// <returns>
+        #/// The discount amount excluded tax for the quantity updated in inventory.
+        #/// </returns>
+        #protected AmountCur discAmountExclTaxcInventoryPosted()
+        #{
+        #    return salesLine.calcLineDiscExclTax(updateNow, this.updateDate(), tax);
+        #}
+      ENDSOURCE
+      SOURCE #documentStatus
+        #/// <summary>
+        #/// Gets the type of document.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>DocumentStatus::Invoice</c> enumeration value.
+        #/// </returns>
+        #DocumentStatus  documentStatus()
+        #{
+        #    return DocumentStatus::Invoice;
+        #}
+      ENDSOURCE
+      SOURCE #docuRefCopy
+        #protected void docuRefCopy(Common _from, Common _to)
+        #{
+        #    CustTable   custTable;
+        #    AccountNum  accountNum;
+        #
+        #    super(_from, _to);
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        // Also copy customer level notes to the custInvoiceJour.
+        #        // Note that there will be no way to tell whether the note is from the
+        #        // customer level or order header level.
+        #        custTable = salesTable.custTable_CustAccount();
+        #        accountNum = custTable.AccountNum;
+        #        Docu::copy(custTable, custInvoiceJour);
+        #        // Do the same for all merged customers.
+        #        while select custTable
+        #            where custTable.mcrMergedRoot == accountNum
+        #        {
+        #            Docu::copy(custTable, custInvoiceJour);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #docuRefFindAndCopyMultiple
+        #protected void docuRefFindAndCopyMultiple(Common _to)
+        #{
+        #    SetEnumerator se;
+        #
+        #    se = ordersPosted.getEnumerator();
+        #
+        #    while (se.moveNext())
+        #    {
+        #        this.docuRefCopy(SalesTable::find(se.current()), _to);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #endLedgerVoucher
+        #protected void endLedgerVoucher()
+        #{
+        #    LedgerVoucherObject      ledgerVoucherObject;
+        #    LedgerBondClient_RU      ledgerBondClient;
+        #
+        #    if (countryRegionIsRU)
+        #    {
+        #        ledgerVoucherObject = ledgerVoucher       ? ledgerVoucher.findLedgerVoucherObject()   : null;
+        #        ledgerBondClient    = ledgerVoucherObject ? ledgerVoucherObject.ledgerBondClient_RU() : null;
+        #        if (this.postBalanceAsManyLedgerTransactions_RU() &&
+        #            ledgerBondClient)
+        #        {
+        #            this.bondMultipleLedgerBalances_RU();
+        #        }
+        #    }
+        #    super();
+        #
+        #    if (countryRegionIsRU)
+        #    {
+        #        this.createTransLink_RU();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #endLines
+        #protected void endLines()
+        #{
+        #    #ISOCountryRegionCodesEuro_W
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion(#EuropeanCountriesAll)
+        #        && !this.checkInvoiceIssueDueDate_W())
+        #    {
+        #        throw error("@SYS21533");
+        #    }
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #endPost
+        #/// <summary>
+        #/// Ends the posting.
+        #/// </summary>
+        #protected void endPost()
+        #{
+        #    super();
+        #    this.updateBankLC();
+        #    if (CustParameters::isTaxIntegrationSystem_CN())
+        #    {
+        #        this.createExportDocument_CN();
+        #    }
+        #
+        #    this.retailBlockReturnedItems();
+        #}
+      ENDSOURCE
+      SOURCE #endPostLine
+        #/// <summary>
+        #/// Ends the posting of one journal line.
+        #/// </summary>
+        #protected void endPostLine()
+        #{
+        #    custInvoiceTrans.updateCommission(ledgerVoucher,
+        #                                      custInvoiceJour);
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #    {
+        #        this.updateAssetLine_RU();
+        #    }
+        #
+        #    super();
+        #
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        this.postEndPostLine_BR();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #endUpdate
+        #/// <summary>
+        #/// Ends the update of selected records.
+        #/// </summary>
+        #/// <remarks>
+        #/// The <c>endUpdate</c> method in the derived classes contains the code for ending the posting of the
+        #/// selected records posted by the derived <c>FormLetter</c> class. For example the <c>endUpdate</c>
+        #/// method in the <c>SalesFormLetter</c> class ends the update for the selected sales orders. The
+        #/// <c>endUpdate</c> method is added to the <c>FormLetter</c> class so that you can run the
+        #/// <c>endUpdate</c> method when you post in batch. The <c>endUpdate</c> method is called from the
+        #/// <c>run</c> method in the abstract classes derived from the <c>FormLetter</c> class, and from the
+        #/// <c>run</c> method in the <c>FormLetterEndMultiThread</c> class.
+        #/// </remarks>
+        #void endUpdate()
+        #{
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        if (RetailMCRChannelTable::mcrEnableOrderCompletion(salesTable))
+        #        {
+        #            // At this location it will still occur after ledgerVoucher end as did in 2009
+        #            this.mcrSettlePayments();
+        #        }
+        #
+        #        this.mcrProcessGiftCards();
+        #
+        #        if (isConfigurationkeyEnabled(configurationKeyNum(MCRCoupon)))
+        #        {
+        #            // Update coupon liability
+        #            this.mcrUpdateCoupon();
+        #        }
+        #        // Transfer money to item revenue account for continuity orders
+        #        MCRContinuityRevenueTransfer::transferRevenue(salesParmTable);
+        #    }
+        #
+        #    // Create broker contract calculation and history records
+        #    // which are used in the MCRBrokerCalc form to genearte the
+        #    // claim records needed to pay the broker.
+        #    MCRBrokerAccrual::createAccrualFromInvoice(custInvoiceJour);
+        #
+        #    this.updateEstimate();
+        #    this.updateWMSShipment();
+        #    this.interCompanyPost();
+        #
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        this.postEndPost_BR();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #exchRate_W
+        #/// <summary>
+        #/// Determines currency exchange rate of the invoice.
+        #/// </summary>
+        #/// <returns>
+        #/// Currency exchange rate of the invoice.
+        #/// </returns>
+        #protected ExchRate exchRate_W()
+        #{
+        #    return custInvoiceJour.ExchRate;
+        #}
+      ENDSOURCE
+      SOURCE #exchRateSec_W
+        #/// <summary>
+        #/// Determines secondary currency exchange rate of the invoice.
+        #/// </summary>
+        #/// <returns>
+        #/// Secondary currency exchange rate of the invoice.
+        #/// </returns>
+        #protected ExchrateSecondary exchRateSec_W()
+        #{
+        #    return custInvoiceJour.ExchRateSecondary;
+        #}
+      ENDSOURCE
+      SOURCE #formletterType
+        #/// <summary>
+        #/// Indicates the formletter type.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>FormletterType::Sales</c> enumeration value.
+        #/// </returns>
+        #protected FormletterType formletterType()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #getOrigSalesId
+        #protected SalesIdOrig getOrigSalesId(ListEnumerator _le)
+        #{
+        #    CustInvoiceTrans localCustInvoiceTrans = _le.current();
+        #
+        #    return localCustInvoiceTrans.OrigSalesId;
+        #}
+      ENDSOURCE
+      SOURCE #getSalesLine
+        #protected SalesLine getSalesLine(ListEnumerator _le)
+        #{
+        #    CustInvoiceTrans localCustInvoiceTrans = _le.current();
+        #
+        #    return localCustInvoiceTrans.salesLine(true);
+        #}
+      ENDSOURCE
+      SOURCE #getVoucher
+        #/// <summary>
+        #/// Gets a voucher number.
+        #/// </summary>
+        #/// <returns>
+        #/// A voucher number.
+        #/// </returns>
+        #protected Num getVoucher()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #hasQualityOrder_IN
+        #protected boolean hasQualityOrder_IN()
+        #{
+        #    InventQualityOrderTable inventQualityOrderTable;
+        #
+        #    if (!salesTable.RecId)
+        #    {
+        #        return false;
+        #    }
+        #
+        #    inventQualityOrderTable = InventQualityOrderTable::findLastQualityOrder(InventTestReferenceType::Sales, salesTable.SalesId);
+        #
+        #    if (inventQualityOrderTable.RecId)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #includeDiscValueInRevenue
+        #/// <summary>
+        #/// Indicates whether to include the discount value in a calculation of revenue.
+        #/// </summary>
+        #/// <returns>
+        #/// Always returns false.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used when an invoice line is posted.
+        #/// </remarks>
+        #protected boolean includeDiscValueInRevenue()
+        #{
+        #    return salesLine.SalesPrice && formletterProvider.lineDiscountLedgerDimension();
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #/// <summary>
+        #/// Initializes the class.
+        #/// </summary>
+        #public void init()
+        #{
+        #    salesTable      = custInvoiceJour.salesTable();
+        #
+        #    if (RetailMCRChannelTable::mcrEnableOrderCompletion(salesTable))
+        #    {
+        #        mcrCustPaymTable = MCRCustPaymTable::findByRefRecIDRefTableID(salesTable.RecId,salesTable.TableId);
+        #    }
+        #
+        #    super();
+        #
+        #    cashDiscountAmount              = salesTotals.cashDiscAmount();
+        #    totalAmountCashDiscOnInvoice    = salesTotals.totalAmountCashDiscOnInvoice(true);
+        #
+        #    mrcPdsConfigurationKey = isConfigurationkeyEnabled(configurationKeyNum(PdsMRC));
+        #
+        #    this.setReverseCharge_UK();
+        #
+        #    // Set the creditCardSalesTable and creditCardSalesTotals to be
+        #    // used as part of the creditCardDoCaptureOrPostAuthorize() call.
+        #    creditCardSalesTable = salesTable.data();
+        #    creditCardSalesTotals = salesTotals;
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        setSalesTableIntallmentEligible = new Set(Types::String);
+        #    }
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIN]))
+        #    {
+        #        useQualityManagement     = InventParameters::find().UseQualityManagement;
+        #        this.validateReturnableReference_IN();
+        #    }
+        #
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        this.postInit_BR();
+        #    }
+        #
+        #    // <GMY>
+        #    if(TaxGSTFeatureChecker_MY::isCountryRegionMY())
+        #    {
+        #        this.checkBeforePost_MY();
+        #    }
+        #    // </GMY>
+        #}
+      ENDSOURCE
+      SOURCE #initCustInvoiceJourFromTotals
+        #/// <summary>
+        #/// Initializes the journal header from totals.
+        #/// </summary>
+        #/// <remarks>
+        #/// This method is used to update the journal header with values that are posted in inventory.
+        #/// </remarks>
+        #protected void initCustInvoiceJourFromTotals()
+        #{
+        #    boolean installmentEligible;
+        #
+        #    if (ReverseChargeParameters_UK::find().rcEnabled)
+        #    {
+        #        custInvoiceJour.initFromSalesTotals(salesTotals, cashDiscountAmount, ReverseCharge_invoice_UK::setReverseChargeSalesTotal(salesTable.SalesId, custInvoiceJour.ParmId, salesParmTable.TableRefId));
+        #    }
+        #    else
+        #    {
+        #        if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #        {
+        #            if (setSalesTableIntallmentEligible.in(salesTable.SalesId))
+        #            {
+        #                installmentEligible = true;
+        #            }
+        #        }
+        #
+        #        custInvoiceJour.initFromSalesTotals(salesTotals
+        #                                            , cashDiscountAmount
+        #                                            , 0
+        #                                            , installmentEligible
+        #                                            );
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initCustVoucher
+        #/// <summary>
+        #/// Constructs a <c>CustVoucher</c> object.
+        #/// </summary>
+        #/// <param name="_ledgerTransTxt">
+        #/// A <c>LedgerTransText</c> object to be transferred to the <c>CustVoucher</c> object.
+        #/// </param>
+        #/// <returns>
+        #/// The constructed <c>CustVoucher</c> object.
+        #/// </returns>
+        #protected CustVoucher initCustVoucher(LedgerTransTxt _ledgerTransTxt)
+        #{
+        #    return CustVoucher::newCustVoucherSales(_ledgerTransTxt,
+        #                                            custInvoiceJour,
+        #                                            salesParmTable,
+        #                                            salesTable);
+        #}
+      ENDSOURCE
+      SOURCE #initInventMovement
+        #/// <summary>
+        #/// Constructs a <c>InventMovement</c> object.
+        #/// </summary>
+        #/// <returns>
+        #/// The constructed <c>InventMovement</c> object.
+        #/// </returns>
+        #protected InventMovement initInventMovement()
+        #{
+        #    return InventMovement::construct(salesLine);
+        #}
+      ENDSOURCE
+      SOURCE #initLedgerVoucher
+        #protected void initLedgerVoucher()
+        #{
+        #    super();
+        #
+        #    this.findOrCreateLedgerVoucherObject(voucher, this.updateDate()).parmReasonRef(salesTable.CreditNoteReasonCode);
+        #}
+      ENDSOURCE
+      SOURCE #initRecordLists
+        #/// <summary>
+        #/// Initializes the record lists.
+        #/// </summary>
+        #protected void initRecordLists()
+        #{
+        #    super();
+        #    recordInsertListCustInvoiceBackorderLine    = new RecordInsertList(tableNum(CustInvoiceBackorderLine));
+        #}
+      ENDSOURCE
+      SOURCE #initRelatedLineTables
+        #/// <summary>
+        #/// Initializes the records related to the current journal line.
+        #/// </summary>
+        #protected void initRelatedLineTables()
+        #{
+        #    RAssetStandards  assetStandardsDefault;
+        #
+        #    super();
+        #
+        #    salesPurchLine = salesLine;
+        #
+        #    setPrefix(#PreFixField(salesLine, SalesId));
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU])
+        #         && salesLine.AssetId_RU && ! salesLine.creditNoteLine())
+        #    {
+        #        assetStandardsDefault = RAssetStandards::find(salesLine.AssetId_RU, RAssetParameters::find().StandardIdDefault);
+        #
+        #        if (assetStandardsDefault && assetStandardsDefault.Depreciation)
+        #        {
+        #            assetLedgerVoucherBase = ledgerVoucher;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initTotals
+        #/// <summary>
+        #/// Initializes the totals class to post the invoice.
+        #/// </summary>
+        #protected void initTotals()
+        #{
+        #    if (this.parmTotals())
+        #    {
+        #        salesTotals = this.parmTotals() as SalesTotals;
+        #    }
+        #    else
+        #    {
+        #        salesTotals     = SalesTotals::construct(salesParmTable, this.parmSpecQty(), this.parmSumBy(), custInvoiceJour.ParmId, this.parmSumOrderId(), this.documentStatus());
+        #    }
+        #    salesTotals.prepareTotalAmountCalculation();
+        #    salesTotals.prepareQuantitiesCalculation();
+        #
+        #    this.tax(salesTotals.tax());
+        #
+        #    if (TaxWithholdParameters_IN::checkTaxParameters())
+        #    {
+        #        this.taxWithholdCalculation_IN(salesTotals.taxWithholdCalculation_IN());
+        #    }
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #    {
+        #        if (! this.checkSalesBook_RU())
+        #        {
+        #            error(strFmt("@GLS101326",
+        #                         custInvoiceJour.InvoiceId,
+        #                         custInvoiceJour.InvoiceDate));
+        #            throw error("@GLS101992");
+        #        }
+        #
+        #        if (RestoredVATLogTable_RU::checkApproved(custInvoiceJour.InvoiceDate))
+        #        {
+        #            error(RestoredVATLogTable_RU::txtApprovedMsg(custInvoiceJour.InvoiceDate));
+        #            throw error("@GLS101992");
+        #        }
+        #
+        #        RestoredVATLogTable_RU::setRecalcAll(custInvoiceJour.InvoiceDate);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initTransactionTxt
+        #/// <summary>
+        #/// Initializes the <c>TransactionTxt</c> object.
+        #/// </summary>
+        #/// <param name="_ledgerTransTxt">
+        #/// A ledger transaction text.
+        #/// </param>
+        #/// <returns>
+        #/// An instance of the <c>TransactionTxt</c> object.
+        #/// </returns>
+        #protected TransactionTxt initTransactionTxt(LedgerTransTxt  _ledgerTransTxt)
+        #{
+        #    TransactionTextContext      transactionTextContext;
+        #    transactionTxt = new TransactionTxt();
+        #    transactionTxt.setType          (_ledgerTransTxt);
+        #    transactionTxt.setLanguage      (custInvoiceJour.LanguageId);
+        #    transactionTxt.setVoucher       (custInvoiceJour.LedgerVoucher);
+        #    transactionTxt.setFormLetter    (custInvoiceJour.InvoiceId);
+        #    transactionTxt.setKey1          (custInvoiceJour.SalesId);
+        #    transactionTxt.setKey2          (custInvoiceJour.InvoiceAccount);
+        #    transactionTxt.setKey3          (CustTable::groupId(custInvoiceJour.InvoiceAccount));
+        #    if (SysCountryRegionCode::isLegalEntityInConsolidatedCountryRegion() &&
+        #        TransactionTextContext::isTypeSupported(_ledgerTransTxt))
+        #    {
+        #        transactionTextContext = TransactionTextContext::newForTransactionType(_ledgerTransTxt);
+        #        transactionTextContext.setTableBuffer(custInvoiceJour);
+        #        transactionTextContext.setTableBuffer(custInvoiceJour.salesTable());
+        #        transactionTxt.setTransactionTextContext(transactionTextContext);
+        #    }
+        #
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        this.postInitTransactionTxt_BR(transactionTxt);
+        #    }
+        #
+        #    return transactionTxt;
+        #}
+      ENDSOURCE
+      SOURCE #insertBackorderLine
+        #protected void  insertBackorderLine(SalesLine  _salesLine)
+        #{
+        #    CustInvoiceBackorderLine  custInvoiceBackorderLine;
+        #
+        #    custInvoiceBackorderLine.initValue();
+        #    custInvoiceBackorderLine.initFromSalesLine      (_salesLine);
+        #    custInvoiceBackorderLine.initFromCustInvoiceJour(custInvoiceJour);
+        #    recordInsertListCustInvoiceBackorderLine.add(custInvoiceBackorderLine);
+        #}
+      ENDSOURCE
+      SOURCE #insertCreditInvoicingJour
+        #protected void insertCreditInvoicingJour(SalesTable _salesTable)
+        #{
+        #    CustVendCreditInvoicingTable    custVendCreditInvoicingTable;
+        #    CustVendCreditInvoicingJour     custVendCreditInvoicingJour;
+        #
+        #    if (CustVendCreditInvoicingTable::useCreditInvoicingReporting())
+        #    {
+        #        if(_salesTable)
+        #        {
+        #            custVendCreditInvoicingTable = CustVendCreditInvoicingTable::findRefId(salesTable.TableId,
+        #                                                                                   salesTable.RecId,
+        #                                                                                   true);
+        #            if(custVendCreditInvoicingTable)
+        #            {
+        #                custVendCreditInvoicingJour.insertFromCustVendCreditInvoicingTable(custVendCreditInvoicingTable,
+        #                                                                                   custInvoiceJour);
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insertCreditInvoicingTrans
+        #/// <summary>
+        #/// Inserts data into the <c>CustVendCreditInvoicingTrans</c> table.
+        #/// </summary>
+        #/// <param name="_sourceLine">
+        #/// The source line record.
+        #/// </param>
+        #protected void insertCreditInvoicingTrans(
+        #                                          Common _sourceLine
+        #                                          )
+        #{
+        #    super(_sourceLine);
+        #}
+      ENDSOURCE
+      SOURCE #insertEInvoice_MX
+        #/// <summary>
+        #/// Creates the electronic invoice information
+        #/// </summary>
+        #/// <param name="_numberSeq">
+        #/// A <c>numberSeq</c> value that is related to this invoice.
+        #/// </param>
+        #protected void insertEInvoice_MX(NumberSeq _numberSeq)
+        #{
+        #    super(_numberSeq);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #insertRecordList
+        #/// <summary>
+        #/// Inserts records in the record lists into the database.
+        #/// </summary>
+        #protected void insertRecordList()
+        #{
+        #    super();
+        #    recordInsertListCustInvoiceBackorderLine.insertDatabase();
+        #}
+      ENDSOURCE
+      SOURCE #intercompanyAmountMarkupOnTrans
+        #/// <summary>
+        #/// Retrieves the intercompany miscellaneous charges amount.
+        #/// </summary>
+        #/// <returns>
+        #/// Always returns <c>0</c>.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used to calculate miscellaneous charges on the line level.
+        #/// </remarks>
+        #protected AmountCur intercompanyAmountMarkupOnTrans()
+        #{
+        #    return salesLine.interCompanyLineAmount(updateNow,custInvoiceTrans.InvoiceDate, tax);
+        #}
+      ENDSOURCE
+      SOURCE #interCompanyPost
+        #protected void interCompanyPost()
+        #{
+        #    RecordSortedList journalList;
+        #    SalesInvoiceJournalPrint journalPrint;
+        #
+        #    if (!this.isProforma()
+        #        && (custInvoiceJour.interCompanyDoInternalPosting()
+        #        || (custInvoiceJour.InterCompanyCompanyId && custInvoiceJour.interCompanyDoExternalPosting())))
+        #    {
+        #        journalPrint = SalesInvoiceJournalPrint::construct();
+        #        journalList = journalPrint.newJournalList();
+        #        journalList.ins(custInvoiceJour);
+        #        InterCompanyPostPurch::post(this.parmChainFormletterContract(), custInvoiceJour, journalList);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #inventProfileType_RU
+        #protected InventProfileType_RU inventProfileType_RU()
+        #{
+        #    return salesLine.inventProfileType_RU();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #inventReportDimHistoryLogType
+        #/// <summary>
+        #/// Gets the inventory report dimension history type.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>InventReportDimHistoryLogType::SalesInvoice</c> enumeration value
+        #/// </returns>
+        #protected InventReportDimHistoryLogType inventReportDimHistoryLogType()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #invoiceNum
+        #/// <summary>
+        #/// Retrieves the invoice number to which the inventory transaction would be attached.
+        #/// </summary>
+        #/// <returns>
+        #/// The invoice number to which the inventory transaction would be attached.
+        #/// </returns>
+        #protected InvoiceId invoiceNum()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #invoicePostingType_RU
+        #protected SalesInvoicePostingType_RU invoicePostingType_RU()
+        #{
+        #    return custInvoiceJour.custInvoiceJour_RU().InvoicePostingType_RU;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #isConfigKeyEnabledCreditCard
+        #protected boolean isConfigKeyEnabledCreditCard()
+        #{
+        #    return Global::isConfigurationkeyEnabled(configurationKeyNum(CreditCard));
+        #}
+      ENDSOURCE
+      SOURCE #isConfigkeyEnabledShipCarrier
+        #protected boolean isConfigkeyEnabledShipCarrier()
+        #{
+        #    return Global::isConfigurationkeyEnabled(configurationKeyNum(ShipCarrier));
+        #}
+      ENDSOURCE
+      SOURCE #isCorrectionLine_RU
+        #private boolean isCorrectionLine_RU()
+        #{
+        #    return custInvoiceTrans.LineAmount < 0;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #isJournalLinePartDelivery
+        #/// <summary>
+        #/// Indicates whether a journal line is a part delivery.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the journal line is a part delivery; otherwise, false.
+        #/// </returns>
+        #protected NoYes isJournalLinePartDelivery()
+        #{
+        #    return !(salesLine.SalesStatus   == SalesStatus::Invoiced
+        #        &&   salesLine.SalesQty      == custInvoiceTrans.Qty);
+        #}
+      ENDSOURCE
+      SOURCE #isLineStocked
+        #/// <summary>
+        #/// Indicates whether a source line is tracked in inventory.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the source line is tracked in inventory; otherwise, false.
+        #/// </returns>
+        #protected boolean isLineStocked()
+        #{
+        #    return salesLine.isStocked();
+        #}
+      ENDSOURCE
+      SOURCE #isMCRGiftCardCustInvoiceTrans_BR
+        #private boolean isMCRGiftCardCustInvoiceTrans_BR()
+        #{
+        #    CustInvoiceTrans tmpCustInvoiceTrans;
+        #
+        #    journalLines_BR.first(tmpCustInvoiceTrans);
+        #
+        #    return MCRGiftCard::isGiftCardOperation(salesTable, tmpCustInvoiceTrans.ItemId);
+        #}
+      ENDSOURCE
+      SOURCE #journalLine
+        #/// <summary>
+        #/// Gets or sets the current journal line record.
+        #/// </summary>
+        #/// <param name="_journalLine">
+        #/// A journal line record to set; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A journal line record.
+        #/// </returns>
+        #protected Common journalLine(Common _journalLine = custInvoiceTrans)
+        #{
+        #    return super(_journalLine);
+        #}
+      ENDSOURCE
+      SOURCE #journalLineTableId
+        #/// <summary>
+        #/// Gets the table ID for the journal line table.
+        #/// </summary>
+        #/// <returns>
+        #/// A table ID.
+        #/// </returns>
+        #protected TableId journalLineTableId()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #ledgerRefRecid
+        #protected RecId ledgerRefRecid()
+        #{
+        #    return salesLine.RecId;
+        #}
+      ENDSOURCE
+      SOURCE #ledgerRefTableId
+        #protected TableId ledgerRefTableId()
+        #{
+        #    return salesLine.TableId;
+        #}
+      ENDSOURCE
+      SOURCE #ledgerVoucherObjectDocument
+        #/// <summary>
+        #/// Gets the document values from the <c>LedgervoucherObject</c> object.
+        #/// </summary>
+        #/// <param name="_ledgerVoucherObject">
+        #/// A <c>LedgerVoucherObject</c> object.
+        #/// </param>
+        #/// <returns>
+        #/// A <c>Container</c> that contains document values.
+        #/// </returns>
+        #protected container ledgerVoucherObjectDocument(LedgerVoucherObject _ledgerVoucherObject)
+        #{
+        #    return super(_ledgerVoucherObject);
+        #}
+      ENDSOURCE
+      SOURCE #lineAmountExclTaxInventoryPosted
+        #/// <summary>
+        #/// Retrieves the line amount excluded tax for a quantity that is updated in inventory.
+        #/// </summary>
+        #/// <returns>
+        #/// The line amount excluded tax for the quantity that is updated in inventory.
+        #/// </returns>
+        #protected AmountCur lineAmountExclTaxInventoryPosted()
+        #{
+        #    return salesLine.calcLineAmountExclTax   (updateNow, this.updateDate(), tax);
+        #}
+      ENDSOURCE
+      SOURCE #lineAmountInventoryPosted
+        #/// <summary>
+        #/// Retrieves the line amount for a quantity that is updated in inventory.
+        #/// </summary>
+        #/// <returns>
+        #/// The line amount for the quantity that is updated in inventory.
+        #/// </returns>
+        #protected AmountCur lineAmountInventoryPosted()
+        #{
+        #    return salesLine.calcLineAmount(updateNow);
+        #}
+      ENDSOURCE
+      SOURCE #lineDiscountAmount
+        #protected AmountCur lineDiscountAmount(AmountCur _lineDiscount = discValue)
+        #{
+        #    return super(_lineDiscount);
+        #}
+      ENDSOURCE
+      SOURCE #markupOnJourSourceQuery
+        #/// <summary>
+        #/// Builds a query to find miscellaneous charges on the header level.
+        #/// </summary>
+        #/// <returns>
+        #/// The built query.
+        #/// </returns>
+        #protected Query markupOnJourSourceQuery()
+        #{
+        #    return salesParmTable.querySalesTable();
+        #}
+      ENDSOURCE
+      SOURCE #mcrProcessGiftCards
+        #private void mcrProcessGiftCards()
+        #{
+        #    SalesLine                   localSalesLine;
+        #    MCRSalesLine                localMCRSalesLine;
+        #    RetailGiftCardTable         retailGiftCardTable;
+        #    RetailGiftCardTransactions  retailGiftCardTransactions, insertRetailGiftCardTransactions;
+        #    RetailParameters            retailParameters;
+        #    utcdatetime                 systemDateTime;
+        #    SalesTable                  localSalesTable;
+        #    RefRecId                    retailChannel;
+        #    // <GEERU>
+        #    RetailGiftCardPost_RU       giftCardPost_RU;
+        #    // </GEERU>
+        #
+        #    void postGiftCard()
+        #    {
+        #        ttsbegin;
+        #        retailGiftCardTable.selectForUpdate(true);
+        #        if (!localMCRSalesLine.GiftCardNumber && localMCRSalesLine.GiftCardType == MCRGiftCardType::Physical)
+        #        {
+        #            throw error("@MCR40294");
+        #        }
+        #
+        #        systemDateTime = DateTimeUtil::getSystemDateTime();
+        #
+        #        if (!localMCRSalesLine.GiftCardNumber && localMCRSalesLine.GiftCardType == MCRGiftCardType::Email)
+        #        {
+        #            //create number
+        #            retailGiftCardTable.EntryId = MCRGiftCard::generateGiftCardSerialNumber();
+        #
+        #        }
+        #        else if (localMCRSalesLine.GiftCardNumber && localMCRSalesLine.GiftCardType == MCRGiftCardType::Physical)
+        #        {
+        #            retailGiftCardTable.EntryId = localMCRSalesLine.GiftCardNumber;
+        #        }
+        #        if (retailGiftCardTable.EntryId)
+        #        {
+        #            retailGiftCardTable.mcrGiftCardType = localMCRSalesLine.GiftCardType;
+        #            retailGiftCardTable.CurrencyCode = localSalesLine.CurrencyCode;
+        #            retailGiftCardTable.Reserved = NoYes::No;
+        #            if (retailParameters.UseGiftCardPolicies)
+        #            {
+        #                retailGiftCardTable.initGiftCardPolicies(retailGiftCardTable.EntryId, DateTimeUtil::applyTimeZoneOffset(systemDateTime, DateTimeUtil::getCompanyTimeZone()), DateTimeUtil::getCompanyTimeZone());
+        #            }
+        #
+        #            retailGiftCardTable.insert();
+        #        }
+        #        else
+        #        {
+        #            throw error("@MCR40295");
+        #        }
+        #        insertRetailGiftCardTransactions.selectForUpdate();
+        #        insertRetailGiftCardTransactions.mcrInventTransId = localSalesLine.InventTransId;
+        #        insertRetailGiftCardTransactions.Amount =
+        #        // <GEERU>
+        #            (retailParameters.ProcessGiftCardsAsPrepayments_RU) ?
+        #                localMCRSalesLine.GiftCardAmount_RU :
+        #        // </GEERU>
+        #                localSalesLine.LineAmount;
+        #        insertRetailGiftCardTransactions.Channel = retailChannel;
+        #        insertRetailGiftCardTransactions.CardNumber = retailGiftCardTable.EntryId;
+        #        insertRetailGiftCardTransactions.mcrInvoiceAccount = localSalesTable.InvoiceAccount;
+        #        insertRetailGiftCardTransactions.Operation = RetailGiftCardOperation::Issue;
+        #        insertRetailGiftCardTransactions.TransDate = DateTimeUtil::date(DateTimeUtil::applyTimeZoneOffset(systemDateTime, DateTimeUtil::getCompanyTimeZone()));
+        #        insertRetailGiftCardTransactions.TransTime = DateTimeUtil::time(DateTimeUtil::applyTimeZoneOffset(systemDateTime, DateTimeUtil::getCompanyTimeZone()));
+        #        insertRetailGiftCardTransactions.Channel = salesTable.retailSalesTable().RetailChannel;
+        #        insertRetailGiftCardTransactions.insert();
+        #        ttscommit;
+        #    }
+        #
+        #    retailParameters = RetailParameters::find();
+        #
+        #    // Only execute if a gift card item has been specified
+        #    if (retailParameters.GiftcardItem)
+        #    {
+        #        retailChannel = salesTable.retailSalesTable().RetailChannel;
+        #        // And the order is in a channel that is not in a channel of type store
+        #        if (retailChannel
+        #            && !RetailStoreTable::findRecId(retailChannel))
+        #        {
+        #            // <GEERU>
+        #            if (retailParameters.ProcessGiftCardsAsPrepayments_RU)
+        #            {
+        #                giftCardPost_RU = RetailGiftCardPost_RU::construct();
+        #            }
+        #            // </GEERU>
+        #
+        #            // Create all gift cards on the invoiced order, and issue gift card transactions for them
+        #            while select localSalesLine
+        #                where localSalesLine.SalesId == salesTable.SalesId
+        #                    && localSalesLine.ItemId == retailParameters.GiftcardItem
+        #                    && localSalesLine.SalesStatus == SalesStatus::Invoiced
+        #                join InvoiceAccount from localSalesTable
+        #                    where localSalesTable.SalesId == localSalesLine.SalesId
+        #                join GiftCardType, GiftCardNumber, GiftCardAmount_RU from localMCRSalesLine
+        #                    where localMCRSalesLine.SalesLine == localSalesLine.RecId
+        #                notexists join retailGiftCardTransactions
+        #                    where retailGiftCardTransactions.mcrInventTransId == localSalesLine.InventTransId
+        #            {
+        #                ttsbegin;
+        #                if (retailParameters.GiftCardCompany == curext()
+        #                    || !retailParameters.GiftCardCompany)
+        #                {
+        #                    postGiftCard();
+        #                }
+        #                else
+        #                {
+        #                    changecompany(retailParameters.GiftCardCompany)
+        #                    {
+        #                        postGiftCard();
+        #                    }
+        #                }
+        #
+        #                // <GEERU>
+        #                if (giftCardPost_RU)
+        #                {
+        #                    giftCardPost_RU.createGiftCardJournalLines(
+        #                        retailGiftCardTable.entryId,
+        #                        SalesTable.InvoiceAccount,
+        #                        systemDateGet(),
+        #                        localSalesLine.CurrencyCode,
+        #                        localMCRSalesLine.GiftCardAmount_RU,
+        #                        salesTable.DefaultDimension);
+        #                }
+        #                // </GEERU>
+        #
+        #                //insert email notification record
+        #                RetailEventNotificationAction::insertRetailOENAction(RetailEventNotificationType::MCRIssueGiftCard, localSalesLine.RecId, salesTable);
+        #                ttscommit;
+        #            }
+        #
+        #            // <GEERU>
+        #            if (giftCardPost_RU)
+        #            {
+        #                giftCardPost_RU.post();
+        #            }
+        #            // </GEERU>
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #mcrSetHasShipped
+        #/// <summary>
+        #///     Populates map with current sales ID and whether or
+        #///     not this order has been shipped.
+        #/// </summary>
+        #/// <remarks>
+        #///     This method sets the flag MCRPreviously shipped to indicate if
+        #///     any part of the order was shipped earlier.
+        #/// </remarks>
+        #void mcrSetHasShipped()
+        #{
+        #    mcrPreviouslyShipped = salesTable.mcrHasShipped();
+        #}
+      ENDSOURCE
+      SOURCE #mcrSettlePayments
+        #/// <summary>
+        #///     Settles payment and invoice transactions for multiple payments.
+        #/// </summary>
+        #void mcrSettlePayments()
+        #{
+        #    MCRCustPaymTotals   mcrCustPaymTotals = MCRCustPaymTotals::construct(salesTable.TableId, salesTable.RecId);
+        #    AmountCur           onAccountPayments;
+        #    AmountCur           totalPaymentAmount;
+        #    boolean             isMultipleSalesInvoice;
+        #    AmountCur           nonOnAccountPayments;
+        #    MCRReturnSalesTable mcrReturnSalesTable = salesTable.mcrReturnSalesTable();
+        #    MCRSalesTable       mcrSalesTable = salesTable.mcrSalesTable();
+        #
+        #    // post payments
+        #    // If summary invoice call separate method to post payments
+        #    isMultipleSalesInvoice =
+        #        CustInvoiceSalesLink::mcrIsMultipleOrdersInvoice(custInvoiceJour.SalesId,
+        #                                                        custInvoiceJour.InvoiceId);
+        #    //Set parm method on total to settle the payments
+        #    mcrCustPaymTotals.parmSettleNow(true);
+        #    if (isMultipleSalesInvoice)
+        #    {
+        #        mcrCustPaymTotals.postPaymentsMultipleOrders(custInvoiceJour);
+        #    }
+        #    else
+        #    {
+        #        // record the payment amount and the amount due
+        #        //  (for use on printed invoices)
+        #        mcrCustPaymTotals.parmCustInvoiceJour(custInvoiceJour);
+        #        mcrCustPaymTotals.parmSalesInvoiceId(custInvoiceJour.InvoiceId);
+        #        mcrCustPaymTotals.processPayments(MCRProcessPaymAction::PostAll, false, false);
+        #
+        #        [custInvoiceJour.mcrPaymAmount, custInvoiceJour.mcrDueAmount] =
+        #        mcrCustPaymTotals.calcInvoiceAmounts(custInvoiceJour);
+        #
+        #        custInvoiceJour.update();
+        #    }
+        #
+        #    onAccountPayments  = mcrCustPaymTotals.getTotalPaymAmount_OnAccount();
+        #    nonOnAccountPayments = mcrCustPaymTotals.getTotalPaymAmount_notOnAccount();
+        #    totalPaymentAmount = mcrCustPaymTotals.getTotalPaymAmount();
+        #
+        #    // If continuity child of a fully paid parent and parent is bill up front
+        #    // settle it here. There is no need of an else here
+        #    // as a sales order is either a cont child or it is not.
+        #    if (mcrSalesTable.ContinuityChild
+        #        && salesTable.mcrIsContParentOrderBillUpFront()
+        #        && mcrSalesTable.ContinuityLineEval == MCRContinuityLineEval::Paid)
+        #    {
+        #        // settle continuity child orders
+        #        mcrCustPaymTotals.settleBillUpFrontContChildren();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #mcrUpdateChildCoupon
+        #/// <summary>
+        #///     Updates the child coupon with the customer account
+        #///     and activates the child coupon for the customer.
+        #/// </summary>
+        #/// <param name="_mcrCoupon">
+        #///     The <c>MCRCoupon</c> record used to updated and activated
+        #///     child coupon and customer.
+        #/// </param>
+        #protected void mcrUpdateChildCoupon(MCRCoupon _mcrCoupon)
+        #{
+        #    MCRCoupon                       mcrCoupon;
+        #    MCRCouponCustomer              mcrCouponCustomer;
+        #    MCRCouponPost_Customer          mcrCouponPost_Customer;
+        #    try
+        #    {
+        #        ttsbegin;
+        #        while select mcrCoupon
+        #            where mcrCoupon.mcrCouponParentId == _mcrCoupon.mcrCouponId
+        #        {
+        #            // Do not add the customer coupon record if it already exists
+        #            select RecId from mcrCouponCustomer
+        #                where mcrCouponCustomer.CustomerCode      == TableGroupAll::Table
+        #                    &&  mcrCouponCustomer.CustVendRel     == salesTable.InvoiceAccount
+        #                    &&  mcrCouponCustomer.mcrCouponId     == mcrCoupon.mcrCouponId;
+        #
+        #            if (mcrCouponCustomer.RecId)
+        #            {
+        #                continue;
+        #            }
+        #            // Write the customer coupon record
+        #            select forupdate mcrCouponCustomer;
+        #            mcrCouponCustomer.CustomerCode    = TableGroupAll::Table;
+        #            mcrCouponCustomer.CustVendRel     = salesTable.InvoiceAccount;
+        #            mcrCouponCustomer.mcrCouponId     = mcrCoupon.mcrCouponId;
+        #            mcrCouponCustomer.insert();
+        #            // Offset  the liability account
+        #            mcrCouponPost_Customer = new MCRCouponPost_Customer(mcrCoupon);
+        #            mcrCouponPost_Customer.post();
+        #        }
+        #        ttscommit;
+        #    }
+        #    catch
+        #    {
+        #        Global::exceptionTextFallThrough();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #mcrUpdateCoupon
+        #/// <summary>
+        #///     Updates the coupon for fully invoiced orders.
+        #/// </summary>
+        #protected void mcrUpdateCoupon()
+        #{
+        #    MCRCouponPost_CustomerOffset    mcrCouponPost_CustomerOffset;
+        #    MCRCouponPost_Customer          mcrCouponPost_Customer;
+        #    MCRCouponSalesTable             mcrCouponSalesTable;
+        #    MCRCoupon                       mcrCoupon;
+        #    MCRReturnSalesTable             mcrReturnSalesTable = salesTable.mcrReturnSalesTable();
+        #
+        #    MCRCustPaymTotals mcrCustPaymTotals =
+        #        MCRCustPaymTotals::construct(salesTable.TableId, salesTable.RecId);
+        #    // Dom't update the coupon for returns
+        #    // Don't look at mcrIsReturn any more,
+        #    // instead just see if it's type returnItem.
+        #    if (salesTable.SalesType == SalesType::ReturnItem
+        #        || mcrReturnSalesTable.IsExchange)
+        #    {
+        #        if (mcrCustPaymTotals.getTotalSalesAmount() != mcrCustPaymTotals.getTotalInvoicedAmount())
+        #        {
+        #            return;
+        #        }
+        #        ttsbegin;
+        #        // look at SalesTable instead of ReturnTable
+        #        while select forupdate mcrCouponSalesTable
+        #            where   mcrCouponSalesTable.SalesId    == mcrReturnSalesTable.OriginalSalesId
+        #            // You can only reissue the coupon once. If the sales order has two RMA's,
+        #            // ony the first RMA shall reissue the coupon
+        #                &&      mcrCouponSalesTable.mcrReissue  == NoYes::No
+        #        {
+        #            if (MCRCoupon::find(mcrCouponSalesTable.mcrCouponId).mcrReissue)
+        #            {
+        #                mcrCouponSalesTable.mcrReissue = NoYes::Yes;
+        #                mcrCouponSalesTable.update();
+        #                // Write the liability account
+        #                mcrCoupon = MCRCoupon::find(mcrCouponSalesTable.mcrCouponId);
+        #                mcrCouponPost_Customer = new MCRCouponPost_Customer(mcrCoupon);
+        #
+        #                mcrCouponPost_Customer.post();
+        #            }
+        #
+        #        }
+        #        ttscommit;
+        #        return;
+        #    }
+        #    // This is done if the full sales order is invoiced
+        #    if (mcrCustPaymTotals.getTotalSalesAmount() != mcrCustPaymTotals.getTotalInvoicedAmount())
+        #    {
+        #        return;
+        #    }
+        #    ttsbegin;
+        #    while select forupdate mcrCouponSalesTable
+        #        where mcrCouponSalesTable.SalesId == salesTable.SalesId
+        #    {
+        #        mcrCoupon = MCRCoupon::find(mcrCouponSalesTable.mcrCouponId);
+        #        // Write the customer to the child coupon
+        #        this.mcrUpdateChildCoupon(mcrCoupon);
+        #        // Offset the liability account
+        #        mcrCouponPost_CustomerOffset = new MCRCouponPost_CustomerOffset(mcrCoupon, salesTable.InvoiceAccount);
+        #        mcrCouponPost_CustomerOffset.post();
+        #        mcrCouponSalesTable.mcrLiabilityDeducted = NoYes::Yes;
+        #        mcrCouponSalesTable.update();
+        #    }
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #mcrWriteProformaMarkup
+        #private void mcrWriteProformaMarkup()
+        #{
+        #    SalesLine               salesLineLocal;
+        #    CustInvoiceTrans        custInvoiceTransLocal;
+        #    QueryRun                queryRun;
+        #    SalesTable              salesTableMarkupLocal;
+        #    SalesTotals             salesTotalsLocal;
+        #    formletterJournal      = this.parmJournalTable();
+        #    formletterJournalTrans = this.journalLine();
+        #
+        #    // loop over lines
+        #    this.selectFormletterJournalTrans();
+        #    while (this.formletterJournalTransRecord())
+        #    {
+        #        salesLineLocal        = this.sourceLine();
+        #        custInvoiceTransLocal = CustInvoiceTrans::findRecId(this.formletterJournalTransRecord());
+        #        markup.mcrProforma(custInvoiceTransLocal.Qty,   // qty
+        #                          lineValue,
+        #                          salesLineLocal,               // source
+        #                          custInvoiceTransLocal);       // destination
+        #        this.nextFormletterJournalTrans();
+        #    }
+        #
+        #    queryRun = new QueryRun(salesParmTable.querySalesTable());
+        #    while (queryRun.next())
+        #    {
+        #        if (queryRun.changed(tableNum(SalesTable)))
+        #        {
+        #            salesTableMarkupLocal = queryRun.get(tableNum(SalesTable));
+        #
+        #            // Use local variable.  Return value of parmTotals may be null.
+        #            salesTotalsLocal = salesTotals;
+        #
+        #            markup.mcrProforma(1,
+        #                              salesTotalsLocal.totalOrderBalance(salesTableMarkupLocal.RecId),
+        #                              salesTableMarkupLocal,
+        #                              custInvoiceJour,
+        #                              salesTotalsLocal.mcrTotalOrderBalanceAbsoluteValue(salesTableMarkupLocal.RecId),
+        #                              salesParmTable.ParmId);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #moveSpecTrans_RU
+        #/// <summary>
+        #///     Moves the specification from the sales order to the invoice.
+        #/// </summary>
+        #protected void moveSpecTrans_RU()
+        #{
+        #    SpecTrans   specTrans;
+        #
+        #    while select forupdate specTrans
+        #        where specTrans.SpecTableId == salesTable.TableId
+        #           && specTrans.SpecRecId   == salesTable.RecId
+        #           && specTrans.SpecCompany == salesTable.DataAreaId
+        #    {
+        #        specTrans.SpecTableId   = custInvoiceJour.TableId;
+        #        specTrans.SpecRecId     = custInvoiceJour.RecId;
+        #        specTrans.SpecCompany   = custInvoiceJour.company();
+        #        specTrans.update();
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #mustCreateScrapOnInventory
+        #/// <summary>
+        #/// Indicates whether to create scrap on inventory.
+        #/// </summary>
+        #/// <returns>
+        #/// true if there should be created scrap on inventory; otherwise, false.
+        #/// </returns>
+        #protected boolean mustCreateScrapOnInventory()
+        #{
+        #    SalesLine           localsalesLine;
+        #
+        #    localsalesLine = this.sourceLine();
+        #    return localsalesLine.Scrap;
+        #}
+      ENDSOURCE
+      SOURCE #parmJournalTable
+        #public Common parmJournalTable(Common _journalTable = custInvoiceJour)
+        #{
+        #    CustInvoiceJour custInvoiceJourToCache;
+        #
+        #    if (!prmisDefault(_journalTable))
+        #    {
+        #        custInvoiceJour = _journalTable as CustInvoiceJour;
+        #
+        #        if (custInvoiceJour)
+        #        {
+        #            select nofetch custInvoiceJourToCache where
+        #                custInvoiceJourToCache.InvoiceId           == custInvoiceJour.InvoiceId &&
+        #                custInvoiceJourToCache.InvoiceDate         == custInvoiceJour.InvoiceDate &&
+        #                custInvoiceJourToCache.NumberSequenceGroup == custInvoiceJour.NumberSequenceGroup &&
+        #                custInvoiceJourToCache.SalesId             == custInvoiceJour.SalesId;
+        #
+        #            custInvoiceJourCache = new RecordViewCache(custInvoiceJourToCache);
+        #        }
+        #    }
+        #
+        #    return custInvoiceJour;
+        #}
+      ENDSOURCE
+      SOURCE #parmMrcPostingErr
+        #public boolean parmMrcPostingErr(boolean _mrcPostingErr = mrcPostingErr)
+        #{
+        #    mrcPostingErr = _mrcPostingErr;
+        #
+        #    return mrcPostingErr;
+        #}
+      ENDSOURCE
+      SOURCE #parmMrcPrintOnPack
+        #public boolean parmMrcPrintOnPack(boolean _mrcPrintOnPack = mrcPrintOnPack)
+        #{
+        #    mrcPrintOnPack = _mrcPrintOnPack;
+        #
+        #    return mrcPrintOnPack;
+        #}
+      ENDSOURCE
+      SOURCE #parmParmTable
+        #public Common parmParmTable(Common _parmTable = salesParmTable)
+        #{
+        #    salesParmTable = _parmTable as SalesParmTable;
+        #
+        #    return salesParmTable;
+        #}
+      ENDSOURCE
+      SOURCE #pdsMRCParameters
+        #/// <summary>
+        #/// Finds related instance of <c>PdsMRCParameters</c> class if relation exists.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>PdsMRCParameters</c> class.
+        #/// </returns>
+        #protected PdsMRCParameters pdsMRCParameters()
+        #{
+        #    if (!pdsMRCParameters.RecId)
+        #    {
+        #        pdsMRCParameters = PdsMRCParameters::find();
+        #    }
+        #
+        #    return pdsMRCParameters;
+        #}
+      ENDSOURCE
+      SOURCE #postAsset_RU
+        #protected void postAsset_RU()
+        #{
+        #    if (salesLine.AssetId_RU)
+        #    {
+        #        if (salesLine.creditNoteLine())
+        #        {
+        #            this.updateAssetReverse_RU();
+        #        }
+        #        else
+        #        {
+        #            this.updateAsset_RU(transactionTxt);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postBalanceAsManyLedgerTransactions_RU
+        #protected boolean postBalanceAsManyLedgerTransactions_RU()
+        #{
+        #    return salesTotals.totalAmountBySign_RU(false) &&
+        #           salesTotals.totalAmountBySign_RU(true);
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postCustVend
+        #/// <summary>
+        #/// Performs the customer related postings.
+        #/// </summary>
+        #protected void postCustVend()
+        #{
+        #    CustVoucher         custVoucher;
+        #    CustTrans           custTrans;
+        #    CustTransRefType    refType;
+        #    Num                 refId;
+        #    CustInvoiceJour_RU custInvoiceJour_RU;
+        #    boolean countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #
+        #    LedgerTransTxt      ledgerTransTxt;
+        #
+        #    SalesLine           salesLineloc;
+        #    SalesLine_IN        salesLine_IN;
+        #
+        #    if (!salesTable.createCustTrans_BR())
+        #    {
+        #        return;
+        #    }
+        #
+        #    if (this.creditNote())
+        #        ledgerTransTxt = LedgerTransTxt::SalesCreditNoteCust;
+        #    else
+        #        ledgerTransTxt = LedgerTransTxt::SalesInvoiceCust;
+        #
+        #    if (countryRegion_RU)
+        #    {
+        #        custInvoiceJour_RU = custInvoiceJour.custInvoiceJour_RU();
+        #
+        #        if (custInvoiceJour_RU.InvoicePostingType_RU == SalesInvoicePostingType_RU::GoodsInRoute)
+        #        {
+        #            this.moveSpecTrans_RU();
+        #        }
+        #    }
+        #
+        #    custVoucher = CustVoucher::newCustVoucherSales(ledgerTransTxt,
+        #                                                   custInvoiceJour,
+        #                                                   salesParmTable,
+        #                                                   salesTable);
+        #
+        #    custVoucher.parmExchRate(custInvoiceJour.ExchRate);
+        #    custVoucher.parmExchRateSecondary(custInvoiceJour.ExchRateSecondary);
+        #    custVoucher.parmReasonRefRecID(custInvoiceJour.ReasonTableRef);
+        #
+        #    if (countryRegion_RU)
+        #    {
+        #        custVoucher.parmSalesInvoicePostingType_RU(custInvoiceJour_RU.InvoicePostingType_RU);
+        #        if (this.postBalanceAsManyLedgerTransactions_RU())
+        #        {
+        #            custVoucher.parmLedgerBalances_RU([
+        #                [false,             salesTotals.totalAmountBySign_RU(false)],
+        #                [this.parmStorno(), salesTotals.totalAmountBySign_RU(true)]
+        #            ]);
+        #        }
+        #    }
+        #
+        #    if (custInvoiceJour.creditNote())
+        #    {
+        #        refType = CustTransRefType::CreditNote;
+        #        refId = custInvoiceJour.InvoiceId;
+        #    }
+        #    else
+        #    {
+        #        refType = CustTransRefType::Invoice;
+        #        refId = custInvoiceJour.InvoiceId;
+        #    }
+        #
+        #    custVoucher.parmTransRefType(refType);
+        #    custVoucher.parmTransRefId(refId);
+        #
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        custVoucher.parmAmountCur(salesTotals.custTransAmount_BR());
+        #    }
+        #    if (TaxWithholdParameters_IN::checkTaxParameters())
+        #    {
+        #        select firstonly tdsGroup_IN, tcsGroup_IN from salesLine_IN
+        #                where salesLine_IN.tdsGroup_IN != ''
+        #                    || salesLine_IN.tcsGroup_IN != ''
+        #            exists join salesLineloc
+        #                where salesLineloc.SalesId == salesTable.SalesId
+        #                    && salesLineloc.RecId == salesLine_IN.SalesLine;
+        #
+        #        custVoucher.parmIsTDSApplicable_IN(salesLine_IN.tdsGroup_IN !='');
+        #        custVoucher.parmIsTCSApplicable_IN(salesLine_IN.tcsGroup_IN !='');
+        #        custVoucher.parmTaxWithholdAmount_IN(salesTotals.parmTaxWithholdAmount_IN());
+        #        custVoucher.parmTaxWithholdAmountOriginCur_IN(salesTotals.taxWithholdCalculation_IN().totalTaxAmountOriginCur());
+        #    }
+        #
+        #    custVoucher.parmBypassCreditCheck(salesTable.creditCardBypassCreditLimit());
+        #    custVoucher.post(ledgerVoucher, custTrans, NoYes::No,Currency::noYes2UnknownNoYes(custInvoiceJour.Triangulation));
+        #
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #    {
+        #        this.postPostCustVendPackage();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postEndDiscount
+        #protected void postEndDiscount()
+        #{
+        #    if (countryRegionIsRU && this.postBalanceAsManyLedgerTransactions_RU())
+        #    {
+        #        endDiscAmounts = [
+        #            [false, salesTotals.totalEndDiscBySign_RU(salesTotals.getSignIndexByAmount_RU(1))],
+        #            [this.parmStorno(), salesTotals.totalEndDiscBySign_RU(salesTotals.getSignIndexByAmount_RU(-1))]
+        #        ];
+        #    }
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #postEndPost_BR
+        #/// <summary>
+        #/// Executes Brazilian localization logic after the <c>endPost</c> method.
+        #/// </summary>
+        #protected void postEndPost_BR()
+        #{
+        #    CustInvoiceJour_BR      custInvoiceJour_BR;
+        #    SalesParmUpdate         salesParmUpdate;
+        #    FiscalDocumentPost_BR   fiscalDocumentPost;
+        #    SalesTable_BR           salesTable_BR;
+        #
+        #    if (RetailParameters::isRetailEnabledAndInUse()
+        #        && salesTable.isRetailStatement_BR()
+        #        || this.isMCRGiftCardCustInvoiceTrans_BR())
+        #    {
+        #        return;
+        #    }
+        #
+        #    if (custInvoiceJour)
+        #    {
+        #        custInvoiceJour_BR = custInvoiceJour.custInvoiceJour_BR();
+        #        custInvoiceJour_BR.TransitControlVoucher_BR = dlvTransitInventController_BR.postInventJournal();
+        #        custInvoiceJour.packCustInvoiceJour_BR(custInvoiceJour_BR);
+        #
+        #        custInvoiceJour.update();
+        #
+        #        if (custInvoiceJour.isProforma())
+        #        {
+        #            fiscalDocumentPost = new FiscalDocumentPost_BR(
+        #                FiscalDocumentParmDataCreator_BR::fromCustProFormaInvoice(custInvoiceJour, salesParmTable, salesTotals, salesParmUpdate, salesTable, journalLines_BR, journalTmpTaxWorkTrans));
+        #
+        #            fiscalDocumentPost.run();
+        #        }
+        #        else
+        #        {
+        #            if (custInvoiceJour.SalesType == SalesType::ReturnItem
+        #                || (!this.creditNote() && !salesTable.isCancellingSalesReturn_BR()))
+        #            {
+        #                select salesParmUpdate where salesParmUpdate.ParmId == salesParmTable.ParmId;
+        #
+        #                fiscalDocumentPost = new FiscalDocumentPost_BR(
+        #                    FiscalDocumentParmDataCreator_BR::fromCustInvoice(custInvoiceJour, salesParmTable, salesTotals, salesParmUpdate, salesTable, journalLines_BR));
+        #
+        #                fiscalDocumentPost.run();
+        #
+        #                if (this.parmWHSLoadId())
+        #                {
+        #                    WHSLoadLineFiscalDocument_BR::insertLoadLinesForCustInvoiceJour(this.parmWHSLoadId(), custInvoiceJour, fiscalDocumentPost.getFiscalDocument().RecId);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                salesTable_BR = salesTable.salesTable_BR();
+        #
+        #                if (salesTable_BR.InvoiceRefRecID_BR)
+        #                {
+        #                    FiscalDocumentPost_BR::cancelFiscalDocument(CustInvoiceJour::findRecId(salesTable_BR.InvoiceRefRecID_BR).fiscalDocument_BR(),
+        #                                                                custInvoiceJour.LedgerVoucher,
+        #                                                                custInvoiceJour.InvoiceDate,
+        #                                                                '',
+        #                                                                ReasonTableRef::find(custInvoiceJour.ReasonTableRef).ReasonComment);
+        #                }
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postEndPostLine_BR
+        #/// <summary>
+        #/// Executes Brazilian localization logic after the <c>endPostLine</c> method.
+        #/// </summary>
+        #protected void postEndPostLine_BR()
+        #{
+        #    journalLines_BR.ins(custInvoiceTrans);
+        #}
+      ENDSOURCE
+      SOURCE #postFailed
+        #/// <summary>
+        #/// Called when the posting of a journal fails.
+        #/// </summary>
+        #/// <param name="_logText">
+        #/// A String with an error message.
+        #/// </param>
+        #public void postFailed(LogText _logText = "")
+        #{
+        #    ShipCarrierShippingRequest  shippingRequest;
+        #    ShipCarrierStaging          staging;
+        #
+        #    if (Global::strContains(_logText,"@SYS116945"))
+        #    {
+        #        // Shipping charges error
+        #        ttsBegin;
+        #        update_recordSet shippingRequest setting
+        #            ErrorRetreivingCharge = NoYes::Yes
+        #                where shippingRequest.ErrorRetreivingCharge == NoYes::No &&
+        #                      (!this.parmShipmentId() || shippingRequest.wmsShipmentId == this.parmShipmentId())
+        #            exists join salesParmLine
+        #                where salesParmLine.ParmId == salesParmTable.ParmId &&
+        #                      salesParmLine.OrigSalesId == shippingRequest.SalesId
+        #            notexists join staging
+        #                where staging.SalesId           == shippingRequest.SalesId &&
+        #                      staging.PackingSlipId     == shippingRequest.PackingSlipId;
+        #        ttsCommit;
+        #    }
+        #
+        #    super(_logText);
+        #}
+      ENDSOURCE
+      SOURCE #postingSales
+        #/// <summary>
+        #/// Retrieves the <c>LedgerPostingType</c> value that is used to post an invoice line.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>LedgerPostingType</c> value.
+        #/// </returns>
+        #protected LedgerPostingType postingSales()
+        #{
+        #    return salesLine.postingSales();
+        #}
+      ENDSOURCE
+      SOURCE #postInit_BR
+        #/// <summary>
+        #/// Populates attributes <c>dlvTransitInventController_BR</c> and <c>journalLines_BR</c>
+        #/// </summary>
+        #public void postInit_BR()
+        #{
+        #    dlvTransitInventController_BR = new DlvTransitInventController_BR(SalesPurchOperationType_BR::find(salesTable.salesTable_BR().SalesPurchOperationType_BR),
+        #                                                                      custInvoiceJour.InvoiceId);
+        #
+        #    journalLines_BR = new RecordSortedList(tableNum(CustInvoiceTrans));
+        #    journalLines_BR.sortOrder(fieldNum(CustInvoiceTrans, RecId));
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postInitTransactionTxt_BR
+        #/// <summary>
+        #/// Sets the name placeholder in the transaction text.
+        #/// </summary>
+        #/// <param name="_transactionTxt">
+        #/// The ledger transaction text <c>TransactionTxt</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// The ledger transaction text <c>TransactionTxt</c> record.
+        #/// </returns>
+        #protected TransactionTxt postInitTransactionTxt_BR(TransactionTxt _transactionTxt)
+        #{
+        #    _transactionTxt.setName_BR   (custInvoiceJour.custTable_InvoiceAccount().name());
+        #
+        #    return _transactionTxt;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postInventory
+        #/// <summary>
+        #/// Posts to inventory.
+        #/// </summary>
+        #protected void postInventory()
+        #{
+        #    CustInvoiceTrans_RU     custInvoiceTrans_RU;
+        #    InventMov_AssetSale_ru  assetInvent;
+        #    InventUpd_Estimated     estimated;
+        #    InventUpd_Financial     inventUpd_Financial;
+        #    boolean                 countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #
+        #    this.createScrapOnInventory();
+        #    if (countryRegion_RU && salesLine.AssetId_RU)
+        #    {
+        #        assetInvent =  new InventMov_AssetSale_ru(salesLine);
+        #        if (assetInvent.canDisposal())
+        #        {
+        #            estimated = InventUpd_Estimated::newInventMovement(assetInvent);
+        #            estimated.updateNow();
+        #
+        #            inventUpd_Financial = InventUpd_Financial::newPostAsset_RU(assetInvent, ledgerVoucher);
+        #            inventUpd_Financial.parmCurrencyCode(CompanyInfo::standardCurrency());
+        #            inventUpd_Financial.updateNow();
+        #        }
+        #    }
+        #
+        #    inventMovement = InventMovement::construct(salesLine);
+        #    if (countryRegion_RU)
+        #    {
+        #        custInvoiceTrans_RU = custInvoiceTrans.custInvoiceTrans_RU();
+        #
+        #        inventMovement.parmStorno_RU(this.creditNote() && this.parmStorno());
+        #        inventMovement.parmGoodsInRoute_RU(salesParmTable.InvoicePostingType_RU == SalesInvoicePostingType_RU::GoodsInRoute);
+        #        inventMovement.parmInventTransIdTransit_RU(custInvoiceTrans_RU.InventTransIdTransit_RU);
+        #        inventMovement.parmInventTransIdDelivery_RU(custInvoiceTrans_RU.InventTransIdDelivery_RU);
+        #        inventMovement.parmStornoPhysical_RU(salesParmTable.salesParmUpdate().StornoPhysical_RU);
+        #    }
+        #    this.updateInventory(inventMovement);
+        #
+        #    if (salesLine.returnItem())
+        #    {
+        #        salesLine.returnLineUpdate(this.documentStatus());
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #postJournalPost
+        #/// <summary>
+        #/// Deletes orders after posting a journal.
+        #/// </summary>
+        #/// <remarks>
+        #/// This method is used to delete orders after posting invoices.
+        #/// </remarks>
+        #public void postJournalPost()
+        #{
+        #    CustInvoiceJour custInvoiceJourTemp;
+        #    // <GIN>
+        #    ExciseTaxPostHandler_IN exciseTaxPostHandlerLoc;
+        #
+        #    boolean excise_IN = TaxParameters::isExciseEnable_IN();
+        #    // <GIN>
+        #
+        #    super();
+        #
+        #    if (this.parmPostingInBatch())
+        #    {
+        #        // Only create payments here if posting in batch. If not in a batch, payments are created in SalesFormletter_Invoice.createPayment() method
+        #        // This is done so that non-batch invoices can support the payment method's export file format.
+        #        this.createPayment();
+        #    }
+        #    // <GIN>
+        #    if(excise_IN)
+        #    {
+        #        exciseTaxPostHandlerLoc = new ExciseTaxSalesPostHandler_IN();
+        #        if(exciseTaxPostHandlerLoc.canPostDeferment())
+        #        {
+        #            exciseTaxPostHandlerLoc.createAndPostDefferedLedgerJournal(custInvoiceJour);
+        #        }
+        #    }
+        #    // <GIN>
+        #    if (#PdsRebateEnabled)
+        #    {
+        #        if (custInvoiceJour
+        #           && PdsRebateParameters::find().PdsRebateAtInvoicing)
+        #        {
+        #            PdsRebateFindAndCreate::newFromCustInvoiceTrans(custInvoiceJour, custInvoiceTrans).run();
+        #        }
+        #    }
+        #
+        #    // Royalties are set up to calculate at invoicing. Evaluate and calculate here.
+        #    if(!this.isProforma()
+        #        && custInvoiceJour
+        #        && isConfigurationkeyEnabled(configurationKeyNum(MCRRoyalty)))
+        #    {
+        #        MCRRoyaltyVendTableFindAndCreate::newFromCustInvoiceTrans(custInvoiceJour, custInvoiceTrans).run();
+        #    }
+        #
+        #    // Post loyalty points (i.e. loyalty transactions)
+        #    if (formletterJournal.TableId == tableNum(CustInvoiceJour)
+        #        && isConfigurationkeyEnabled(configurationKeyNum(Retail)))
+        #    {
+        #        custInvoiceJourTemp = formletterJournal;
+        #        RetailLoyaltyManager::PostCardTransFromSalesTable(custInvoiceJourTemp.SalesId);
+        #    }
+        #
+        #
+        #    this.deleteFullyInvoiced();
+        #}
+      ENDSOURCE
+      SOURCE #postLine
+        #/// <summary>
+        #/// Posts one journal line.
+        #/// </summary>
+        #protected void postLine()
+        #{
+        #    super();
+        #
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        this.postPostLine_BR();
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postLineDiscount
+        #/// <summary>
+        #/// Posts the line discount.
+        #/// </summary>
+        #protected void postLineDiscount()
+        #{
+        #    InventProfileType_RU inventProfileType;
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #    {
+        #        inventProfileType = salesLine.inventProfileType_RU();
+        #
+        #        if (salesParmTable.InvoicePostingType_RU == SalesInvoicePostingType_RU::GoodsInRoute       ||
+        #            inventProfileType                    == InventProfileType_RU::CommissionPrincipalAgent ||
+        #            inventProfileType                    == InventProfileType_RU::Bailee)
+        #        {
+        #            return;
+        #        }
+        #    }
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupOnJour
+        #/// <summary>
+        #/// Posts the markup for the invoice journal header for a source record.
+        #/// </summary>
+        #/// <param name="_source">
+        #/// The source record for which to post markup on the invoice journal header.
+        #/// </param>
+        #protected void postMarkupOnJour(Common _source)
+        #{
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        totalOrderBalanceAbsoluteValue = salesTotals.mcrTotalOrderBalanceAbsoluteValue(_source.RecId);
+        #    }
+        #
+        #    super(_source);
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupOnTrans
+        #/// <summary>
+        #/// Posts markup for the journal lines.
+        #/// </summary>
+        #protected void postMarkupOnTrans()
+        #{
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #    {
+        #        postNegativeMarkupsAsCorrection_RU = this.usePerLineCorrection_RU();
+        #    }
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupTable
+        #/// <summary>
+        #/// Posts markup for the journal header.
+        #/// </summary>
+        #protected void postMarkupTable()
+        #{
+        #    super();
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        if (this.parmProforma())
+        #        {
+        #            this.mcrWriteProformaMarkup();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postNotStocked
+        #/// <summary>
+        #/// Performs posting routines for not stocked sales order lines.
+        #/// </summary>
+        #protected void postNotStocked()
+        #{
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #postPostCustVendPackage
+        #/// <summary>
+        #/// Calculates and creates the package posting for an invoice
+        #/// </summary>
+        #/// <remarks>
+        #/// This method is the post event handler for the <c>postCustVend</c> method.
+        #/// </remarks>
+        #protected void postPostCustVendPackage()
+        #{
+        #    if (this.isProforma() ||
+        #        CustTable::find(custInvoiceJour.InvoiceAccount).PackageDepositExcempt_PL)
+        #        return;
+        #
+        #    PlSalesDeposit_Invoice::updatePackageTrans(custInvoiceJour);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postPostLine_BR
+        #/// <summary>
+        #/// Adds the line to the inventory journal lines.
+        #/// </summary>
+        #protected void postPostLine_BR()
+        #{
+        #    LedgerDimensionAccount ledgerDimension;
+        #
+        #    ledgerDimension = CustLedgerAccounts::summaryLedgerDimension(custInvoiceTrans.invoiceAccount(), custInvoiceJour.PostingProfile);
+        #
+        #    dlvTransitInventController_BR.addLine(custInvoiceTrans.ItemId,
+        #                                          custInvoiceTrans.Qty,
+        #                                          custInvoiceTrans.SalesPrice,
+        #                                          custInvoiceTrans.InventDimId,
+        #                                          ledgerDimension,
+        #                                          custInvoiceTrans.DefaultDimension);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postQualityOrderTaxes_IN
+        #/// <summary>
+        #/// Posts the quality order taxes.
+        #/// </summary>
+        #/// <param name="_ledgerVoucher">
+        #/// The ledger voucher.
+        #/// </param>
+        #/// <param name="_transactionTxt">
+        #/// The transaction txt.
+        #/// </param>
+        #public void postQualityOrderTaxes_IN(
+        #    LedgerVoucher  _ledgerVoucher,
+        #    TransactionTxt _transactionTxt)
+        #{
+        #    InventQualityOrderTable inventQualityOrderTable;
+        #    TaxSalesQualityOrder_IN qualityOrderTax;
+        #    NumberSequenceReference numberSeqRef;
+        #    LedgerVoucherObject     ledgerVoucherObject;
+        #    LedgerVoucherGroup      ledgerVoucherGroup;
+        #    LedgerVoucher           taxTransLedgerVoucher;
+        #    LedgerVoucher           settlementLedgerVoucher;
+        #    NumberSeq               numberSequence;
+        #    TaxTrans                taxTrans;
+        #
+        #    inventQualityOrderTable = InventQualityOrderTable::findSalesPurchRefTransId_IN(salesLine.InventTransId, InventTestReferenceType::Sales);
+        #
+        #    select firstonly RecId from taxTrans
+        #        where taxTrans.SourceTableId == tableNum(InventQualityOrderTable)
+        #            && taxTrans.SourceRecId  == inventQualityOrderTable.RecId;
+        #
+        #    if (taxTrans.RecId != 0)
+        #    {
+        #        return;
+        #    }
+        #
+        #    ledgerVoucherGroup      = LedgerVoucherGroup::construct();
+        #    numberSeqRef            = CustParameters::numRefCustInvoiceVoucher();
+        #    numberSequence          = NumberSeq::newGetVoucher(numberSeqRef);
+        #
+        #    taxTransLedgerVoucher = LedgerVoucher::newLedgerPost(DetailSummary::Detail,
+        #                                                         SysModule::Cust,
+        #                                                         NumberSequenceTable::find(numberSeqRef.NumberSequenceId).NumberSequence);
+        #
+        #    taxTransLedgerVoucher.parmCompanyId(curext());
+        #
+        #    ledgerVoucherGroup.addLedgerVoucher(taxTransLedgerVoucher);
+        #    ledgerVoucherObject = taxTransLedgerVoucher.findLedgerVoucherObject();
+        #
+        #    if (ledgerVoucherObject == null
+        #        || ledgerVoucherObject.transElements() != 0)
+        #    {
+        #        taxTransLedgerVoucher.addVoucher(LedgerVoucherObject::newVoucher(numberSequence.voucher(),
+        #                                                                         this.updateDate()));
+        #    }
+        #    voucher = taxTransLedgerVoucher.lastVoucher();
+        #    taxTransLedgerVoucher.findLedgerVoucherObject(voucher).lastTransTxt(_transactionTxt.txt());
+        #    qualityOrderTax = TaxSalesQualityOrder_IN::construct(inventQualityOrderTable);
+        #    qualityOrderTax.setRelatedVoucherObject(taxTransLedgerVoucher);
+        #    qualityOrderTax.inventLossAccount(salesLine.ItemId);
+        #
+        #    qualityOrderTax.calc();
+        #    qualityOrderTax.setVoucherId(voucher);
+        #    qualityOrderTax.saveAndPost(LedgerPostingController::newForLedgerPostingJournal(taxTransLedgerVoucher),
+        #                                inventQualityOrderTable);
+        #    ledgerVoucherGroup.end();
+        #    settlementLedgerVoucher = ledgerVoucherGroup.findLedgerVoucher(curext(),
+        #                                                                   taxTransLedgerVoucher.parmVoucherSeriesCode());
+        #
+        #    if (settlementLedgerVoucher != null)
+        #    {
+        #        settlementLedgerVoucher.createVoucherLinks(_ledgerVoucher.lastVoucher(),
+        #                                                   _ledgerVoucher.lastTransDate());
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postTaxOnProforma
+        #/// <summary>
+        #/// Indicates whether tax should be considered when you post a pro forma journal.
+        #/// </summary>
+        #/// <returns>
+        #/// Always returns true.
+        #/// </returns>
+        #protected boolean postTaxOnProforma()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #projLedger
+        #protected ProjLedger projLedger(ItemId _itemId = '')
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #recalcTotals
+        #/// <summary>
+        #/// Recalculates the totals.
+        #/// </summary>
+        #/// <remarks>
+        #/// If he quantity is reduced by inventory, use this method.
+        #/// </remarks>
+        #protected void recalcTotals()
+        #{
+        #    salesTotals = SalesTotals::construct(salesParmTable, this.parmSpecQty(), this.parmSumBy(), custInvoiceJour.ParmId, this.parmSumOrderId(), this.documentStatus());
+        #    salesTotals.parmSalesInvoicePostingType_RU(salesParmTable.InvoicePostingType_RU);
+        #    salesTotals.parmGoodsInRouteId_RU(salesParmTable.GoodsInRouteId_RU);
+        #    salesTotals.prepareTotalAmountCalculation();
+        #    salesTotals.prepareQuantitiesCalculation();
+        #    this.tax(salesTotals.tax());
+        #}
+      ENDSOURCE
+      SOURCE #retailBlockReturnedItems
+        #/// <summary>
+        #/// Reserves items that were returned to location with <c>RetailBlockReturnedItems</c> flag
+        #/// </summary>
+        #protected void retailBlockReturnedItems()
+        #{
+        #    InventBlocking      inventBlocking;
+        #    ListEnumerator      listEnumerator;
+        #    SalesLine           localSalesLine;
+        #
+        #    RetailTransactionSalesTrans     retailTransactionSalesTrans;
+        #    RetailTransactionInfocodeTrans  retailTransactionInfocodeTrans;
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(Retail)))
+        #    {
+        #        listEnumerator = journalLines.getEnumerator();
+        #
+        #        while (listEnumerator.moveNext())
+        #        {
+        #            localSalesLine = this.getSalesLine(listEnumerator);
+        #
+        #            //if salelesLine is not exists or it BlockQty is 0 we don't need to process it
+        #            if (!localSalesLine || !localSalesLine.RetailBlockQty)
+        #            {
+        #                continue;
+        #            }
+        #
+        #            select firstonly RecId, InfocodeId, SubInfocodeId from retailTransactionInfocodeTrans
+        #                order by LineNum desc
+        #                exists join retailTransactionSalesTrans
+        #                    where retailTransactionSalesTrans.Store         == retailTransactionInfocodeTrans.Store
+        #                       && retailTransactionSalesTrans.TerminalId    == retailTransactionInfocodeTrans.Terminal
+        #                       && retailTransactionSalesTrans.TransactionId == retailTransactionInfocodeTrans.TransactionId
+        #                       && retailTransactionSalesTrans.LineNum       == retailTransactionInfocodeTrans.ParentLineNum
+        #                       && retailTransactionSalesTrans.Channel       == retailTransactionInfocodeTrans.Channel
+        #                       && retailTransactionSalesTrans.InventTransId == localSalesLine.InventTransId
+        #                       && retailTransactionSalesTrans.InventDimId   == localSalesLine.InventDimId;
+        #
+        #            ttsbegin;
+        #
+        #            inventBlocking.clear();
+        #
+        #            inventBlocking.BlockingType         = InventBlockingType::ReturnLocation;
+        #            inventBlocking.ExpectReceipt        = NoYes::No;
+        #            inventBlocking.Qty                  = localSalesLine.RetailBlockQty;
+        #            inventBlocking.ItemId               = localSalesLine.ItemId;
+        #            inventBlocking.InventDimId          = localSalesLine.InventDimId;
+        #            inventBlocking.ExpectedReceiptDate  = dateMax();
+        #
+        #            if (retailTransactionInfocodeTrans)
+        #            {
+        #                inventBlocking.Description = strFmt("@REX4520660", retailTransactionInfocodeTrans.InfocodeId, retailTransactionInfocodeTrans.SubInfocodeId); //Info code: %1, sub code: %2
+        #            }
+        #
+        #            inventBlocking.write();
+        #
+        #            ttscommit;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #roundingOffSign
+        #/// <summary>
+        #/// Gets the rounding sign.
+        #/// </summary>
+        #/// <returns>
+        #/// The rounding sign.
+        #/// </returns>
+        #protected int roundingOffSign()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #/// <summary>
+        #/// Posts a journal.
+        #/// </summary>
+        #public void run()
+        #{
+        #    CreditCardPaymentJournal    creditCardPaymentJournal;
+        #    CreditCardAuthTrans         creditCardAuthTrans;
+        #    boolean                     isRefund;
+        #
+        #    void updateSalesTableAuthorizationError(SalesId _salesId, NoYes _hasError)
+        #    {
+        #        SalesTable salesTableLocal = SalesTable::find(_salesId, true);
+        #
+        #        if(salesTableLocal
+        #            && creditCardSalesTable.CreditCardCustRefId
+        #            )
+        #        {
+        #            salesTableLocal.CreditCardAuthorizationError = _hasError;
+        #            salesTableLocal.update();
+        #        }
+        #    }
+        #
+        #    if(!this.isProforma())
+        #    {
+        #        ttsbegin;
+        #
+        #        updateSalesTableAuthorizationError(salesTable.SalesId, NoYes::No);
+        #    }
+        #
+        #    super();
+        #
+        #    isRefund = custInvoiceJour.InvoiceAmount < 0;
+        #
+        #    if(!this.isProforma())
+        #    {
+        #        if (this.creditCardDoCaptureOrPostAuthorize(custInvoiceJour.InvoiceId, isRefund, custInvoiceJour))
+        #        {
+        #            ttscommit;
+        #
+        #            // Reread the buffer to get the data changed during the creditCardDoCaptureOrPostAuthorize().
+        #            creditCardSalesTable.reread();
+        #
+        #            if (creditCardSalesTable.CreditCardCustRefId)
+        #            {
+        #                // Create the payment journal and settle this invoice with credit card payment.
+        #                creditCardPaymentJournal = new CreditCardPaymentJournal(creditCardSalesTable, custInvoiceJour);
+        #                creditCardPaymentJournal.run();
+        #            }
+        #            if (!isRefund && creditCardSalesTable.SalesStatus != SalesStatus::Invoiced)
+        #            {
+        #                // The processed sales order has not been marked as invoiced.
+        #                // Preauthorize the remaining amount.
+        #                this.creditCardDoPreAuthorize();
+        #            }
+        #        }
+        #        else
+        #        {
+        #            // Credit card capture failed.  Abort to not post the invoice.
+        #            ttsabort;
+        #
+        #            ttsbegin;
+        #            creditCardAuthTrans = CreditCardAuthTrans::findLatest(creditCardSalesTable.SalesId, true);
+        #            creditCardAuthTrans.SalesInvoiceId = ""; // no posting so invoice id does not apply
+        #            creditCardAuthTrans.update();
+        #
+        #            // Put the Sales Order into the "Credit card issues list"
+        #            updateSalesTableAuthorizationError(creditCardSalesTable.SalesId, NoYes::Yes);
+        #            ttscommit;
+        #
+        #            throw error(strFmt("@SYS116944", creditCardSalesTable.SalesId));
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #salesInvoicePostNotStocked
+        #/// <summary>
+        #/// Creates an instance of the <c>SalesInvoicePostNotStocked</c> class.
+        #/// </summary>
+        #/// <returns>
+        #/// A new instance of the <c>SalesInvoicePostNotStocked</c> class.
+        #/// </returns>
+        #protected SalesInvoicePostNotStocked salesInvoicePostNotStocked()
+        #{
+        #    SalesInvoicePostNotStocked  salesInvoicePostNotStocked;
+        #
+        #    salesInvoicePostNotStocked = SalesInvoicePostNotStocked::construct(custInvoiceTrans,
+        #                                                                salesLine,
+        #                                                                salesParmLine,
+        #                                                                recordInsertListCustInvoicePackingSlipMatch);
+        #
+        #    return salesInvoicePostNotStocked;
+        #}
+      ENDSOURCE
+      SOURCE #selectFormletterJournalTrans
+        #/// <summary>
+        #///   Selects a journal line.
+        #/// </summary>
+        #protected void selectFormletterJournalTrans()
+        #{
+        #    select forupdate formletterJournalTrans
+        #        where formletterJournalTrans.JournalId           == formletterJournal.JournalId
+        #           && formletterJournalTrans.InternalJournalId   == formletterJournal.InternalJournalId
+        #           && formletterJournalTrans.OrderId             == formletterJournal.OrderId
+        #           && formletterJournalTrans.TransDate           == formletterJournal.TransDate
+        #           && formletterJournalTrans.NumberSequenceGroup == formletterJournal.NumberSequenceGroup
+        #        join forupdate salesLine
+        #            where salesLine.InventTransId                == formletterJournalTrans.InventTransId
+        #        outer join salesParmLine
+        #            where salesParmLine.ParmId                   == custInvoiceJour.ParmId
+        #               && salesParmLine.TableRefId               == salesParmTable.TableRefId
+        #               && salesParmLine.SalesLineRecId           == salesLine.RecId
+        #        outer join inventTable
+        #            where inventTable.ItemId                     == salesLine.ItemId;
+        #}
+      ENDSOURCE
+      SOURCE #setNotStockedVariables
+        #/// <summary>
+        #/// Sets the <c>SalesInvoiceJournalPost</c> object to the <c>SalesInvoicePostNotStocked</c> object.
+        #/// </summary>
+        #/// <param name="_salesInvoicePostNotStocked">
+        #/// The instance of the <c>SalesInvoicePostNotStocked</c> class.
+        #/// </param>
+        #protected void setNotStockedVariables(SalesInvoicePostNotStocked _salesInvoicePostNotStocked)
+        #{
+        #    super(_salesInvoicePostNotStocked);
+        #}
+      ENDSOURCE
+      SOURCE #setRevenueAmount_BR
+        #protected AmountCur setRevenueAmount_BR(AmountCur _revenueAmount)
+        #{
+        #    _revenueAmount += tax.taxInSalesRevenue_BR(salesLine.TableId, salesLine.RecId);
+        #
+        #    if (salesTable.createCustTrans_BR() == false)
+        #    {
+        #        _revenueAmount = 0;
+        #    }
+        #    return _revenueAmount;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #setReverseCharge_UK
+        #/// <summary>
+        #///    Checks whether reverse charge applies to the current invoice update. If it has, updates the
+        #///    applicable lines with the reverse charge sales tax group.
+        #/// </summary>
+        #/// <remarks>
+        #///    If the reverse charge feature is disabled, no additional checks are performed.
+        #/// </remarks>
+        #protected void setReverseCharge_UK()
+        #{
+        #    if (ReverseChargeParameters_UK::find().rcEnabled)
+        #    {
+        #        if ((ReverseCharge_invoice_UK::isSalesLineReverseChargeApplicable(salesTable.SalesId,salesParmTable.ParmId,salesParmTable.TableRefId) ||
+        #            (ReverseChargeParameters_UK::find().rcInvoiceThreshold &&
+        #             ReverseCharge_invoice_UK::reverseChargeSalesTotal(salesTable.SalesId,salesParmTable.ParmId,salesParmTable.TableRefId)>=ReverseChargeParameters_UK::find().rcInvoiceThresholdAmount)) &&
+        #            ReverseCharge_invoice_UK::isSalesDomestic(salesTable) &&
+        #            ReverseCharge_invoice_UK::isReverseChargeApplicableSales(salesTable.SalesId,salesParmTable.ParmId,salesParmTable.TableRefId))
+        #        {
+        #            if (salesTable.vatNum)
+        #            {
+        #                ReverseCharge_invoice_UK::setReverseChargeSalesItemSalesTaxGroup(salesTable.SalesId,salesParmTable.ParmId,salesParmTable.TableRefId);
+        #            }
+        #            else
+        #            {
+        #                warning("@SYS125408");
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #shouldCopyMultipleDocuRef
+        #protected boolean shouldCopyMultipleDocuRef()
+        #{
+        #    return !ordersPosted.empty();
+        #}
+      ENDSOURCE
+      SOURCE #shouldPostMarkupTable
+        #protected boolean shouldPostMarkupTable()
+        #{
+        #    boolean                         mcrShouldPostMarkupTable = true;
+        #    SalesParmUpdate                 salesParmUpdateLocal;
+        #    CustInvoiceTrans                custInvoiceTransLocal;
+        #    SalesParmLine                   salesParmLineLocal;
+        #    MCRSalesOrderType               mcrSalesOrderType;
+        #    AmountCur                       totToBeInvoiced;
+        #    AmountCur                       totBeingInvoiced;
+        #    MCRSalesOrderTotals             mcrSalesOrderTotals;
+        #    MCRInventTable                  mcrInventTable;
+        #    InventTable                     inventTableLocal;
+        #
+        #    mcrSalesOrderType = salesTable.mcrEvalSalesOrderType();
+        #
+        #    if (mcrSalesOrderType == MCRSalesOrderType::OrderAndInstallment)
+        #    {
+        #        mcrSalesOrderTotals = new MCRSalesOrderTotals(salesTable);
+        #        totToBeInvoiced     = mcrSalesOrderTotals.getRemainingOrder();
+        #        totBeingInvoiced    = custInvoiceJour.InvoiceAmountMST;
+        #
+        #        if (totToBeInvoiced != totBeingInvoiced)
+        #        {
+        #            salesParmUpdateLocal = SalesParmUpdate::find(salesParmTable.ParmId);
+        #            select firstonly ItemId from custInvoiceTransLocal
+        #                join RecId from inventTableLocal
+        #                    where inventTableLocal.ItemId == custInvoiceTransLocal.ItemId
+        #                join InstallmentEligible from mcrInventTable
+        #                    where mcrInventTable.InventTable == inventTableLocal.RecId
+        #                       && mcrInventTable.InstallmentEligible
+        #                exists join RecId from salesParmLineLocal
+        #                where custInvoiceTransLocal.OrigSalesId  == salesTable.SalesId
+        #                    && salesParmLineLocal.InventTransId  == custInvoiceTransLocal.InventTransId
+        #                    && salesParmLineLocal.ParmId         == salesParmUpdateLocal.ParmId;
+        #
+        #            if (mcrInventTable.InstallmentEligible)
+        #            {
+        #                mcrShouldPostMarkupTable = false;
+        #                this.postCustVend();
+        #            }
+        #        }
+        #    }
+        #
+        #    return mcrShouldPostMarkupTable;
+        #}
+      ENDSOURCE
+      SOURCE #sourceAmountMarkupOnJour
+        #/// <summary>
+        #/// Calculates the miscellaneous charges amount for a <c>Common</c> record.
+        #/// </summary>
+        #/// <param name="_source">
+        #/// The source record for which to calculate the miscellaneous charges amount.
+        #/// </param>
+        #/// <returns>
+        #/// The calculated miscellaneous charges amount.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used to calculate miscellaneous charges on the header level.
+        #/// </remarks>
+        #protected AmountCur sourceAmountMarkupOnJour(Common _source)
+        #{
+        #    return salesTotals.totalOrderBalance(_source.RecId);
+        #}
+      ENDSOURCE
+      SOURCE #sourceDocumentLine
+        #/// <summary>
+        #/// Gets the record ID for the associated source document line.
+        #/// </summary>
+        #/// <returns>
+        #/// The record ID.
+        #/// </returns>
+        #protected RefRecId sourceDocumentLine()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #sourceLine
+        #/// <summary>
+        #/// Gets the source line record for the current journal line.
+        #/// </summary>
+        #/// <returns>
+        #/// A source line record.
+        #/// </returns>
+        #protected Common sourceLine()
+        #{
+        #    return salesLine;
+        #}
+      ENDSOURCE
+      SOURCE #sourceLineQuantity
+        #/// <summary>
+        #/// Retrieves the <c>UnitQty</c> value for the source line that is being invoiced.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>UnitQty</c> value for the source line that is being invoiced.
+        #/// </returns>
+        #protected UnitQty sourceLineQuantity()
+        #{
+        #    return salesLine.SalesQty;
+        #}
+      ENDSOURCE
+      SOURCE #sourceLineSalesUnit
+        #/// <summary>
+        #/// Retrieves the unit of measure for a source line.
+        #/// </summary>
+        #/// <returns>
+        #/// The unit of measure for the source line.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used to post inventory.
+        #/// </remarks>
+        #protected SalesUnit sourceLineSalesUnit()
+        #{
+        #    return salesLine.SalesUnit;
+        #}
+      ENDSOURCE
+      SOURCE #sourceMarkupOnTrans
+        #/// <summary>
+        #/// Retrieves the source record to post miscellaneous charges on the line level.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>Common</c> record .
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used to post miscellaneous charges on the line level.
+        #/// </remarks>
+        #protected Common sourceMarkupOnTrans()
+        #{
+        #    return salesLine;
+        #}
+      ENDSOURCE
+      SOURCE #sourceTable
+        #/// <summary>
+        #/// Gets the source header record for the journal header.
+        #/// </summary>
+        #/// <returns>
+        #/// A source header record.
+        #/// </returns>
+        #protected Common sourceTable()
+        #{
+        #    return salesTable;
+        #}
+      ENDSOURCE
+      SOURCE #tableIdSourceMarkupJour
+        #/// <summary>
+        #/// Retrieves the table ID for a table that is used to find miscellaneous charges on the header level.
+        #/// </summary>
+        #/// <returns>
+        #/// The table ID.
+        #/// </returns>
+        #protected TableId tableIdSourceMarkupJour()
+        #{
+        #    return tableNum(SalesTable);
+        #}
+      ENDSOURCE
+      SOURCE #tmpLineValue_RU
+        #protected Amount tmpLineValue_RU()
+        #{
+        #    return this.tax().taxPrLine(tableNum(SalesLine), salesLine.RecId);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #totalAmount
+        #/// <summary>
+        #/// Retrieves the total amount for a sales invoice that is being posted.
+        #/// </summary>
+        #/// <returns>
+        #/// The total amount for the sales invoice.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used to determine whether the invoice is a credit note.
+        #/// </remarks>
+        #protected AmountCur totalAmount()
+        #{
+        #    return salesTotals.totalAmount();
+        #}
+      ENDSOURCE
+      SOURCE #totalQty_RU
+        #protected SalesQty totalQty_RU()
+        #{
+        #    return salesTotals.totalQty();
+        #}
+      ENDSOURCE
+      SOURCE #tradeCalcTax
+        #/// <summary>
+        #/// Gets an instance of the <c>TradeCalcTax</c> object.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>TradeCalcTax</c> object.
+        #/// </returns>
+        #protected Object tradeCalcTax()
+        #{
+        #    SalesCalcTax ret = SalesCalcTax::construct(this.parmJournalTable());
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]) && this.usePerLineCorrection_RU())
+        #    {
+        #        ret.parmPostNegativeLinesAsStorno_RU(true);
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogTxt
+        #/// <summary>
+        #/// Gets an instance of the <c>TransTxt</c> object.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>TransTxt</c> object.
+        #/// </returns>
+        #protected TransTxt  transactionLogTxt()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogType
+        #/// <summary>
+        #/// Gets the transaction log type.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>TransactionLogType::SalesInvoice</c> enumeration value.
+        #/// </returns>
+        #protected TransactionLogType  transactionLogType()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #updateAdvanceInvoiceSettlement_W
+        #/// <summary>
+        #/// For each advance invoice marked to settle with the current sales invoice, creates and posts
+        #/// a reversing advance invoice, and generates an advance invoice settlement record.
+        #/// </summary>
+        #protected void updateAdvanceInvoiceSettlement_W()
+        #{
+        #    SalesFormLetterContract contract = this.parmChainFormletterContract();
+        #    AdvanceInvoiceSettlement_SalesOrder_W advanceInvoiceSettlement =
+        #        AdvanceInvoiceSettlement_W::newUnpack(tableNum(SalesTable),
+        #            SysOperationHelper::base64Decode(contract.parmAdvanceInvoiceSettlementPacked()));
+        #
+        #    if (!this.isProforma() && !this.isOnHold())
+        #    {
+        #        if (advanceInvoiceSettlement)
+        #        {
+        #            advanceInvoiceSettlement.reverseSettlement(custInvoiceJour);
+        #            advanceInvoiceSettlement.settleNow(custInvoiceJour);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateAsset_RU
+        #private void updateAsset_RU(TransactionTxt _transactionTxt)
+        #{
+        #    RAssetStandards         assetStandards;
+        #    RAssetStandardId        assetStandardDefault = RAssetParameters::standardIdDefault();
+        #    Voucher                 assetVoucher;
+        #    NumberSequenceCode      assetNumberSeq;
+        #    RefRecId                numberSequnceTableId;
+        #    LedgerVoucherObject     assetLedgerVoucherObjectOthers;
+        #    RAssetPost              rAssetPost;
+        #    RAssetOperationType     rAssetOperationType;
+        #    RAssetTrans             rAssetTrans;
+        #
+        #    if (assetLedgerVoucherBase)
+        #    {
+        #        rAssetPost = RAssetPost::construct(custInvoiceTrans,
+        #                                           assetLedgerVoucherBase,
+        #                                           assetStandardDefault);
+        #        rAssetPost.run();
+        #
+        #        while select AssetStandardId from assetStandards
+        #            where assetStandards.AssetId         == salesLine.AssetId_RU &&
+        #                  assetStandards.AssetStandardId != assetStandardDefault &&
+        #                  assetStandards.Depreciation
+        #        exists join rAssetTrans
+        #            where rAssetTrans.AccountNum      == assetStandards.AssetId         &&
+        #                  rAssetTrans.AssetStandardId == assetStandards.AssetStandardId &&
+        #                  rAssetTrans.AssetTransType  == RAssetTransType::Acquisition   &&
+        #                  ! rAssetTrans.StornoRecId
+        #        {
+        #            rAssetOperationType = RAssetOperationType::construct(RAssetTransType::DisposalSale,
+        #                                                                 salesLine,
+        #                                                                 salesParmTable.Transdate,
+        #                                                                 assetStandards.AssetStandardId);
+        #            if (! rAssetOperationType.check())
+        #                throw error("@SYS25904");
+        #
+        #            numberSequnceTableId = (select firstonly ledgerJournalName
+        #                                        where ledgerJournalName.JournalType == LedgerJournalType::Assets_RU).NumberSequenceTable;
+        #
+        #            assetNumberSeq = NumberSequenceTable::find(numberSequnceTableId).NumberSequence;
+        #
+        #            assetVoucher   = NumberSeq::newGetVoucherFromCode(assetNumberSeq, NumberSeqScopeFactory::createDefaultScope(), false).voucher();
+        #
+        #            assetLedgerVoucherOthers = LedgerVoucher::newLedgerPost(DetailSummary::Summary,
+        #                                                                    SysModule::FixedAssets_RU,
+        #                                                                    assetNumberSeq);
+        #
+        #            assetLedgerVoucherObjectOthers = LedgerVoucherObject::newVoucher(
+        #                assetVoucher,
+        #                salesParmTable.Transdate,
+        #                SysModule::FixedAssets_RU,
+        #                LedgerTransType::FixedAssets_RU,
+        #                NoYes::No,
+        #                RAssetStandardTable::find(assetStandards.AssetStandardId).CurrentOperationsTax);
+        #
+        #            assetLedgerVoucherObjectOthers.parmDocument(salesParmTable.Transdate, custInvoiceJour.InvoiceId);
+        #            assetLedgerVoucherObjectOthers.lastTransTxt(_transactionTxt.txt());
+        #            assetLedgerVoucherOthers.addVoucher(assetLedgerVoucherObjectOthers);
+        #
+        #            if (assetLedgerVoucherOthers)
+        #            {
+        #                rAssetPost = RAssetPost::construct(custInvoiceTrans,
+        #                                                   assetLedgerVoucherOthers,
+        #                                                   assetStandards.AssetStandardId);
+        #                rAssetPost.run();
+        #            }
+        #
+        #            this.updateAssetLine_RU();
+        #        }
+        #
+        #        RAssetTable::updateCustInfo(salesLine.AssetId_RU, salesLine.CustAccount, salesLine.SalesId, custInvoiceJour.InvoiceId);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateAssetLine_RU
+        #private void updateAssetLine_RU()
+        #{
+        #    if (assetLedgerVoucherBase)
+        #    {
+        #        assetLedgerVoucherBase = null;
+        #    }
+        #
+        #    if (assetLedgerVoucherOthers)
+        #    {
+        #        assetLedgerVoucherOthers.end();
+        #        assetLedgerVoucherOthers = null;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateAssetReverse_RU
+        #private void updateAssetReverse_RU()
+        #{
+        #    RAssetTransactionReversal  rAssetTransactionReversal;
+        #    RAssetStandards            rAssetStandards;
+        #    RAssetTrans                rAssetTrans;
+        #    ;
+        #
+        #    while select AssetStandardId from rAssetStandards
+        #        where rAssetStandards.AssetId == salesLine.AssetId_RU &&
+        #              rAssetStandards.Depreciation
+        #    {
+        #        rAssetTrans = RAssetTrans::findLastType(salesLine.AssetId_RU,
+        #                                                rAssetStandards.AssetStandardId,
+        #                                                RAssetTransType::DisposalSale,
+        #                                                false,
+        #                                                maxDate(),
+        #                                                true);
+        #        rAssetTransactionReversal = RAssetTransactionReversal::construct(rAssetTrans);
+        #        rAssetTransactionReversal.initValue(rAssetTrans);
+        #        rAssetTransactionReversal.parmReversalDate(salesParmTable.Transdate);
+        #        rAssetTransactionReversal.run();
+        #    }
+        #    RAssetTable::updateCustInfo(salesLine.AssetId_RU, '', '');
+        #}
+        #
+      ENDSOURCE
+      SOURCE #updateBankLC
+        #/// <summary>
+        #/// Updates the Letter of Credit after the journal is posted.
+        #/// </summary>
+        #private void updateBankLC()
+        #{
+        #    BankLCExportType bankLCExportType;
+        #
+        #    if (BankLCExportFeatureChecker::checkBankLCExportEnabled()
+        #        && salesParmTable.BankLCExportLine != 0)
+        #    {
+        #        bankLCExportType = BankLCExportType::constructBySalesId(salesParmTable.SalesId, true, true);
+        #        bankLCExportType.updateInvoicePosted(salesParmTable.BankLCExportLine);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateDate
+        #/// <summary>
+        #/// Gets the transaction date of an invoice.
+        #/// </summary>
+        #/// <returns>
+        #/// The invoice transaction date.
+        #/// </returns>
+        #protected TransDate  updateDate()
+        #{
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #updateEstimate
+        #protected void updateEstimate()
+        #{
+        #    SetEnumerator   se;
+        #    SalesTable      localSalesTable;
+        #
+        #    se = ordersPosted.getEnumerator();
+        #
+        #    while (se.moveNext())
+        #    {
+        #        localSalesTable = SalesTable::find(se.current(),true);
+        #
+        #        if (localSalesTable && localSalesTable.setEstimate())
+        #        {
+        #            localSalesTable.doUpdate();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateInventory
+        #/// <summary>
+        #/// Updates the inventory ledger.
+        #/// </summary>
+        #/// <param name="_inventMovement">
+        #/// An <c>InventMovement</c> object.
+        #/// </param>
+        #protected void updateInventory(InventMovement _inventMovement)
+        #{
+        #    super(_inventMovement);
+        #}
+      ENDSOURCE
+      SOURCE #updateJournalLine
+        #/// <summary>
+        #/// Updates the journal line.
+        #/// </summary>
+        #protected void updateJournalLine()
+        #{
+        #    TmpTaxWorkTrans             taxWorkTransLoc;
+        #    boolean                     taxParametersLoc = TaxParameters::checkTaxParameters_IN();
+        #
+        #    if (taxParametersLoc)
+        #    {
+        #        taxWorkTransLoc = this.tax().tmpTaxWorkTrans();
+        #    }
+        #    if (TaxWithholdParameters_IN::checkTaxParameters())
+        #    {
+        #        custInvoiceTrans.TaxAmount  = tax.totalTaxAmountSingleLine(salesLine.TableId,salesLine.RecId);
+        #    }
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #updateJournalTable
+        #/// <summary>
+        #/// Updates the journal header.
+        #/// </summary>
+        #protected void updateJournalTable()
+        #{
+        #    super();
+        #    this.updateSalesShippingStat();
+        #    this.insertCreditInvoicingJour(salesTable);
+        #
+        #    if (   CustParameters::find().EntryCertificateIssuingEnabled_W
+        #        && salesParmTable.IssueOwnEntryCertificate_W
+        #        && ! this.isProforma())
+        #    {
+        #        CustEntryCertificateJour_W::constructFromInvoice(custInvoiceJour);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateLineValues
+        #/// <summary>
+        #/// Calculates the line value variables based on the quantity that the inventory has posted.
+        #/// </summary>
+        #protected void updateLineValues()
+        #{
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #updateNonPostedParmLines
+        #/// <summary>
+        #/// Updates the records in the <c>SalesParmLine</c> table that has not yet been processed.
+        #/// </summary>
+        #/// <param name="_salesParmLine">
+        #/// A <c>SalesParmLine</c> record.
+        #/// </param>
+        #protected void updateNonPostedParmLines(SalesParmLine   _salesParmLine)
+        #{
+        #    super(_salesParmLine);
+        #}
+      ENDSOURCE
+      SOURCE #updateSalesParmLineReducedQuantity
+        #/// <summary>
+        #/// Updates the quantities in the <c>SalesParmLine</c> record if inventory have reduced delivered
+        #/// quantity to the available inventory.
+        #/// </summary>
+        #protected void updateSalesParmLineReducedQuantity()
+        #{
+        #    if (salesParmLine.DeliverNow != updateNow || salesParmLine.InventNow != updateNowInvent)
+        #    {
+        #        salesParmLine = SalesParmLine::findRecId(salesParmLine.RecId, true);
+        #        this.setRecalcTotals();
+        #        info(strFmt("@SYS26397",updateNow));
+        #        salesParmLine.DeliverNow = updateNow;
+        #        salesParmLine.InventNow  = updateNowInvent;
+        #        salesParmLine.PdsCWDeliverNow = cwUpdateNow;
+        #        salesParmLine.setLineAmount(salesLine);
+        #        salesParmLine.update();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSalesShippingStat
+        #protected void updateSalesShippingStat()
+        #{
+        #    SalesShippingStat  salesShippingStat;
+        #
+        #    if (!SalesParameters::find().useShippingStatOnInvoice())
+        #        return;
+        #
+        #    ttsbegin;
+        #
+        #    delete_from salesShippingStat
+        #        where salesShippingStat.TableRefId  == salesParmTable.TableRefId   &&
+        #              salesShippingStat.ParmId      == salesParmTable.ParmId       &&
+        #              salesShippingStat.Quantity    == 0;
+        #
+        #    update_recordset salesShippingStat
+        #        setting InvoiceId    = custInvoiceJour.InvoiceId,
+        #                InvoiceDate  = custInvoiceJour.InvoiceDate,
+        #                ParmId       = ''
+        #        where salesShippingStat.TableRefId  == salesParmTable.TableRefId   &&
+        #              salesShippingStat.ParmId      == salesParmTable.ParmId;
+        #
+        #    ttscommit;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #updateSourceLine
+        #/// <summary>
+        #/// Updates the source line for the current journal line.
+        #/// </summary>
+        #protected void updateSourceLine()
+        #{
+        #    SalesLineType salesLineType;
+        #    SalesLine     orderLine;
+        #
+        #    salesLineType = salesLine.type();
+        #    if (!salesLine.isStocked())
+        #    {
+        #      //For subscription lines, RemainSalesPhysical is reset to the line quantity if it would become zero; otherwise set to RemainAfter
+        #        salesLine.RemainSalesPhysical =
+        #            (salesLineType.mustInventBeExpectedAgain() && salesParmLine.RemainAfter == 0)? salesLine.SalesQty: salesParmLine.RemainAfter;
+        #    }
+        #
+        #    salesLineType.updateSalesLine(inventMovement ? inventMovement.transIdSum() : null);
+        #
+        #    if (salesTable.InterCompanyCompanyId)
+        #    {
+        #        salesLineType.interCompanyResetDeliverNow();
+        #        if (!salesTable.InterCompanyDirectDeliveryOrig)
+        #        {
+        #            InterCompanyTransferInventDim::doTransfer(salesLine.DataAreaId,
+        #                                                        salesLine.InventTransId,
+        #                                                        salesTable.InterCompanyCompanyId,
+        #                                                        salesLine.InterCompanyInventTransId,
+        #                                                        salesTable.interCompanyEndpointActionPolicy().getOrCreateInterCompanyPolicyTransfer(InterCompanyFieldTransferType::External),
+        #                                                        StatusIssue::Sold,
+        #                                                        custInvoiceJour.InvoiceId);
+        #        }
+        #    }
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU, #isoLT, #isoEE, #isoLV, #isoCZ, #isoPL, #isoHU]))
+        #    {
+        #        // Update sales status in case of Polish return
+        #        if (salesLine.CreditNoteInternalRef_PL &&
+        #            salesLine.QtyOrdered == 0)
+        #        {
+        #            salesLine.SalesStatus = SalesStatus::Invoiced;
+        #        }
+        #    }
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        // Flag the sales stats as dirty.
+        #        if (salesLine.SalesStatus == SalesStatus::Invoiced)
+        #        {
+        #            // SO line has been completed which will affect the current stored stats.
+        #            MCRSalesStatsCustTable::salesStatsAffected(salesLine.CustAccount);
+        #        }
+        #    }
+        #
+        #    salesLine.doUpdate();
+        #
+        #    if (salesLine.LineDeliveryType == LineDeliveryType::DeliveryLine)
+        #    {
+        #        orderLine = SalesDeliverySchedule::findOrderLineForDeliveryLine(salesLine.InventTransId, true);
+        #        orderLine.setSalesStatus();
+        #        orderLine.doUpdate();
+        #    }
+        #
+        #    if (salesTable.SalesId != custInvoiceTrans.OrigSalesId)
+        #    {
+        #        this.updateSpecTransForNewSalesId();
+        #        this.updateSumSalesId();
+        #    }
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        // Record whether installment eligible
+        #        if (salesLine.mcrSalesLine().InstallmentEligible
+        #            && !setSalesTableIntallmentEligible.in(salesLine.SalesId))
+        #        {
+        #            setSalesTableIntallmentEligible.add(salesLine.SalesId);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSourceTable
+        #/// <summary>
+        #/// Updates the source table for the journal header.
+        #/// </summary>
+        #protected void updateSourceTable()
+        #{
+        #    SetEnumerator   se = ordersPosted.getEnumerator();
+        #
+        #    ttsbegin;
+        #    while (se.moveNext())
+        #    {
+        #        salesTable = SalesTable::find(se.current(),true);
+        #        if (salesTable)
+        #        {
+        #            salesTable.reread();
+        #            salesTable.updateDocumentStatus(this.documentStatus());
+        #            salesTable.updateBackStatus();
+        #            salesTable.updateSalesType();
+        #            this.createBackorderLines();
+        #            if (salesTable.SalesId != salesParmTable.SalesId)
+        #            {
+        #                // If this is not the primary sales order in the summary order,
+        #                // void the credit card preauthorization that may exist as it is no longer valid
+        #                salesTable.voidCreditCardPreauthorize(); //Invoice
+        #            }
+        #            sourceTableRecIdSet.add(salesTable.RecId);
+        #        }
+        #    }
+        #    ttscommit;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #updateSpecTransForNewSalesId
+        #/// <summary>
+        #///    Updates a <c>SpecTrans</c> record with the new <c>SalesTable</c> record ID.
+        #/// </summary>
+        #protected void updateSpecTransForNewSalesId()
+        #{
+        #    SalesTable  origSalesTable;
+        #    SpecTrans updateSpecTrans;
+        #
+        #    origSalesTable = custInvoiceTrans.salesLine().salesTable();
+        #
+        #    if (origSalesTable.RecId != 0 && origSalesTable.SettleVoucher == SettlementType::SelectedTransact)
+        #    {
+        #        // SpecTrans records exist and point to the original sales table. Update SpecTrans records to reference
+        #        // the new sales table for the Spec reference so they will be settled when this new sales invoice is posted.
+        #        update_recordset updateSpecTrans
+        #            setting SpecRecId = salesTable.RecId
+        #            where updateSpecTrans.SpecCompany == origSalesTable.company() &&
+        #                updateSpecTrans.SpecTableId == tableNum(SalesTable) &&
+        #                updateSpecTrans.SpecRecId == origSalesTable.RecId;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSumSalesId
+        #protected void  updateSumSalesId()
+        #{
+        #    SalesTable  localSalesTable;
+        #
+        #    if (SalesTable::exist(custInvoiceTrans.OrigSalesId))
+        #    {
+        #        ttsbegin;
+        #
+        #        localSalesTable = custInvoiceTrans.salesLine().salesTable(true);
+        #        localSalesTable.updateBackStatus();
+        #        localSalesTable.write();
+        #
+        #        ttscommit;
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #updateWMSShipment
+        #protected void updateWMSShipment()
+        #{
+        #    WMSShipmentId               wmsShipmentId;
+        #    ShipCarrierShipmentInvoice  shipCarrierShipmentInvoice;
+        #    SetEnumerator               se;
+        #
+        #    if (this.parmPackedLineIdSet())
+        #    {
+        #        se = Set::create(this.parmPackedLineIdSet()).getEnumerator();
+        #        while (se.moveNext())
+        #        {
+        #            wmsShipmentId = se.current();
+        #
+        #            if (WMSShipment::exist(wmsShipmentId) && !ShipCarrierShipmentInvoice::exist(wmsShipmentId, custInvoiceJour.RecId))
+        #            {
+        #                shipCarrierShipmentInvoice.clear();
+        #                shipCarrierShipmentInvoice.wmsShipmentId = wmsShipmentId;
+        #                shipCarrierShipmentInvoice.CustInvoiceJourRefRecId = custInvoiceJour.RecId;
+        #                shipCarrierShipmentInvoice.insert();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #useBillOfLading
+        #/// <summary>
+        #/// Indicates whether to use bill of lading when an invoice is posted.
+        #/// </summary>
+        #/// <returns>
+        #/// true if bill of lading should be used; otherwise, false.
+        #/// </returns>
+        #protected boolean useBillOfLading()
+        #{
+        #    return ! this.isProforma() && SalesParameters::find().useBillOfLadingOnInvoice();
+        #}
+      ENDSOURCE
+      SOURCE #useInventOwnerIdRange_RU
+        #protected boolean useInventOwnerIdRange_RU()
+        #{
+        #    return SalesFormLetter::useInventOwnerIdRange_RU(salesParmTable.salesParmUpdate().SplitInventOwnerId_RU,
+        #                                                     this.documentStatus(),
+        #                                                     salesLine);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #usePerLineCorrection_RU
+        #/// <summary>
+        #///   Returns true, if negative lines shoule be posted as correction, and positive - not as coections.
+        #/// </summary>
+        #/// <returns>
+        #///   true, if negatove lines should be posted as corrections: otherwise, false.
+        #/// </returns>
+        #private boolean usePerLineCorrection_RU()
+        #{
+        #    if (!usePerLineCorrectionIsCached_RU)
+        #    {
+        #        cachedUsePerLineCorrection_RU = this.parmStorno() && (
+        #            !salesTotals.totalAmount() || (salesTotals.totalAmountBySign_RU(false) && salesTotals.totalAmountBySign_RU(true))
+        #        );
+        #        usePerLineCorrectionIsCached_RU = true;
+        #    }
+        #    return cachedUsePerLineCorrection_RU;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #validateReturnableReference_IN
+        #/// <summary>
+        #/// Validates reference for return order is existing or not.
+        #/// </summary>
+        #private void validateReturnableReference_IN()
+        #{
+        #    SalesLine_IN                salesLineIN;
+        #    SalesLine                   salesLineLoc;
+        #    SalesLineReturnDetails_IN   salesLineReturnDetails;
+        #    SalesReturnInformation_IN   salesReturnInformation;
+        #    TaxInformation_IN           taxInformation;
+        #    SalesReturn_IN              salesReturn;
+        #    boolean                     alreadyMessageAdded = false;
+        #    SalesTable                  salesTableLoc = custInvoiceJour.salesTable();
+        #
+        #    while select salesLineLoc
+        #        where salesLineLoc.SalesId  == salesTableLoc.SalesId
+        #           && salesLineLoc.SalesQty < 0
+        #           && !salesLineLoc.InventTransIdReturn
+        #    {
+        #        salesLineIN            = salesLineLoc.salesLine_IN();
+        #        salesLineReturnDetails = SalesLineReturnDetails_IN::findbySalesLine(salesLineIN.RecId);
+        #        taxInformation         = TaxInformation_IN::find(salesLineIN.TaxInformation);
+        #        salesReturn            = SalesReturn_IN::construct(salesLineLoc.TaxItemGroup);
+        #        salesReturnInformation = salesReturn.getReturnInformation(taxInformation);
+        #
+        #        if (salesReturnInformation.RecId != 0 && salesLineReturnDetails.Type != SalesReturnType_IN::None
+        #            && (salesReturnInformation.AlertLevel == SalesReturnAlert_IN::Warning
+        #            || salesReturnInformation.AlertLevel == SalesReturnAlert_IN::Error))
+        #        {
+        #            if(!alreadyMessageAdded)
+        #            {
+        #                warning("@SYS4004284");
+        #                alreadyMessageAdded = true;
+        #            }
+        #            if(salesReturnInformation.AlertLevel == SalesReturnAlert_IN::Error)
+        #            {
+        #                throw error("@SYS21533");
+        #            }
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #vatRegData_W
+        #/// <summary>
+        #/// A container used to pass various data between methods.
+        #/// </summary>
+        #/// <returns>
+        #/// A container containing various data.
+        #/// </returns>
+        #protected container vatRegData_W()
+        #{
+        #    VatDueDate_W           vatDate;
+        #    DocumentDate           documentDate;
+        #    PlCustVendName         custVendName;
+        #    VATNum                 tmpVATNum;
+        #    Addressing             addressing;
+        #    InvoiceId              invoiceId;
+        #    CustTable              custTable;
+        #    PlTaxPeriodPaymentCode taxPeriodPaymentCode;
+        #    CzPostponeVAT          postponeVAT;
+        #    IntraComVATDueDate_W   intraComVatDate;
+        #
+        #    if (salesParmTable.RecId)
+        #    {
+        #        vatDate         = salesParmTable.VatDueDate_W;
+        #        documentDate    = salesParmTable.DocumentDate;
+        #        postponeVAT     = salesParmTable.PostponeVAT && custInvoiceJour.creditNote();
+        #        intraComVatDate = NoYes::No;
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #        {
+        #            taxPeriodPaymentCode = salesParmTable.TaxPeriodPaymentCode_PL;
+        #            custTable            = CustTable::find(salesParmTable.InvoiceAccount);
+        #            custVendName         = custTable.name();
+        #            addressing           = custTable.address();
+        #            tmpVATNum            = custTable.vatNum;
+        #            invoiceId            = custInvoiceJour.InvoiceId;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        [ vatDate,
+        #          documentDate,
+        #          custVendName,
+        #          tmpVATNum,
+        #          addressing,
+        #          invoiceId,
+        #          taxPeriodPaymentCode,
+        #          postponeVAT,
+        #          intraComVatDate ] = this.tax().parmVatRegData_W();
+        #    }
+        #
+        #    return [ vatDate,
+        #             documentDate,
+        #             custVendName,
+        #             tmpVATNum,
+        #             addressing,
+        #             invoiceId,
+        #             taxPeriodPaymentCode,
+        #             postponeVAT,
+        #             intraComVatDate ];
+        #}
+      ENDSOURCE
+      SOURCE #writeTaxAmount_W
+        #/// <summary>
+        #/// Updates GEEW tax fields of the invoice lines.
+        #/// </summary>
+        #protected void writeTaxAmount_W()
+        #{
+        #    CustInvoiceTrans        trans;
+        #    FormletterProformaPrint formletterProformaPrint;
+        #
+        #    if (!SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU, #isoPL]))
+        #        return;
+        #
+        #    if (!taxParameters.TaxSpecifyLine)
+        #        return;
+        #
+        #    formletterProformaPrint = FormletterProformaPrint::construct();
+        #    formletterProformaPrint.parmTax             (this.tax());
+        #    formletterProformaPrint.parmExchRate_W      (this.exchRate_W());
+        #    formletterProformaPrint.parmExchRateSec_W   (this.exchRateSec_W());
+        #//    formletterProformaPrint.writeTmpTaxWorkTrans(custInvoiceJour.RecId);
+        #// by this taxWorkTrans rewritten by TaxSalesInvoice.moveFromSales with SourceTableId CustInvoiceTrans
+        #// and taxWorkTrans cannot be found in formletterProformaPrint.tmpTaxWorkTrans,
+        #// therefore trans stay without VAT
+        #// that's why we must use existing journalTmpTaxWorkTrans
+        #    formletterProformaPrint.parmJournalTmpTaxWorkTrans(journalTmpTaxWorkTrans);
+        #
+        #    while select forupdate trans
+        #        where trans.SalesId             == custInvoiceJour.SalesId     &&
+        #              trans.InvoiceId           == custInvoiceJour.InvoiceId   &&
+        #              trans.InvoiceDate         == custInvoiceJour.InvoiceDate &&
+        #              trans.NumberSequenceGroup == custInvoiceJour.NumberSequenceGroup
+        #    {
+        #        trans.initFromTaxWorkTrans_RU(formletterProformaPrint.tmpTaxWorkTrans(custInvoiceJour.RecId),
+        #                                             tableNum(SalesLine),
+        #                                             0,
+        #                                             trans.InventTransId);
+        #        trans.update();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static SalesInvoiceJournalPost construct()
+        #{
+        #    return new SalesInvoiceJournalPost();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+    EVENTS
+      METHOD #run
+        EVENTHANDLERS
+          EVENTHANDLER #CreditCardPosting
+            PROPERTIES
+              CalledWhen          #Post
+              Class               #CreditCardPosting
+              Method              #runInvoice
+              AOTlink             #\Classes\CreditCardPosting\runInvoice
+            ENDPROPERTIES
+            
+          ENDEVENTHANDLER
+        ENDEVENTHANDLERS
+      ENDMETHOD
+    ENDEVENTS
+  ENDCLASS
+
+***Element: END

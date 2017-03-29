@@ -1,0 +1,351 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #LedgerJournalTransCC
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #LedgerJournalTransCC
+      Label               #@ACC214
+      TitleField1         #Voucher
+      TitleField2         #TransID
+      ConfigurationKey    #LedgerBasic
+      SecurityKey         #LedgerTables
+      CreateRecIdIndex    #Yes
+      TableGroup          #WorksheetLine
+      PrimaryIndex        #RecId
+      ClusterIndex        #NumVoucherIdx
+      DeveloperDocumentation  #@ACC1449
+      Origin              #{F19D49C3-68EE-4018-AD58-DFEFC35B1FB8}
+      LegacyId            #20017
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #CreditCardId
+        STRING
+        PROPERTIES
+          Name                #CreditCardId
+          Table               #LedgerJournalTransCC
+          Origin              #{D3FB0A19-9A5F-4E19-A71C-C37B81595833}
+          LegacyId            #20007
+          ExtendedDataType    #CreditCardId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardTrxType
+        ENUM
+        PROPERTIES
+          Name                #CreditCardTrxType
+          Table               #LedgerJournalTransCC
+          Origin              #{AE02B8A3-A709-41F3-AD7A-A97D169E76D4}
+          LegacyId            #20006
+          EnumType            #CreditCardTrxTypeJour
+        ENDPROPERTIES
+        
+      FIELD #JournalNum
+        STRING
+        PROPERTIES
+          Name                #JournalNum
+          Table               #LedgerJournalTransCC
+          Origin              #{D544D31D-7E9F-497D-9554-D80836303D95}
+          LegacyId            #20001
+          ExtendedDataType    #LedgerJournalId
+        ENDPROPERTIES
+        
+      FIELD #JournalOrig
+        ENUM
+        PROPERTIES
+          Name                #JournalOrig
+          Table               #LedgerJournalTransCC
+          Origin              #{2F45CE57-0D17-43C3-A65D-CAF7D8DBE669}
+          LegacyId            #20005
+          EnumType            #CreditCardJournalOrig
+        ENDPROPERTIES
+        
+      FIELD #LineNum
+        REAL
+        PROPERTIES
+          Name                #LineNum
+          Table               #LedgerJournalTransCC
+          Origin              #{E8EA34F7-9368-496B-81B5-A2BCC46BBBB5}
+          LegacyId            #20003
+          ExtendedDataType    #LineNum
+        ENDPROPERTIES
+        
+      FIELD #PNRef
+        STRING
+        PROPERTIES
+          Name                #PNRef
+          Table               #LedgerJournalTransCC
+          Origin              #{4B0D4D9E-18EC-4B8D-8B19-74E4F3E6930E}
+          LegacyId            #20008
+          ExtendedDataType    #CreditCardPNRef
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #Processed
+        ENUM
+        PROPERTIES
+          Name                #Processed
+          HelpText            #@ACC1199
+          Table               #LedgerJournalTransCC
+          Origin              #{096CF654-85E6-47C2-B1AB-3E07974BDEB4}
+          LegacyId            #20009
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #TransID
+        STRING
+        PROPERTIES
+          Name                #TransID
+          Table               #LedgerJournalTransCC
+          Origin              #{658E4CC4-6014-4DFB-B6C8-32B53A74D251}
+          LegacyId            #20004
+          ExtendedDataType    #CreditCardTransID
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #Voucher
+        STRING
+        PROPERTIES
+          Name                #Voucher
+          Table               #LedgerJournalTransCC
+          Origin              #{A8E22B62-3943-4E67-92FC-F44FE0325CCD}
+          LegacyId            #20002
+          ExtendedDataType    #Voucher
+          StringSize          #20
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #JournalNum
+          #Voucher
+          #LineNum
+          #TransID
+          #JournalOrig
+          #CreditCardTrxType
+          #CreditCardId
+          #PNRef
+          #Processed
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Voucher
+          #TransID
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Journal
+        PROPERTIES
+          Name                #Journal
+          Label               #@SYS24010
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #JournalNum
+          #Voucher
+          #LineNum
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Process
+        PROPERTIES
+          Name                #Process
+          Label               #@SYS8577
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Processed
+          #CreditCardId
+          #CreditCardTrxType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Transaction
+        PROPERTIES
+          Name                #Transaction
+          Label               #@SYS15191
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #JournalOrig
+          #TransID
+          #PNRef
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TransIdIdx
+      PROPERTIES
+        Name                #TransIdIdx
+        Origin              #{B6D8825B-E635-4FA9-A9C5-E968B41394F5}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TransID
+      ENDINDEXFIELDS
+      
+      #NumVoucherIdx
+      PROPERTIES
+        Name                #NumVoucherIdx
+        Origin              #{43A4D221-78AD-4B20-92B4-982C4BC17985}
+        LegacyId            #20002
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #JournalNum
+        #Voucher
+        #LineNum
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTable
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CreditCardId
+            RelatedField        #CreditCardId
+            SourceEDT           #CreditCardId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTrans
+        PROPERTIES
+          Name                #CreditCardTrans
+          Table               #CreditCardTrans
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TransID
+            RelatedField        #TransID
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #LedgerJournalTable
+        PROPERTIES
+          Name                #LedgerJournalTable
+          Table               #LedgerJournalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #JournalNum
+            RelatedField        #JournalNum
+            SourceEDT           #LedgerJournalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #LedgerJournalTrans
+        PROPERTIES
+          Name                #LedgerJournalTrans
+          Table               #LedgerJournalTrans
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #LineNum
+            RelatedField        #LineNum
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #Voucher
+            RelatedField        #Voucher
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #JournalNum
+            RelatedField        #JournalNum
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #checkCreditTrans
+        #static boolean checkCreditTrans(LedgerJournalTrans ledgerJournalTrans)
+        #{
+        #    LedgerJournalTransCC    ledgerJournalTransCC;
+        #    ;
+        #    select firstonly ledgerJournalTransCC where ledgerJournalTransCC.Voucher == ledgerJournalTrans.Voucher
+        #        && ledgerJournalTransCC.LineNum == ledgerJournalTrans.LineNum
+        #        && ledgerJournalTransCC.JournalNum == ledgerJournalTrans.JournalNum;
+        #
+        #    if (ledgerJournalTransCC)
+        #        return true;
+        #    else
+        #        return false;
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #public static LedgerJournalTransCC find(Voucher     voucher,
+        #                                        LineNum     lineNum)
+        #{
+        #    LedgerJournalTransCC            lJTransCC;
+        #    ;
+        #    select lJTransCC
+        #        where lJTransCC.Voucher == voucher
+        #        && lJTransCC.LineNum == lineNum;
+        #
+        #
+        #    return lJTransCC;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

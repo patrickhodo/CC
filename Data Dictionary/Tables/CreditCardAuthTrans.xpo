@@ -1,0 +1,1268 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardAuthTrans
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardAuthTrans
+      Label               #@SYS101657
+      TitleField1         #SalesId
+      TitleField2         #ApprovalType
+      ConfigurationKey    #CreditCard
+      SecurityKey         #CreditCardInquiry
+      CacheLookup         #NotInTTS
+      CreateRecIdIndex    #Yes
+      TableGroup          #Transaction
+      PrimaryIndex        #RecId
+      ClusterIndex        #RecId
+      DeveloperDocumentation  #@SYS126885
+      Origin              #{2C13092B-0000-1000-84D3-955AA036144C}
+      LegacyId            #2347
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AddressVerificationResult
+        ENUM
+        PROPERTIES
+          Name                #AddressVerificationResult
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{114DBB3E-243D-4ECE-8FFE-1F4B4BFCD9BE}
+          LegacyId            #27
+          EnumType            #CreditCardAddressVerificationResult
+        ENDPROPERTIES
+        
+      FIELD #ApprovalAmountCur
+        REAL
+        PROPERTIES
+          Name                #ApprovalAmountCur
+          Label               #@SYS6928
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{DEBC6D28-09BE-4309-9B4F-9ECF0103CD96}
+          LegacyId            #5
+          ExtendedDataType    #AmountCur
+        ENDPROPERTIES
+        
+      FIELD #ApprovalExpired
+        ENUM
+        PROPERTIES
+          Name                #ApprovalExpired
+          Label               #@SYS107504
+          HelpText            #@SYS116913
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{BC76E394-AB72-4438-BFFD-BDE134CA84CC}
+          LegacyId            #4
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #ApprovalType
+        ENUM
+        PROPERTIES
+          Name                #ApprovalType
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{8562E801-D4FA-4F60-BD03-13A954E129ED}
+          LegacyId            #7
+          EnumType            #CreditCardOperation
+        ENDPROPERTIES
+        
+      FIELD #ApprovalVoid
+        ENUM
+        PROPERTIES
+          Name                #ApprovalVoid
+          Label               #@SYS6127
+          HelpText            #@SYS116929
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{6B299FF2-EF63-4DA3-A092-21107829FDD4}
+          LegacyId            #10
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #ApprovedDateTime
+        DATETIME
+        PROPERTIES
+          Name                #ApprovedDateTime
+          Label               #@SYS7402
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{6A8B284D-AF06-4541-A294-4912C1FA5ADA}
+          LegacyId            #3
+          ExtendedDataType    #ApprovedDateTime
+        ENDPROPERTIES
+        
+      FIELD #Authorization
+        STRING
+        PROPERTIES
+          Name                #Authorization
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{9F3BC929-0644-42B6-9063-CAF0BC725CCF}
+          LegacyId            #2
+          ExtendedDataType    #CreditCardAuthorization
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CardTokenRequest
+        STRING
+        PROPERTIES
+          Name                #CardTokenRequest
+          AllowEdit           #No
+          Visible             #No
+          Table               #CreditCardAuthTrans
+          Origin              #{41F94758-E0EC-442D-B073-AB4D48B4FD93}
+          ExtendedDataType    #CreditCardPaymentCardToken
+          StringSize          #(Memo)
+        ENDPROPERTIES
+        
+      FIELD #CardTokenResult
+        STRING
+        PROPERTIES
+          Name                #CardTokenResult
+          AllowEdit           #No
+          Visible             #No
+          Table               #CreditCardAuthTrans
+          Origin              #{722E7778-E5A0-42D5-AF92-972E31575669}
+          ExtendedDataType    #CreditCardPaymentCardToken
+          StringSize          #(Memo)
+        ENDPROPERTIES
+        
+      FIELD #CreditCardNumber
+        STRING
+        PROPERTIES
+          Name                #CreditCardNumber
+          Table               #CreditCardAuthTrans
+          Origin              #{93B126A2-B751-4A30-B702-764182C2DF38}
+          ExtendedDataType    #CreditCardNumber
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CreditCardProcessors
+        INT64
+        PROPERTIES
+          Name                #CreditCardProcessors
+          Table               #CreditCardAuthTrans
+          Origin              #{98305E23-DE4C-4F17-ADA3-3DB5BD8053BB}
+          ExtendedDataType    #CreditCardProcessorsId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardTypeName
+        STRING
+        PROPERTIES
+          Name                #CreditCardTypeName
+          Table               #CreditCardAuthTrans
+          Origin              #{13A0D92D-3750-430C-9B60-CAE81B549F03}
+          ExtendedDataType    #CreditCardTypeName
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CurrencyCode
+        STRING
+        PROPERTIES
+          Name                #CurrencyCode
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{BD9ED1C1-B72D-47DA-8997-C45E55BEE4D3}
+          LegacyId            #16
+          ExtendedDataType    #CurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #CVCResult
+        ENUM
+        PROPERTIES
+          Name                #CVCResult
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{FA698AD9-CA39-4C58-BD61-98A4ADE06415}
+          LegacyId            #28
+          EnumType            #CreditCardMSCVCResultCode
+        ENDPROPERTIES
+        
+      FIELD #Description
+        STRING
+        PROPERTIES
+          Name                #Description
+          Label               #@SYS6303
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{F4182F87-F7BB-47A8-B71D-CA2309A918FF}
+          LegacyId            #6
+          ExtendedDataType    #CreditCardApprovalRejectReason
+          StringSize          #256
+        ENDPROPERTIES
+        
+      FIELD #LineNum
+        REAL
+        PROPERTIES
+          Name                #LineNum
+          AllowEdit           #No
+          Visible             #No
+          Table               #CreditCardAuthTrans
+          Origin              #{C8B6BE4F-D2D0-415D-A708-3E814CB7BC97}
+          LegacyId            #14
+          ExtendedDataType    #LineNum
+        ENDPROPERTIES
+        
+      FIELD #MCRCustPaymSchedName
+        STRING
+        PROPERTIES
+          Name                #MCRCustPaymSchedName
+          Visible             #No
+          Table               #CreditCardAuthTrans
+          Origin              #{711103B8-7A83-48CE-A45C-10001BFFDA43}
+          ExtendedDataType    #CustPaymSchedId
+          StringSize          #30
+        ENDPROPERTIES
+        
+      FIELD #MCRInvoiceId
+        STRING
+        PROPERTIES
+          Name                #MCRInvoiceId
+          HelpText            #The free text invoice ID assoicated to this authorization.
+          AllowEdit           #No
+          Visible             #No
+          ConfigurationKey    #MCRPayment
+          Table               #CreditCardAuthTrans
+          IgnoreEDTRelation   #Yes
+          Origin              #{DF584B07-C873-4F52-8CA7-71C924268DF0}
+          ExtendedDataType    #CustInvoiceId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #MCRJournalNum
+        STRING
+        PROPERTIES
+          Name                #MCRJournalNum
+          HelpText            #The journal number of the payment journal that the authorization is linked to.
+          AllowEdit           #No
+          Visible             #No
+          ConfigurationKey    #MCRPayment
+          Table               #CreditCardAuthTrans
+          Origin              #{C5DB0C11-8EB3-4AC7-9BC9-52F82FC35796}
+          ExtendedDataType    #LedgerJournalId
+        ENDPROPERTIES
+        
+      FIELD #MCRPaymRecId
+        INT64
+        PROPERTIES
+          Name                #MCRPaymRecId
+          Label               #Payment
+          HelpText            #The payment record identifier that points to the customer payment record.
+          AllowEdit           #No
+          Visible             #No
+          Table               #CreditCardAuthTrans
+          Origin              #{B1B70309-1333-4AC4-848F-36E76A107519}
+          ExtendedDataType    #MCRCustPaymTableRecID
+        ENDPROPERTIES
+        
+      FIELD #ProcessorStatus
+        ENUM
+        PROPERTIES
+          Name                #ProcessorStatus
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{F47800FD-518E-43AD-B399-EE5DE68B34B2}
+          LegacyId            #8
+          EnumType            #CreditCardProcessorStatus
+        ENDPROPERTIES
+        
+      FIELD #RefundStatus
+        ENUM
+        PROPERTIES
+          Name                #RefundStatus
+          AllowEdit           #No
+          Visible             #No
+          Table               #CreditCardAuthTrans
+          Origin              #{848D05A3-D80B-418F-AFFE-0AC308288690}
+          LegacyId            #29
+          EnumType            #CreditCardRefundStatus
+        ENDPROPERTIES
+        
+      FIELD #SalesId
+        STRING
+        PROPERTIES
+          Name                #SalesId
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{783B5C38-4A97-4CF0-A219-BBF0A1DEC7BF}
+          LegacyId            #1
+          ExtendedDataType    #SalesId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #SalesInvoiceId
+        STRING
+        PROPERTIES
+          Name                #SalesInvoiceId
+          AllowEdit           #No
+          Table               #CreditCardAuthTrans
+          Origin              #{89D24A2A-0ED8-4ED7-AB6F-65E41353CD26}
+          LegacyId            #12
+          ExtendedDataType    #SalesInvoiceId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #UniqueCardId
+        STRING
+        PROPERTIES
+          Name                #UniqueCardId
+          Visible             #No
+          Table               #CreditCardAuthTrans
+          Origin              #{AB12BEDB-42E9-4595-A9A2-98F89A5A0B7D}
+          ExtendedDataType    #CreditCardUniqueCardId
+          StringSize          #38
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+          #Authorization
+          #ApprovedDateTime
+          #ApprovalExpired
+          #ApprovalAmountCur
+          #Description
+          #ApprovalType
+          #ProcessorStatus
+          #ApprovalVoid
+          #SalesInvoiceId
+          #LineNum
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Other
+        PROPERTIES
+          Name                #Other
+          Label               #@SYS1284
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesInvoiceId
+          #LineNum
+          #CreditCardTypeName
+          #CreditCardProcessors
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Overview
+        PROPERTIES
+          Name                #Overview
+          Label               #@SYS9039
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+          #CreditCardNumber
+          #ApprovalType
+          #ProcessorStatus
+          #Authorization
+          #ApprovedDateTime
+          #ApprovalAmountCur
+          #CurrencyCode
+          #AddressVerificationResult
+          #CVCResult
+          #ApprovalExpired
+          #ApprovalVoid
+          #Description
+          #SalesInvoiceId
+          #displayProcessorsName
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #PaymInfo
+        PROPERTIES
+          Name                #PaymInfo
+          Label               #@SYS100269
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #MCRInvoiceId
+          #MCRJournalNum
+          #MCRPaymRecId
+          #MCRCustPaymSchedName
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #SalesCCApprovalIdx
+      PROPERTIES
+        Name                #SalesCCApprovalIdx
+        Origin              #{2B120001-092B-1000-AF3B-03A8EB958A82}
+        LegacyId            #1
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #SalesId
+        #LineNum
+        #ApprovalType
+      ENDINDEXFIELDS
+      
+      #SalesApprovalDateIdx
+      PROPERTIES
+        Name                #SalesApprovalDateIdx
+        Origin              #{2B140002-092B-1000-00A1-A6B11E0E1F88}
+        LegacyId            #2
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #SalesId
+        #ApprovedDateTime
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardProcessors
+        PROPERTIES
+          Name                #CreditCardProcessors
+          Table               #CreditCardProcessors
+          EntityRelationshipRole  #@SYS67903
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CreditCardProcessors
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CurrencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRCustInvoiceId
+        PROPERTIES
+          Name                #MCRCustInvoiceId
+          Table               #CustInvoiceTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #MCRInvoiceId
+            RelatedField        #InvoiceId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRCustPaymTable
+        PROPERTIES
+          Name                #MCRCustPaymTable
+          Table               #MCRCustPaymTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #MCRPaymRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRLedgerJournalTable
+        PROPERTIES
+          Name                #MCRLedgerJournalTable
+          Table               #LedgerJournalTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #MCRJournalNum
+            RelatedField        #JournalNum
+            SourceEDT           #LedgerJournalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRPaymSched
+        PROPERTIES
+          Name                #MCRPaymSched
+          Table               #PaymSched
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #MCRCustPaymSchedName
+            RelatedField        #Name
+            SourceEDT           #CustPaymSchedId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesInvoice
+        PROPERTIES
+          Name                #SalesInvoice
+          Table               #CustInvoiceJour
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #SalesInvoice
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #SalesInvoiceId
+            RelatedField        #InvoiceId
+            SourceEDT           #SalesInvoiceId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesTable
+        PROPERTIES
+          Name                #SalesTable
+          Table               #SalesTable
+          EntityRelationshipRole  #@SYS126887
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          RelatedTableRole    #SalesTable
+          Role                #CreditCardAuthTrans
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #SalesId
+            RelatedField        #SalesId
+            SourceEDT           #SalesId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #creditCard
+        #/// <summary>
+        #/// Gets the credit card number.
+        #/// </summary>
+        #/// <returns>
+        #/// The credit card number; otherwise, an empty string.
+        #/// </returns>
+        #//BP Deviation Documented
+        #public display CreditCardNumber creditCard()
+        #{
+        #    CreditCardPaymentProperty property = CreditCardPaymentProperties::fromXmlString(this.CardTokenRequest).find(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_PaymentCard(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.PaymentCardProperties::get_Last4Digits());
+        #
+        #    return property ? property.parmStringValue() : '';
+        #}
+        #
+      ENDSOURCE
+      SOURCE #displayProcessorsName
+        #/// <summary>
+        #/// Returns the name of the processor.
+        #/// </summary>
+        #/// <returns>
+        #/// The processor's human readable identification.
+        #/// </returns>
+        #public display CreditCardProcessorsName displayProcessorsName()
+        #{
+        #    return (select creditCardProcessors where creditCardProcessors.RecId == this.CreditCardProcessors).Name;
+        #}
+      ENDSOURCE
+      SOURCE #insert
+        #public void insert()
+        #{
+        #    if (this.LineNum == 0)
+        #    {
+        #        if (this.SalesId)
+        #        {
+        #            this.LineNum = CreditCardAuthTrans::lastLineNum(this.SalesId) + 1;
+        #        }
+        #        else if (this.MCRInvoiceId)
+        #        {
+        #            this.LineNum = CreditCardAuthTrans::lastLineNum(this.MCRInvoiceId) + 1;
+        #        }
+        #        else if (this.MCRJournalNum)
+        #        {
+        #            this.LineNum = CreditCardAuthTrans::lastLineNum(this.MCRJournalNum) + 1;
+        #        }
+        #        else
+        #        {
+        #            // Fall back to using sales Id unconditionally if non of above is applicable.
+        #            this.LineNum = CreditCardAuthTrans::lastLineNum(this.SalesId) + 1;
+        #        }
+        #    }
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #mcrDisplayRelatedOrderID
+        #/// <summary>
+        #/// Displays the order ID
+        #///     of the record the payment is related to.
+        #/// </summary>
+        #/// <returns>
+        #/// The order ID
+        #///     of the record the payment is related to.
+        #/// </returns>
+        #public display Num mcrDisplayRelatedOrderID()
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable = MCRCustPaymTable::findByRecID(this.MCRPaymRecId);
+        #
+        #    if (mcrCustPaymTable.RefTableId == tableNum(SalesTable))
+        #    {
+        #        return mcrCustPaymTable.salesTable().SalesId;
+        #    }
+        #    else if (this.MCRInvoiceId)
+        #    {
+        #        return CustInvoiceTable::findRecId(mcrCustPaymTable.RefRecId).InvoiceId;
+        #    }
+        #    else if (this.MCRJournalNum)
+        #    {
+        #        return LedgerJournalTrans::findRecId(mcrCustPaymTable.RefRecId, false).JournalNum;
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #mcrManuallyAuthorize
+        #/// <summary>
+        #///     Updates this record to indicate that it has been manually authorized.
+        #/// </summary>
+        #/// <param name="_creditCardAuthorization">
+        #/// The authorization code obtained from the credit
+        #///     card processor, typically through the phone.
+        #/// </param>
+        #public void mcrManuallyAuthorize(CreditCardAuthorization _creditCardAuthorization)
+        #{
+        #    ttsBegin;
+        #    this.selectForUpdate(true);
+        #    this.Authorization       = _creditCardAuthorization;
+        #    this.ApprovedDateTime   = DateTimeUtil::getSystemDateTime();
+        #    this.ProcessorStatus = CreditCardProcessorStatus::Approved;
+        #    this.update();
+        #    ttsCommit;
+        #}
+      ENDSOURCE
+      SOURCE #mcrManuallyDecline
+        #/// <summary>
+        #///     Updates this record to indicate that it has been manually declined.
+        #/// </summary>
+        #/// <param name="_creditCardAuthorization">
+        #/// The decline code obtained from the credit
+        #///     card processor, typically through the phone.
+        #/// </param>
+        #public void mcrManuallyDecline(CreditCardAuthorization _creditCardAuthorization)
+        #{
+        #    ttsBegin;
+        #    this.selectForUpdate(true);
+        #    this.Authorization       = _creditCardAuthorization;
+        #    this.ApprovedDateTime    = DateTimeUtil::getSystemDateTime();
+        #    this.ProcessorStatus     = CreditCardProcessorStatus::Declined;
+        #    this.update();
+        #    ttsCommit;
+        #}
+      ENDSOURCE
+      SOURCE #checkExist
+        #/// <summary>
+        #///    Determines whether the specified record exists in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_recId">
+        #///    The record ID of the credit card authorization transaction to check.
+        #/// </param>
+        #/// <returns>
+        #///    true if the specified record exists; otherwise, false.
+        #/// </returns>
+        #public static boolean checkExist(RecId _recId)
+        #{
+        #    boolean found = true;
+        #
+        #    if (!CreditCardAuthTrans::exist(_recId))
+        #    {
+        #        found = checkFailed(strFmt(CreditCardAuthTrans::txtNotExist(), _recId));
+        #    }
+        #
+        #    return found;
+        #}
+      ENDSOURCE
+      SOURCE #exist
+        #/// <summary>
+        #/// Determines whether the specified record in the <c>CreditCardAuthTrans</c> table exists.
+        #/// </summary>
+        #/// <param name="_recId">
+        #/// The record ID of the credit card transaction to check for existence.
+        #/// </param>
+        #/// <returns>
+        #/// true if the specified record exists; otherwise, false.
+        #/// </returns>
+        #public static boolean exist(RecId _recId)
+        #{
+        #    return (select creditCardAuthTrans
+        #            where creditCardAuthTrans.RecId == _recId).RecId != 0;
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_recId">
+        #/// The record ID of the credit card transaction record to find.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <param name="_concurrencyModel">
+        #/// The concurrency model option to use when it reads the record; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #public static CreditCardAuthTrans find(RecId _recId,
+        #                                 boolean _forUpdate = false,
+        #                                 ConcurrencyModel _concurrencyModel = ConcurrencyModel::Auto)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    if(_forUpdate && _concurrencyModel != ConcurrencyModel::Auto)
+        #    {
+        #        creditCardAuthTrans.concurrencyModel(_concurrencyModel);
+        #    }
+        #
+        #    creditCardAuthTrans.selectForUpdate(_forUpdate);
+        #
+        #    if(_recId)
+        #    {
+        #        creditCardAuthTrans.selectLocked(_forUpdate);
+        #
+        #        select creditCardAuthTrans
+        #            where creditCardAuthTrans.RecId == _recId;
+        #    }
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findCharge
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID of the record to find.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans findCharge(SalesId _salesId)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    select creditCardAuthTrans
+        #        where creditCardAuthTrans.SalesId == _salesId &&
+        #            (creditCardAuthTrans.ApprovalType == CreditCardOperation::CaptureAfterAuthorize || creditCardAuthTrans.ApprovalType == CreditCardOperation::AuthorizeAndCapture) &&
+        #            creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findChargeByInvoice
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID of the record to find.
+        #/// </param>
+        #/// <param name="_salesInvoiceId">
+        #/// The sales invoice ID of the record to find.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans findChargeByInvoice(SalesId _salesId, SalesInvoiceId _salesInvoiceId)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    select creditCardAuthTrans
+        #        where creditCardAuthTrans.SalesId == _salesId &&
+        #            creditCardAuthTrans.SalesInvoiceId == _salesInvoiceId &&
+        #            (creditCardAuthTrans.ApprovalType == CreditCardOperation::CaptureAfterAuthorize || creditCardAuthTrans.ApprovalType == CreditCardOperation::AuthorizeAndCapture) &&
+        #            creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findFinalizedPreApproval
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID of the record to find.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans findFinalizedPreApproval(SalesId _salesId)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    select creditCardAuthTrans
+        #        where creditCardAuthTrans.SalesId == _salesId &&
+        #            creditCardAuthTrans.ApprovalType == CreditCardOperation::CaptureAfterAuthorize &&
+        #            creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findLatest
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID of the record to find.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans findLatest(SalesId _salesId, boolean _forUpdate = false)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    if (_salesId)
+        #    {
+        #        creditCardAuthTrans.selectForUpdate(_forUpdate);
+        #        creditCardAuthTrans.selectLocked(_forUpdate);
+        #
+        #        select firstonly creditCardAuthTrans
+        #            order by LineNum desc
+        #            where creditCardAuthTrans.SalesId == _salesId;
+        #    }
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findRefundCharge
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID of the record to find.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans findRefundCharge(SalesId _salesId, boolean _forUpdate = false)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    creditCardAuthTrans.selectForUpdate(_forUpdate);
+        #
+        #    select creditCardAuthTrans
+        #        where creditCardAuthTrans.SalesId == _salesId &&
+        #            creditCardAuthTrans.RefundStatus == CreditCardRefundStatus::Marked &&
+        #            (creditCardAuthTrans.ApprovalType == CreditCardOperation::CaptureAfterAuthorize || creditCardAuthTrans.ApprovalType == CreditCardOperation::AuthorizeAndCapture) &&
+        #            creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findValidPreApproval
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID of the record to find.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans findValidPreApproval(SalesId _salesId)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    CreditCardAuthTrans::updateExpiredApproval(_salesId);
+        #
+        #    select creditCardAuthTrans
+        #        where creditCardAuthTrans.SalesId == _salesId &&
+        #            creditCardAuthTrans.ApprovalType == CreditCardOperation::Authorize &&
+        #            !creditCardAuthTrans.ApprovalExpired &&
+        #            !creditCardAuthTrans.ApprovalVoid &&
+        #            creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #isAuthorizedAndApproved
+        #/// <summary>
+        #/// Determines whether the latest credit card transaction is authorized and approved.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID for which to obtain the latest credit card transaction.
+        #/// </param>
+        #/// <returns>
+        #/// true if the latest credit card transaction is charged; otherwise, false.
+        #/// </returns>
+        #static boolean isAuthorizedAndApproved(SalesId _salesId)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans = CreditCardAuthTrans::findLatest(_salesId);
+        #
+        #    return (creditCardAuthTrans.ApprovalType == CreditCardOperation::CaptureAfterAuthorize || creditCardAuthTrans.ApprovalType == CreditCardOperation::AuthorizeAndCapture) &&
+        #            creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #}
+      ENDSOURCE
+      SOURCE #lastLineNum
+        #/// <summary>
+        #/// Gets the last line number of the credit card transaction.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID of the line number to find.
+        #/// </param>
+        #/// <returns>
+        #/// The line number.
+        #/// </returns>
+        #static LineNum lastLineNum(SalesId _salesId)
+        #{
+        #    return (select maxof(LineNum) from creditCardAuthTrans
+        #        where creditCardAuthTrans.SalesId == _salesId).LineNum;
+        #}
+      ENDSOURCE
+      SOURCE #markRefundProcessed
+        #public static void markRefundProcessed(RefRecId _authTransRecId)
+        #{
+        #    UserConnection connection = new UserConnection();
+        #    CreditCardAuthTrans authTrans;
+        #
+        #    authTrans.setConnection(connection);
+        #
+        #    connection.ttsbegin();
+        #
+        #    select forupdate authTrans
+        #        where authTrans.RecId == _authTransRecId;
+        #
+        #    if(authTrans)
+        #    {
+        #        authTrans.RefundStatus = CreditCardRefundStatus::Processed;
+        #        authTrans.update();
+        #    }
+        #
+        #    connection.ttscommit();
+        #}
+      ENDSOURCE
+      SOURCE #mcrFindCharge
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymRecId">
+        #/// The customer payment record.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #public static CreditCardAuthTrans mcrFindCharge(RecId _mcrCustPaymRecId)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    if (_mcrCustPaymRecId)
+        #    {
+        #        select creditCardAuthTrans
+        #            where creditCardAuthTrans.MCRPaymRecId == _mcrCustPaymRecId &&
+        #                (creditCardAuthTrans.ApprovalType == CreditCardOperation::CaptureAfterAuthorize
+        #                    || creditCardAuthTrans.ApprovalType == CreditCardOperation::AuthorizeAndCapture)
+        #                    && creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #    }
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #mcrFindLatest
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymRecId">
+        #/// The record ID of the payment record to find an authorization.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans mcrFindLatest(RecId _mcrCustPaymRecId,
+        #                                         boolean _forUpdate = false)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    if (_mcrCustPaymRecId)
+        #    {
+        #        creditCardAuthTrans.selectForUpdate(_forUpdate);
+        #        creditCardAuthTrans.selectLocked(_forUpdate);
+        #
+        #        select firstonly creditCardAuthTrans
+        #            order by LineNum desc
+        #            where creditCardAuthTrans.MCRPaymRecId == _mcrCustPaymRecId;
+        #    }
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #mcrFindRefundCharge
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymRecId">
+        #/// The Rec ID used to find the original capture.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans mcrFindRefundCharge(RecId _mcrCustPaymRecId, boolean _forUpdate = false)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    creditCardAuthTrans.selectForUpdate(_forUpdate);
+        #
+        #    select creditCardAuthTrans
+        #        where creditCardAuthTrans.MCRPaymRecId == _mcrCustPaymRecId &&
+        #            (creditCardAuthTrans.ApprovalType == CreditCardOperation::CaptureAfterAuthorize
+        #                || creditCardAuthTrans.ApprovalType == CreditCardOperation::AuthorizeAndCapture) &&
+        #            creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #mcrFindValidPreApproval
+        #/// <summary>
+        #/// Finds the specified record in the <c>CreditCardAuthTrans</c> table.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymRecId">
+        #/// The customer payment record ID to find if available; otherwise, zero.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>CreditCardAuthTrans</c> table; otherwise, an empty record.
+        #/// </returns>
+        #static CreditCardAuthTrans mcrFindValidPreApproval(RecId _mcrCustPaymRecId)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #    //--> Red Maple Begin
+        #    MCRCustPaymTable        paymTable = MCRCustPaymTable::findByRecID(_mcrCustPaymRecId);
+        #    //<-- Red Maple End
+        #
+        #    if (_mcrCustPaymRecId && paymTable.TableId != tableNum(SalesTableCC))
+        #    {
+        #        CreditCardAuthTrans::mcrUpdateExpiredApproval(_mcrCustPaymRecId);
+        #
+        #        select creditCardAuthTrans
+        #            where creditCardAuthTrans.MCRPaymRecId == _mcrCustPaymRecId
+        #                    && creditCardAuthTrans.ApprovalType == CreditCardOperation::Authorize
+        #                    && !creditCardAuthTrans.ApprovalExpired
+        #                    && !creditCardAuthTrans.ApprovalVoid
+        #                    && creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+        #    }
+        #
+        #    return creditCardAuthTrans;
+        #}
+      ENDSOURCE
+      SOURCE #mcrUpdateExpiredApproval
+        #/// <summary>
+        #/// Sets the credit card approval expiration for the specified sales ID.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymRecId">
+        #/// The customer payment record to set the expiration of the credit card approval.
+        #/// </param>
+        #/// <exception cref="Exception::Error">
+        #/// RecID of <c>MCRCustPaymTable</c> required; throw error if not provided.
+        #/// </exception>
+        #static void mcrUpdateExpiredApproval(RecId _mcrCustPaymRecId)
+        #{
+        #    UserConnection connection;
+        #    CreditCardAuthTrans authTrans;
+        #    CreditCardPreapprovalLastNoOfDays days;
+        #
+        #    if (_mcrCustPaymRecId)
+        #    {
+        #        days = CustParameters::find().CreditCardPreapprovalLastNoOfDays;
+        #        connection = new UserConnection();
+        #        authTrans.setConnection(connection);
+        #        connection.ttsbegin();
+        #        while select forupdate authTrans
+        #            where authTrans.MCRPaymRecId == _mcrCustPaymRecId &&
+        #                authTrans.ApprovalType == CreditCardOperation::Authorize &&
+        #                !authTrans.ApprovalExpired &&
+        #                authTrans.ProcessorStatus == CreditCardProcessorStatus::Approved
+        #        {
+        #            if(systemDateGet() - DateTimeUtil::date(authTrans.ApprovedDateTime) > days)
+        #            {
+        #                authTrans.ApprovalExpired = true;
+        #                authTrans.update();
+        #            }
+        #        }
+        #        connection.ttscommit();
+        #    }
+        #    else
+        #    {
+        #        throw error(error::wrongUseOfFunction(funcName()));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #settlePreapprovalTransaction
+        #/// <summary>
+        #/// Closes the credit card transaction.
+        #/// </summary>
+        #/// <param name="_authTransRecId">
+        #/// The credit card history record for which to set the status as settled.
+        #/// </param>
+        #/// <param name="_custInvoiceId">
+        #/// The customer invoice ID to close; optional.
+        #/// </param>
+        #static void settlePreapprovalTransaction(RefRecId _authTransRecId, CustInvoiceId _custInvoiceId = '')
+        #{
+        #    UserConnection connection = new UserConnection();
+        #    CreditCardAuthTrans authTrans;
+        #
+        #    authTrans.setConnection(connection);
+        #
+        #    connection.ttsbegin();
+        #
+        #    select forupdate authTrans
+        #        where authTrans.RecId == _authTransRecId;
+        #
+        #    if (authTrans)
+        #    {
+        #        authTrans.ProcessorStatus = CreditCardProcessorStatus::Settled;
+        #        authTrans.SalesInvoiceId = _custInvoiceId;
+        #        authTrans.update();
+        #    }
+        #
+        #    connection.ttscommit();
+        #}
+      ENDSOURCE
+      SOURCE #setVoidApproval
+        #/// <summary>
+        #/// Voids the preapproval of credit card transactions.
+        #/// </summary>
+        #/// <param name="_authTransRecId">
+        #/// The credit card history record to mark as voided.
+        #/// </param>
+        #static void setVoidApproval(RefRecId _authTransRecId)
+        #{
+        #    UserConnection connection = new UserConnection();
+        #    CreditCardAuthTrans authTrans;
+        #
+        #    authTrans.setConnection(connection);
+        #
+        #    connection.ttsbegin();
+        #
+        #    select forupdate authTrans
+        #        where authTrans.RecId == _authTransRecId;
+        #
+        #    if (authTrans)
+        #    {
+        #        authTrans.ApprovalVoid = NoYes::Yes;
+        #        authTrans.update();
+        #    }
+        #
+        #    connection.ttscommit();
+        #}
+      ENDSOURCE
+      SOURCE #txtNotExist
+        #public static TxtNotExist txtNotExist()
+        #{
+        #    return "@SYS102169";
+        #}
+      ENDSOURCE
+      SOURCE #updateExpiredApproval
+        #/// <summary>
+        #/// Sets the credit card approval expiration for the specified sales ID.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #/// The sales ID to set the credit card approval expiration for.
+        #/// </param>
+        #static void updateExpiredApproval(SalesId _salesId)
+        #{
+        #    UserConnection connection = new UserConnection();
+        #    CreditCardAuthTrans authTrans;
+        #    CreditCardPreapprovalLastNoOfDays days = CustParameters::find().CreditCardPreapprovalLastNoOfDays;
+        #
+        #    authTrans.setConnection(connection);
+        #
+        #    connection.ttsbegin();
+        #
+        #    while select forupdate authTrans
+        #        where authTrans.SalesId == _salesId &&
+        #            authTrans.ApprovalType == CreditCardOperation::Authorize &&
+        #            !authTrans.ApprovalExpired &&
+        #            authTrans.ProcessorStatus == CreditCardProcessorStatus::Approved
+        #    {
+        #        if(systemDateGet() - DateTimeUtil::date(authTrans.ApprovedDateTime) > days)
+        #        {
+        #            authTrans.ApprovalExpired = true;
+        #            authTrans.update();
+        #        }
+        #    }
+        #
+        #    connection.ttscommit();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

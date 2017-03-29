@@ -1,0 +1,409 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardTableListPage
+  PROPERTIES
+    Name                #CreditCardTableListPage
+    FormTemplate        #ListPage
+    InteractionClass    #CreditCardTableListPageInteraction
+    Origin              #{28B9B584-5674-46F7-A040-E0B82AB5B9D0}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+      Query               #CreditCardTable
+      Version             #12
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+          AllowEdit           #No
+          AllowCreate         #No
+          OnlyFetchActive     #Yes
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+    PARTREFERENCE #PreviewPane
+      PROPERTIES
+        Name                #PreviewPane
+        PartLocation        #PreviewPane
+        DataSource          #CreditCardTable
+        ElementPosition     #1073741823
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@ACC29
+      UseCaptionFromMenuItem  #Yes
+      WindowType          #ContentPage
+      Style               #ListPage
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          VerticalSpacing     #0
+          ElementPosition     #536870911
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #HomeTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+          Caption             #@ACC1423
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #MaintainGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #HomeTab
+          Caption             #@SYS316703
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #NewGroup
+          ElementPosition     #1073741822
+          HierarchyParent     #HomeTab
+          Caption             #@SYS2055
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #ListPageGrid
+          AllowEdit           #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          DataSource          #CreditCardTable
+          DefaultAction       #ViewButton
+          DefaultActionLabel  #@SYS122402
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Filter
+          Visible             #No
+          ElementPosition     #1073741822
+          Style               #CustomFilter
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #CreditCardTable_PrimaryCard
+          ElementPosition     #1879048185
+          HierarchyParent     #ListPageGrid
+          BackgroundColor     #Window background
+          DataSource          #CreditCardTable
+          DataField           #PrimaryCard
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardType
+          ElementPosition     #805306365
+          HierarchyParent     #ListPageGrid
+          DataSource          #CreditCardTable
+          DataField           #CreditCardType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #CreditCardTable_ExpirationDate
+          ElementPosition     #1610612730
+          HierarchyParent     #ListPageGrid
+          DataSource          #CreditCardTable
+          DataField           #ExpirationDate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardEPSetPrimary
+          DisplayTarget       #EP
+          ElementPosition     #1717986916
+          HierarchyParent     #MaintainGroup
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          DataSource          #CreditCardTable
+          MenuItemType        #Action
+          MenuItemName        #CreditCardEPSetPrimary
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EditButton
+          ElementPosition     #858993458
+          HierarchyParent     #MaintainGroup
+          Text                #@SYS317438
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Primary             #Yes
+          OpenMode            #Edit
+          CopyCallerQuery     #Yes
+          MenuItemName        #CreditCardTableaddeP
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #NewButton
+          DisplayTarget       #Client
+          ElementPosition     #1610612733
+          HierarchyParent     #NewGroup
+          NormalImage         #12227
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Primary             #Yes
+          OpenMode            #New
+          CopyCallerQuery     #Yes
+          MenuItemName        #CreditCardTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #NewButtonEP
+          DisplayTarget       #EP
+          ElementPosition     #1073741822
+          HierarchyParent     #NewGroup
+          NormalImage         #12227
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Primary             #Yes
+          OpenMode            #New
+          CopyCallerQuery     #Yes
+          MenuItemName        #CreditCardTableAddEP
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ViewButton
+          Visible             #No
+          ElementPosition     #1288490187
+          HierarchyParent     #MaintainGroup
+          CopyCallerQuery     #Yes
+          MenuItemName        #CreditCardTableaddep
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardId
+          HyperLinkMenuItem   #CreditCardtable
+          HyperLinkDataSource #CreditCardTable
+          ElementPosition     #536870910
+          HierarchyParent     #ListPageGrid
+          DataSource          #CreditCardTable
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardNumSecure
+          ElementPosition     #1073741820
+          HierarchyParent     #ListPageGrid
+          DataSource          #CreditCardTable
+          DataField           #CreditCardNumSecure
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_Name
+          ElementPosition     #1342177275
+          HierarchyParent     #ListPageGrid
+          DataSource          #CreditCardTable
+          DataField           #Name
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

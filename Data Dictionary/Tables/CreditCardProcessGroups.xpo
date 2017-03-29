@@ -1,0 +1,173 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardProcessGroups
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardProcessGroups
+      Label               #@ACC1260
+      FormRef             #creditCardProcessGroups
+      TitleField1         #ProcessGroupId
+      TitleField2         #Description
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      TableGroup          #Group
+      PrimaryIndex        #ProcessGroupId
+      ClusterIndex        #ProcessGroupId
+      DeveloperDocumentation  #@ACC1744
+      Origin              #{024FAF7A-F15B-487A-8690-24DE0B32AB33}
+      LegacyId            #20028
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Description
+        STRING
+        PROPERTIES
+          Name                #Description
+          Table               #CreditCardProcessGroups
+          Origin              #{73457E65-6449-4DCB-9832-961CD884F068}
+          LegacyId            #20002
+          ExtendedDataType    #Description
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #ProcessGroupId
+        STRING
+        PROPERTIES
+          Name                #ProcessGroupId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardProcessGroups
+          Origin              #{6846F7E4-8751-4C76-AD4A-41AE70EDE591}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardProcessGroupId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ProcessGroupId
+          #Description
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ProcessGroupId
+          #Description
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS36186
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ProcessGroupId
+          #Description
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #ProcessGroupId
+      PROPERTIES
+        Name                #ProcessGroupId
+        AllowDuplicates     #No
+        Origin              #{A877B26A-7D0B-489E-8693-70AB82862959}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #ProcessGroupId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #CreditCardProcessLine
+      PROPERTIES
+        Table               #CreditCardProcessLine
+        DeleteAction        #Cascade + Restricted
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #resolveTerminalforToken
+        #static creditCardTerminalTable resolveTerminalforToken(CreditCardTable         ccTable)
+        #{
+        #    CreditCardProcessLine               processLine;
+        #    CreditCardTerminalTable             primaryTerminal;
+        #    CreditCardTerminalTable             secondaryTerminal;
+        #    CreditCardProcessGroupid            processGroupId;
+        #    CustTable                           custTable = CustTable::find(ccTable.CustAccount);
+        #    ;
+        #    select processLine
+        #        where processLine.SetPrimary == NoYes::Yes
+        #        && processLIne.TerminalId == CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (processLine)
+        #    {
+        #        primaryTerminal = CreditCardTerminalTable::findTerminalWithId(processLIne.TerminalId);
+        #        processGroupId = processLine.ProcessGroupId;
+        #
+        #        while select processLine
+        #            order by Priority desc
+        #            where processLine.ProcessGroupId == processGroupId
+        #            && processLine.SetPrimary == NoYes::No
+        #        {
+        #            if (((processLine.CreditCardType == ccTable.CreditCardType
+        #                && processLine.CreditCardTypeActive == NoYes::Yes)
+        #                || processLine.CreditCardTypeActive == NoYes::No)
+        #                && (processLine.CustAccount == '' ||
+        #                processLine.CustAccount == ccTable.CustAccount)
+        #                && (processLine.CurrencyCode == custTable.Currency
+        #                && custTable.RecId == 0)
+        #                && processLine.ProcessGroupId == processGroupId)
+        #            {
+        #                secondaryTerminal = CreditCardTerminalTable::findTerminalWithId(processLine.TerminalId);
+        #                break;
+        #            }
+        #
+        #
+        #        }
+        #
+        #        if (secondaryTerminal)
+        #        {
+        #            primaryTerminal = secondaryTerminal;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        return CreditCardTerminalTable::find();
+        #    }
+        #
+        #
+        #    return primaryTerminal;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

@@ -1,0 +1,304 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #LogisticsLocationRole
+    EnforceFKRelation 1
+    PROPERTIES
+      Name                #LogisticsLocationRole
+      Label               #@SYS112385
+      FormRef             #logisticslocationrole
+      TitleField1         #Name
+      TitleField2         #Type
+      SecurityKey         #BasicTables
+      CacheLookup         #EntireTable
+      CreateRecIdIndex    #Yes
+      SaveDataPerCompany  #No
+      TableGroup          #Reference
+      PrimaryIndex        #SurrogateKey
+      ClusterIndex        #NameIdx
+      ReplacementKey      #NameIdx
+      DeveloperDocumentation  #@SYS327272
+      Origin              #{2C150B89-0000-1000-0778-1640160F5334}
+      LegacyId            #2953
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #IsContactInfo
+        ENUM
+        PROPERTIES
+          Name                #IsContactInfo
+          HelpText            #@SYS344264
+          Table               #LogisticsLocationRole
+          Origin              #{DE352D31-137F-4C34-B92E-171035CCC478}
+          LegacyId            #8
+          ExtendedDataType    #LogisticsLocationIsElectronic
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #IsPostalAddress
+        ENUM
+        PROPERTIES
+          Name                #IsPostalAddress
+          HelpText            #@SYS344263
+          Table               #LogisticsLocationRole
+          Origin              #{B4568203-CE47-4598-B5C4-EAA193FD3D4C}
+          LegacyId            #7
+          ExtendedDataType    #LogisticsLocationIsPostal
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Name
+        STRING
+        PROPERTIES
+          Name                #Name
+          HelpText            #@SYS344261
+          Mandatory           #Yes
+          Table               #LogisticsLocationRole
+          Origin              #{05DE7B67-C796-40D8-BE71-427BA745D767}
+          LegacyId            #4
+          ExtendedDataType    #LogisticsLocationRoleName
+          StringSize          #40
+        ENDPROPERTIES
+        
+      FIELD #Type
+        ENUM
+        PROPERTIES
+          Name                #Type
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #LogisticsLocationRole
+          Origin              #{FDC454A4-8778-4812-87D4-083837F5C9BA}
+          LegacyId            #5
+          EnumType            #LogisticsLocationRoleType
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Name
+          #Type
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoIdentification
+        PROPERTIES
+          Name                #AutoIdentification
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Name
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #All
+        PROPERTIES
+          Name                #All
+          Label               #@sys80094
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Name
+          #Type
+          #IsPostalAddress
+          #IsContactInfo
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TypeIdx
+      PROPERTIES
+        Name                #TypeIdx
+        Origin              #{C192D379-EDDD-4071-9242-127ACF979A6F}
+        LegacyId            #3
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #Type
+      ENDINDEXFIELDS
+      
+      #NameIdx
+      PROPERTIES
+        Name                #NameIdx
+        AllowDuplicates     #No
+        AlternateKey        #Yes
+        Origin              #{FBC3872C-A363-4503-B808-50EA25D06E0A}
+        LegacyId            #5
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #Name
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #DirPartyLocationRole(LogisticsLocationRole_FK)
+      PROPERTIES
+        Table               #DirPartyLocationRole
+        DeleteAction        #Restricted
+        Relation            #LogisticsLocationRole_FK
+      ENDPROPERTIES
+      
+      #InventLocationLogisticsLocationRole(LogisticsLocationRole)
+      PROPERTIES
+        Table               #InventLocationLogisticsLocationRole
+        DeleteAction        #Restricted
+        Relation            #LogisticsLocationRole
+      ENDPROPERTIES
+      
+      #InventSiteLogisticsLocationRole(LogisticsLocationRole)
+      PROPERTIES
+        Table               #InventSiteLogisticsLocationRole
+        DeleteAction        #Restricted
+        Relation            #LogisticsLocationRole
+      ENDPROPERTIES
+      
+      #LogisticsLocationRoleTranslation
+      PROPERTIES
+        Table               #LogisticsLocationRoleTranslation
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+      #CreditCardParameters
+      PROPERTIES
+        Table               #CreditCardParameters
+        DeleteAction        #Restricted
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #description
+        #/// <summary>
+        #/// Gets the translated value of a location role.
+        #/// </summary>
+        #/// <returns>
+        #/// A string that represents the translated value of the location role.
+        #/// </returns>
+        #public Description description()
+        #{
+        #    LogisticsLocationRoleTranslation locationTranslationRole;
+        #
+        #    locationTranslationRole = LogisticsLocationRoleTranslation::find(currentUserLanguage(), this.RecId);
+        #
+        #    return locationTranslationRole.Description ? locationTranslationRole.Description : this.Name;
+        #}
+      ENDSOURCE
+      SOURCE #validateDelete
+        #public boolean validateDelete()
+        #{
+        #    boolean ret;
+        #
+        #    ret = super();
+        #
+        #    if (ret)
+        #    {
+        #        if (this.Type != LogisticsLocationRoleType::None)
+        #        {
+        #            // Cannot delete a system location role.
+        #            ret = checkFailed("@SYS136859");
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #dataSetLookup
+        #public static SysDataSetLookup dataSetLookup(SysDataSetLookup sysDataSetLookup)
+        #{
+        #    List list = new List(Types::String);
+        #    QueryBuildDataSource            queryBuildDataSource;
+        #    Query                           query;
+        #    SysDataSetBuilder               sysDataSetBuilder;
+        #
+        #    list.addEnd(fieldStr(LogisticsLocationRole, Name));
+        #
+        #    query = new Query();
+        #
+        #    queryBuildDataSource = query.addDataSource(tableNum(LogisticsLocationRole));
+        #
+        #    sysDataSetBuilder = SysDataSetBuilder::constructLookupDataSet(tableNum(LogisticsLocationRole));
+        #
+        #    sysDataSetLookup.parmLookupFields(list);
+        #    sysDataSetLookup.parmSelectField(fieldStr(LogisticsLocationRole, Name));
+        #    sysDataSetLookup.parmQuery(query);
+        #    sysDataSetLookup.parmDataSet(sysDataSetBuilder.toDataSet());
+        #
+        #    return sysDataSetLookup;
+        #}
+      ENDSOURCE
+      SOURCE #findBytype
+        #/// <summary>
+        #///    Finds a record in the <c>LogisticsLocationRole</c> table, depending on a
+        #///    <c>LogisticsLocationRoleType</c> value.
+        #/// </summary>
+        #/// <param name="_type">
+        #///    The <c>LogisticsLocationRoleType</c> value of the record to select.
+        #/// </param>
+        #/// <param name="_forupdate">
+        #///    A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #///    A record in the <c>LogisticsLocationRole</c> table.
+        #/// </returns>
+        #public static LogisticsLocationRole findBytype(LogisticsLocationRoleType _type, boolean _forupdate = false)
+        #{
+        #    LogisticsLocationRole    locationRole;
+        #
+        #    if (_type != LogisticsLocationRoleType::None)
+        #    {
+        #        locationRole.selectForUpdate(_forupdate);
+        #
+        #        select firstonly locationRole where locationRole.Type == _type;
+        #    }
+        #    return locationRole;
+        #}
+      ENDSOURCE
+      SOURCE #findRec
+        #/// <summary>
+        #///    Finds a record in the <c>LogisticsLocationRole</c> table, depending on a
+        #///    <c>LogisticsLocationRoleRecId</c> value.
+        #/// </summary>
+        #/// <param name="_locationRoleRecId">
+        #///    The <c>LogisticsLocationRoleRecId</c> value of the record to select.
+        #/// </param>
+        #/// <param name="_forupdate">
+        #///    A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #///    A record in the <c>LogisticsLocationRole</c> table.
+        #/// </returns>
+        #public static LogisticsLocationRole findRec(LogisticsLocationRoleRecId _locationRoleRecId, boolean _forupdate = false)
+        #{
+        #    LogisticsLocationRole locationRole = null;
+        #    ;
+        #
+        #    if (_locationRoleRecId)
+        #    {
+        #        locationRole.selectForUpdate(_forupdate);
+        #
+        #        select firstonly locationRole where locationRole.RecId == _locationRoleRecId;
+        #    }
+        #
+        #    return locationRole;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

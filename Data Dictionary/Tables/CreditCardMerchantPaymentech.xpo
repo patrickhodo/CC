@@ -1,0 +1,279 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantPaymentech
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantPaymentech
+      Label               #@ACC1078
+      TitleField1         #MerchantId
+      TitleField2         #Platform
+      ConfigurationKey    #Paymentech
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdx
+      ClusterIndex        #TerminalIdx
+      DeveloperDocumentation  #@ACC1603
+      Origin              #{B6B40490-9DA7-4066-8E5F-2AB31D6FF4C0}
+      LegacyId            #20008
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #ClientNum
+        STRING
+        PROPERTIES
+          Name                #ClientNum
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{8B364B64-135B-4C13-B127-9C041C708837}
+          LegacyId            #20005
+          ExtendedDataType    #CreditCardClientNum
+        ENDPROPERTIES
+        
+      FIELD #HostAddress
+        STRING
+        PROPERTIES
+          Name                #HostAddress
+          Label               #@ACC44
+          HelpText            #@ACC1037
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{AC8AE736-44AD-407F-A987-05A1B39DE12B}
+          LegacyId            #20003
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #IndustryOrbital
+        ENUM
+        PROPERTIES
+          Name                #IndustryOrbital
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{D0A997DA-7F50-4079-B99B-BA8676900745}
+          LegacyId            #20010
+          EnumType            #CreditCardIndustryOrbital
+        ENDPROPERTIES
+        
+      FIELD #MerchantId
+        STRING
+        PROPERTIES
+          Name                #MerchantId
+          Label               #@ACC603
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{671BF874-9730-4752-B1FB-B88C3E069832}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #OrbitalCurrency
+        ENUM
+        PROPERTIES
+          Name                #OrbitalCurrency
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{09261275-A9A2-4DE7-83E2-F3ED48046993}
+          LegacyId            #20009
+          EnumType            #CreditCardOrbitalCurrency
+        ENDPROPERTIES
+        
+      FIELD #OrbitalTimeZone
+        ENUM
+        PROPERTIES
+          Name                #OrbitalTimeZone
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{34E031A4-CF50-4A84-BAD3-1DEBA1D4EF23}
+          LegacyId            #20011
+          EnumType            #CreditCardOrbitalTimeZone
+        ENDPROPERTIES
+        
+      FIELD #Platform
+        ENUM
+        PROPERTIES
+          Name                #Platform
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{840DC0B0-2418-4C86-9D7C-6BEE8529E9BE}
+          LegacyId            #20007
+          EnumType            #CreditCardPaymentechPlatform
+        ENDPROPERTIES
+        
+      FIELD #Port
+        INT
+        PROPERTIES
+          Name                #Port
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{304DE68B-D29D-4CFC-89F3-AD73480D904B}
+          LegacyId            #20004
+          ExtendedDataType    #CreditCardTCPPort
+        ENDPROPERTIES
+        
+      FIELD #Pwd
+        STRING
+        PROPERTIES
+          Name                #Pwd
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{97153616-3181-49B5-9669-6C631C26314D}
+          LegacyId            #20002
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{1560AA01-7096-4668-9330-D20FCF6B357E}
+          LegacyId            #20008
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #UserId
+        STRING
+        PROPERTIES
+          Name                #UserId
+          Table               #CreditCardMerchantPaymentech
+          Origin              #{C9309E7E-E876-4D76-B2B3-4150C6A12C2D}
+          LegacyId            #20006
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #MerchantId
+          #Pwd
+          #HostAddress
+          #Port
+          #ClientNum
+          #UserId
+          #Platform
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ClientNum
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Batch
+        PROPERTIES
+          Name                #Batch
+          Label               #@SYS14462
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #DEL_Orbital
+        PROPERTIES
+          Name                #DEL_Orbital
+          Label               #@ACC864
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #IndustryOrbital
+          #OrbitalTimeZone
+          #OrbitalCurrency
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Login
+        PROPERTIES
+          Name                #Login
+          Label               #@SYS57712
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UserId
+          #Pwd
+          #MerchantId
+          #ClientNum
+          #Platform
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Network
+        PROPERTIES
+          Name                #Network
+          Label               #@SYS30485
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #HostAddress
+          #Port
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdx
+      PROPERTIES
+        Name                #TerminalIdx
+        AllowDuplicates     #No
+        Origin              #{700C080A-CD91-4604-AE85-781E621A8B3A}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminals
+        PROPERTIES
+          Name                #CreditCardTerminals
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

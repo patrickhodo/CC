@@ -1,0 +1,1237 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #MCRCustPaym_CreditCard
+    PROPERTIES
+      Name                #MCRCustPaym_CreditCard
+      Extends             #MCRCustPaym
+      Origin              #{E27452D7-03F9-4C46-A17B-981C86D04E9F}
+      LegacyId            #30052
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #allowEditCreditCard
+        #/// <summary>
+        #///     Determines if it is allowable to update the credit card number and credit
+        #///     card vendor fields.
+        #/// </summary>
+        #/// <returns>
+        #///     true if credit card and credit card vendor field are able to be updated;
+        #///     otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     The fields are not allowed to be updated if any it is poted in any way.
+        #/// </remarks>
+        #public boolean allowEditCreditCard()
+        #{
+        #    if (mcrCustPaymTable.PostedAmount)
+        #    {
+        #        return false;
+        #    }
+        #    else
+        #    {
+        #        return true;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #allowEditCurrency
+        #/// <summary>
+        #///     Determines if the currency should be allowed to be modified for this
+        #///     payment.
+        #/// </summary>
+        #/// <returns>
+        #///     true if the currency is allowed to be modified; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     Overridden to disallow changing the currency if any authorization or
+        #///     settlement records exist for the payment.  This is necessary because the
+        #///     currency is used on authorization and settlement records.
+        #/// </remarks>
+        #public boolean allowEditCurrency()
+        #{
+        #    boolean allowEdit;
+        #
+        #    allowEdit = super();
+        #
+        #    if (allowEdit)
+        #    {
+        #        allowEdit = !this.existAuthOrSettlementRecords();
+        #    }
+        #
+        #    return allowEdit;
+        #}
+      ENDSOURCE
+      SOURCE #allowEditInvoiceAccount
+        #/// <summary>
+        #///     Determines if the invoice account should be allowed to be modified for this
+        #///     payment.
+        #/// </summary>
+        #/// <returns>
+        #///     true if the invoice account is allowed to be modified; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     Overridden to disallow changing the invoice account if any authorization or
+        #///     settlement records exist for the payment.  This is necessary because the
+        #///     address used on authorization and settlement records is the address for the
+        #///     invoice account.
+        #/// </remarks>
+        #public boolean allowEditInvoiceAccount()
+        #{
+        #    boolean allowEdit;
+        #
+        #    allowEdit = super();
+        #
+        #    if (allowEdit)
+        #    {
+        #        allowEdit = !this.existAuthOrSettlementRecords();
+        #    }
+        #
+        #    return allowEdit;
+        #}
+      ENDSOURCE
+      SOURCE #authorizeCharge
+        #/// <summary>
+        #///     Initiates authorization for a credit card charge (debit to the card).
+        #/// </summary>
+        #/// <returns>
+        #///     The <c>MCRCustPaymStatus</c> after the payment is submitted for authorization.
+        #/// </returns>
+        #private MCRCustPaymStatus authorizeCharge()
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #    boolean             preAuthResult;
+        #    //--> Red Maple Begin
+        #    SalesTableCC        salesTableCC;
+        #    //<-- Red Maple End
+        #
+        #    // unable to re-use existing authorization -- create new record
+        #
+        #    if (mcrCustPaymTable.RefTableId == tableNum(SalesTable))
+        #    {
+        #        //--> Red Maple Begin
+        #        if (mcrCustPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #        {
+        #            salesTableCC = salesTableCC::findRecId(mcrCustPaymTable.PaymInfoRecId);
+        #            salesTableCC::processMCRCustPaymTable(salesTableCC,mcrCustPaymTable);
+        #        }
+        #        else
+        #        {
+        #            preAuthResult = CreditCardProcess::mcrDoPreAuth(mcrCustPaymTable);
+        #            if (!preAuthResult)
+        #            {
+        #                info("@MCR40423");
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        //--> Red Maple Begin
+        #        if (mcrCustPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #        {
+        #            salesTableCC = salesTableCC::findRecId(mcrCustPaymTable.PaymInfoRecId);
+        #            salesTableCC::processMCRCustPaymTable(salesTableCC,mcrCustPaymTable);
+        #        }
+        #        else
+        #        {
+        #            creditCardAuthTrans = CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId);
+        #        }
+        #    }
+        #    // calculate resulting payment status
+        #    //--> Red Maple Begin
+        #    if (mcrCustPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #    {
+        #        return salesTableCC::calculateChargePaymStatus(salesTableCC,mcrCustPaymTable);
+        #    }
+        #    else
+        #    {
+        #        //-->Red Maple End
+        #        return MCRCustPaym_CreditCard::calculateChargePaymStatus(creditCardAuthTrans, mcrCustPaymTable);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #authorizeChargeManually
+        #/// <summary>
+        #///     Authorizes this credit card payment manually.
+        #/// </summary>
+        #/// <param name="_creditCardAuthorization">
+        #///     Credit card authorization code, obtained from the credit card processor.
+        #/// </param>
+        #/// <returns>
+        #///     The new payment status.  The payment should be updated with this new
+        #///     status.
+        #/// </returns>
+        #/// <remarks>
+        #///     Related authorization records are updated, but the payment record is not.
+        #///
+        #///     In some cases, it is not appropriate to simply update the currently
+        #///     active authorization record, because it would overwrite data that should
+        #///     be retained for tracking purposes.  Instead, old authorization records
+        #///     are deleted or made inactive, and a new authorization record is created.
+        #///     The new record is then updated to be manually authorized.
+        #/// </remarks>
+        #public MCRCustPaymStatus authorizeChargeManually(CreditCardAuthorization _creditCardAuthorization)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    // payment must be a charge (positive amount) for manual authorization
+        #    if (mcrCustPaymTable.getUnpostedAmount() <= 0.0)
+        #    {
+        #        throw error("@MCR10754");
+        #    }
+        #
+        #    // update the authorization to be manually authorized
+        #    ttsbegin;
+        #    creditCardAuthTrans = CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId, true);
+        #
+        #    if (creditCardAuthTrans)
+        #    {
+        #        creditCardAuthTrans.mcrManuallyAuthorize(_creditCardAuthorization);
+        #        if (creditCardAuthTrans.validateWrite())
+        #        {
+        #            creditCardAuthTrans.update();
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS104318");
+        #        }
+        #    }
+        #    ttscommit;
+        #
+        #    return MCRCustPaym_CreditCard::calculateChargePaymStatus(creditCardAuthTrans);
+        #}
+      ENDSOURCE
+      SOURCE #authorizeRefund
+        #/// <summary>
+        #///     Initiates authorization for a credit card refund (credit to the card).
+        #/// </summary>
+        #/// <returns>
+        #///     The mcrCustPaymStatus of the payment after authorization initiation.
+        #/// </returns>
+        #/// <remarks>
+        #///     Currently, authorizations of refunds are tracked by using
+        #///     the mcrCustPaymStatus of a settlement record.  It would be preferable to
+        #///     use a separate concept (a new table?) for tracking refund
+        #///     authorizations.
+        #/// </remarks>
+        #private MCRCustPaymStatus authorizeRefund()
+        #{
+        #    MCRCustPaymStatus       mcrCustPaymStatus;
+        #    Amount                  refundApprovalAmount;
+        #    Amount                  unpostedAmount;
+        #
+        #    refundApprovalAmount = MCROrderParameters::find().mcrCreditCardApprovalAmount;
+        #
+        #    // Check if a refund amount has been setup, if it has compare unposted to the
+        #    // parameter, otherwise return authorized
+        #    if (refundApprovalAmount)
+        #    {
+        #        unpostedAmount = abs(mcrCustPaymTable.getUnpostedAmount());
+        #        // If the unposted amount is greater than the parameter, refund requires
+        #        // approval
+        #        if (unpostedAmount > refundApprovalAmount)
+        #        {
+        #            mcrCustPaymStatus = MCRCustPaymStatus::NotSubmitted;
+        #        }
+        #        else
+        #        {
+        #            mcrCustPaymStatus = MCRCustPaymStatus::Authorized;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        mcrCustPaymStatus = MCRCustPaymStatus::Authorized;
+        #    }
+        #
+        #    return mcrCustPaymStatus;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #canPost
+        #/// <summary>
+        #///     Checks if posting is possible.
+        #/// </summary>
+        #/// <param name="_postAmount">
+        #///     The amount to check of posting is possible.
+        #/// </param>
+        #/// <returns>
+        #///     true if posting is possible; otherwise, false.
+        #/// </returns>
+        #public boolean canPost(AmountCur _postAmount)
+        #{
+        #    boolean canPost = false;
+        #
+        #    if (_postAmount != 0)
+        #    {
+        #        switch(mcrCustPaymTable.RefTableId)
+        #        {
+        #            case tableNum(SalesTable):
+        #            case tableNum(LedgerJournalTrans):
+        #            case tableNum(CustInvoiceTable):
+        #            case tableNum(CustPaymSchedLine):
+        #            case tableNum(MCRCustCreditTable):
+        #                if (mcrCustPaymTable.Status != MCRCustPaymStatus::NotSubmitted)
+        #                {
+        #                    canPost = true;
+        #                }
+        #            break;
+        #            default:
+        #                throw error("@SYS89176");
+        #        }
+        #    }
+        #    return canPost;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///     The <c>MCRCustPaym_CreditCard</c> class that
+        #///     handles customer payments of type "credit card".
+        #/// </summary>
+        #class McrCustPaym_CreditCard extends MCRCustPaym
+        #{
+        #    MCROrderParameters  orderParameters;
+        #}
+      ENDSOURCE
+      SOURCE #createCreditCardEvents
+        #/// <summary>
+        #///     Creates a credit card event.
+        #/// </summary>
+        #/// <remarks>
+        #///     If the new payment status is 'declined' due to one or more declined credit
+        #///     cards, record an event so a customer letter will be sent.  Same thing for
+        #///     orders being held due to one or more credit cards being held.
+        #/// </remarks>
+        #private void createCreditCardEvents()
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #    SalesTable          salesTable;
+        #
+        #    if (mcrCustPaymTable)
+        #    {
+        #        creditCardAuthTrans = CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId);
+        #
+        #        // When the payment is related to any other table other than
+        #        // the sales table there is no need to raise an event.
+        #        if (mcrCustPaymTable
+        #                && mcrCustPaymTable.RefTableId == tableNum(SalesTable))
+        #        {
+        #            if (creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Declined)
+        #            {
+        #                salesTable = SalesTable::findRecId(mcrCustPaymTable.RefRecId);
+        #                RetailEventNotificationAction::insertRetailOENAction(RetailEventNotificationType::PaymentFailed,
+        #                        creditCardAuthTrans.RecId,
+        #                        salesTable);
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #declineChargeManually
+        #/// <summary>
+        #///     Declines this credit card payment manually.
+        #/// </summary>
+        #/// <param name="_responseCode">
+        #///     The response code indicating the reason for declining the credit card authorization.
+        #/// </param>
+        #/// <returns>
+        #///     The new payment status after the payment has ben declined.
+        #/// </returns>
+        #/// <remarks>
+        #///     Related authorization records are updated, but the payment record is not.
+        #///     In some cases, it is not appropriate to simply update the currently
+        #///     active authorization record, because it would overwrite data that should
+        #///     be retained for tracking purposes.  Instead, old authorization records
+        #///     are deleted or made inactive, and a new authorization record is created.
+        #///     The new record is then updated to be manually declined.
+        #/// </remarks>
+        #public MCRCustPaymStatus declineChargeManually(str _responseCode)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    if (!_responseCode)
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #    // Payment must be a charge (positive amount) for manual authorization.
+        #    if (mcrCustPaymTable.getUnpostedAmount() <= 0.0)
+        #    {
+        #        throw error("@MCR10754");
+        #    }
+        #
+        #    ttsbegin;
+        #    creditCardAuthTrans = CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId, true);
+        #
+        #    if (creditCardAuthTrans)
+        #    {
+        #        //if a credit card auth record exists, manually decline the transaction
+        #        creditCardAuthTrans.mcrManuallyDecline(_responseCode);
+        #        if (creditCardAuthTrans.validateWrite())
+        #        {
+        #            creditCardAuthTrans.update();
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS104318");
+        #        }
+        #    }
+        #    ttscommit;
+        #
+        #    return MCRCustPaym_CreditCard::calculateChargePaymStatus(creditCardAuthTrans);
+        #}
+      ENDSOURCE
+      SOURCE #determineStatus
+        #public MCRCustPaymStatus determineStatus()
+        #{
+        #    MCRCustPaymStatus       retStatus       = mcrCustPaymTable.Status;
+        #    CreditCardAuthTrans     creditCardAuthTrans  = CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId);
+        #    AmountCur               settledAmount   = CreditCardAuthTrans::mcrFindCharge(mcrCustPaymTable.RecId).ApprovalAmountCur;
+        #
+        #    if (settledAmount == mcrCustPaymTable.Amount)
+        #    {
+        #        retStatus = MCRCustPaymStatus::Paid;
+        #    }
+        #    else if (mcrCustPaymTable.PostedAmount == mcrCustPaymTable.Amount)
+        #    {
+        #        retStatus = MCRCustPaymStatus::Posted;
+        #    }
+        #    else
+        #    {
+        #        if (creditCardAuthTrans)
+        #        {
+        #            if (creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Declined)
+        #            {
+        #                retStatus = MCRCustPaymStatus::Declined;
+        #            }
+        #            else if (creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved)
+        #            {
+        #                if (mcrCustPaymTable.IsPrepay)
+        #                {
+        #                    retStatus = MCRCustPaymStatus::Posted;
+        #                }
+        #                else
+        #                {
+        #                    retStatus = MCRCustPaymStatus::Authorized;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return retStatus;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #existAuthOrSettlementRecords
+        #/// <summary>
+        #///     Determines if one or more authorization or settlement records exist for
+        #///     the payment.
+        #/// </summary>
+        #/// <returns>
+        #///     true if one or more authorization or settlement records exist; otherwise, false.
+        #/// </returns>
+        #private boolean existAuthOrSettlementRecords()
+        #{
+        #    CreditCardAuthTrans    creditCardAuthTrans;
+        #
+        #    select firstonly RecId from creditCardAuthTrans
+        #        where creditCardAuthTrans.mcrPaymRecId == mcrCustPaymTable.RecId
+        #        && (creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::NA
+        #            || creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved
+        #            || creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Settled);
+        #
+        #    if (creditCardAuthTrans)
+        #    {
+        #        return true;
+        #    }
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #getDefaultValue
+        #public  anytype getDefaultValue(FieldId _fieldId)
+        #{
+        #    MCRCustPaymTotals   mcrCustPaymTotals;
+        #    SalesTable          salesTable;
+        #    LedgerJournalTrans  ledgerJournalTrans;
+        #
+        #    Percent             totalPercentAmount = 0.0;
+        #
+        #    switch (_fieldId)
+        #    {
+        #        case fieldNum(MCRCustPaymTable, IsPrepay):
+        #            // Returns
+        #            if (mcrCustPaymTable.RefTableId == tableNum(SalesTable))
+        #            {
+        #                salesTable = SalesTable::findRecId(mcrCustPaymTable.RefRecId);
+        #            }
+        #            // Returns merge - look at SalesTable instead of ReturnTable
+        #            if (salesTable.SalesType == SalesType::ReturnItem
+        #                && salesTable.mcrReturnSalesTable().AdvanceCredit )
+        #            {
+        #                return NoYes::Yes;
+        #            }
+        #
+        #            return NoYes::No;
+        #
+        #        case fieldNum(MCRCustPaymTable, PercentAmount):
+        #            if (mcrCustPaymTable.RefTableId == tableNum(MCRContinuityCustHeader))
+        #            {
+        #                return 0;
+        #            }
+        #            else
+        #            {
+        #            // default to remaining balance
+        #                mcrCustPaymTotals =
+        #                    MCRCustPaymTotals::construct(mcrCustPaymTable.RefTableId,
+        #                                                mcrCustPaymTable.RefRecId);
+        #
+        #                if (mcrCustPaymTotals)
+        #                {
+        #                    totalPercentAmount = mcrCustPaymTotals.getTotalPercentAmount();
+        #                }
+        #
+        #                return max(100.0 - totalPercentAmount, 0.0);
+        #            }
+        #        case fieldNum(MCRCustPaymTable, Amount):
+        #            // If this is related to a journal line it is being created through
+        #            //      the journal form, force amount to the journal line.
+        #            if (mcrCustPaymTable.RefTableId == tableNum(LedgerJournalTrans))
+        #            {
+        #                ledgerJournalTrans = LedgerJournalTrans::findRecId(mcrCustPaymTable.RefRecId, false);
+        #                return (ledgerJournalTrans.AmountCurCredit ? ledgerJournalTrans.AmountCurCredit : -ledgerJournalTrans.AmountCurDebit);
+        #            }
+        #            else
+        #            {
+        #                return 0.0;
+        #            }
+        #    }
+        #
+        #    return super(_fieldId);
+        #}
+      ENDSOURCE
+      SOURCE #getPaymAccount
+        #/// <summary>
+        #/// Gets the payment account and account type.
+        #/// </summary>
+        #/// <returns>
+        #/// The account type <c>LedgerJournalACType</c> and the account <c>LedgerJournalAC</c>
+        #/// </returns>
+        #/// <remarks>
+        #/// By default, the account type and account are determined by the payment method.
+        #/// </remarks>
+        #public container getPaymAccount()
+        #{
+        #    RetailStoreTenderTypeCardTable      retailStoreTenderTypeCardTable;
+        #    LedgerJournalACType                 offsetType;
+        #    LedgerDimensionDefaultAccount       offsetAccount;
+        #
+        #    retailStoreTenderTypeCardTable = RetailStoreTenderTypeCardTable::find(mcrCustPaymTable.Channel,
+        #                                                                            mcrCustPaymTable.TenderTypeId,
+        #                                                                            mcrCustPaymTable.CardTypeId);
+        #
+        #    if (retailStoreTenderTypeCardTable)
+        #    {
+        #        switch (retailStoreTenderTypeCardTable.AccountType)
+        #        {
+        #            case RetailLedgerBank::Bank:
+        #                offsetType = LedgerJournalACType::Bank;
+        #            break;
+        #            case RetailLedgerBank::Ledger:
+        #                offsetType = LedgerJournalACType::Ledger;
+        #            break;
+        #        }
+        #        offsetAccount = retailStoreTenderTypeCardTable.LedgerDimension;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@MCR40426",enum2str(mcrCustPaymTable.CustPaymType)));
+        #    }
+        #
+        #    return [offsetType, offsetAccount];
+        #}
+      ENDSOURCE
+      SOURCE #getPaymReference
+        #/// <summary>
+        #///     Retrieves the masked credit card number.
+        #/// </summary>
+        #/// <returns>
+        #///     The masked credit card number.
+        #/// </returns>
+        #/// <remarks>
+        #///     Returns an identifier for this payment.  The payment reference is
+        #///     written to the ledger journal during posting, and is intended to
+        #///     identify this payment on a bank deposit slip or for other financial
+        #///     records.
+        #///     For a credit card payment, the return value is the masked credit card
+        #///     number.
+        #/// </remarks>
+        #protected PaymReference getPaymReference()
+        #{
+        #    return mcrCustPaymTable.getCCNumMasked();
+        #}
+      ENDSOURCE
+      SOURCE #hasPaymTypeData
+        #/// <summary>
+        #///     Determines if the payment record has an associated credit card record.
+        #/// </summary>
+        #/// <returns>
+        #///     true if an associated credit card is present; otherwise, false.
+        #/// </returns>
+        #public boolean hasPaymTypeData()
+        #{
+        #    boolean valid = true;
+        #
+        #    if (!mcrCustPaymTable.PaymInfoRecId
+        #        || !mcrCustPaymTable.PaymInfoTableId)
+        #    {
+        #        valid = checkFailed("@SYS116746");
+        #    }
+        #
+        #    return valid;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #/// <summary>
+        #///     Constructs a new customer payment of type "credit card".
+        #/// </summary>
+        #/// <param name="_custPaymTable">
+        #///     Customer payment record for which this instance is a wrapper.
+        #/// </param>
+        #/// <param name="_allowUserInput">
+        #///     Specifies whether user interaction is allowed during operations on this payment.
+        #/// </param>
+        #/// <param name="_creditCardAuthTransReversal">
+        #///     A boolean that denotes the reversal of the credit card authorization; optional.
+        #/// </param>
+        #public void new(MCRCustPaymTable _custPaymTable,
+        #                boolean _allowUserInput,
+        #                CreditCardAuthTrans _creditCardAuthTransReversal = null)
+        #{
+        #    if (_custPaymTable.CustPaymType != MCRCustPaymType::CreditCard)
+        #    {
+        #        throw error(strFmt("@MCR32269", funcName(),
+        #                           enum2str(MCRCustPaymType::CreditCard)));
+        #    }
+        #
+        #    super(_custPaymTable, _allowUserInput, _creditCardAuthTransReversal);
+        #    orderParameters = MCROrderParameters::find();
+        #}
+      ENDSOURCE
+      SOURCE #paymentChanged
+        #/// <summary>
+        #///     Creates a credit card event if the status has changed.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymTable_Old">
+        #///     The old <c>MCRCustPaymTable</c> record to check for status changes.
+        #/// </param>
+        #/// <remarks>
+        #///     This method is called when a payment is changed in any way, and is
+        #///     only called from the update method of the payment table.
+        #/// </remarks>
+        #public void paymentChanged(MCRCustPaymTable _mcrCustPaymTable_Old)
+        #{
+        #
+        #    if (mcrCustPaymTable.Status != _mcrCustPaymTable_Old.Status)
+        #    {
+        #        if (mcrCustPaymTable.Status == MCRCustPaymStatus::Declined)
+        #        {
+        #            this.createCreditCardEvents();
+        #        }
+        #    }
+        #
+        #    super(_mcrCustPaymTable_Old);
+        #}
+      ENDSOURCE
+      SOURCE #performAuth
+        #/// <summary>
+        #///     Performs authorization on this payment, for the unposted amount.
+        #/// </summary>
+        #/// <returns>
+        #///     The resulting payment status, which is one of the following:
+        #///     * MCRCustPaymStatus::Posted.
+        #///     * MCRCustPaymStatus::Authorized.
+        #///     * MCRCustPaymStatus::Declined.
+        #/// </returns>
+        #/// <remarks>
+        #///     If the unposted amount is 0.00, then this payment is automatically
+        #///     authorized.
+        #///     If the unposted amount is positive, then an authorization request is sent
+        #///     to the credit card processor.  If online authorization is configured,
+        #///     then online authorization is performed.  Otherwise, this payment is
+        #///     prepared for batch authorization.
+        #///     If the unposted amount is negative, then the payment is submitted to the
+        #///     credit card refund authorization queue.
+        #/// </remarks>
+        #protected MCRCustPaymStatus performAuth()
+        #{
+        #    Amount               unpostedAmount;
+        #    CreditCardAuthTrans  creditCardAuthTrans;
+        #    MCROrderParameters   mcrOrderParameters;
+        #
+        #    unpostedAmount = mcrCustPaymTable.getUnpostedAmount();
+        #
+        #    if (unpostedAmount == 0.0)
+        #    {
+        #        //  If the payment is zero, need to check if there
+        #        //      are pending auth records.
+        #        if (mcrCustPaymTable.Amount == 0)
+        #        {
+        #            creditCardAuthTrans = CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId, true);
+        #
+        #            if (creditCardAuthTrans)
+        #            {
+        #                ttsbegin;
+        #                creditCardAuthTrans.delete();
+        #                ttscommit;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            mcrCustPaymTable.Status =  this.determineStatus();
+        #        }
+        #    }
+        #    // Only execute if there is something to process
+        #    else
+        #    {
+        #        if (unpostedAmount > 0.0)
+        #        {
+        #            mcrCustPaymTable.Status = this.authorizeCharge();
+        #        }
+        #        else if (unpostedAmount < 0.0)
+        #        {
+        #            mcrCustPaymTable.Status = this.authorizeRefund();
+        #        }
+        #        mcrOrderParameters = MCROrderParameters::find();
+        #        ttsbegin;
+        #        if (mcrCustPaymTable.Status == MCRCustPaymStatus::Declined
+        #            && mcrOrderParameters.mcrNumCCAuthRetry > 0
+        #            && mcrCustPaymTable.NumAuthRetry <= mcrOrderParameters.mcrNumCCAuthRetry)
+        #        {
+        #            mcrCustPaymTable.NumAuthRetry++;
+        #            mcrCustPaymTable.Status = MCRCustPaymStatus::NotSubmitted;
+        #        }
+        #        if (mcrCustPaymTable.validateWrite())
+        #        {
+        #            mcrCustPaymTable.update();
+        #        }
+        #        ttscommit;
+        #    }
+        #    return mcrCustPaymTable.Status;
+        #}
+      ENDSOURCE
+      SOURCE #performPost
+        #/// <summary>
+        #///     Updates or creates a credit card settlement record to
+        #///     settle for the specified amount.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The specified amount for which this method updates or creates a
+        #///     settlement record.
+        #/// </param>
+        #/// <remarks>
+        #///     Invoked to perform posting operations after posting records to the
+        #///     ledger journal.
+        #/// </remarks>
+        #protected void performPost(Amount _amount)
+        #{
+        #    boolean successful = false;
+        #
+        #    if (_amount > 0.0)
+        #    {
+        #        successful = this.postCharge(_amount);
+        #    }
+        #    else if (_amount < 0.0)
+        #    {
+        #        successful = this.postRefund(abs(_amount));
+        #    }
+        #
+        #    mcrCustPaymTable.reread();
+        #
+        #    if (mcrCustPaymTable.Amount
+        #        && successful)
+        #    {
+        #        ttsbegin;
+        #        mcrCustPaymTable.Status = MCRCustPaymStatus::Paid;
+        #        mcrCustPaymTable.update();
+        #        ttscommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #post
+        #/// <summary>
+        #///     Posts the payment for the amount passed.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The amount of the payment being postd.
+        #/// </param>
+        #/// <param name="_isPrepay">
+        #///     A boolean determining if they payment is a prepay or not.
+        #/// </param>
+        #public void post(Amount _amount, boolean _isPrepay)
+        #{
+        #    setPrefix(strFmt("@MCR10793",
+        #                     enum2str(mcrCustPaymTable.CustPaymType),
+        #                     num2str(_amount, 1, 2, 1, 2)));
+        #
+        #    if (!this.validatePost(_amount, true))
+        #    {
+        #        throw error("@MCR10794");
+        #    }
+        #
+        #    ttsbegin;
+        #
+        #    // perform any posting operations for specific payment types
+        #    this.performPost(_amount);
+        #
+        #    //--> Red Maple Credit Card begin
+        #    if (!this.parmSkipJournalCreate())
+        #    {
+        #        // create ledger journal records
+        #        this.postToLedgerJournal(_amount, mcrCustPaymTable.IsPrepay);
+        #    }
+        #    //--> Red Maple Credit Card end
+        #
+        #    mcrCustPaymTable.updatePostedAmount(_amount);
+        #
+        #    mcrCustPaymTable.reread();
+        #
+        #    ttscommit;
+        #
+        #    if (mcrCustPaymTable.getUnpostedAmount() > 0)
+        #    {
+        #        CreditCardProcess::mcrDoPreAuth(mcrCustPaymTable);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postCharge
+        #/// <summary>
+        #///    Capture a credit card amount on the credit card payment.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The postivie amount to post.
+        #/// </param>
+        #/// <returns>
+        #/// true if the amount has been captured; otherwise, false.
+        #/// </returns>
+        #private boolean postCharge(Amount _amount)
+        #{
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #    SalesTable          salesTable;
+        #    boolean             captureSuccess = false;
+        #
+        #    creditCardAuthTrans = CreditCardAuthTrans::mcrFindValidPreApproval(mcrCustPaymTable.RecId);
+        #
+        #    if (creditCardAuthTrans)
+        #    {
+        #        if (mcrCustPaymTable.RefRecId == tableNum(SalesTable))
+        #        {
+        #            salesTable = SalesTable::findRecId(mcrCustPaymTable.RefRecId);
+        #        }
+        #        captureSuccess = CreditCardProcess::mcrDoCapture(mcrCustPaymTable,
+        #                                                        salesInvoiceId,
+        #                                                        custInvoiceJour,
+        #                                                        _amount);
+        #        if (!captureSuccess)
+        #        {
+        #            throw error(strFmt("@MCR4410040", mcrCustPaymTable.displayOrderID()));
+        #        }
+        #    }
+        #    return captureSuccess;
+        #}
+      ENDSOURCE
+      SOURCE #postRefund
+        #/// <summary>
+        #///     Updates or creates a credit card settlement record to settle for a credit
+        #///     card refund.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The positvice amount to post.
+        #/// </param>
+        #/// <returns>
+        #///     true if refund successfully posted; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     Currently, authorizations of refunds are tracked by using
+        #///     the status of a settlement record.  It would be preferable to
+        #///     use a separate concept (a new table?) for tracking refund
+        #///     authorizations.
+        #/// </remarks>
+        #private boolean postRefund(Amount _amount)
+        #{
+        #    boolean             adjustAppAmt = true;
+        #    //--> Red Maple Begin
+        #    SalesTableCC        salesTableCC,origSalesTableCC;
+        #    MCRCustPaymTable    origCustPaymTable;
+        #    CreditCardTrans     ccTrans;
+        #    //<-- Red Maple End
+        #
+        #    try
+        #    {
+        #        if (mcrCustPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #        {
+        #            salesTableCC = salesTableCC::findReturnRecId(mcrCustPaymTable.PaymInfoRecId);
+        #
+        #            if (!salesTableCC)
+        #            {
+        #                salesTableCC = salesTableCC::findRecId(MCRCustPaymTable.PaymInfoRecId);
+        #                //--> Was it returned?
+        #                if (salesTableCC.PNRef)
+        #                {
+        #                    select origSalesTableCC
+        #                        where origSalesTableCC.PNRef == salesTableCC.PNRef
+        #                        && origSalesTableCC.CreditCardTrxType == CreditCardTrxType::C
+        #                        //--> convert original to negative, which makes it "less" than the credit
+        #                        && origSalesTableCC.AmountCur >= -(salesTableCC.AmountCur);
+        #
+        #                    if (origSalesTableCC)
+        #                    {
+        #                        if (origSalesTableCC.Processed)
+        #                        {
+        #                            return true;
+        #                        }
+        #                        else
+        #                        {
+        #                            return salesTableCC::processMCRCustPaymTable(origSalesTableCC,mcrCustPaymTable);
+        #                        }
+        #                    }
+        #                }
+        #            }
+        #
+        #            if (!salesTableCC)
+        #            {
+        #                select sum(AmountCur) from salesTableCC
+        #                    where SalesTableCC.SalesId == SalesTable::findRecId(MCRCustPaymTable.RefRecId).SalesId
+        #                    && salesTableCC.Processed == NoYes::Yes;
+        #
+        #                salesTableCC = salesTableCC::createFromCustPaymTable(mcrCustPaymTable);
+        #            }
+        #
+        #            if (salesTableCC.Processed)
+        #            {
+        #                return salesTableCC::processMCRCustPaymTable(salesTableCC,mcrCustPaymTable);
+        #            }
+        #            else
+        #            {
+        #                if (salesTableCC.PNRef)
+        #                {
+        #                    ttsbegin;
+        #                    ccTrans = CreditCardTrans::createTransforRefCredit(salesTableCC);
+        #
+        #                    ttscommit;
+        #
+        #                    //<-- create Credit Card Transaction
+        #                    //--> We remove the tts portion to make sure errors are captured in the try/catch blocks
+        #                    ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+        #
+        #                    ttsBegin;
+        #                    salesTableCC.selectForUpdate(true);
+        #                    if (CreditCardAdv::checkReturn(ccTrans,ccTrans.Result))
+        #                    {
+        #                        salesTableCC.PNRef     = ccTrans.pNRef;
+        #                        salesTableCC.Processed = NoYes::Yes;
+        #                        salesTableCC.TransID   = ccTrans.TransID;
+        #                        salesTableCC.update();
+        #
+        #                    }
+        #                    else
+        #                    {
+        #                        salesTableCC.TransID = ccTrans.TransID;
+        #                        salesTableCC.update();
+        #                        throw error(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+        #                    }
+        #                    ttsCommit;
+        #
+        #                    return true;
+        #                }
+        #                else
+        #                {
+        #                    return salesTableCC::processMCRCustPaymTable(salesTableCC,mcrCustPaymTable);
+        #                }
+        #            }
+        #        }
+        #        else
+        #        {
+        #
+        #
+        #            ttsbegin;
+        #            CreditCardProcess::mcrDoRefund(mcrCustPaymTable);
+        #            ttscommit;
+        #        }
+        #    }
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #postToLedgerJournal
+        #public void postToLedgerJournal(Amount _amount, boolean _isPrepay)
+        #{
+        #    // If a sales order has been canceled and it is a prepay,
+        #    // check if the amount has not been settled in such a case do
+        #    // not post the unposted amount.
+        #    if (_isPrepay
+        #        && mcrCustPaymTable.Amount == 0)
+        #    {
+        #        if (CreditCardAuthTrans::mcrFindCharge(mcrCustPaymTable.RecId))
+        #        {
+        #            super(_amount, _isPrepay);
+        #        }
+        #        else
+        #        {
+        #            return;
+        #        }
+        #    }
+        #    // Posting is handled by the journal itself
+        #    if (mcrCustPaymTable.RefTableId == tableNum(LedgerJournalTrans))
+        #    {
+        #        return;
+        #    }
+        #    super(_amount, _isPrepay);
+        #}
+      ENDSOURCE
+      SOURCE #validateAuthorize
+        #/// <summary>
+        #///     Validates this payment for authorization.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     A boolean that determines whether to write errors to an infolog; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if all data for this payment is valid and the payment should
+        #///     be allowed to be submitted for authorization; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     If the return value is false, then this payment should not be submitted
+        #///     for authorization.
+        #/// </remarks>
+        #boolean validateAuthorize(boolean _showErrors = true)
+        #{
+        #    boolean isValid = true;
+        #
+        #    // credit card data is required
+        #    if (!this.hasPaymTypeData())
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error("@MCR10658");
+        #        }
+        #    }
+        #    if (!isValid)
+        #    {
+        #        ttsbegin;
+        #        mcrCustPaymTable.selectForUpdate(true);
+        #        mcrCustPaymTable.reread();
+        #        mcrCustPaymTable.Status = MCRCustPaymStatus::Declined;
+        #        mcrCustPaymTable.update();
+        #        ttscommit;
+        #    }
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validatePost
+        #public boolean validatePost(Amount _amount, boolean _showErrors = true)
+        #{
+        #    boolean isValid = true;
+        #
+        #    Amount unpostedAmount = mcrCustPaymTable.getUnpostedAmount();
+        #
+        #    if (mcrCustPaymTable.IsPrepay)
+        #    {
+        #        isValid = super(_amount, _showErrors);
+        #    }
+        #    else
+        #    {
+        #        // this payment must be Posted/Paid
+        #        if (mcrCustPaymTable.Status == MCRCustPaymStatus::NotSubmitted)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR30348", enum2str(mcrCustPaymTable.Status)));
+        #            }
+        #        }
+        #
+        #        // must be a non-zero amount
+        #        if (_amount == 0.0)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #            }
+        #        }
+        #
+        #        // the amount must have the same sign as the unposted payment amount
+        #        if (isValid && sign(_amount) != sign(unpostedAmount))
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #            }
+        #        }
+        #
+        #        // the amount may not be greater than the unposted payment amount
+        #        if (isValid && abs(_amount) > abs(unpostedAmount))
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #            }
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #/// <summary>
+        #///     Validates this payment for an insert or update for credit card
+        #///         payments.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     A boolean determing whether to write errors to the infolog; optional.
+        #/// </param>
+        #/// <param name="_validateAccountSetup">
+        #///     A boolean determing whether to validate if an account is
+        #///     setup on the <c>RetailStoreTenderTypeTable</c>; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if all data for this payment is valid and should be allowed
+        #///     to be saved to the database; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     If the return value is false, then this payment should not be saved to
+        #///     the database.
+        #/// </remarks>
+        #public boolean validateWrite(boolean _showErrors = true,
+        #                             boolean _validateAccountSetup = true)
+        #{
+        #    boolean isValid;
+        #    RetailStoreTenderTypeCardTable retailStoreTenderTypeCardTable;
+        #    RetailTenderTypeCardTable      retailTenderTypeCardTable;
+        #
+        #    // Cards use account on the <c>RetailStoreTenderTypeCardTable</c>, so skip account
+        #    //  validation in parent class
+        #    isValid = super(_showErrors, false);
+        #
+        #    retailStoreTenderTypeCardTable = RetailStoreTenderTypeCardTable::find(mcrCustPaymTable.Channel,
+        #                                                                          mcrCustPaymTable.TenderTypeId,
+        #                                                                          mcrCustPaymTable.CardTypeId);
+        #
+        #    if (retailStoreTenderTypeCardTable)
+        #    {
+        #        retailTenderTypeCardTable = RetailTenderTypeCardTable::find(retailStoreTenderTypeCardTable.CardTypeId);
+        #        if (retailTenderTypeCardTable.CardTypes != RetailCardTypesBase::CorporateCard
+        #            && retailTenderTypeCardTable.CardTypes != RetailCardTypesBase::InternationalKreditcard)
+        #        {
+        #            isValid = false;
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR40420",
+        #                        retailTenderTypeCardTable.CardTypes,
+        #                        RetailChannelTable::findByOperatingUnitId(mcrCustPaymTable.Channel).ChannelType));
+        #            }
+        #        }
+        #        // payment account is required if parameter is true
+        #        if (_validateAccountSetup
+        #                && retailStoreTenderTypeCardTable.LedgerDimension == 0)
+        #        {
+        #            isValid = false;
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR10845", mcrCustPaymTable.TenderTypeId));
+        #            }
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        isValid = false;
+        #        if (_showErrors)
+        #        {
+        #            error(strFmt("@MCR40422",
+        #                    mcrCustPaymTable.CardTypeId,
+        #                    RetailChannelTable::findByRecId(mcrCustPaymTable.Channel).name()));
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #calculateChargePaymStatus
+        #/// <summary>
+        #///     Calculates what the status of this payment should be based upon the
+        #///     status of the active credit card authorization record.
+        #/// </summary>
+        #/// <param name="_creditCardAuthTrans">
+        #///     The <c>CreditCardAuthTrans</c> record from which the status is updated.
+        #/// </param>
+        #/// <param name="_mcrCustPaymTable">
+        #///     The <c>MCRCustPaymTable</c> record being updated; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The updated status of the <c>MCRCustPaymTable</c> record.
+        #/// </returns>
+        #/// <remarks>
+        #///     If there is no active credit card authorization record for this
+        #///     payment, then the return value is MCRCustPaymStatus::NotSubmitted.
+        #///     This method is intended to be called only for credit card charges
+        #///     (positive unposted amount).
+        #/// </remarks>
+        #public static MCRCustPaymStatus calculateChargePaymStatus(CreditCardAuthTrans _creditCardAuthTrans,
+        #                                                    MCRCustPaymTable _mcrCustPaymTable = null)
+        #{
+        #    MCRCustPaymStatus status;
+        #
+        #    if (!_mcrCustPaymTable)
+        #    {
+        #        _mcrCustPaymTable = MCRCustPaymTable::findByRecID(_creditCardAuthTrans.mcrPaymRecId);
+        #    }
+        #
+        #    if (_creditCardAuthTrans)
+        #    {
+        #        switch (_creditCardAuthTrans.ProcessorStatus)
+        #        {
+        #            case CreditCardProcessorStatus::Approved:
+        #            // Moving reversed to an authorized status
+        #            // Else reversed records won't get picked up by picking
+        #                if (_mcrCustPaymTable.IsPrepay)
+        #                {
+        #                    status = MCRCustPaymStatus::Posted;
+        #                }
+        #                else
+        #                {
+        #                    status = MCRCustPaymStatus::Authorized;
+        #                }
+        #            break;
+        #            // If it's not authorized, treat it as declined
+        #            default:
+        #                status = MCRCustPaymStatus::Declined;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        status = MCRCustPaymStatus::NotSubmitted;
+        #    }
+        #
+        #    return status;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

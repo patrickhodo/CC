@@ -1,0 +1,182 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantGiveX
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantGiveX
+      Label               #@ACC1272
+      FormRef             #creditCardterminalTable
+      TitleField1         #TerminalId
+      TitleField2         #URL
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdIdx
+      ClusterIndex        #TerminalIdIdx
+      DeveloperDocumentation  #@ACC1425
+      Origin              #{2C4283C1-147C-4176-A402-74E17D1626BA}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #HostPort
+        INT
+        PROPERTIES
+          Name                #HostPort
+          Table               #CreditCardMerchantGiveX
+          Origin              #{EC7F1493-6688-431D-8D9C-E9D486DE1247}
+          ExtendedDataType    #CreditCardTCPPort
+        ENDPROPERTIES
+        
+      FIELD #PartnerPwd
+        STRING
+        PROPERTIES
+          Name                #PartnerPwd
+          Table               #CreditCardMerchantGiveX
+          Origin              #{EFC70208-410D-457F-B927-B8F655B72306}
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantGiveX
+          Origin              #{4A6B48F8-8A78-461D-A66E-45E311BB6458}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #URL
+        STRING
+        PROPERTIES
+          Name                #URL
+          Table               #CreditCardMerchantGiveX
+          Origin              #{D7A4DC25-6AB7-44EC-8A3B-00BE5C664134}
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #UserId
+        STRING
+        PROPERTIES
+          Name                #UserId
+          Table               #CreditCardMerchantGiveX
+          Origin              #{B2127368-3DC8-488E-8782-6248A54F8E37}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+          #UserId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+          #UserId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Interface
+        PROPERTIES
+          Name                #Interface
+          Label               #@SYS69603
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #URL
+          #HostPort
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Merchant
+        PROPERTIES
+          Name                #Merchant
+          Label               #@ACC1012
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UserId
+          #PartnerPwd
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdIdx
+      PROPERTIES
+        Name                #TerminalIdIdx
+        AllowDuplicates     #No
+        Origin              #{AB35C9A4-E394-459C-A69A-120AE4532A26}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

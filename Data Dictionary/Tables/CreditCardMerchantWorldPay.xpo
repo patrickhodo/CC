@@ -1,0 +1,298 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantWorldPay
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantWorldPay
+      Label               #@ACC1899
+      FormRef             #CreditCardTerminalTable
+      TitleField1         #TerminalId
+      TitleField2         #URL
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdIdx
+      ClusterIndex        #TerminalIdIdx
+      DeveloperDocumentation  #@ACC1898
+      Origin              #{0368EC06-13E5-4F12-8B63-2763D0D2623A}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #HostPayConfiguration
+        STRING
+        PROPERTIES
+          Name                #HostPayConfiguration
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{29E46C43-E440-450F-98E3-69429DF84FD7}
+          ExtendedDataType    #AxaptaConfiguration
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #HostPayPageId
+        STRING
+        PROPERTIES
+          Name                #HostPayPageId
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{1E19AE67-9EB6-444C-B83D-40C8045A7D41}
+          ExtendedDataType    #CreditCardHostPayPageId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #Key
+        STRING
+        PROPERTIES
+          Name                #Key
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{4263B4CE-164A-442A-A043-BD6B7AF44F43}
+          ExtendedDataType    #CreditCardTransKey
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #LastService
+        DATETIME
+        PROPERTIES
+          Name                #LastService
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{B8FCBF6F-C3BC-4E46-80B2-9C5573690B9B}
+          ExtendedDataType    #DateTimeExecuted
+        ENDPROPERTIES
+        
+      FIELD #LevelType
+        ENUM
+        PROPERTIES
+          Name                #LevelType
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{E227306C-9291-4A43-BF9D-4E2AD6111EE5}
+          EnumType            #CreditCardLevelType
+        ENDPROPERTIES
+        
+      FIELD #SecurenetID
+        STRING
+        PROPERTIES
+          Name                #SecurenetID
+          Label               #@ACC1901
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{0BF32E47-3E9A-4098-A263-9137317429C7}
+          ExtendedDataType    #CreditCardFirstDataDID
+          StringSize          #32
+        ENDPROPERTIES
+        
+      FIELD #ServiceURL
+        STRING
+        PROPERTIES
+          Name                #ServiceURL
+          Label               #@ACC1505
+          HelpText            #@ACC1506
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{3FDB606E-39DA-420E-810F-01F04F03E583}
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{FF5B68BE-0040-450B-AB6D-3236ABB44147}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #TransactionKey
+        STRING
+        PROPERTIES
+          Name                #TransactionKey
+          Label               #@MCR24647
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{25652831-E588-4316-8357-2D8B56B68CCD}
+          ExtendedDataType    #CreditCardCybersourceKey
+          StringSize          #(Memo)
+        ENDPROPERTIES
+        
+      FIELD #URL
+        STRING
+        PROPERTIES
+          Name                #URL
+          Table               #CreditCardMerchantWorldPay
+          Origin              #{92273BC5-2EA6-437F-81B8-B81267980464}
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Hidden
+        PROPERTIES
+          Name                #Hidden
+          Label               #@SYS54478
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ServiceURL
+          #LastService
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #HostedPay
+        PROPERTIES
+          Name                #HostedPay
+          Label               #@ACC1859
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #HostPayPageId
+          #HostPayConfiguration
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Industry
+        PROPERTIES
+          Name                #Industry
+          Label               #@ACC1319
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #LevelType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Interface
+        PROPERTIES
+          Name                #Interface
+          Label               #@SYS69603
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Merchant
+        PROPERTIES
+          Name                #Merchant
+          Label               #@ACC1012
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #SecureNet
+        PROPERTIES
+          Name                #SecureNet
+          Label               #@ACC1319
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SecurenetID
+          #Key
+          #TransactionKey
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdIdx
+      PROPERTIES
+        Name                #TerminalIdIdx
+        AllowDuplicates     #No
+        Enabled             #No
+        Origin              #{6F2E4B58-9A95-40D7-9B0E-B97969C04D8C}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #find
+        #static CreditCardMerchantWorldPay find(CreditCardTerminalId    terminalId)
+        #{
+        #    CreditCardMerchantWorldPay         ccWorldPay;
+        #    ;
+        #    select ccWorldPay
+        #        where ccWorldPay.TerminalId == terminalId;
+        #
+        #    return ccWorldPay;
+        #}
+      ENDSOURCE
+      SOURCE #getDeveloperId
+        #public static TempStr getDeveloperId()
+        #{
+        #    return '10000683';
+        #}
+      ENDSOURCE
+      SOURCE #getDeveloperVersion
+        #public static TempStr getDeveloperVersion()
+        #{
+        #    return '6.3';
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

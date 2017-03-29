@@ -1,0 +1,737 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #MCRCustPaym_GiftCard
+    PROPERTIES
+      Name                #MCRCustPaym_GiftCard
+      Extends             #MCRCustPaym
+      Origin              #{6CA65E8F-59FC-48EB-B030-0091DD41264C}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #allowEdit
+        #/// <summary>
+        #///     Determines if a payment field should be editable by the user.
+        #/// </summary>
+        #/// <param name="_fieldId">
+        #///     The field for which this method checks/changes the allow edit property.
+        #/// </param>
+        #/// <returns>
+        #///     true if editing should be allowed; otherwise, false.
+        #/// </returns>
+        #public boolean allowEdit(FieldId _fieldId)
+        #{
+        #    switch (_fieldId)
+        #    {
+        #        case fieldNum(MCRCustPaymTable, PercentAmount):
+        #            return false;
+        #    }
+        #
+        #    return super(_fieldId);
+        #}
+      ENDSOURCE
+      SOURCE #allowEditGiftCardSerialNum
+        #/// <summary>
+        #///     Determines is it is allowable to update the serial number.
+        #/// </summary>
+        #/// <returns>
+        #///     true if there is any posted amount; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     The serial number is not allowed to be updated if any amount has been
+        #///     posted for this payment.
+        #/// </remarks>
+        #public boolean allowEditGiftCardSerialNum()
+        #{
+        #    if (mcrCustPaymTable.PostedAmount != 0)
+        #    {
+        #        return false;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #canPost
+        #/// <summary>
+        #///     Determines whether the passed amount can be posted.
+        #/// </summary>
+        #/// <param name="_postAmount">
+        #///     The amount to be checked if it can be posted.
+        #/// </param>
+        #/// <returns>
+        #///     true if the amount passed in can be posed; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     On a return of a gift cert or a gift card, if not advance credit
+        #///     then the payment will be a non prepay in which case the amount needs
+        #///     to be posted at invoicing. At this point the custpaymstatus is
+        #///     authorized and not paid or posted.
+        #/// </remarks>
+        #public boolean canPost(AmountCur _postAmount)
+        #{
+        #    if (_postAmount != 0)
+        #    {
+        #        if (mcrCustPaymTable.IsPrepay)
+        #        {
+        #            if (mcrCustPaymTable.Status == MCRCustPaymStatus::Paid
+        #                || mcrCustPaymTable.Status == MCRCustPaymStatus::Posted)
+        #            {
+        #                return true;
+        #            }
+        #            else
+        #            {
+        #                return false;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            if (mcrCustPaymTable.Status == MCRCustPaymStatus::Authorized)
+        #            {
+        #                return true;
+        #            }
+        #            else
+        #            {
+        #                return false;
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        return false;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///     The <c>MCRCustPaym_GiftCard</c> class that handles gift card payments.
+        #/// </summary>
+        #class MCRCustPaym_GiftCard extends MCRCustPaym
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #findGiftCard
+        #/// <summary>
+        #///     Finds the gift card record associated with this payment.
+        #/// </summary>
+        #/// <param name="_forUpdate">
+        #///     A boolean that determines if the found record should be selected for update; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The <c>RetailGiftCardTable</c> found.
+        #/// </returns>
+        #public RetailGiftCardTable findGiftCard(boolean _forUpdate = false)
+        #{
+        #    //Use the decrypted serial number
+        #    return RetailGiftCardTable::mcrFindRecId(mcrCustPaymTable.PaymInfoRecId, _forUpdate);
+        #}
+      ENDSOURCE
+      SOURCE #getDefaultValue
+        #/// <summary>
+        #///     Finds the default value of the passed field if it has been defined.
+        #/// </summary>
+        #/// <param name="_fieldId">
+        #///     The field for which this method finds the default value.
+        #/// </param>
+        #/// <returns>
+        #///     The default value of the specified field if it is defined; otherwise, null.
+        #/// </returns>
+        #public anytype getDefaultValue(FieldId _fieldId)
+        #{
+        #    Percent totalPercentAmount = 0.0;
+        #
+        #    switch (_fieldId)
+        #    {
+        #        case fieldNum(MCRCustPaymTable, IsPrepay):
+        #            return NoYes::Yes;
+        #
+        #        case fieldNum(MCRCustPaymTable, PercentAmount):
+        #            return 0;
+        #    }
+        #
+        #    return super(_fieldID);
+        #}
+      ENDSOURCE
+      SOURCE #getPaymAccount
+        #/// <summary>
+        #/// Gets the payment account and account type.
+        #/// </summary>
+        #/// <returns>
+        #/// The account type <c>LedgerJournalACType</c> and the account <c>LedgerJournalAC</c>
+        #/// </returns>
+        #/// <remarks>
+        #/// By default, the account type and account are determined by the payment method.
+        #/// </remarks>
+        #public container getPaymAccount()
+        #{
+        #    RetailStoreTenderTypeCardTable      retailStoreTenderTypeCardTable;
+        #    LedgerJournalACType                 offsetType;
+        #    LedgerDimensionDefaultAccount       offsetAccount;
+        #
+        #    retailStoreTenderTypeCardTable = RetailStoreTenderTypeCardTable::find(mcrCustPaymTable.Channel,
+        #                                                                            mcrCustPaymTable.TenderTypeId,
+        #                                                                            mcrCustPaymTable.CardTypeId);
+        #
+        #    if (retailStoreTenderTypeCardTable)
+        #    {
+        #        switch (retailStoreTenderTypeCardTable.accountType)
+        #        {
+        #            case RetailLedgerBank::Bank:
+        #                offsetType = LedgerJournalACType::Bank;
+        #            break;
+        #            case RetailLedgerBank::Ledger:
+        #                offsetType = LedgerJournalACType::Ledger;
+        #            break;
+        #        }
+        #        offsetAccount = retailStoreTenderTypeCardTable.LedgerDimension;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@MCR40426",enum2str(mcrCustPaymTable.CustPaymType)));
+        #    }
+        #
+        #    return [offsetType, offsetAccount];
+        #}
+      ENDSOURCE
+      SOURCE #getPaymReference
+        #/// <summary>
+        #///     Retrieves an identifier for this payment.
+        #/// </summary>
+        #/// <returns>
+        #///     An identifier for this payment.
+        #/// </returns>
+        #/// <remarks>
+        #///     The payment reference is written to the ledger journal during
+        #///     posting, and is intended to identify this payment on a bank
+        #///     deposit slip or for other financial records.
+        #///
+        #///     For a gift certificate payment, the return value is the serial number.
+        #/// </remarks>
+        #protected PaymReference getPaymReference()
+        #{
+        #    return RetailGiftCardTable::mcrFindRecId(mcrCustPaymTable.PaymInfoRecId).entryId;
+        #}
+      ENDSOURCE
+      SOURCE #hasPaymTypeData
+        #/// <summary>
+        #///     Determines if a gift certificate serial number has been provided.
+        #/// </summary>
+        #/// <returns>
+        #///     true if the gift certificate's serial number has been provided; otherwise, false.
+        #/// </returns>
+        #public boolean hasPaymTypeData()
+        #{
+        #    return mcrCustPaymTable.PaymInfoTableId
+        #        && MCRCustPaymTable.PaymInfoTableId;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #/// <summary>
+        #///     Constructs a new customer payment of type "gift certificate".
+        #/// </summary>
+        #/// <param name="_mcrCustPaymTable">
+        #///     The <c>MCRCustPaymTable</c> used to create a new payment.
+        #/// </param>
+        #/// <param name="_allowUserInput">
+        #///     A boolean that determines whether to allow user input during the
+        #///     process of creating a new payment.
+        #/// </param>
+        #public void new(MCRCustPaymTable _mcrCustPaymTable, boolean _allowUserInput)
+        #{
+        #    // Add Gift Card to this logic
+        #    if (_mcrCustPaymTable.CustPaymType != MCRCustPaymType::GiftCard)
+        #    {
+        #        throw error(strFmt("@MCR32269", funcName(),
+        #                           enum2str(MCRCustPaymType::GiftCard)));
+        #    }
+        #
+        #    super(_mcrCustPaymTable, _allowUserInput);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #performAuth
+        #/// <summary>
+        #///     Performs authorization on this payment.
+        #/// </summary>
+        #/// <returns>
+        #///     The resulting payment status of either MCRCustPaymStatus::Authorized or MCRCustPaymStatus::Declined.
+        #/// </returns>
+        #/// <remarks>
+        #///     A gift card payment is authorized if the remaining amount on the gift
+        #///     card plus all unposted amounts is less than or equal to the payment amount.
+        #/// </remarks>
+        #protected MCRCustPaymStatus performAuth()
+        #{
+        #    RetailGiftCardTable retailGiftCardTable = this.findGiftCard();
+        #
+        #    if (retailGiftCardTable
+        #        && MCRGiftCard::availableBalance(retailGiftCardTable.entryId) < mcrCustPaymTable.getUnpostedAmount())
+        #    {
+        #        warning("@MCR11252");
+        #
+        #        mcrCustPaymTable.Status = MCRCustPaymStatus::Declined;
+        #    }
+        #    else
+        #    {
+        #        // Gift card /Gift cert if prepay can be
+        #        // marked paid else it should be authorized.
+        #        if (mcrCustPaymTable.IsPrepay == NoYes::Yes)
+        #        {
+        #            mcrCustPaymTable.Status = MCRCustPaymStatus::Paid;
+        #        }
+        #        else
+        #        {
+        #            mcrCustPaymTable.Status = MCRCustPaymStatus::Authorized;
+        #        }
+        #    }
+        #
+        #    ttsBegin;
+        #    mcrCustPaymTable.update();
+        #    ttsCommit;
+        #
+        #    return mcrCustPaymTable.Status;
+        #}
+      ENDSOURCE
+      SOURCE #performAuthReversal
+        #/// <summary>
+        #///     Throws error because reversal not implemented for Gift certificates.
+        #/// </summary>
+        #/// <returns>
+        #///     An error describing the incorrect use of this function.
+        #/// </returns>
+        #public boolean performAuthReversal()
+        #{
+        #    throw error(Error::wrongUseOfFunction(funcName()));
+        #}
+      ENDSOURCE
+      SOURCE #performPost
+        #/// <summary>
+        #///     Performs the posting operations using the passed amount.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The amount to be posted.
+        #/// </param>
+        #/// <remarks>
+        #///     Invoked to perform posting operations after posting records to the
+        #///     ledger journal.
+        #///     Subtract _amount from the gift card's remaining amount.
+        #/// </remarks>
+        #protected void performPost(Amount _amount)
+        #{
+        #    RetailGiftCardTable         retailGiftCardTable;
+        #    RetailGiftCardTransactions  retailGiftCardTransactions;
+        #    RetailParameters            retailParameters;
+        #
+        #    void post()
+        #    {
+        #        RetailGiftCardOperation operation =
+        #            _amount < 0.0 ?
+        #            RetailGiftCardOperation::Refund :
+        #            RetailGiftCardOperation::Redeem;
+        #
+        #        ttsBegin;
+        #
+        #        retailGiftCardTable = this.findGiftCard(true);
+        #
+        #        if (operation == RetailGiftCardOperation::Redeem &&
+        #            retailParameters.UseGiftCardPolicies &&
+        #            retailGiftCardTable.OneTimeRedemption)
+        #        {
+        #            retailGiftCardTable.Status = RetailGiftCardStatus::Expired;
+        #            retailGiftCardTable.update();
+        #        }
+        #
+        #        retailGiftCardTransactions.Operation = operation;
+        #        retailGiftCardTransactions.CardNumber =  retailGiftCardTable.entryId;
+        #        retailGiftCardTransactions.Amount = -_amount;
+        #        retailGiftCardTransactions.TransDate = DateTimeUtil::date(DateTimeUtil::utcNow());
+        #        retailGiftCardTransactions.TransTime = DateTimeUtil::time(DateTimeUtil::utcNow());
+        #        retailGiftCardTransactions.MCRSalesId = mcrCustPaymTable.salesTable().SalesId;
+        #        retailGiftCardTransactions.MCRInvoiceAccount = mcrCustPaymTable.CustAccount;
+        #        retailGiftCardTransactions.Channel = mcrCustPaymTable.salesTable().retailSalesTable().RetailChannel;
+        #        if (retailGiftCardTransactions.validateWrite())
+        #        {
+        #            retailGiftCardTransactions.insert();
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS104318");
+        #        }
+        #
+        #        // remaining amount should never go below zero
+        #        if (_amount > 0
+        #            && MCRGiftCard::availableBalance(retailGiftCardTransactions.CardNumber) < 0)
+        #        {
+        #            throw error("@MCR11158");
+        #        }
+        #        ttsCommit;
+        #
+        #        //--> Credit Card Gift Cards begin
+        #        CreditCardStoredValueProcess::redeemGiftCard(retailGiftCardTable,retailGiftCardTransactions);
+        #        //<-- Credit Card Gift Cards
+        #    }
+        #
+        #    retailParameters = RetailParameters::find();
+        #
+        #    if (!retailParameters.GiftCardCompany
+        #        || retailParameters.GiftCardCompany == curext())
+        #    {
+        #        post();
+        #    }
+        #    else
+        #    {
+        #        changeCompany(retailParameters.GiftCardCompany)
+        #        {
+        #            post();
+        #        }
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #postToLedgerJournal
+        #public void postToLedgerJournal(Amount _amount, boolean _isPrepay)
+        #{
+        #    //<GEERU>
+        #    RetailGiftCardPost_RU giftCardPost_RU;
+        #
+        #    if (RetailParameters::find().ProcessGiftCardsAsPrepayments_RU)
+        #    {
+        #        giftCardPost_RU = RetailGiftCardPost_RU::construct();
+        #
+        #        giftCardPost_RU.createGiftCardJournalLines(
+        #            mcrCustPaymTable.getGiftCardNumber(),
+        #            mcrCustPaymTable.CustAccount,
+        #            systemDateGet(),
+        #            mcrCustPaymTable.CurrencyCode,
+        #            - _amount,
+        #            this.parmDefaultDimension(),
+        #            null,
+        #            conNull(),
+        #            _isPrepay,
+        #            mcrCustPaymTable.displayOrderID(),
+        #            mcrCustPaymTable.RecId);
+        #
+        #        giftCardPost_RU.post();
+        #    }
+        #    else
+        #    {
+        #    //</GEERU>
+        #        super(_amount, _isPrepay);
+        #    //<GEERU>
+        #    }
+        #    //</GEERU>
+        #}
+      ENDSOURCE
+      SOURCE #validateAuthorize
+        #/// <summary>
+        #///     Validates this payment for authorization.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     A boolean that determins whether to write the errors to an infolog; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if all data for this payment is valid and the payment should
+        #///     be allowed to be submitted for authorization; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     If the return value is false, then this payment should not be submitted
+        #///     for authorization.
+        #/// </remarks>
+        #public boolean validateAuthorize(boolean _showErrors = true)
+        #{
+        #    MCRCustPaymTotals   mcrCustPaymTotals;
+        #    RetailGiftCardTable retailGiftCardTable;
+        #
+        #    boolean isValid;
+        #
+        #    setPrefix(strFmt("@MCR32270", mcrCustPaymTable.TenderTypeId,
+        #                     mcrCustPaymTable.Amount));
+        #
+        #    isValid = super(_showErrors);
+        #
+        #    // payment account is required
+        #    if (conpeek(this.getPaymAccount(), 2) == 0)
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error(strfmt("@MCR10845", mcrCustPaymTable.TenderTypeId));
+        #        }
+        #    }
+        #
+        #    // Avoid calling encryption when the calling method extra times in validate serial num
+        #    // by passing in the unencrypted and encrypted serial number.
+        #
+        #    // Serial number must be valid.
+        #    // Check serial number only if gift card.
+        #    if (mcrCustPaymTable.CustPaymType == MCRCustPaymType::GiftCard
+        #        && !MCRCustPaym_GiftCard::ValidatePaymentGiftCardSerialNum(mcrCustPaymTable.PaymInfoRecId, _showErrors))
+        #    {
+        #        isValid = false;
+        #    }
+        #    else
+        #    {
+        #        // currency on gift certificate must match that of payment
+        #        mcrCustPaymTotals = MCRCustPaymTotals::construct(mcrCustPaymTable.RefTableId,
+        #                                                      mcrCustPaymTable.RefRecId);
+        #        retailGiftCardTable = RetailGiftCardTable::mcrFindRecId(mcrCustPaymTable.PaymInfoRecId);
+        #
+        #        if (mcrCustPaymTotals.getCurrency()
+        #            != retailGiftCardTable.CurrencyCode)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strfmt("@MCR11247",
+        #                    retailGiftCardTable.CurrencyCode,
+        #                    mcrCustPaymTotals.getCurrency()));
+        #            }
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validatePost
+        #/// <summary>
+        #///     Validates post to ensure that on a return an authorized gift card will not
+        #///     issue an error.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The amount to be validated in the post.
+        #/// </param>
+        #/// <param name="_showErrors">
+        #///     A boolean that determins whether to write the errors to an infolog; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if the amount being posted is valid; otherwise, false.
+        #/// </returns>
+        #public boolean validatePost(Amount _amount, boolean _showErrors = true)
+        #{
+        #    boolean isValid = true;
+        #
+        #    Amount unpostedAmount = mcrCustPaymTable.getUnpostedAmount();
+        #
+        #    if (mcrCustPaymTable.IsPrepay)
+        #    {
+        #        isValid = super(_amount, _showErrors);
+        #    }
+        #    else
+        #    {
+        #        // this payment must be Posted/Paid
+        #        if (mcrCustPaymTable.Status != MCRCustPaymStatus::Authorized)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strfmt("@MCR30348", enum2str(mcrCustPaymTable.Status)));
+        #            }
+        #        }
+        #
+        #        // must be a non-zero amount
+        #        if (_amount == 0.0)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strfmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #            }
+        #        }
+        #
+        #        // the amount must have the same sign as the unposted payment amount
+        #        if (isValid && sign(_amount) != sign(unpostedAmount))
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strfmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #            }
+        #        }
+        #
+        #        // the amount may not be greater than the unposted payment amount
+        #        if (isValid && abs(_amount) > abs(unpostedAmount))
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strfmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #            }
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #/// <summary>
+        #///     Validates this payment for an insert or update.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///       A boolean that determins whether to write the errors to an infolog; optional.
+        #/// </param>
+        #/// <param name="_validateAccountSetup">
+        #///     A boolean determing whether to validate if an account is
+        #///     setup on the <c>RetailStoreTenderTypeTable</c>; optional.
+        #/// </param>
+        #/// <returns>
+        #///     Returns true if all data for this payment is valid and should be allowed
+        #///     to be saved to the database.  Returns false if one or more errors exist.
+        #/// </returns>
+        #public boolean validateWrite(boolean _showErrors = true,
+        #                             boolean _validateAccountSetup = true)
+        #{
+        #    RetailStoreTenderTypeCardTable retailStoreTenderTypeCardTable;
+        #    RetailTenderTypeCardTable      retailTenderTypeCardTable;
+        #
+        #    // Cards use account on the <c>RetailStoreTenderTypeCardTable</c>, so skip account
+        #    //  validation in parent class
+        #    boolean isValid = super(_showErrors, false);
+        #
+        #    // serial number is required
+        #    if (!this.hasPaymTypeData())
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error("@MCR11008");
+        #        }
+        #    }
+        #    // Serial number must be valid.
+        #    // Check serial number only for a gift card.
+        #    if (mcrCustPaymTable.CustPaymType == MCRCustPaymType::GiftCard
+        #        && !MCRCustPaym_GiftCard::ValidatePaymentGiftCardSerialNum(mcrCustPaymTable.PaymInfoRecId, _showErrors))
+        #    {
+        #        isValid = false;
+        #    }
+        #
+        #    if (!MCRCustPaymTable.checkAllowPaymentByPolicies(_showErrors))
+        #    {
+        #        isValid = false;
+        #    }
+        #
+        #
+        #    if (mcrCustPaymTable.getGiftCardAvailableBalance() < mcrCustPaymTable.getUnpostedAmount())
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error("@MCR11158");
+        #        }
+        #    }
+        #    retailStoreTenderTypeCardTable = RetailStoreTenderTypeCardTable::find(mcrCustPaymTable.Channel,
+        #                                                                          mcrCustPaymTable.TenderTypeId,
+        #                                                                          mcrCustPaymTable.CardTypeId);
+        #    // Validate card setup
+        #    // Related card table must be of type gift card
+        #    if (retailStoreTenderTypeCardTable)
+        #    {
+        #        retailTenderTypeCardTable = RetailTenderTypeCardTable::find(retailStoreTenderTypeCardTable.cardTypeId);
+        #        if (retailTenderTypeCardTable.cardTypes != RetailCardTypesBase::GiftCard)
+        #        {
+        #            isValid = false;
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR40420",
+        #                        retailTenderTypeCardTable.cardTypes,
+        #                        RetailChannelTable::findByOperatingUnitId(mcrCustPaymTable.Channel).ChannelType));
+        #            }
+        #        }
+        #        // payment account is required if parameter is true
+        #        if (_validateAccountSetup
+        #                && retailStoreTenderTypeCardTable.LedgerDimension == 0)
+        #        {
+        #            isValid = false;
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR10845", mcrCustPaymTable.TenderTypeId));
+        #            }
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        isValid = false;
+        #        if (_showErrors)
+        #        {
+        #            error(strFmt("@MCR40422",
+        #                    mcrCustPaymTable.CardTypeId,
+        #                    RetailChannelTable::findByRecId(mcrCustPaymTable.Channel).name()));
+        #        }
+        #    }
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validatePaymentGiftCardSerialNum
+        #/// <summary>
+        #/// Validates whether or not the given serial number is valid.
+        #/// </summary>
+        #/// <param name="_paymInfoRecId">
+        #/// The RecID of the <c>RetailGiftCardTable</c> record to be validated against.
+        #/// </param>
+        #/// <param name="_showErrors">
+        #/// If true, errors are written to the infolog.
+        #/// </param>
+        #/// <returns>
+        #/// true if the given serial number is valid; otherwise, false.
+        #/// </returns>
+        #public static boolean validatePaymentGiftCardSerialNum(RecId _paymInfoRecId,
+        #                                                        boolean _showErrors = true)
+        #{
+        #    boolean          isValid     = true;
+        #    MCRCheckDigit    checkDigit  = new MCRCheckDigit_Mod97();
+        #    RetailGiftCardTable retailGiftCardTable;
+        #
+        #    // Avoid calling encryption when the calling method already has the field encrypted.
+        #    retailGiftCardTable = RetailGiftCardTable::mcrFindRecId(_paymInfoRecId);
+        #    //Check digits only apply to gift certs.
+        #    if (RetailParameters::find().GiftCardTerminalId)
+        #    {
+        #        if (!CreditCardStoredValueProcess::balanceGiftCard(retailGiftCardTable))
+        #        {
+        #            return false;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        if (RetailGiftCardTable.MCRGiftCardType == MCRGiftCardType::Email
+        #            && ! checkDigit.validate(retailGiftCardTable.entryId))
+        #        {
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR11009", retailGiftCardTable.entryId));
+        #            }
+        #            //If check digit(s) not right, don't do further validation.
+        #            return false;
+        #        }
+        #    }
+        #    if (   isValid
+        #        && retailGiftCardTable.Reserved
+        #       )
+        #    {
+        #        isValid = false;
+        #        if (_showErrors)
+        #        {
+        #            error("@MCR40293");
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

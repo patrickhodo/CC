@@ -1,0 +1,3423 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #ProjInvoiceJournalPost
+    PROPERTIES
+      Name                #ProjInvoiceJournalPost
+      Extends             #FormletterJournalPost
+      RunOn               #Server
+      Origin              #{2D160000-0000-1000-9E22-44B37DA33697}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #accrueJournal
+        #protected void accrueJournal()
+        #{
+        #    SMAAccrueGenerator      smaAccrueGenerator;
+        #
+        #    smaAccrueGenerator = new SMAAccrueGenerator(projInvoiceJour.ProjInvoiceId);
+        #
+        #    smaAccrueGenerator.run();
+        #}
+      ENDSOURCE
+      SOURCE #addToInventReportDimHistory
+        #/// <summary>
+        #/// Adds a record to the <c>InventReportDimHistory</c> table.
+        #/// </summary>
+        #/// <param name="_journalline">
+        #/// A journal line record.
+        #/// </param>
+        #protected void addToInventReportDimHistory(Common _journalline)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #allocateVoucher
+        #protected NumberSeq allocateVoucher()
+        #{
+        #    RefRecId                invoiceNumber;
+        #    RefRecId                invoiceVoucher;
+        #    NumberSequenceDatatype  numberDatatype;
+        #    NumberSequenceDatatype  voucherDatatype;
+        #    RefRecId                scopeId = NumberSeqScopeFactory::createDefaultScope().getId();
+        #    NumberSeq               tmpNumberSeq;
+        #    ProjProposalCost        tmpProjProposalCost;
+        #    ProjProposalEmpl        tmpProjProposalEmpl;
+        #    ProjProposalOnAcc       tmpProjProposalOnAcc;
+        #    ProjProposalRevenue     tmpProjProposalRevenue;
+        #    ProjProposalItem        tmpProjProposalItem;
+        #    #ISOCountryRegionCodes
+        #
+        #    creditNote = this.creditNote();
+        #    switch (projProposalJour.InvoiceType)
+        #    {
+        #        case ProjInvoiceType::Invoice :
+        #            if (projProposalJour.NumberSequenceGroupId)
+        #            {
+        #                if (creditNote)
+        #                {
+        #                    numberDatatype = NumberSequenceDatatype::find(ProjParameters::numRefProjNormalCreditNoteId().NumberSequenceDatatype);
+        #                    voucherDatatype = NumberSequenceDatatype::find(ProjParameters::numRefProjNormalCreditNoteVoucher().NumberSequenceDatatype);
+        #
+        #                    invoiceNumber = NumberSequenceGroupRef::findNaturalKey(numberDatatype.RecId, scopeId, projProposalJour.NumberSequenceGroupId).NumberSequenceId;
+        #
+        #                    if (!invoiceNumber)
+        #                    {
+        #                        invoiceNumber = ProjParameters::numRefProjNormalCreditNoteId().NumberSequenceId;
+        #                    }
+        #
+        #                    if (ProjParameters::numRefProjNormalCreditNoteVoucher().AllowSameAs)
+        #                    {
+        #                        voucherEqualsNumber = true;
+        #                        invoiceVoucher      = invoiceNumber;
+        #                    }
+        #                    else
+        #                    {
+        #                        invoiceVoucher = NumberSequenceGroupRef::findNaturalKey(voucherDatatype.RecId, scopeId, projProposalJour.NumberSequenceGroupId).NumberSequenceId;
+        #
+        #                        if (!invoiceVoucher)
+        #                        {
+        #                            invoiceVoucher = ProjParameters::numRefProjNormalCreditNoteVoucher().NumberSequenceId;
+        #                        }
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    numberDatatype = NumberSequenceDatatype::find(ProjParameters::numRefProjNormalCreditNoteId().NumberSequenceDatatype);
+        #                    voucherDatatype = NumberSequenceDatatype::find(ProjParameters::numRefProjNormalCreditNoteVoucher().NumberSequenceDatatype);
+        #
+        #                    invoiceNumber = NumberSequenceGroupRef::findNaturalKey(numberDatatype.RecId, scopeId, projProposalJour.NumberSequenceGroupId).NumberSequenceId;
+        #
+        #                    if (!invoiceNumber)
+        #                    {
+        #                        invoiceNumber = ProjParameters::numRefProjNormalInvoiceId().NumberSequenceId;
+        #                    }
+        #
+        #                    if (ProjParameters::numRefProjNormalInvoiceVoucher().AllowSameAs)
+        #                    {
+        #                        voucherEqualsNumber = true;
+        #                        invoiceVoucher      = invoiceNumber;
+        #                    }
+        #                    else
+        #                    {
+        #                        invoiceVoucher = NumberSequenceGroupRef::findNaturalKey(voucherDatatype.RecId, scopeId, projProposalJour.NumberSequenceGroupId).NumberSequenceId;
+        #
+        #                        if (!invoiceVoucher)
+        #                        {
+        #                            invoiceVoucher = ProjParameters::numRefProjNormalInvoiceVoucher().NumberSequenceId;
+        #                        }
+        #                    }
+        #                }
+        #
+        #                tmpNumberSeq = NumberSeq::newGetVoucherFromId(invoiceVoucher);
+        #            }
+        #            else
+        #            {
+        #                if (creditNote)
+        #                {
+        #                    numberSequenceReference  = ProjParameters::numRefProjNormalCreditNoteId();
+        #                    voucherSequenceReference = ProjParameters::numRefProjNormalCreditNoteVoucher();
+        #
+        #                    tmpNumberSeq = NumberSeq::newGetVoucher(ProjParameters::numRefProjNormalCreditNoteVoucher());
+        #                }
+        #                else
+        #                {
+        #                    numberSequenceReference  = ProjParameters::numRefProjNormalInvoiceId();
+        #                    voucherSequenceReference = ProjParameters::numRefProjNormalInvoiceVoucher();
+        #
+        #                    tmpNumberSeq = NumberSeq::newGetVoucher(ProjParameters::numRefProjNormalInvoiceVoucher());
+        #                }
+        #            }
+        #            break;
+        #
+        #        case ProjInvoiceType::OnAccount:
+        #            if (projProposalJour.NumberSequenceGroupId)
+        #            {
+        #                if (creditNote)
+        #                {
+        #                    numberDatatype = NumberSequenceDatatype::find(ProjParameters::numRefProjOnAccCreditNoteId().NumberSequenceDatatype);
+        #                    voucherDatatype = NumberSequenceDatatype::find(ProjParameters::numRefProjOnAccCreditNoteVoucher().NumberSequenceDatatype);
+        #
+        #                    invoiceNumber = NumberSequenceGroupRef::findNaturalKey(numberDatatype.RecId, scopeId, projProposalJour.NumberSequenceGroupId).NumberSequenceId;
+        #
+        #                    if (!invoiceNumber)
+        #                    {
+        #                        invoiceNumber = ProjParameters::numRefProjOnAccCreditNoteId().NumberSequenceId;
+        #                    }
+        #
+        #                    if (ProjParameters::numRefProjOnAccCreditNoteVoucher().AllowSameAs)
+        #                    {
+        #                        voucherEqualsNumber = true;
+        #                        invoiceVoucher      = invoiceNumber;
+        #                    }
+        #                    else
+        #                    {
+        #                        invoiceVoucher = NumberSequenceGroupRef::findNaturalKey(voucherDatatype.RecId, scopeId, projProposalJour.NumberSequenceGroupId).NumberSequenceId;
+        #
+        #                        if (!invoiceVoucher)
+        #                        {
+        #                            invoiceVoucher = ProjParameters::numRefProjOnAccCreditNoteVoucher().NumberSequenceId;
+        #                        }
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    numberDatatype = NumberSequenceDatatype::find(ProjParameters::numRefProjOnAccInvoiceId().NumberSequenceDatatype);
+        #                    voucherDatatype = NumberSequenceDatatype::find(ProjParameters::numRefProjOnAccInvoiceVoucher().NumberSequenceDatatype);
+        #
+        #                    invoiceNumber = NumberSequenceGroupRef::findNaturalKey(numberDatatype.RecId, scopeId, projProposalJour.NumberSequenceGroupId).NumberSequenceId;
+        #
+        #                    if (!invoiceNumber)
+        #                    {
+        #                        numberSequenceReference = ProjParameters::numRefProjOnAccInvoiceId();
+        #                        invoiceNumber = ProjParameters::numRefProjOnAccInvoiceId().NumberSequenceId;
+        #                    }
+        #
+        #                    if (ProjParameters::numRefProjOnAccInvoiceVoucher().AllowSameAs)
+        #                    {
+        #                        voucherEqualsNumber = true;
+        #                        invoiceVoucher      = invoiceNumber;
+        #                    }
+        #                    else
+        #                    {
+        #                        invoiceVoucher = NumberSequenceGroupRef::findNaturalKey(voucherDatatype.RecId, scopeId, projProposalJour.NumberSequenceGroupId).NumberSequenceId;
+        #
+        #                        if (!invoiceVoucher)
+        #                        {
+        #                            invoiceVoucher = ProjParameters::numRefProjOnAccInvoiceVoucher().NumberSequenceId;
+        #                        }
+        #                    }
+        #                }
+        #
+        #                tmpNumberSeq = NumberSeq::newGetVoucherFromId(invoiceVoucher);
+        #            }
+        #            else
+        #            {
+        #                if (creditNote)
+        #                {
+        #                    numberSequenceReference  = ProjParameters::numRefProjOnAccCreditNoteId();
+        #                    voucherSequenceReference = ProjParameters::numRefProjOnAccCreditNoteVoucher();
+        #
+        #                    tmpNumberSeq = NumberSeq::newGetVoucher(ProjParameters::numRefProjOnAccCreditNoteVoucher());
+        #                }
+        #                else
+        #                {
+        #                    numberSequenceReference  = ProjParameters::numRefProjOnAccInvoiceId();
+        #                    voucherSequenceReference = ProjParameters::numRefProjOnAccInvoiceVoucher();
+        #
+        #                    tmpNumberSeq = NumberSeq::newGetVoucher(ProjParameters::numRefProjOnAccInvoiceVoucher());
+        #                }
+        #            }
+        #            break;
+        #    }
+        #
+        #    // Italian functionality of VAT books and VAT book sections
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIT]))
+        #    {
+        #        if(! TaxBookSection::checkTaxBookSection(tmpNumberSeq.parmNumberSequenceId(), projProposalJour .InvoiceDate))
+        #        {
+        #            throw error("@SYS21533");
+        #        }
+        #
+        #        while select TaxGroupId, TaxItemGroupId from tmpProjProposalCost index hint ProposalIdx
+        #            where tmpProjProposalCost.ProposalId == projProposalJour.ProposalId
+        #        {
+        #            if (! TaxGroupData::checkTaxGroups(tmpProjProposalCost.TaxGroupId, tmpProjProposalCost.TaxItemGroupId))
+        #            {
+        #                throw error("@SYS21533");
+        #            }
+        #        }
+        #
+        #        while select TaxGroupId, TaxItemGroupId from tmpProjProposalEmpl index hint ProposalIdx
+        #            where tmpProjProposalEmpl.ProposalId == projProposalJour.ProposalId
+        #        {
+        #            if (! TaxGroupData::checkTaxGroups(tmpProjProposalEmpl.TaxGroupId, tmpProjProposalEmpl.TaxItemGroupId))
+        #            {
+        #                throw error("@SYS21533");
+        #            }
+        #        }
+        #
+        #        while select TaxGroupId, TaxItemGroupId from tmpProjProposalOnAcc index hint ProposalIdx
+        #            where tmpProjProposalOnAcc.ProposalId == projProposalJour.ProposalId
+        #        {
+        #            if (! TaxGroupData::checkTaxGroups(tmpProjProposalOnAcc.TaxGroupId, tmpProjProposalOnAcc.TaxItemGroupId))
+        #            {
+        #                throw error("@SYS21533");
+        #            }
+        #        }
+        #
+        #        while select TaxGroupId, TaxItemGroupId from tmpProjProposalRevenue index hint ProposalIdx
+        #            where tmpProjProposalRevenue.ProposalId == projProposalJour.ProposalId
+        #        {
+        #            if (! TaxGroupData::checkTaxGroups(tmpProjProposalRevenue.TaxGroupId, tmpProjProposalRevenue.TaxItemGroupId))
+        #            {
+        #                throw error("@SYS21533");
+        #            }
+        #        }
+        #
+        #        while select TaxGroupId, TaxItemGroupId from tmpProjProposalItem index hint ProposalIdx
+        #            where tmpProjProposalItem.ProposalId == projProposalJour.ProposalId
+        #        {
+        #            if (! TaxGroupData::checkTaxGroups(tmpProjProposalItem.TaxGroupId, tmpProjProposalItem.TaxItemGroupId))
+        #            {
+        #                throw error("@SYS21533");
+        #            }
+        #        }
+        #    }
+        #
+        #    return tmpNumberSeq;
+        #}
+      ENDSOURCE
+      SOURCE #calculateDueDateFromDeliveryDate_ES
+        #/// <summary>
+        #/// Calculates the due date based on the delivery date.
+        #/// </summary>
+        #/// <param name="_deliveryDate">
+        #/// The delivery date.
+        #/// </param>
+        #/// <param name="_paymTerm">
+        #/// The <c>PaymTerm</c> record; optional.
+        #/// </param>
+        #/// <param name="_paymDayId">
+        #/// The payment day identifier; optional.
+        #/// </param>
+        #/// <param name="_dueDateLimit">
+        #/// The number of days the due date can be past the delivery date; optional.
+        #/// </param>
+        #/// <returns>
+        #/// The due date.
+        #/// </returns>
+        #protected TransDate calculateDueDateFromDeliveryDate_ES(
+        #    TransDate           _deliveryDate,
+        #    PaymTerm            _paymTerm = null,
+        #    PaymDayId           _paymDayId = '',
+        #    PaymDueDateLimit_ES _dueDateLimit = null)
+        #{
+        #    PaymTerm            paymTermLocal;
+        #    PaymDueDateLimit_ES dueDateLimitLocal;
+        #    PaymDueDateLimit_ES dueDateLimitTermsOfPayment;
+        #    PaymDayId           paymDayIdLocal;
+        #
+        #    paymTermLocal = _paymTerm;
+        #    if (!paymTermLocal)
+        #    {
+        #        paymTermLocal = this.findProjectInvoicePaymTerm();
+        #    }
+        #
+        #    if (!paymTermLocal.UseDeliveryDateForDueDate_ES)
+        #    {
+        #        return datenull();
+        #    }
+        #
+        #    // Due date limit from terms of payment.
+        #    dueDateLimitTermsOfPayment = PaymDueDateLimit_ES::getCurrentValues(paymTermLocal.DueDateLimitGroupId_ES);
+        #    dueDateLimitLocal = _dueDateLimit;
+        #    if (!dueDateLimitLocal ||
+        #        (dueDateLimitTermsOfPayment &&
+        #         dueDateLimitTermsOfPayment.getLastValidDate(_deliveryDate) < dueDateLimitLocal.getLastValidDate(_deliveryDate)))
+        #    {
+        #        dueDateLimitLocal = dueDateLimitTermsOfPayment;
+        #    }
+        #
+        #    paymDayIdLocal = _paymDayId;
+        #    if (!paymDayIdLocal)
+        #    {
+        #        // Payment day id from project.
+        #        paymDayIdLocal = projInvoiceJour.PaymDayId;
+        #    }
+        #
+        #    return paymTermLocal.due(_deliveryDate, paymDayIdLocal, false, dueDateLimitLocal);
+        #}
+      ENDSOURCE
+      SOURCE #canPostEndDisc
+        #protected boolean canPostEndDisc()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #canPostLedger
+        #protected boolean canPostLedger()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #canPostRoundOff
+        #/// <summary>
+        #/// Determines whether end roundings can be posted.
+        #/// </summary>
+        #/// <returns>
+        #/// true if roundings can be posted; otherwise, false.
+        #/// </returns>
+        #protected boolean canPostRoundOff()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #canPostTax
+        #protected boolean canPostTax()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #checkProjInvoiceCost
+        #[SysObsoleteAttribute('', true)]
+        #private real checkProjInvoiceCost(real _sign)
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #checkProjInvoiceEmpl
+        #[SysObsoleteAttribute('', true)]
+        #private real checkProjInvoiceEmpl(real _sign)
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #checkProjInvoiceItem
+        #[SysObsoleteAttribute('', true)]
+        #private real checkProjInvoiceItem(real _sign)
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #checkProjInvoiceOnAcc
+        #[SysObsoleteAttribute('', true)]
+        #private real checkProjInvoiceOnAcc(real _sign)
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #checkProjInvoiceRevenue
+        #[SysObsoleteAttribute('', true)]
+        #private real checkProjInvoiceRevenue(real _sign)
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #checkSourceLine
+        #[SysObsoleteAttribute('', false)]
+        #/// <summary>
+        #/// Verifies the source line for the journal line.
+        #/// </summary>
+        #protected void checkSourceLine()
+        #{
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class ProjInvoiceJournalPost extends FormletterJournalPost
+        #{
+        #    boolean                             voucherEqualsNumber;
+        #    ProjInvoiceJour                     projInvoiceJour;
+        #    ProjInvoiceTable                    projInvoiceTable;
+        #    ProjInvoiceParmTable                projInvoiceParmTable;
+        #
+        #    boolean                             fixedExchRate;
+        #    boolean                             creditNote;
+        #    ProjProposalTotals                  projProposalTotals;
+        #
+        #    RecordSortedList                    recordListProjProposalCost;
+        #    RecordSortedList                    recordListProjProposalEmpl;
+        #    RecordSortedList                    recordListProjProposalRevenue;
+        #    RecordSortedList                    recordListProjProposalOnAcc;
+        #    RecordSortedList                    recordListProjProposalItem;
+        #    RecordInsertList                    recordInsertListSpecTrans;
+        #
+        #    LedgerVoucher                       ledgerVoucherSMA;
+        #    TransactionTxt                      transactionTxtSMA;
+        #    Voucher                             voucherSMA;
+        #
+        #    NumberSequenceReference             voucherSequenceReference;
+        #    NumberSequenceReference             numberSequenceReference;
+        #    SalesFormLetter_InvoiceProject      salesFormLetter;
+        #
+        #    ProjBudgetTransaction               projBudgetTransactionNormal, projBudgetTransactionReverse;
+        #    ProjBudgetTransactionManager        projBudgetTransactionManager;
+        #
+        #    RecordInsertList                recordInsertListCustInvoicePackingSlipMatch;
+        #    // <GBR>
+        #    TmpInvoiceCancel_BR           tmpInvoiceCancel;
+        #    // </GBR>
+        #
+        #    TaxParameters                 taxParameters;
+        #    MainAccount                   postingMainAccount;
+        #
+        #    // <GIN>
+        #    AmountCur                     taxCustomsDuty;
+        #    // </GIN>
+        #    PaymTerm                        projectInvoicePaymTerm;
+        #
+        #    #ISOCountryRegionCodes
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createCashDisc
+        #protected void createCashDisc()
+        #{
+        #    LedgerVoucherTransObject        ledgerVoucherTransObject;
+        #    CurrencyExchangeHelper          exchangeRateHelper;
+        #    LedgerDimensionDefaultAccount   paidLedgerDimensionDefault;
+        #    LedgerDimensionAccount          paidLedgerDimensionAccount;
+        #    LedgerVoucherObject             ledgerVoucherObject;
+        #    LedgerDimensionDefaultAccount   custCashDiscDefaultAccount;
+        #
+        #    ledgerVoucherObject = ledgerVoucher.findLedgerVoucherObject();
+        #
+        #    paidLedgerDimensionDefault = CashDisc::find(projInvoiceJour.CashDiscCode).PaidLedgerDimension;
+        #
+        #    exchangeRateHelper = CurrencyExchangeHelper::newExchangeDate(Ledger::primaryLedger(CompanyInfo::findDataArea(curext()).RecId), ledgerVoucherObject.parmAccountingDate());
+        #    exchangeRateHelper.parmExchangeRate1(projInvoiceJour.ExchRate);
+        #    exchangeRateHelper.parmExchangeRate2(projInvoiceJour.ExchrateSecondary);
+        #
+        #    if (paidLedgerDimensionDefault)
+        #    {
+        #        paidLedgerDimensionAccount = DimensionDefaultingService::serviceCreateLedgerDimension(paidLedgerDimensionDefault, projInvoiceJour.DefaultDimension);
+        #
+        #        ledgerVoucherTransObject = LedgerVoucherTransObject::newTransactionAmountDefault(
+        #                                     ledgerVoucherObject,
+        #                                     LedgerPostingType::CustCashDisc,
+        #                                     paidLedgerDimensionAccount,
+        #                                     projInvoiceJour.CurrencyId,
+        #                                     projInvoiceJour.CashDisc,
+        #                                     exchangeRateHelper);
+        #        ledgerVoucherTransObject.parmSourceTableId(projInvoiceJour.TableId);
+        #        ledgerVoucherTransObject.parmSourceRecId(projInvoiceJour.RecId);
+        #    }
+        #    else
+        #    {
+        #        custCashDiscDefaultAccount = LedgerSystemAccounts::getDefaultAccount(LedgerPostingType::CustCashDisc);
+        #        if (custCashDiscDefaultAccount)
+        #        {
+        #            paidLedgerDimensionAccount = DimensionDefaultingService::serviceCreateLedgerDimension(custCashDiscDefaultAccount, projInvoiceJour.DefaultDimension);
+        #
+        #            ledgerVoucherTransObject = LedgerVoucherTransObject::newTransactionAmountDefault(
+        #                                         ledgerVoucherObject,
+        #                                         LedgerPostingType::CustCashDisc,
+        #                                         paidLedgerDimensionAccount,
+        #                                         projInvoiceJour.CurrencyId,
+        #                                         projInvoiceJour.CashDisc,
+        #                                         exchangeRateHelper);
+        #            ledgerVoucherTransObject.parmSourceTableId(projInvoiceJour.TableId);
+        #            ledgerVoucherTransObject.parmSourceRecId(projInvoiceJour.RecId);
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS99048");
+        #        }
+        #    }
+        #
+        #    ledgerVoucher.addTrans(ledgerVoucherTransObject);
+        #}
+      ENDSOURCE
+      SOURCE #createExportDocument_CN
+        #/// <summary>
+        #/// Creates export document.
+        #/// </summary>
+        #// <GCN>
+        #protected void createExportDocument_CN()
+        #{
+        #    TaxIntgrExportDocumentGenerator_CN::generate(
+        #        projInvoiceJour.RecId,
+        #        projInvoiceJour.TableId,
+        #        projProposalJour.RecId,
+        #        projProposalJour.TableId);
+        #}
+        #// </GCN>
+      ENDSOURCE
+      SOURCE #createOnAccountCreditNote
+        #protected void createOnAccountCreditNote()
+        #{
+        #    ProjOnAccTrans      projOnAccTrans;
+        #    ProjOnAccTransSale  projOnAccTransSale;
+        #    ProjOnAccTrans      projOnAccTransOrig;
+        #    ProjOnAccTrans      projOnAccTransNew;
+        #    ProjOnAccTransSale  projOnAccTransSaleNew;
+        #
+        #    ProjProposalOnAcc       projProposalOnAcc;
+        #    ProjProposalOnAccDetail projProposalOnAccDetail;
+        #    ProjProposalOnAcc       projProposalOnAccNew;
+        #    ProjProposalOnAccDetail projProposalOnAccDetailNew;
+        #    ProjInvoiceOnAcc        projInvoiceOnAcc;
+        #    ProjInvoiceJour         onAccountInvoiceJour;
+        #
+        #    ProjProposalJour    creditProposalJour;
+        #    ProjProposalTotals  creditProposalTotals;
+        #    ProjFormLetter      creditFormLetter;
+        #
+        #    ParmId              creditParmId;
+        #    ProjTable           projTable;
+        #
+        #    ProjInvoiceJour     creditInvoiceJour;
+        #
+        #    CustTrans           custTrans;
+        #    CustTransOpen       custTransOpen;
+        #
+        #    SpecTransManager    specTransManager;
+        #
+        #    AmountCur           amountCur;
+        #
+        #    // Not implemented for proforma invoices
+        #
+        #    if (proforma)
+        #    {
+        #        return;
+        #    }
+        #
+        #    // This is only active on normal invoices and if the payment criteria is selected
+        #
+        #    if (projProposalJour.InvoiceType                    == ProjInvoiceType::OnAccount ||
+        #        ProjParameters::find().OnAccountPaymentCriteria == NoYes::No                    )
+        #    {
+        #        return;
+        #    }
+        #
+        #    // Process all on account invoicing offset postings on time and material projects
+        #
+        #    while select projProposalOnAcc
+        #        where projProposalOnAcc.ProposalId == projProposalJour.ProposalId
+        #        join projOnAccTrans
+        #            group by CurrencyId, ProjID, TaxGroupId, TaxItemGroupId
+        #            where projOnAccTrans.TransId == projProposalOnAcc.TransId &&
+        #                  projOnAccTrans.TransactionOrigin == ProjOrigin::Deduction
+        #            join projTable
+        #                where projTable.ProjId == projOnAccTrans.ProjID &&
+        #                     (projTable.Type == ProjType::TimeMaterial ||
+        #                      projTable.Type == ProjType::Time)
+        #        join projProposalOnAccDetail
+        #            where projProposalOnAccDetail.ProposalRefRecId == projProposalOnAcc.RecId
+        #            join sum(Amount) from projOnAccTransSale
+        #                where projOnAccTransSale.RecId == projProposalOnAccDetail.SaleRefRecId &&
+        #                    projOnAccTransSale.Amount < 0
+        #    {
+        #        amountCur = 0;
+        #
+        #        // Sum up amount of on account invoices which is paid
+        #
+        #        while select projInvoiceOnAcc
+        #            where projInvoiceOnAcc.ProjId           == projOnAccTrans.ProjID        &&
+        #                  projInvoiceOnAcc.CurrencyId       == projOnAccTrans.CurrencyId
+        #            join RecId from projOnAccTransOrig
+        #                where projOnAccTransOrig.TransId             == projInvoiceOnAcc.TransId &&
+        #                      (projOnAccTransOrig.TransactionOrigin  == ProjOrigin::Milestone ||
+        #                       projOnAccTransOrig.TransactionOrigin  == ProjOrigin::Prepayment)
+        #                join InvoiceAmount, InvoiceDate, LedgerVoucher, ProjInvoiceId from onAccountInvoiceJour
+        #                    where onAccountInvoiceJour.ProjInvoiceId == projInvoiceOnAcc.ProjInvoiceId &&
+        #                          onAccountInvoiceJour.InvoiceAmount != 0
+        #                    join RecId from custTrans
+        #                        where custTrans.TransDate == onAccountInvoiceJour.InvoiceDate &&
+        #                              custTrans.Voucher   == onAccountInvoiceJour.LedgerVoucher &&
+        #                              custTrans.Invoice   == onAccountInvoiceJour.ProjInvoiceId
+        #        {
+        #            // Get the payment ratio of the invoice
+        #
+        #            select sum(AmountCur) from custTransOpen
+        #                where custTransOpen.RefRecId == custTrans.RecId;
+        #
+        #            amountCur += Currency::amount(projInvoiceOnAcc.lineAmount() * (1 - (custTransOpen.AmountCur / onAccountInvoiceJour.InvoiceAmount)), projOnAccTrans.CurrencyId);
+        #        }
+        #
+        #        // Deduct already offset amount
+        #
+        #        while select projInvoiceOnAcc
+        #            where projInvoiceOnAcc.ProjId           == projOnAccTrans.ProjID        &&
+        #                  projInvoiceOnAcc.CurrencyId       == projOnAccTrans.CurrencyId    &&
+        #                  projInvoiceOnAcc.TaxGroupId       == projOnAccTrans.TaxGroupId    &&
+        #                  projInvoiceOnAcc.TaxItemGroupId   == projOnAccTrans.TaxItemGroupId
+        #            exists join  projOnAccTransOrig
+        #                where projOnAccTransOrig.TransId            == projInvoiceOnAcc.TransId &&
+        #                      projOnAccTransOrig.TransactionOrigin  == ProjOrigin::Deduction
+        #        {
+        #            amountCur -= projInvoiceOnAcc.lineAmount();
+        #        }
+        #
+        #        // If the offset transaction is not paid fully, make a credit note for the difference
+        #
+        #        if (projOnAccTransSale.Amount + amountCur < 0)
+        #        {
+        #            // Create a proposal header for the credit note
+        #
+        #            if (!creditProposalJour)
+        #            {
+        #                creditProposalJour.data(projProposalJour);
+        #                creditProposalJour.ProposalId   = NumberSeq::newGetNum( ProjParameters::numRefProjProposalId()).num();
+        #                creditProposalJour.InvoiceType  = ProjInvoiceType::OnAccount;
+        #                creditProposalJour.insert();
+        #            }
+        #
+        #            // Create a on account transaction for the credit note
+        #
+        #            projOnAccTransNew.clear();
+        #            projOnAccTransNew.initValue();
+        #            projOnAccTransNew.ProjID                = projOnAccTrans.ProjID;
+        #            projOnAccTransNew.CurrencyId            = projOnAccTrans.CurrencyId;
+        #            projOnAccTransNew.TransDate             = projProposalJour.InvoiceDate;
+        #            projOnAccTransNew.TaxGroupId            = projOnAccTrans.TaxGroupId;
+        #            projOnAccTransNew.TaxItemGroupId        = projOnAccTrans.TaxItemGroupId;
+        #
+        #            if (ProjTable::find(projOnAccTrans.ProjID).Type == ProjType::TimeMaterial)
+        #            {
+        #                projOnAccTransNew.TransactionOrigin = ProjOrigin::Prepayment;
+        #            }
+        #            else
+        #            {
+        #                projOnAccTransNew.TransactionOrigin = ProjOrigin::Milestone;
+        #            }
+        #
+        #            projOnAccTransNew.Description           = "@SYS98513";
+        #            projOnAccTransNew.insert();
+        #
+        #            projOnAccTransSaleNew.clear();
+        #            projOnAccTransSaleNew.initValue();
+        #            projOnAccTransSaleNew.initFromProjOnAccTrans(projOnAccTransNew);
+        #            projOnAccTransSaleNew.Amount                = amountCur + projOnAccTransSale.Amount;
+        #            projOnAccTransSaleNew.doInsert();
+        #
+        #            // Create a proposal line for the credit note
+        #
+        #            projProposalOnAccNew.clear();
+        #            projProposalOnAccNew                    =  ProjProposalOnAcc::initProposaleFromTrans(projOnAccTransNew);
+        #            projProposalOnAccNew.ProposalId         = creditProposalJour.ProposalId;
+        #            projProposalOnAccNew.insert();
+        #
+        #            // <GEEPL>
+        #            if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #            {
+        #                TaxServiceTariff::insertTaxServiceTariffForNewParent(projOnAccTransNew.TableId, projOnAccTransNew.RecId, projProposalOnAccNew.TableId, projProposalOnAccNew.RecId);
+        #            }
+        #            // </GEEPL>
+        #
+        #            projProposalOnAccDetailNew.clear();
+        #            projProposalOnAccDetailNew              =  ProjProposalOnAccDetail::initProposaleFromTrans(projOnAccTransSaleNew);
+        #            projProposalOnAccDetailNew.ProposalRefRecId = projProposalOnAccNew.RecId;
+        #            projProposalOnAccDetailNew.insert();
+        #
+        #            // Create an on account transaction for the offset on the original invoice
+        #
+        #            projOnAccTransNew.TransId               = ProjParameters::newTransId();
+        #            projOnAccTransNew.Description           = "@SYS98513";
+        #            projOnAccTransNew.TransactionOrigin     = ProjOrigin::Deduction;
+        #            projOnAccTransNew.insert();
+        #
+        #            projOnAccTransSaleNew.TransId           = projOnAccTransNew.TransId;
+        #            projOnAccTransSaleNew.Amount            = -(amountCur + projOnAccTransSale.Amount);
+        #            projOnAccTransSaleNew.insert();
+        #
+        #            // Create a proposal line for the offset on the original invoice
+        #
+        #            projProposalOnAccNew.clear();
+        #            projProposalOnAccNew                    = ProjProposalOnAcc::initProposaleFromTrans(projOnAccTransNew);
+        #            projProposalOnAccNew.ProposalId         = projProposalJour.ProposalId;
+        #            projProposalOnAccNew.insert();
+        #
+        #            // <GEEPL>
+        #            if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #            {
+        #                TaxServiceTariff::insertTaxServiceTariffForNewParent(projOnAccTransNew.TableId, projOnAccTransNew.RecId, projProposalOnAccNew.TableId, projProposalOnAccNew.RecId);
+        #            }
+        #            // </GEEPL>
+        #
+        #            projProposalOnAccDetailNew.clear();
+        #            projProposalOnAccDetailNew              =  ProjProposalOnAccDetail::initProposaleFromTrans(projOnAccTransSaleNew);
+        #            projProposalOnAccDetailNew.ProposalRefRecId = projProposalOnAccNew.RecId;
+        #            projProposalOnAccDetailNew.insert();
+        #        }
+        #    }
+        #
+        #    // Calculcate totals and post the credit note if any corrections
+        #    if (creditProposalJour)
+        #    {
+        #        creditProposalTotals = new ProjProposalTotals(creditProposalJour);
+        #        creditProposalTotals.calc();
+        #
+        #        creditProposalJour.CostValue           = creditProposalTotals.projInvoiceCostValue();
+        #        creditProposalJour.CashDisc            = creditProposalTotals.projInvoiceCashDisc();
+        #        creditProposalJour.InvoiceRoundOff     = creditProposalTotals.projInvoiceRoundOff();
+        #        creditProposalJour.InvoiceAmount       = creditProposalTotals.projInvoiceTotalAmount();
+        #        creditProposalJour.OnAccountAmount     = creditProposalTotals.projOnAccAmount();
+        #
+        #        creditProposalJour.calcDue();
+        #        creditProposalJour.calcCashDiscDate();
+        #        creditProposalJour.update();
+        #
+        #        creditFormLetter = ProjFormLetter::construct(DocumentStatus::ProjectInvoice);
+        #        creditParmId     = creditFormLetter.parmId();
+        #        creditFormLetter.unpack(formLetter.pack());
+        #        creditFormLetter.parmId(creditParmId);
+        #        creditFormLetter.createParmLine(creditProposalJour);
+        #        creditFormLetter.run();
+        #
+        #        // Make open transaction records for the created creditnote
+        #
+        #        select firstonly InvoiceDate, ProjInvoiceId, InvoiceAccount from creditInvoiceJour
+        #            where creditInvoiceJour.ProposalId      == creditProposalJour.ProposalId     &&
+        #                  creditInvoiceJour.InvoiceAccount  == creditProposalJour.InvoiceAccount &&
+        #                  creditInvoiceJour.InvoiceDate     == creditProposalJour.InvoiceDate;
+        #
+        #        select firstonly AccountNum, CurrencyCode, RecId from custTrans
+        #            where custTrans.TransDate   == creditInvoiceJour.InvoiceDate    &&
+        #                  custTrans.Invoice     == creditInvoiceJour.ProjInvoiceId  &&
+        #                  custTrans.AccountNum  == creditInvoiceJour.InvoiceAccount;
+        #
+        #        projTable = ProjTable::find(projOnAccTransNew.ProjID);
+        #
+        #        specTransManager = SpecTransManager::construct(projTable, false);
+        #
+        #        while select custTransOpen
+        #            where custTransOpen.AccountNum == custTrans.AccountNum &&
+        #                  custTransOpen.RefRecId   == custTrans.RecId
+        #        {
+        #            specTransManager.insert(custTransOpen.company(), custTransOpen.TableId, custTransOpen.RecId, custTransOpen.AmountCur, custTrans.CurrencyCode);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createPayment
+        #protected void createPayment()
+        #{
+        #    CustTrans custTrans;
+        #
+        #    projInvoiceJour.CustVendInvoiceJour::custVendTrans(custTrans);
+        #
+        #    if (CustPaymModeTable::find(custTrans.PaymMode).PaymOnInvoice)
+        #    {
+        #        CustVendPaymInvoiceWithJournal::construct(projInvoiceJour).run();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createPaymentSched
+        #/// <summary>
+        #/// Creates a payment schedule.
+        #/// </summary>
+        #protected void createPaymentSched()
+        #{
+        #    if (projInvoiceTable.Paymentsched &&
+        #        ! CustPaymSched::exist(projInvoiceTable.TableId,
+        #                               projInvoiceTable.RecId) &&
+        #        ! CustPaymSched::exist(projInvoiceParmTable.TableId,
+        #                               projInvoiceParmTable.RecId))
+        #    {
+        #        projInvoiceTable.createPaymentSched();
+        #    }
+        #
+        #    if (CustPaymSched::exist(projInvoiceParmTable.TableId, projInvoiceParmTable.RecId))
+        #    {
+        #        projInvoiceParmTable.copyPaymentSched(projInvoiceJour);
+        #    }
+        #    else
+        #    {
+        #        if (CustPaymSched::exist(projProposalJour.TableId, projProposalJour.RecId))
+        #        {
+        #            projProposalJour.copyPaymentSched(projInvoiceJour);
+        #        }
+        #        else
+        #        {
+        #            if (CustPaymSched::exist(projInvoiceTable.TableId, projInvoiceTable.RecId))
+        #            {
+        #                projInvoiceTable.copyPaymentSched(projInvoiceJour);
+        #                projInvoiceJour.createPaymentSched();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createProjInvoiceCost
+        #private void createProjInvoiceCost()
+        #{
+        #    ProjProposalCost            projProposalCost;
+        #    ProjCostTrans               projCostTrans;
+        #    ProjTransCostProposal       projTransCostProposal;
+        #    ProjTransStatus             projTransStatus;
+        #    ProjProposalCostDetail      projProposalCostDetail;
+        #    ProjCostTransSale           projCostTransSale;
+        #    ProjTransCostProposalSale   projTransCostProposalSale;
+        #    container                   con;
+        #    Query                       query;
+        #    QueryRun                    queryRun;
+        #    ProjCostTransCost           projCostTransCost;
+        #    boolean                     canJournalBeInvoiced;
+        #    boolean                     useBudgeting;
+        #    ProjPost                    projPostInvoiceCost;
+        #    ProjPost                    projPostCostProposalSale;
+        #    // <GEERU>
+        #    boolean                     countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #    // </GEERU>
+        #
+        #    recordListProjProposalCost.first(projProposalCost);
+        #
+        #    while (projProposalCost)
+        #    {
+        #        projTransCostProposal   = ProjTrans::newProjProposalCost(projProposalCost);
+        #
+        #        projPostInvoiceCost = ProjPost::newEnterSalesAccrued_Proposal(projProposalCost, ledgerVoucher);
+        #
+        #        this.validateNoTax(projTransCostProposal);
+        #
+        #        // <GEERU>
+        #        if (countryRegion_RU)
+        #        {
+        #            projPostInvoiceCost.parmTax_RU(this.tax());
+        #        }
+        #        // </GEERU>
+        #        projPostInvoiceCost.postTrans();
+        #
+        #        useBudgeting = ProjTable::find(projTransCostProposal.projId()).UseBudgeting;
+        #
+        #        while select projProposalCostDetail
+        #            where projProposalCostDetail.ProposalRefRecId == projProposalCost.RecId
+        #                join projCostTransSale
+        #                    where projCostTransSale.RecId == projProposalCostDetail.SaleRefRecId
+        #                        join projCostTrans
+        #                            where projCostTrans.TransId == projCostTransSale.TransId
+        #        {
+        #            // Budget Checking
+        #            if (useBudgeting)
+        #            {
+        #                if (this.reverseProjBudgetTransaction(projCostTransSale.TransId))
+        #                {
+        #                    projBudgetTransactionReverse = ProjBudgetTransaction::construct(projCostTransSale);
+        #                }
+        #
+        #                projBudgetTransactionNormal = ProjBudgetTransaction::construct(projProposalCostDetail);
+        #                canJournalBeInvoiced = this.projAdjustBudget();
+        #
+        #                if (!canJournalBeInvoiced)
+        #                {
+        #                    throw Exception::Error;
+        #                }
+        #            }
+        #
+        #            projTransStatus = projCostTransSale.TransStatus;
+        #            projTransCostProposalSale = ProjTrans::newProjProposalCostSale(projProposalCost, projProposalCostDetail, projCostTransSale);
+        #            projPostCostProposalSale = ProjPost::newEnterSalesAccrued_ProposalDetail(
+        #                                            projProposalCost,
+        #                                            projProposalCostDetail,
+        #                                            projCostTrans,
+        #                                            projCostTransSale,
+        #                                            ledgerVoucher,
+        #                                            projTransCostProposalSale.ledgerSalesPosted());
+        #            projPostCostProposalSale.parmTaxParentReferenceRecId(projPostInvoiceCost.newTrans().RecId);
+        #            projPostCostProposalSale.parmTaxParentReferenceTableId(projPostInvoiceCost.newTrans().TableId);
+        #             // <GEERU>
+        #            if (countryRegion_RU)
+        #            {
+        #                projPostCostProposalSale.parmTax_RU(this.tax());
+        #            }
+        #            // </GEERU>
+        #            projPostCostProposalSale.postTrans();
+        #
+        #            con = ProjCostTransCost::findForSalesRefRecId(projProposalCostDetail.SaleRefRecId);
+        #            query = new Query(con);
+        #            queryRun = new QueryRun(query);
+        #            while (queryRun.next())
+        #            {
+        #                projCostTransCost = queryRun.get(tableNum(ProjCostTransCost));
+        #
+        #                // <GEERU>
+        #                if (countryRegion_RU)
+        #                {
+        #                    this.setTaxTo(ProjPost::newEnterCost_ProposalDetail(
+        #                        projProposalCost,
+        #                        projProposalCostDetail,
+        #                        projCostTrans,
+        #                        projCostTransCost,
+        #                        ledgerVoucher,
+        #                        projTransStatus)).postTrans();
+        #                }
+        #                else
+        #                {
+        #                // </GEERU>
+        #                    ProjPost::newEnterCost_ProposalDetail(
+        #                        projProposalCost,
+        #                        projProposalCostDetail,
+        #                        projCostTrans,
+        #                        projCostTransCost,
+        #                        ledgerVoucher,
+        #                        projTransStatus).postTrans();
+        #                // <GEERU>
+        #                }
+        #                // </GEERU>
+        #                if (projTransStatus != ProjTransStatus::CreditnoteProposal)
+        #                {
+        #                    if (projCostTransCost.LedgerStatusCost != ProjLedgerStatus::Operations)
+        #                    {
+        #                        // <GEERU>
+        #                        if (countryRegion_RU)
+        #                        {
+        #                            this.setTaxTo(
+        #                                ProjPost::newEnterCost_TrxDetail(
+        #                                    projCostTrans, projCostTransCost, ledgerVoucher,
+        #                                    ProjLedgerStatus::Operations, ProjOrigin::Invoice
+        #                                )
+        #                            ).postTrans();
+        #                        }
+        #                        else
+        #                        {
+        #                        // </GEERU>
+        #                            ProjPost::newEnterCost_TrxDetail(projCostTrans, projCostTransCost, ledgerVoucher, ProjLedgerStatus::Operations, ProjOrigin::Invoice).postTrans();
+        #                        // <GEERU>
+        #                        }
+        #                        // </GEERU>
+        #                    }
+        #                }
+        #            }
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projTransCostProposal.transDate()));
+        #        }
+        #
+        #        if (!recordListProjProposalCost.next(projProposalCost))
+        #        {
+        #            break;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createProjInvoiceEmpl
+        #private void createProjInvoiceEmpl()
+        #{
+        #    ProjProposalEmpl                projProposalEmpl;
+        #    ProjEmplTrans                   projEmplTrans;
+        #    ProjTrans                       projTransEmplProposal;
+        #    ProjTransStatus                 projTransStatus;
+        #    ProjProposalEmplDetail          projProposalEmplDetail;
+        #    ProjEmplTransSale               projEmplTransSale;
+        #    ProjTrans                       projTransEmplProposalSale;
+        #    container                       con;
+        #    Query                           query;
+        #    QueryRun                        queryRun;
+        #    ProjEmplTransCost               projEmplTransCost;
+        #    boolean                         canJournalBeInvoiced;
+        #    boolean                         useBudgeting;
+        #    ProjPost                        projPostInvoiceEmpl;
+        #    ProjPost                        projPostEmplProposalSale;
+        #    boolean                         isCreditNote;
+        #    // <GEERU>
+        #    boolean                         countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #    // </GEERU>
+        #
+        #    ProjPost                        psaProjPostEmplIndirectSalesAccrued;
+        #    PSAIndirectComponentTrans       psaIndirectComponentTrans;
+        #
+        #    recordListProjProposalEmpl.first(projProposalEmpl);
+        #
+        #    while (projProposalEmpl)
+        #    {
+        #        projTransEmplProposal   = ProjTrans::newProjProposalEmpl(projProposalEmpl);
+        #
+        #        projPostInvoiceEmpl = ProjPost::newEnterSalesAccrued_Proposal(projProposalEmpl, ledgerVoucher);
+        #
+        #        this.validateNoTax(projTransEmplProposal);
+        #
+        #        // <GEERU>
+        #        if (countryRegion_RU)
+        #        {
+        #            projPostInvoiceEmpl.parmTax_RU(this.tax());
+        #        }
+        #        // </GEERU>
+        #        projPostInvoiceEmpl.postTrans();
+        #
+        #        useBudgeting = ProjTable::find(projTransEmplProposal.projId()).UseBudgeting;
+        #
+        #        while select projProposalEmplDetail
+        #            where projProposalEmplDetail.ProposalRefRecId == projProposalEmpl.RecId
+        #                join projEmplTransSale
+        #                    where projEmplTransSale.RecId == projProposalEmplDetail.SaleRefRecId
+        #                        join projEmplTrans
+        #                            where projEmplTrans.TransId == projEmplTransSale.TransId
+        #        {
+        #            //Project Budget Checking
+        #            if (useBudgeting)
+        #            {
+        #                if (this.reverseProjBudgetTransaction(projEmplTransSale.TransId))
+        #                {
+        #                    projBudgetTransactionReverse = ProjBudgetTransaction::construct(projEmplTransSale);
+        #                }
+        #
+        #                projBudgetTransactionNormal = ProjBudgetTransaction::construct(projProposalEmplDetail);
+        #
+        #                canJournalBeInvoiced = this.projAdjustBudget();
+        #
+        #                if (!canJournalBeInvoiced)
+        #                {
+        #                    throw Exception::Error;
+        #                }
+        #            }
+        #            projTransStatus = projEmplTransSale.TransStatus;
+        #
+        #            if (isConfigurationkeyEnabled(configurationKeyNum(Project3)) &&
+        #                projEmplTransSale.TransStatus == ProjTransStatus::CreditnoteProposal)
+        #            {
+        #                isCreditNote = true;
+        #                projEmplTransSale.LedgerSalesPosted = NoYes::Yes;
+        #            }
+        #
+        #            if (isConfigurationkeyEnabled(configurationKeyNum(Project3)) &&
+        #               (projEmplTransSale.psaIndirectRevenue > 0) &&
+        #               (projEmplTransSale.LedgerSalesPosted))
+        #            {
+        #                psaProjPostEmplIndirectSalesAccrued = ProjPost::psaReverseProjIndirectRevenue(
+        #                                            projProposalEmpl,
+        #                                            projProposalEmplDetail,
+        #                                            projEmplTrans,
+        #                                            projEmplTransSale,
+        #                                            ledgerVoucher);
+        #
+        #                psaProjPostEmplIndirectSalesAccrued.parmTaxParentReferenceRecId(projPostInvoiceEmpl.newTrans().RecId);
+        #                psaProjPostEmplIndirectSalesAccrued.parmTaxParentReferenceTableId(projPostInvoiceEmpl.newTrans().TableId);
+        #                psaProjPostEmplIndirectSalesAccrued.postTrans();
+        #            }
+        #
+        #            projTransEmplProposalSale = ProjTrans::newProjProposalEmplSale(projProposalEmpl, projProposalEmplDetail, projEmplTransSale);
+        #
+        #            projPostEmplProposalSale  = ProjPost::newEnterSalesAccrued_ProposalDetail(
+        #                                            projProposalEmpl,
+        #                                            projProposalEmplDetail,
+        #                                            projEmplTrans,
+        #                                            projEmplTransSale,
+        #                                            ledgerVoucher,
+        #                                            projTransEmplProposalSale.ledgerSalesPosted());
+        #            projPostEmplProposalSale.parmTaxParentReferenceRecId(projPostInvoiceEmpl.newTrans().RecId);
+        #            projPostEmplProposalSale.parmTaxParentReferenceTableId(projPostInvoiceEmpl.newTrans().TableId);
+        #             // <GEERU>
+        #            if (countryRegion_RU)
+        #            {
+        #                projPostEmplProposalSale.parmTax_RU(this.tax());
+        #            }
+        #            // </GEERU>
+        #            projPostEmplProposalSale.postTrans();
+        #
+        #            if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #
+        #            {
+        #                if (ProjInvoiceTable::find(PSAContractLineItems::find(projProposalEmpl.psaContractLineNum).ProjInvoiceProjId).psaContractLines == NoYes::Yes)
+        #                {
+        #                    if (PSAContractLineItems::find(projProposalEmpl.psaContractLineNum).IncludeIndirectCost == NoYes::Yes)
+        #                    {
+        #                        if (isConfigurationkeyEnabled(configurationKeyNum(PSAIndirectCost)))
+        #                        {
+        #
+        #                           ProjPost::psaNewEnterIndirectSalesAccrued(projProposalEmpl, ledgerVoucher, projTransEmplProposal.ledgerSalesPosted(), false, isCreditNote).postTrans();
+        #
+        #                        }
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    if (isConfigurationkeyEnabled(configurationKeyNum(PSAIndirectCost)))
+        #                    {
+        #
+        #                        ProjPost::psaNewEnterIndirectSalesAccrued(projProposalEmpl, ledgerVoucher, projTransEmplProposal.ledgerSalesPosted(), false, isCreditNote).postTrans();
+        #
+        #                    }
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (isConfigurationkeyEnabled(configurationKeyNum(PSAIndirectCost)))
+        #                {
+        #                    ProjPost::psaNewEnterIndirectSalesAccrued(projProposalEmpl, ledgerVoucher, projTransEmplProposal.ledgerSalesPosted(), false, isCreditNote).postTrans();
+        #
+        #                }
+        #            }
+        #
+        #            con = ProjEmplTransCost::findForSalesRefRecId(projProposalEmplDetail.SaleRefRecId);
+        #            query = new Query(con);
+        #            queryRun = new QueryRun(query);
+        #            while (queryRun.next())
+        #            {
+        #                projEmplTransCost = queryRun.get(tableNum(ProjEmplTransCost));
+        #
+        #                 // <GEERU>
+        #                if (countryRegion_RU)
+        #                {
+        #                    this.setTaxTo(
+        #                        ProjPost::newEnterCost_ProposalDetail(
+        #                            projProposalEmpl,
+        #                            projProposalEmplDetail,
+        #                            projEmplTrans,
+        #                            projEmplTransCost,
+        #                            ledgerVoucher,
+        #                            projTransStatus
+        #                       )
+        #                    ).postTrans();
+        #                }
+        #                else
+        #                {
+        #                // </GEERU>
+        #                    ProjPost::newEnterCost_ProposalDetail(
+        #                        projProposalEmpl,
+        #                        projProposalEmplDetail,
+        #                        projEmplTrans,
+        #                        projEmplTransCost,
+        #                        ledgerVoucher,
+        #                        projTransStatus).postTrans();
+        #                // <GEERU>
+        #                }
+        #                //</GEERU>
+        #
+        #                if ((projTransStatus != ProjTransStatus::CreditnoteProposal))
+        #                {
+        #                    if (projEmplTransCost.LedgerStatusCost == ProjLedgerStatus::None ||
+        #                        projEmplTransCost.LedgerStatusCost == ProjLedgerStatus::BalanceSheet)
+        #                    {
+        #                        while select psaIndirectComponentTrans
+        #                            where psaIndirectComponentTrans.TransId == projEmplTransCost.TransId &&
+        #                                psaIndirectComponentTrans.ProjFundingSource == projEmplTransCost.FundingSource &&
+        #                                psaIndirectComponentTrans.IndirectComponentType == PSAIndirectComponentType::Cost
+        #                        {
+        #                            // <GEERU>
+        #                            if (countryRegion_RU)
+        #                            {
+        #                                this.setTaxTo(
+        #                                    ProjPost::newEnterCost_TrxDetail(
+        #                                        projEmplTrans, projEmplTransCost, ledgerVoucher,
+        #                                        ProjLedgerStatus::Operations, ProjOrigin::Invoice,
+        #                                        false, false, psaIndirectComponentTrans
+        #                                    )
+        #                                ).postTrans();
+        #                            }
+        #                            else
+        #                            {
+        #                            // </GEERU>
+        #                                ProjPost::newEnterCost_TrxDetail(projEmplTrans, projEmplTransCost, ledgerVoucher, ProjLedgerStatus::Operations, ProjOrigin::Invoice,
+        #                                        false, false, psaIndirectComponentTrans).postTrans();
+        #                            // <GEERU>
+        #                            }
+        #                            //</GEERU>
+        #                        }
+        #
+        #                        // <GEERU>
+        #                        if (countryRegion_RU)
+        #                        {
+        #                            this.setTaxTo(
+        #                                ProjPost::newEnterCost_TrxDetail(
+        #                                    projEmplTrans, projEmplTransCost, ledgerVoucher,
+        #                                    ProjLedgerStatus::Operations, ProjOrigin::Invoice
+        #                                )
+        #                            ).postTrans();
+        #                        }
+        #                        else
+        #                        {
+        #                        // </GEERU>
+        #                            ProjPost::newEnterCost_TrxDetail(projEmplTrans, projEmplTransCost, ledgerVoucher, ProjLedgerStatus::Operations, ProjOrigin::Invoice).postTrans();
+        #                        // <GEERU>
+        #                        }
+        #                        //</GEERU>
+        #                    }
+        #                }
+        #                //creditnote for none ledger group must be redrawn
+        #                else if (projTransStatus == ProjTransStatus::CreditnoteProposal         &&
+        #                         projEmplTransCost.LedgerStatusCost == ProjLedgerStatus::Operations &&
+        #                         projEmplTrans.projTable().projGroup().EmplTransCost == ProjLedgerStatus::None)
+        #                {
+        #                    if (projEmplTransCost.LedgerStatusCost == ProjLedgerStatus::Operations)
+        #                    {
+        #                        while select psaIndirectComponentTrans
+        #                            where psaIndirectComponentTrans.TransId == projEmplTransCost.TransId &&
+        #                                psaIndirectComponentTrans.ProjFundingSource == projEmplTransCost.FundingSource &&
+        #                                psaIndirectComponentTrans.IndirectComponentType == PSAIndirectComponentType::Cost
+        #                        {
+        #                            // <GEERU>
+        #                            if (countryRegion_RU)
+        #                            {
+        #                                this.setTaxTo(
+        #                                    ProjPost::newEnterCost_TrxDetail(
+        #                                        projEmplTrans, projEmplTransCost, ledgerVoucher,
+        #                                        ProjLedgerStatus::None, ProjOrigin::Invoice,
+        #                                        false, false, psaIndirectComponentTrans)
+        #                                ).postTrans();
+        #                            }
+        #                            else
+        #                            {
+        #                            // </GEERU>
+        #                                ProjPost::newEnterCost_TrxDetail(projEmplTrans, projEmplTransCost, ledgerVoucher, ProjLedgerStatus::None, ProjOrigin::Invoice,
+        #                                        false, false, psaIndirectComponentTrans).postTrans();
+        #                            // <GEERU>
+        #                            }
+        #                            //</GEERU>
+        #                        }
+        #
+        #                        // <GEERU>
+        #                        if (countryRegion_RU)
+        #                        {
+        #                            this.setTaxTo(
+        #                                ProjPost::newEnterCost_TrxDetail(
+        #                                    projEmplTrans, projEmplTransCost, ledgerVoucher,
+        #                                    ProjLedgerStatus::None, ProjOrigin::Invoice)
+        #                            ).postTrans();
+        #                        }
+        #                        else
+        #                        {
+        #                        // </GEERU>
+        #                            ProjPost::newEnterCost_TrxDetail(projEmplTrans, projEmplTransCost, ledgerVoucher, ProjLedgerStatus::None, ProjOrigin::Invoice).postTrans();
+        #                        // <GEERU>
+        #                        }
+        #                        //</GEERU>
+        #                    }
+        #                }
+        #            }
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projTransEmplProposal.transDate()));
+        #        }
+        #
+        #        if (!recordListProjProposalEmpl.next(projProposalEmpl))
+        #        {
+        #            break;
+        #        }
+        #    }
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #createProjInvoiceItem
+        #private void createProjInvoiceItem()
+        #{
+        #    ProjProposalItem                    projProposalItem;
+        #    ProjItemTrans                       projItemTrans;
+        #    ProjItemTransCost                   projItemTransCost;
+        #    ProjTrans                           projTransItemProposal;
+        #    ProjLedgerStatus                    projLedgerStatus;
+        #    ProjTransStatus                     projTransStatus;
+        #    boolean                             checkEnterCostValue;
+        #    ProjProposalItemDetail              projProposalItemDetail;
+        #    ProjItemTransSale                   projItemTransSale;
+        #    ProjTrans                           projTransItemProposalSale;
+        #    container                           con;
+        #    Query                               query;
+        #    QueryRun                            queryRun;
+        #    boolean                             canJournalBeInvoiced;
+        #    boolean                             useBudgeting;
+        #    ProjPost                            projPostInvoiceItem;
+        #    ProjPost                            projPostItemProposalSale;
+        #    // <GEERU>
+        #    boolean                             countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #    // </GEERU>
+        #
+        #    recordListProjProposalItem.first(projProposalItem);
+        #
+        #    while (projProposalItem)
+        #    {
+        #        projTransItemProposal   = ProjTrans::newProjProposalItem(projProposalItem);
+        #        projLedgerStatus = ProjGroup::find(ProjTable::find(projTransItemProposal.projId()).ProjGroupId).ItemTransCost;
+        #
+        #        this.validateNoTax(projTransItemProposal);
+        #
+        #        projPostInvoiceItem = ProjPost::newEnterSalesAccrued_Proposal(projProposalItem, ledgerVoucher);
+        #        // <GEERU>
+        #        if (countryRegion_RU)
+        #        {
+        #            projPostInvoiceItem.parmTax_RU(this.tax());
+        #        }
+        #        // </GEERU>
+        #        projPostInvoiceItem.postTrans();
+        #
+        #        this.matchInvoicePackingSlip(projProposalItem, projPostInvoiceItem.newTrans());
+        #
+        #        useBudgeting = ProjTable::find(projTransItemProposal.projId()).UseBudgeting;
+        #
+        #        while select projProposalItemDetail
+        #            where projProposalItemDetail.ProposalRefRecId == projProposalItem.RecId
+        #                join projItemTransSale
+        #                    where projItemTransSale.RecId == projProposalItemDetail.SaleRefRecId
+        #                        join projItemTrans
+        #                            where projItemTrans.ProjTransId == projItemTransSale.ProjTransId
+        #        {
+        #            // Project Budget Checking
+        #            if (useBudgeting)
+        #            {
+        #                if (this.reverseProjBudgetTransaction(projItemTransSale.ProjTransId))
+        #            {
+        #                projBudgetTransactionReverse = ProjBudgetTransaction::construct(projItemTransSale);
+        #                }
+        #
+        #                projBudgetTransactionNormal = ProjBudgetTransaction::construct(projProposalItemDetail);
+        #                canJournalBeInvoiced = this.projAdjustBudget();
+        #
+        #                if (!canJournalBeInvoiced)
+        #                {
+        #                    throw Exception::Error;
+        #                }
+        #            }
+        #
+        #            projTransStatus = projItemTransSale.TransStatus;
+        #            if (projTransStatus == ProjTransStatus::CreditnoteProposal && projLedgerStatus == ProjLedgerStatus::BalanceSheet)
+        #            {
+        #                checkEnterCostValue = true;
+        #            }
+        #            projTransItemProposalSale = ProjTrans::newProjProposalItemSale(projProposalItem, projProposalItemDetail, projItemTransSale);
+        #
+        #            projPostItemProposalSale  = ProjPost::newEnterSalesAccrued_ProposalDetail(
+        #                projProposalItem,
+        #                projProposalItemDetail,
+        #                projItemTrans,
+        #                projItemTransSale,
+        #                ledgerVoucher,
+        #                                            projTransItemProposalSale.ledgerSalesPosted());
+        #            projPostItemProposalSale.parmTaxParentReferenceRecId(projPostInvoiceItem.newTrans().RecId);
+        #            projPostItemProposalSale.parmTaxParentReferenceTableId(projPostInvoiceItem.newTrans().TableId);
+        #            // <GEERU>
+        #            if (countryRegion_RU)
+        #            {
+        #                projPostItemProposalSale.parmTax_RU(this.tax());
+        #            }
+        #            // </GEERU>
+        #            projPostItemProposalSale.postTrans();
+        #
+        #            con = ProjItemTransCost::findForSalesRefRecId(projProposalItemDetail.SaleRefRecId);
+        #            query = new Query(con);
+        #            queryRun = new QueryRun(query);
+        #            while (queryRun.next())
+        #            {
+        #                projItemTransCost = queryRun.get(tableNum(ProjItemTransCost));
+        #
+        #                if ((projItemTransCost.LedgerStatusCost == ProjLedgerStatus::BalanceSheet) || (checkEnterCostValue))
+        #                {
+        #                    // <GEERU>
+        #                    if (countryRegion_RU)
+        #                    {
+        #                        this.setTaxTo(ProjPost::newEnterCost_TrxDetail(projItemTrans, projItemTransCost, ledgerVoucher, ProjLedgerStatus::Operations, ProjOrigin::Invoice,false,checkEnterCostValue))
+        #                            .postTrans();
+        #                    }
+        #                    else
+        #                    {
+        #                        // </GEERU>
+        #                        ProjPost::newEnterCost_TrxDetail(projItemTrans, projItemTransCost, ledgerVoucher, ProjLedgerStatus::Operations, ProjOrigin::Invoice,false,checkEnterCostValue).postTrans();
+        #                        // <GEERU>
+        #                    }
+        #                    // </GEERU>
+        #
+        #                }
+        #            }
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(
+        #                this.calculateDueDateFromDeliveryDate_ES(
+        #                    projTransItemProposal.transDate(),
+        #                    null,
+        #                    '',
+        #                    PaymDueDateLimit_ES::getCurrentValues(InventItemGroup::find(
+        #                        InventItemGroupItem::findByItemIdLegalEntity(projTransItemProposal.itemId()).ItemGroupId).DueDateLimitGroupId_ES)));
+        #        }
+        #
+        #        if (!recordListProjProposalItem.next(projProposalItem))
+        #        {
+        #            break;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createProjInvoiceOnAcc
+        #private void createProjInvoiceOnAcc()
+        #{
+        #    ProjProposalOnAcc           projProposalOnAcc;
+        #    ProjOnAccTrans              projOnAccTrans;
+        #    ProjProposalOnAccDetail     projProposalOnAccDetail;
+        #    ProjOnAccTransSale          projOnAccTransSale;
+        #    ProjTransOnAccProposalSale  projTransOnAccProposalSale;
+        #    ProjPost                    projPostInvoiceOnAcc;
+        #    ProjPost                    projPostOnAccProposalSale;
+        #    // <GEERU>
+        #    boolean                     countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #    // </GEERU>
+        #
+        #    recordListProjProposalOnAcc.first(projProposalOnAcc);
+        #
+        #    while (projProposalOnAcc)
+        #    {
+        #        projPostInvoiceOnAcc = ProjPost::newEnterOnAcc(projProposalOnAcc, ledgerVoucher);
+        #        // <GEERU>
+        #        if (countryRegion_RU)
+        #        {
+        #            projPostInvoiceOnAcc.parmTax_RU(this.tax());
+        #        }
+        #        // </GEERU>
+        #        projPostInvoiceOnAcc.postTrans();
+        #
+        #        while select projProposalOnAccDetail
+        #            where projProposalOnAccDetail.ProposalRefRecId == projProposalOnAcc.RecId
+        #                join projOnAccTransSale
+        #                    where projOnAccTransSale.RecId == projProposalOnAccDetail.SaleRefRecId
+        #                        join projOnAccTrans
+        #                            where projOnAccTrans.TransId == projOnAccTransSale.TransId
+        #        {
+        #            projTransOnAccProposalSale = ProjTrans::newProjProposalOnAccSale(projProposalOnAcc, projProposalOnAccDetail, projOnAccTransSale);
+        #
+        #            projPostOnAccProposalSale  = ProjPost::newEnterOnAccSale(
+        #                projProposalOnAcc,
+        #                projProposalOnAccDetail,
+        #                projOnAccTrans,
+        #                projOnAccTransSale,
+        #                ledgerVoucher);
+        #            // <GEERU>
+        #            if (countryRegion_RU)
+        #            {
+        #                projPostOnAccProposalSale.parmTax_RU(this.tax());
+        #            }
+        #            // </GEERU>
+        #            projPostOnAccProposalSale.parmTaxParentReferenceRecId(projPostInvoiceOnAcc.newTrans().RecId);
+        #            projPostOnAccProposalSale.parmTaxParentReferenceTableId(projPostInvoiceOnAcc.newTrans().TableId);
+        #            projPostOnAccProposalSale.postTrans();
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projProposalOnAcc.transDate()));
+        #        }
+        #
+        #        if (!recordListProjProposalOnAcc.next(projProposalOnAcc))
+        #        {
+        #            break;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createProjInvoiceRevenue
+        #private void createProjInvoiceRevenue()
+        #{
+        #    ProjProposalRevenue             projProposalRevenue;
+        #    ProjTransRevenueProposal        projTransRevenueProposal;
+        #    ProjTransStatus                 projTransStatus;
+        #    ProjRevenueTrans                projRevenueTrans;
+        #    ProjProposalRevenueDetail       projProposalRevenueDetail;
+        #    ProjRevenueTransSale            projRevenueTransSale;
+        #    ProjTransRevenueProposalSale    projTransRevenueProposalSale;
+        #    ProjPost                        projPostInvoiceRevenue;
+        #    ProjPost                        projPostRevenueProposalSale;
+        #    // <GEERU>
+        #    boolean                         countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #    // </GEERU>
+        #
+        #    recordListProjProposalRevenue.first(projProposalRevenue);
+        #
+        #    while (projProposalRevenue)
+        #    {
+        #        projTransRevenueProposal    = ProjTrans::newProjProposalRevenue(projProposalRevenue);
+        #
+        #        projPostInvoiceRevenue = ProjPost::newEnterSalesAccrued_Proposal(projProposalRevenue, ledgerVoucher);
+        #
+        #        this.validateNoTax(projTransRevenueProposal);
+        #        // <GEERU>
+        #        if (countryRegion_RU)
+        #        {
+        #            projPostInvoiceRevenue.parmTax_RU(this.tax());
+        #        }
+        #        // </GEERU>
+        #        projPostInvoiceRevenue.postTrans();
+        #
+        #        while select projProposalRevenueDetail
+        #            where projProposalRevenueDetail.ProposalRefRecId == projProposalRevenue.RecId
+        #                join projRevenueTransSale
+        #                    where projRevenueTransSale.RecId == projProposalRevenueDetail.SaleRefRecId
+        #                        join projRevenueTrans
+        #                            where projRevenueTrans.TransId == projRevenueTransSale.TransId
+        #        {
+        #            projTransStatus = projRevenueTransSale.TransStatus;
+        #            projTransRevenueProposalSale = ProjTrans::newProjProposalRevenueSale(projProposalRevenue, projProposalRevenueDetail, projRevenueTransSale);
+        #
+        #            projPostRevenueProposalSale  = ProjPost::newEnterSalesAccrued_ProposalDetail(
+        #                projProposalRevenue,
+        #                projProposalRevenueDetail,
+        #                projRevenueTrans,
+        #                projRevenueTransSale,
+        #                ledgerVoucher,
+        #                projTransRevenueProposalSale.ledgerSalesPosted());
+        #            projPostRevenueProposalSale.parmTaxParentReferenceRecId(projPostInvoiceRevenue.newTrans().RecId);
+        #            projPostRevenueProposalSale.parmTaxParentReferenceTableId(projPostInvoiceRevenue.newTrans().TableId);
+        #             // <GEERU>
+        #            if (countryRegion_RU)
+        #            {
+        #                projPostRevenueProposalSale.parmTax_RU(this.tax());
+        #            }
+        #            // </GEERU>
+        #            projPostRevenueProposalSale.postTrans();
+        #
+        #            if (projTransStatus == ProjTransStatus::CreditnoteProposal && projProposalRevenue.projRevenueTrans().smaSubscriptionId)
+        #            {
+        #                this.reverseSubscriptionAccruals(projProposalRevenue,projTransRevenueProposal);
+        #            }
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projTransRevenueProposal.transDate()));
+        #        }
+        #
+        #        if (!recordListProjProposalRevenue.next(projProposalRevenue))
+        #        {
+        #            break;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createProjInvoiceSalesLine
+        #private void createProjInvoiceSalesLine()
+        #{
+        #    // <GEEU>
+        #    #EECountryRegionCodes
+        #    // </GEEU>
+        #    SalesTable              salesTable;
+        #    PaymTerm                paymTerm;
+        #    ProjProposalItem        projProposalItem;
+        #    ProjFormLetter_Invoice  projFormLetter;
+        #
+        #    salesFormLetter = SalesFormLetter::construct(DocumentStatus::ProjectInvoice);
+        #
+        #    salesFormLetter.setNumAndVoucher(projInvoiceJour.ProjInvoiceId, voucher);
+        #    salesFormLetter.setLedgerVoucher(ledgerVoucher);
+        #    salesFormLetter.parmDeleteFullyInvoiced(true);
+        #    // <GEEU>
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion(#easternEuropeAll))
+        #    {
+        #        salesFormLetter.parmProjInvoiceParmTable(projInvoiceParmTable);
+        #    }
+        #    // </GEEU>
+        #
+        #    if (formletter is ProjFormLetter_Invoice)
+        #    {
+        #        projFormLetter = formletter as ProjFormLetter_Invoice;
+        #        salesFormLetter.parmCheckCreditMax(projFormLetter.parmCheckCreditMax());
+        #    }
+        #
+        #    salesFormLetter.update(projProposalJour, projInvoiceJour.InvoiceDate, SalesUpdate::DeliverNow);
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #    {
+        #        while select SalesId from projProposalItem
+        #            where projProposalItem.ProposalId == projProposalJour.ProposalId &&
+        #                projProposalItem.ItemType   == ProjItemType::SalesOrder
+        #        {
+        #            salesTable = SalesTable::find(projProposalItem.SalesId);
+        #            paymTerm = PaymTerm::find(salesTable.Payment);
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(
+        #                                        salesTable.ReceiptDateConfirmed,
+        #                                        paymTerm,
+        #                                        salesTable.paymDayId(),
+        #                                        PaymDueDateLimit_ES::getItemDueDateLimit(salesTable, salesFormLetter.parmId())));
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #creditNote
+        #protected NoYes creditNote()
+        #{
+        #    if (projProposalTotals.projInvoiceTotalAmount() < 0)
+        #    {
+        #        creditNote = NoYes::Yes;
+        #    }
+        #    else
+        #    {
+        #        creditNote = NoYes::No;
+        #    }
+        #
+        #    return creditNote;
+        #}
+      ENDSOURCE
+      SOURCE #defaultLedgerTransactionText
+        #/// <summary>
+        #/// Gets the default ledger transaction text.
+        #/// </summary>
+        #/// <returns>
+        #/// A transaction text.
+        #/// </returns>
+        #protected LedgerTransTxt defaultLedgerTransactionText()
+        #{
+        #    return (creditNote  ? LedgerTransTxt::ProjectCreditNoteLedger : LedgerTransTxt::ProjectInvoiceLedger);
+        #}
+      ENDSOURCE
+      SOURCE #documentStatus
+        #protected DocumentStatus documentStatus()
+        #{
+        #    return DocumentStatus::Invoice;
+        #}
+      ENDSOURCE
+      SOURCE #endLedgerVoucher
+        #/// <summary>
+        #/// Invokes the posting process.
+        #/// </summary>
+        #protected void endLedgerVoucher()
+        #{
+        #    // <GEERU>
+        #    LedgerVoucherObject ledgerVoucherObject = ledgerVoucher ? ledgerVoucher.findLedgerVoucherObject() : null
+        #    ;
+        #    LedgerBondClient_RU ledgerBondClient    = ledgerVoucherObject ? ledgerVoucherObject.ledgerBondClient_RU() : null;
+        #
+        #    if (ledgerBondClient && ledgerBondClient.findVRefByPostingType(LedgerPostingType::CustBalance))
+        #    {
+        #        ledgerBondClient.bondVRef2Log(ledgerBondClient.findVRefByPostingType(LedgerPostingType::CustBalance));
+        #    }
+        #    // </GEERU>
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #endLines
+        #protected void endLines()
+        #{
+        #    if (proforma)
+        #    {
+        #        this.insertProforma();
+        #    }
+        #    else
+        #    {
+        #        recordInsertListCustInvoicePackingSlipMatch = new RecordInsertList(tableNum(CustInvoicePackingSlipQuantityMatch));
+        #
+        #        this.initProposalUpdate();
+        #        this.createProjInvoiceEmpl();
+        #        this.createProjInvoiceCost();
+        #        this.createProjInvoiceRevenue();
+        #        this.createProjInvoiceItem();
+        #        this.createProjInvoiceOnAcc();
+        #        this.createProjInvoiceSalesLine();
+        #
+        #        recordInsertListCustInvoicePackingSlipMatch.insertDatabase();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #endPost
+        #/// <summary>
+        #/// Ends the posting.
+        #/// </summary>
+        #protected void endPost()
+        #{
+        #
+        #    if (projInvoiceJour.CashDiscCode && TaxParameters::canApplyCashDiscOnInvoice_ES())
+        #    {
+        #        this.createCashDisc();
+        #    }
+        #
+        #    this.createPaymentSched();
+        #
+        #    this.createPayment();
+        #
+        #    //<GMX>
+        #    if (!this.isProforma() && (EInvoiceParameters_MX::isElectronicInvoiceEnabled() || EInvoiceCFDIParameters_MX::isElectronicInvoiceEnabled()))
+        #    {
+        #        this.insertEInvoice_MX(numberSeq.parmNumberSequenceId());
+        #    }
+        #    //</GMX>
+        #
+        #    // <GCN>
+        #    if (CustParameters::isTaxIntegrationSystem_CN())
+        #    {
+        #        this.createExportDocument_CN();
+        #    }
+        #    // </GCN>
+        #
+        #}
+      ENDSOURCE
+      SOURCE #endUpdate
+        #/// <summary>
+        #/// Ends the update of the selected records.
+        #/// </summary>
+        #/// <remarks>
+        #/// The <c>endUpdate</c> method in the derived classes contains the code to end the posting of the
+        #/// selected records that are posted by the derived <c>FormLetter</c> class. For example the
+        #/// <c>endUpdate</c> method in the <c>SalesFormLetter</c> class ends the update for the selected sales
+        #/// orders. The <c>endUpdate</c> method is added to the <c>FormLetter</c> class so that you can run the
+        #/// <c>endUpdate</c> method when you post in batch. The <c>endUpdate</c> method is called from the
+        #/// <c>run</c> method in the abstract classes that are derived from the <c>FormLetter</c> class, and
+        #/// from the <c>run</c> method in the <c>FormLetterEndMultiThread</c> class.
+        #/// </remarks>
+        #void endUpdate()
+        #{
+        #    this.accrueJournal();
+        #
+        #    TradeBLWIFormCodes::initClassFromProj(projInvoiceJour, TradeBLWITypeOfForm::ProjInvoiceJour,
+        #                                            TradeBLWITypeOfForm::InvoiceProject);
+        #
+        #    super();
+        #
+        #    // <GBR>
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        this.postEndPostBR();
+        #    }
+        #    // </GBR>
+        #}
+      ENDSOURCE
+      SOURCE #exchRateSet
+        #private void exchRateSet()
+        #{
+        #    if (ProjInvoiceCurrency::exist(projInvoiceJour.ProjInvoiceProjId,projInvoiceJour.CurrencyId))
+        #    {
+        #        fixedExchRate = true;
+        #    }
+        #    else
+        #    {
+        #        fixedExchRate = false;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #findProjectInvoicePaymTerm
+        #/// <summary>
+        #/// Gets the <c>PaymTerm</c> record for the project.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>PaymTerm</c> record; otherwise an empty record.
+        #/// </returns>
+        #protected PaymTerm findProjectInvoicePaymTerm()
+        #{
+        #    if (!projectInvoicePaymTerm)
+        #    {
+        #        projectInvoicePaymTerm = PaymTerm::find(
+        #            ProjFundingSource::find(
+        #                ProjFundingSource::getCustomerDefaultFundingSource(
+        #                    projInvoiceTable.ProjInvoiceProjId,
+        #                    projInvoiceParmtable.InvoiceAccount
+        #                )
+        #            ).PaymentTermsId
+        #        );
+        #    }
+        #
+        #    return projectInvoicePaymTerm;
+        #}
+      ENDSOURCE
+      SOURCE #formletterType
+        #protected FormletterType formletterType()
+        #{
+        #    return FormletterType::Project;
+        #}
+      ENDSOURCE
+      SOURCE #getVoucher
+        #/// <summary>
+        #/// Gets a voucher number.
+        #/// </summary>
+        #/// <returns>
+        #/// A voucher number.
+        #/// </returns>
+        #protected Num getVoucher()
+        #{
+        #    return projInvoiceJour.LedgerVoucher;
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #/// <summary>
+        #/// Initializes the class.
+        #/// </summary>
+        #public void init()
+        #{
+        #    projProposalJour = ProjProposalJour::find(projInvoiceJour.ProposalId,true);
+        #    projInvoiceTable = ProjInvoiceTable::find(projInvoiceJour.ProjInvoiceProjId);
+        #
+        #    if (this.parmTotals())
+        #    {
+        #        projProposalTotals = this.parmTotals() as ProjProposalTotals;
+        #    }
+        #    else
+        #    {
+        #    projProposalTotals = new ProjProposalTotals(projProposalJour, projInvoiceJour.ParmId);
+        #    projProposalTotals.calc();
+        #    }
+        #
+        #    this.tax(projProposalTotals.tax());
+        #
+        #    // <GIN>
+        #    if (TaxWithholdParameters_IN::checkTaxParameters())
+        #    {
+        #        this.taxWithholdCalculation_IN(projProposalTotals.taxWithholdCalculation_IN());
+        #    }
+        #    // </GIN>
+        #
+        #    creditNote = this.creditNote();
+        #
+        #    super();
+        #
+        #    transactionTxt = this.initTransactionTxtProjProposalJour(creditNote  ? LedgerTransTxt::ProjectCreditNoteLedger : LedgerTransTxt::ProjectInvoiceLedger);
+        #
+        #
+        #    recordListProjProposalCost      = projProposalTotals.recordListProjProposalcost();
+        #    recordListProjProposalEmpl      = projProposalTotals.recordListProjProposalEmpl();
+        #    recordListProjProposalRevenue   = projProposalTotals.recordListProjProposalRevenue();
+        #    recordListProjProposalItem      = projProposalTotals.recordListProjProposalItem_Project();
+        #    recordListProjProposalOnAcc     = projProposalTotals.recordListProjProposalOnAcc();
+        #
+        #    recordInsertListSpecTrans = new RecordInsertList(tableNum(SpecTrans));
+        #
+        #    this.createOnAccountCreditNote();
+        #
+        #    taxParameters = TaxParameters::find();
+        #}
+      ENDSOURCE
+      SOURCE #initMarkup
+        #/// <summary>
+        #/// Initializes the <c>Markup</c> object.
+        #/// </summary>
+        #protected void initMarkup()
+        #{
+        #    markup = new Markup(projInvoiceJour.CurrencyId);
+        #    markup.parmExchRate(this.markUpfixedExchRate(), this.markUpFixedExchRateSecondary(), this.markUpFixedEuroTriangulation());
+        #    // <GEERU>
+        #    markup.transDate(projInvoiceParmTable.InvoiceDate);
+        #    // </GEERU>
+        #}
+      ENDSOURCE
+      SOURCE #initProposalUpdate
+        #private void initProposalUpdate()
+        #{
+        #    projProposalJour.InvoiceDate        = projInvoiceJour.InvoiceDate;
+        #    projProposalJour.ProjInvoiceId      = projInvoiceJour.ProjInvoiceId;
+        #    projProposalJour.ExchRate           = projInvoiceJour.ExchRate;
+        #    projProposalJour.ExchrateSecondary  = projInvoiceJour.ExchrateSecondary;
+        #    projProposalJour.Triangulation      = projInvoiceJour.Triangulation;
+        #
+        #    projProposalJour.update();
+        #
+        #    // <GEEU>
+        #    if (TaxParameters::isBankExchRateEnabled_W() &&
+        #        projInvoiceJour.CurrencyId != Ledger::accountingCurrency())
+        #    {
+        #        SalesTaxExchangeRateHelper::changeSourceRecord(projProposalJour.TableId, projProposalJour.RecId, projInvoiceJour.TableId, projInvoiceJour.RecId);
+        #    }
+        #    // </GEEU>
+        #}
+      ENDSOURCE
+      SOURCE #initTransactionTxt
+        #/// <summary>
+        #/// Initializes the <c>TransactionTxt</c> object.
+        #/// </summary>
+        #/// <param name="_ledgerTransTxt">
+        #/// A ledger transaction text.
+        #/// </param>
+        #/// <returns>
+        #/// An instance of the <c>TransactionTxt</c> object.
+        #/// </returns>
+        #protected TransactionTxt initTransactionTxt(LedgerTransTxt _ledgerTransTxt)
+        #{
+        #    transactionTxt = new TransactionTxt();
+        #
+        #    transactionTxt.setType          (_ledgerTransTxt);
+        #    transactionTxt.setLanguage      (projInvoiceJour.LanguageId);
+        #    transactionTxt.setVoucher       (voucher);
+        #    transactionTxt.setFormLetter    (projInvoiceJour.ProjInvoiceId);
+        #    transactionTxt.setKey1          (projInvoiceJour.ProjInvoiceProjId);
+        #    transactionTxt.setKey2          (projInvoiceJour.InvoiceAccount);
+        #    transactionTxt.setKey3          (CustTable::groupId(projInvoiceJour.InvoiceAccount));
+        #
+        #    return transactionTxt;
+        #}
+      ENDSOURCE
+      SOURCE #initTransactionTxtProjProposalJour
+        #protected TransactionTxt initTransactionTxtProjProposalJour(LedgerTransTxt _ledgerTransTxt)
+        #{
+        #    transactionTxt = new TransactionTxt();
+        #    transactionTxt = new TransactionTxt();
+        #
+        #    transactionTxt.setType          (_ledgerTransTxt);
+        #    transactionTxt.setLanguage      (projProposalJour.LanguageId);
+        #    transactionTxt.setVoucher       (projProposalJour.ProposalId);
+        #    transactionTxt.setFormLetter    (projProposalJour.ProjInvoiceId);
+        #    transactionTxt.setKey1          (projProposalJour.ProjInvoiceProjId);
+        #    transactionTxt.setKey2          (projProposalJour.InvoiceAccount);
+        #    transactionTxt.setKey3          (CustTable::groupId(projProposalJour.InvoiceAccount));
+        #
+        #    return transactionTxt;
+        #}
+      ENDSOURCE
+      SOURCE #insertCustomerRetention
+        #public void insertCustomerRetention()
+        #{
+        #    PSACustomerInvoiceRetain    psaCustomerInvoiceRetain;
+        #    PSAProjProposalProj         psaProjProposalProj;
+        #
+        #    while select psaProjProposalProj
+        #        where psaProjProposalProj.ProjProposalId == projInvoiceJour.ProposalId
+        #    {
+        #        psaCustomerInvoiceRetain.clear();
+        #        psaCustomerInvoiceRetain.InvoicedNow        = psaProjProposalProj.InvoicedNow + psaProjProposalProj.calcTotalIndirectComponentInvoice(psaProjProposalProj);
+        #        psaCustomerInvoiceRetain.ProjId             = psaProjProposalProj.ProjId;
+        #        psaCustomerInvoiceRetain.ProjProposalId     = psaProjProposalProj.ProjProposalId;
+        #        psaCustomerInvoiceRetain.ContractLineNum    = psaProjProposalProj.ContractLineNum;
+        #        psaCustomerInvoiceRetain.FundingSource      = psaProjProposalProj.FundingSource;
+        #        psaCustomerInvoiceRetain.RetainedAmount     = psaProjProposalProj.RetainedNow;
+        #        psaCustomerInvoiceRetain.ReleasedAmount     = psaProjProposalProj.ReleasedAmount;
+        #        psaCustomerInvoiceRetain.ProjInvoiceId      = projInvoiceJour.ProjInvoiceId;
+        #        psaCustomerInvoiceRetain.ProjInvoiceDate    = projInvoiceJour.InvoiceDate;
+        #        psaCustomerInvoiceRetain.insert();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insertEInvoice_MX
+        #/// <summary>
+        #/// Creates the electronic invoice information
+        #/// </summary>
+        #/// <param name="_numberSequenceTable">
+        #/// The <c>NumberSequenceTable</c> table information that is related to this invoice.
+        #/// </param>
+        #protected void insertEInvoice_MX(RefRecId   _numberSequenceTable)
+        #{
+        #    EInvoicePost_MX   eInvoicePost;
+        #
+        #    eInvoicePost = EInvoicePost_MX::construct(projInvoiceJour, _numberSequenceTable);
+        #
+        #    eInvoicePost.createElectronicInvoiceJour();
+        #
+        #    if (this.parmSendByMail_MX())
+        #    {
+        #        eInvoicePost.createXMLFileAndPopulateSysMailTable();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insertProforma
+        #protected void insertProforma()
+        #{
+        #    ProjInvoiceRevenue          projInvoiceRevenue;
+        #    ProjInvoiceRevenueDetail    projInvoiceRevenueDetail;
+        #    ProjProposalRevenue         projProposalRevenue;
+        #    ProjProposalRevenueDetail   projProposalRevenueDetail;
+        #    ProjRevenueTransSale        projRevenueTransSale;
+        #
+        #    ProjInvoiceOnAcc            projInvoiceOnAcc;
+        #    ProjInvoiceOnAccDetail      projInvoiceOnAccDetail;
+        #    ProjProposalOnAcc           projProposalOnAcc;
+        #    ProjProposalOnAccDetail     projProposalOnAccDetail;
+        #    ProjOnAccTransSale          projOnAccTransSale;
+        #
+        #    ProjInvoiceEmpl             projInvoiceEmpl;
+        #    ProjInvoiceEmplDetail       projInvoiceEmplDetail;
+        #    ProjProposalEmpl            projProposalEmpl;
+        #    ProjProposalEmplDetail      projProposalEmplDetail;
+        #    ProjEmplTransSale           projEmplTransSale;
+        #
+        #    ProjInvoiceCost             projInvoiceCost;
+        #    ProjInvoiceCostDetail       projInvoiceCostDetail;
+        #    ProjProposalCost            projProposalCost;
+        #    ProjProposalCostDetail      projProposalCostDetail;
+        #    ProjCostTransSale           projCostTransSale;
+        #
+        #    ProjInvoiceItem             projInvoiceItem;
+        #    ProjInvoiceItemDetail       projInvoiceItemDetail;
+        #    ProjProposalItem            projProposalItem;
+        #    ProjProposalItemDetail      projProposalItemDetail;
+        #
+        #    SalesTable                  salesTable;
+        #
+        #    // <GEECZ>
+        #    boolean                     countryRegion_CZ = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoCZ]);
+        #    // </GEECZ>
+        #
+        #    projInvoiceTable = projProposalJour.projInvoiceTable();
+        #
+        #    // Description: Number and voucher must be initialized to be assigned to fields in a record in ProjInvoiceJour
+        #    //              Else : record in ProjInvoiceJour wouldn't be unique because number and voucher would be blank
+        #
+        #    // numer should not be assigned if invoice is not posted
+        #    //  if(!this.proforma())
+        #
+        #    if (!this.isProforma() && isConfigurationkeyEnabled(configurationkeynum(Project3)))
+        #    {
+        #        numberSeq = this.allocateVoucher();
+        #        voucher   =  this.getVoucher();
+        #    }
+        #
+        #    this.exchRateSet();
+        #
+        #    while select projProposalEmpl where projProposalEmpl.ProposalId == projProposalJour.ProposalId
+        #    {
+        #        projInvoiceEmpl                 = ProjInvoiceEmpl::initInvoiceFromProposale(projProposalEmpl);
+        #        projInvoiceEmpl.ProjInvoiceId   = projInvoiceJour.ProjInvoiceId;
+        #        projInvoiceEmpl.InvoiceDate     = projInvoiceJour.InvoiceDate;
+        #        projInvoiceEmpl.insert();
+        #
+        #        Docu::copy(projProposalEmpl, projInvoiceEmpl);
+        #
+        #        while select projProposalEmplDetail
+        #            where projProposalEmplDetail.ProposalRefRecId == projProposalEmpl.RecId
+        #                join projEmplTransSale
+        #                    where projEmplTransSale.RecId == projProposalEmplDetail.SaleRefRecId
+        #        {
+        #            projInvoiceEmplDetail.clear();
+        #            projInvoiceEmplDetail = ProjInvoiceEmplDetail::initInvoiceFromProposale(projProposalEmpl, projProposalEmplDetail, projEmplTransSale);
+        #            projInvoiceEmplDetail.InvoiceRefRecId = projInvoiceEmpl.RecId;
+        #            projInvoiceEmplDetail.insert();
+        #
+        #            // <GEECZ>
+        #            if (countryRegion_CZ
+        #                &&  projEmplTransSale.TransStatus == ProjTransStatus::CreditnoteProposal)
+        #            {
+        #                this.projInvoiceEmplUpdate_CZ(projEmplTransSale.RecId);
+        #            }
+        #            // </GEECZ>
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projInvoiceEmpl.TransDate));
+        #        }
+        #    }
+        #
+        #    while select projProposalCost where projProposalCost.ProposalId == projProposalJour.ProposalId
+        #    {
+        #        projInvoiceCost                 = ProjInvoiceCost::initInvoiceFromProposal(projProposalCost);
+        #        projInvoiceCost.ProjInvoiceId   = projInvoiceJour.ProjInvoiceId;
+        #        projInvoiceCost.InvoiceDate     = projInvoiceJour.InvoiceDate;
+        #        projInvoiceCost.insert();
+        #
+        #        Docu::copy(projProposalCost, projInvoiceCost);
+        #
+        #        while select projProposalCostDetail
+        #            where projProposalCostDetail.ProposalRefRecId == projProposalCost.RecId
+        #                join projCostTransSale
+        #                    where projCostTransSale.RecId == projProposalCostDetail.SaleRefRecId
+        #        {
+        #            projInvoiceCostDetail.clear();
+        #            projInvoiceCostDetail = ProjInvoiceCostDetail::initInvoiceFromProposal(projProposalCost, projProposalCostDetail, projCostTransSale);
+        #            projInvoiceCostDetail.InvoiceRefRecId = projInvoiceCost.RecId;
+        #            projInvoiceCostDetail.insert();
+        #
+        #            // <GEECZ>
+        #            if (countryRegion_CZ
+        #                &&  projCostTransSale.TransStatus == ProjTransStatus::CreditnoteProposal)
+        #            {
+        #                this.projInvoiceCostUpdate_CZ(projCostTransSale.RecId);
+        #            }
+        #            // </GEECZ>
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projInvoiceCost.TransDate));
+        #        }
+        #    }
+        #
+        #    while select projProposalOnAcc where projProposalOnAcc.ProposalId == projProposalJour.ProposalId
+        #    {
+        #        projInvoiceOnAcc                = ProjInvoiceOnAcc::initInvoiceFromProposale(projProposalOnAcc);
+        #        projInvoiceOnAcc.ProjInvoiceId  = projInvoiceJour.ProjInvoiceId;
+        #        projInvoiceOnAcc.InvoiceDate    = projInvoiceJour.InvoiceDate;
+        #        projInvoiceOnAcc.insert();
+        #
+        #        Docu::copy(projProposalOnAcc, projInvoiceOnAcc);
+        #
+        #        while select projProposalOnAccDetail
+        #            where projProposalOnAccDetail.ProposalRefRecId == projProposalOnAcc.RecId
+        #                join projOnAccTransSale
+        #                    where projOnAccTransSale.RecId == projProposalOnAccDetail.SaleRefRecId
+        #        {
+        #            projInvoiceOnAccDetail.clear();
+        #            projInvoiceOnAccDetail = ProjInvoiceOnAccDetail::initInvoiceFromProposale(projProposalOnAcc, projProposalOnAccDetail, projOnAccTransSale);
+        #            projInvoiceOnAccDetail.InvoiceRefRecId = projInvoiceOnAcc.RecId;
+        #            projInvoiceOnAccDetail.insert();
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projInvoiceOnAcc.TransDate));
+        #        }
+        #
+        #        // <GEECZ>
+        #        if (countryRegion_CZ
+        #            &&  projOnAccTransSale.TransStatus == ProjTransStatus::CreditnoteProposal)
+        #        {
+        #            this.projInvoiceOnAccUpdate_CZ(projOnAccTransSale.RecId);
+        #        }
+        #        // </GEECZ>
+        #    }
+        #
+        #    while select projProposalRevenue where projProposalRevenue.ProposalId == projProposalJour.ProposalId
+        #    {
+        #        projInvoiceRevenue                  = ProjInvoiceRevenue::initInvoiceFromProposale(projProposalRevenue);
+        #        projInvoiceRevenue.ProjInvoiceId    = projInvoiceJour.ProjInvoiceId;
+        #        projInvoiceRevenue.InvoiceDate      = projInvoiceJour.InvoiceDate;
+        #        projInvoiceRevenue.insert();
+        #
+        #        Docu::copy(projProposalRevenue, projInvoiceRevenue);
+        #
+        #        while select projProposalRevenueDetail
+        #            where projProposalRevenueDetail.ProposalRefRecId == projProposalRevenue.RecId
+        #                join projRevenueTransSale
+        #                    where projRevenueTransSale.RecId == projProposalRevenueDetail.SaleRefRecId
+        #        {
+        #            projInvoiceRevenueDetail.clear();
+        #            projInvoiceRevenueDetail = ProjInvoiceRevenueDetail::initInvoiceFromProposale(projProposalRevenue, projProposalRevenueDetail, projRevenueTransSale);
+        #            projInvoiceRevenueDetail.InvoiceRefRecId = projInvoiceRevenue.RecId;
+        #            projInvoiceRevenueDetail.insert();
+        #
+        #            // <GEECZ>
+        #            if (countryRegion_CZ
+        #                &&  projRevenueTransSale.TransStatus == ProjTransStatus::CreditnoteProposal)
+        #            {
+        #                this.projInvoiceRevenueUpdate_CZ(projRevenueTransSale.RecId);
+        #            }
+        #            // </GEECZ>
+        #        }
+        #
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #        {
+        #            this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projInvoiceRevenue.TransDate));
+        #        }
+        #    }
+        #
+        #    while select projProposalItem where projProposalItem.ProposalId == projProposalJour.ProposalId
+        #    {
+        #        switch (projProposalItem.ItemType)
+        #        {
+        #            case ProjItemType::Project:
+        #                projInvoiceItem                 = ProjInvoiceItem::initInvoice_Project(projProposalItem);
+        #                break;
+        #
+        #            case ProjItemType::InventJournal:
+        #                projInvoiceItem                 = ProjInvoiceItem::initInvoice_Project(projProposalItem);
+        #
+        #                if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #                {
+        #                    this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projInvoiceItem.TransDate,
+        #                                                                            null,
+        #                                                                            '',
+        #                                                                            PaymDueDateLimit_ES::getCurrentValues(InventItemGroup::find(
+        #                                                                                InventItemGroupItem::findByItemIdLegalEntity(
+        #                                                                                        projInvoiceItem.ItemId).ItemGroupId).DueDateLimitGroupId_ES)));
+        #                }
+        #                break;
+        #
+        #            case ProjItemType::PurchOrder:
+        #                projInvoiceItem                 = ProjInvoiceItem::initInvoice_Project(projProposalItem);
+        #
+        #                if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #                {
+        #                    this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(projInvoiceItem.TransDate,
+        #                                                                null,
+        #                                                                '',
+        #                                                                PaymDueDateLimit_ES::getCurrentValues(
+        #                                                                InventItemGroup::find(InventItemGroupItem::findByItemIdLegalEntity(
+        #                                                                projInvoiceItem.ItemId).ItemGroupId).DueDateLimitGroupId_ES)));
+        #                }
+        #                break;
+        #
+        #            case ProjItemType::VendorInvoice:
+        #                projInvoiceItem                 = ProjInvoiceItem::initInvoice_Project(projProposalItem);
+        #                break;
+        #
+        #            case ProjItemType::SalesOrder:
+        #                projInvoiceItem                 = ProjInvoiceItem::initInvoice_SalesOrder(projProposalItem);
+        #
+        #                if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoES]))
+        #                {
+        #                   salesTable = SalesTable::find(projInvoiceItem.SalesId);
+        #
+        #                   this.updateDueDate_ES(this.calculateDueDateFromDeliveryDate_ES(salesTable.ReceiptDateConfirmed,
+        #                                                                PaymTerm::find(salesTable.Payment),
+        #                                                                salesTable.paymDayId(),
+        #                                                                PaymDueDateLimit_ES::getCurrentValues(
+        #                                                                InventItemGroup::find(
+        #                                                                InventItemGroupItem::findByItemIdLegalEntity(projInvoiceItem.ItemId).ItemGroupId).DueDateLimitGroupId_ES)));
+        #                }
+        #                break;
+        #
+        #            case ProjItemType::Production:
+        #                projInvoiceItem                 = ProjInvoiceItem::initInvoice_Project(projProposalItem);
+        #                break;
+        #
+        #            case ProjItemType::ProdLine:
+        #                projInvoiceItem                 = ProjInvoiceItem::initInvoice_Project(projProposalItem);
+        #                break;
+        #
+        #            case ProjItemType::BeginningBalance:
+        #                projInvoiceItem                 = ProjInvoiceItem::initInvoice_Project(projProposalItem);
+        #                break;
+        #        }
+        #
+        #        projInvoiceItem.ProjInvoiceId   = projInvoiceJour.ProjInvoiceId;
+        #        projInvoiceItem.InvoiceDate     = projInvoiceJour.InvoiceDate;
+        #        projInvoiceItem.insert();
+        #
+        #        Docu::copy(projProposalItem, projInvoiceItem);
+        #
+        #        while select projProposalItemDetail
+        #            where projProposalItemDetail.ProposalRefRecId == projProposalItem.RecId
+        #        {
+        #            projInvoiceItemDetail.clear();
+        #            switch (projProposalItem.ItemType)
+        #            {
+        #                case ProjItemType::Project:
+        #                    projInvoiceItemDetail                 = ProjInvoiceItemDetail::initInvoice_Project(projProposalItem, projProposalItemDetail, projProposalItemDetail.projItemTransSale());
+        #                    break;
+        #
+        #                case ProjItemType::InventJournal:
+        #                    projInvoiceItemDetail                 = ProjInvoiceItemDetail::initInvoice_Project(projProposalItem, projProposalItemDetail, projProposalItemDetail.projItemTransSale());
+        #                    break;
+        #
+        #                case ProjItemType::PurchOrder:
+        #                    projInvoiceItemDetail                 = ProjInvoiceItemDetail::initInvoice_Project(projProposalItem, projProposalItemDetail, projProposalItemDetail.projItemTransSale());
+        #                    break;
+        #
+        #                case ProjItemType::VendorInvoice:
+        #                    projInvoiceItemDetail                 = ProjInvoiceItemDetail::initInvoice_Project(projProposalItem, projProposalItemDetail, projProposalItemDetail.projItemTransSale());
+        #                    break;
+        #
+        #                case ProjItemType::SalesOrder:
+        #                    projInvoiceItemDetail                 = ProjInvoiceItemDetail::initInvoice_SalesOrder(projProposalItem, projProposalItemDetail);
+        #                    break;
+        #
+        #                case ProjItemType::Production:
+        #                    projInvoiceItemDetail                 = ProjInvoiceItemDetail::initInvoice_Project(projProposalItem, projProposalItemDetail, projProposalItemDetail.projItemTransSale());
+        #                    break;
+        #
+        #                case ProjItemType::ProdLine:
+        #                    projInvoiceItemDetail                 = ProjInvoiceItemDetail::initInvoice_Project(projProposalItem, projProposalItemDetail, projProposalItemDetail.projItemTransSale());
+        #                    break;
+        #
+        #                case ProjItemType::BeginningBalance:
+        #                    projInvoiceItemDetail                 = ProjInvoiceItemDetail::initInvoice_Project(projProposalItem, projProposalItemDetail, projProposalItemDetail.projItemTransSale());
+        #                    break;
+        #            }
+        #            projInvoiceItemDetail.InvoiceRefRecId = projInvoiceItem.RecId;
+        #            projInvoiceItemDetail.insert();
+        #
+        #            // <GEECZ>
+        #            if (countryRegion_CZ
+        #                &&  projProposalItemDetail.projItemTransSale().TransStatus  == ProjTransStatus::CreditnoteProposal)
+        #            {
+        #                this.projInvoiceItemUpdate_CZ(projProposalItemDetail.SaleRefRecId);
+        #            }
+        #            // </GEECZ>
+        #        }
+        #    }
+        #
+        #    // This line updates the invoice lines with the tax code and tax amount but does not post the tax since it is only a proforma invoice.
+        #    this.postTax(false);
+        #}
+      ENDSOURCE
+      SOURCE #insertRecordList
+        #/// <summary>
+        #/// Inserts records in the record lists into the database.
+        #/// </summary>
+        #protected void insertRecordList()
+        #{
+        #    super();
+        #
+        #    if (!proforma)
+        #    {
+        #        recordInsertListSpecTrans.insertDatabase();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #journalLineTableId
+        #/// <summary>
+        #/// Gets the table ID for the journal line table.
+        #/// </summary>
+        #/// <returns>
+        #/// A table ID.
+        #/// </returns>
+        #protected TableId journalLineTableId()
+        #{
+        #    return 0;
+        #}
+      ENDSOURCE
+      SOURCE #markUpFixedEuroTriangulation
+        #protected UnknownNoYes markUpFixedEuroTriangulation()
+        #{
+        #    UnknownNoYes    retValue = UnknownNoYes::Unknown;
+        #
+        #    if (ProjInvoiceCurrency::exist(projProposalJour.ProjInvoiceProjId,projProposalJour.CurrencyId))
+        #    {
+        #        retValue = UnknownNoYes::No;
+        #    }
+        #
+        #    return retValue;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #markUpfixedExchRate
+        #protected CustExchRate markUpfixedExchRate()
+        #{
+        #    CustExchRate    retValue = 0;
+        #
+        #    if (ProjInvoiceCurrency::exist(projProposalJour.ProjInvoiceProjId,projProposalJour.CurrencyId))
+        #    {
+        #        retValue = ProjInvoiceCurrency::find(projProposalJour.ProjInvoiceProjId,projProposalJour.CurrencyId).ExchRate;
+        #    }
+        #
+        #    return retValue;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #markUpFixedExchRateSecondary
+        #protected ExchrateSecondary markUpFixedExchRateSecondary()
+        #{
+        #    return 0;
+        #}
+      ENDSOURCE
+      SOURCE #matchInvoicePackingSlip
+        #protected void matchInvoicePackingSlip(ProjProposalItem _projProposalItem, ProjInvoiceItem _projInvoiceItem)
+        #{
+        #    TradeNotStockedPostCheck        notStockedPostCheck;
+        #    ProjItemTrans                   projItemTrans;
+        #    ProjItemTrans                   projItemTransTop;
+        #    SalesLine                       salesLine;
+        #    SalesTable                      salesTable;
+        #    CustPackingSlipTrans            custPackingSlipTrans;
+        #    CustPackingSlipJour             custPackingSlipJour;
+        #    SalesParmLine                   salesParmLine;
+        #    SalesParmSubLine                salesParmSubLine;
+        #    SalesInvoicePostNotStockedProj  salesInvoicePostNotStockedProj;
+        #    SalesLineType                   salesLineType;
+        #    RefRecId                        sourceDocumentHeaderRecId;
+        #    RefRecId                        sourceDocumentLineRecId;
+        #    SourceDocumentHeader            sourceDocumentHeader;
+        #    SourceDocumentLine              sourceDocumentLine;
+        #    SalesQuantity                   salesQuantity;
+        #
+        #    TradeNotStockedPostCheck createNotStockedPostCheck()
+        #    {
+        #        return TradeNotStockedPostCheck::newSalesLine(salesLine, projItemTransTop.Qty, salesParmLine.RemainAfter, salesParmLine.RemainBefore);
+        #    }
+        #
+        #    boolean checkNotStockedLineBeforePosting(TradeNotStockedPostCheck _notStockedPostCheck)
+        #    {
+        #        return _notStockedPostCheck.checkUpdatePhysicalBeforePosting();
+        #    }
+        #
+        #    boolean checkNotStockedLineAfterPosting(TradeNotStockedPostCheck _notStockedPostCheck)
+        #    {
+        #        _notStockedPostCheck.parmQtyPhysicalToBeJournalUpdated(salesInvoicePostNotStockedProj.parmInvoiceUpdatedOnly());
+        #
+        #        return _notStockedPostCheck.checkUpdatePhysicalAfterPosting();
+        #    }
+        #
+        #    void updateInventory(SalesParmLine  _salesParmLine, RefRecId _sourceDocumentLineRecId)
+        #    {
+        #        List                    list;
+        #        Counter                 subLines;
+        #        ListEnumerator          le;
+        #        SalesQty                salesQtyLeft;
+        #        InventQty               inventQtyLeft;
+        #        SalesQty                deliverNow;
+        #        InventQty               inventNow;
+        #        CustPackingSlipTrans    localCustPackingSlipTrans;
+        #        SalesParmSubLine        localSalesParmSubLine;
+        #
+        #        list = SalesParmSubLine::buildSalesParmSubLineList(_salesParmLine.RecId);
+        #
+        #        subLines        = list.elements();
+        #        le              = list.getEnumerator();
+        #        salesQtyLeft    = _salesParmLine.DeliverNow;
+        #        inventQtyLeft   = _salesParmLine.InventNow;
+        #
+        #        while (le.moveNext())
+        #        {
+        #            localSalesParmSubLine = le.current();
+        #
+        #            if (subLines == 1)
+        #            {
+        #                deliverNow = salesQtyLeft;
+        #                inventNow  = inventQtyLeft;
+        #            }
+        #            else
+        #            {
+        #                deliverNow = localSalesParmSubLine.DeliverNow;
+        #                inventNow  = localSalesParmSubLine.InventNow;
+        #            }
+        #
+        #            subLines--;
+        #
+        #            localCustPackingSlipTrans = CustPackingSlipTrans::findRecId(localSalesParmSubLine.JournalRefRecId,true);
+        #            CustInvoicePackingSlipQuantityMatch::matchPackingSlipTransSourceDocumentLine(recordInsertListCustInvoicePackingSlipMatch, _sourceDocumentLineRecId, localCustPackingSlipTrans, deliverNow, inventNow);
+        #
+        #            salesQtyLeft  -= localSalesParmSubLine.DeliverNow;
+        #            inventQtyLeft -= localSalesParmSubLine.InventNow;
+        #        }
+        #    }
+        #
+        #    projItemTrans = _projProposalItem.projItemTrans();
+        #    if (projItemTrans.TransactionOrigin == ProjOrigin::ItemRequirement)
+        #    {
+        #        projItemTransTop = projItemTrans;
+        #        while (projItemTransTop.AdjRefTransId)
+        #        {
+        #            projItemTransTop = ProjItemTrans::find(projItemTransTop.AdjRefTransId);
+        #        }
+        #
+        #        salesLine = SalesLine::findInventTransId(projItemTransTop.InventTransId, true);
+        #
+        #        while select custPackingSlipTrans
+        #            where custPackingSlipTrans.InventTransId == salesLine.InventTransId &&
+        #                custPackingSlipTrans.FullyMatched  == NoYes::No
+        #            exists join custPackingSlipJour
+        #            where custPackingSlipJour.SalesId == custPackingSlipTrans.SalesId
+        #                && custPackingSlipJour.PackingSlipId == custPackingSlipTrans.PackingSlipId
+        #                && custPackingSlipJour.DeliveryDate == custPackingSlipTrans.DeliveryDate
+        #                && custPackingSlipJour.LedgerVoucher == projItemTransTop.VoucherPackingSlip
+        #        {
+        #            if (!salesParmLine)
+        #            {
+        #                salesParmLine.clear();
+        #                salesParmLine.InventTransId = _projProposalItem.InventTransId;
+        #
+        #                salesQuantity = SalesQuantity::construct(DocumentStatus::Invoice);
+        #                [salesParmLine.DeliverNow, salesParmLine.RemainBefore, salesParmLine.RemainAfter] =
+        #                    salesQuantity.qtySales(
+        #                                    salesLine,
+        #                                    SalesUpdate::PackingSlip,
+        #                                    projItemTransTop.Qty);
+        #
+        #                if (salesLine.isStocked())
+        #                {
+        #                    [salesParmLine.InventNow, salesParmLine.RemainBeforeInvent, salesParmLine.RemainAfterInvent] =
+        #                        salesQuantity.qtyInvent(
+        #                                        salesLine,
+        #                                        SalesUpdate::PackingSlip,
+        #                                        UnitOfMeasureConverter::convert(projItemTransTop.Qty,
+        #                                                                    UnitOfMeasure::unitOfMeasureIdBySymbol(projItemTransTop.SalesUnit),
+        #                                                                    UnitOfMeasure::unitOfMeasureIdBySymbol(InventTable::find(projItemTransTop.ItemId).inventUnitId()),
+        #                                                                    NoYes::Yes,
+        #                                                                    InventTable::itemProduct(projItemTransTop.ItemId)));
+        #                }
+        #
+        #                salesParmLine.doInsert();
+        #            }
+        #
+        #            salesParmSubLine.clear();
+        #            salesParmSubLine.LineRefRecId = salesParmLine.RecId;
+        #            salesParmSubLine.initFromCustPackingSlipTrans(custPackingSlipTrans);
+        #            salesParmSubLine.doInsert();
+        #        }
+        #
+        #        if (salesParmLine)
+        #        {
+        #            if (!salesLine.isStocked())
+        #            {
+        #                notStockedPostCheck = createNotStockedPostCheck();
+        #
+        #                if (notStockedPostCheck
+        #                    && !checkNotStockedLineBeforePosting(notStockedPostCheck))
+        #                {
+        #                    throw error("@SYS21533");
+        #                }
+        #
+        #                salesInvoicePostNotStockedProj = SalesInvoicePostNotStockedProj::construct(_projProposalItem,
+        #                                                                            salesLine,
+        #                                                                            salesParmLine,
+        #                                                                            recordInsertListCustInvoicePackingSlipMatch,
+        #                                                                            projInvoiceJour.SourceDocumentHeader);
+        #
+        #                salesInvoicePostNotStockedProj.postNotStocked();
+        #
+        #                if (notStockedPostCheck
+        #                    && !checkNotStockedLineAfterPosting(notStockedPostCheck))
+        #                {
+        #                    throw error("@SYS21533");
+        #                }
+        #
+        #                _projInvoiceItem.QtyPhysical = salesInvoicePostNotStockedProj.parmInvoiceUpdatedOnly();
+        #
+        #                salesLine.RemainSalesFinancial += salesInvoicePostNotStockedProj.parmInvoiceUpdatedOnly();
+        #                salesLine.RemainSalesFinancial -= salesInvoicePostNotStockedProj.parmUpdateNow();
+        #
+        #                sourceDocumentHeaderRecId = salesInvoicePostNotStockedProj.parmSourceDocumentHeaderRecId();
+        #                sourceDocumentLineRecId = salesInvoicePostNotStockedProj.parmSourceDocumentLineRecId();
+        #            }
+        #            else
+        #            {
+        #                sourceDocumentHeaderRecId = projInvoiceJour.SourceDocumentHeader;
+        #                if (!sourceDocumentHeaderRecId)
+        #                {
+        #                    sourceDocumentHeader = SourceDocumentHeader::insertSourceDocument(
+        #                                                                    tableNum(ProjInvoiceJour),
+        #                                                                    enumStr(SourceDocument_ProjectInvoice),
+        #                                                                    SourceDocument_ProjectInvoice::ProjectInvoice);
+        #
+        #                    sourceDocumentHeaderRecId = sourceDocumentHeader.RecId;
+        #                }
+        #
+        #                sourceDocumentLine = SourceDocumentLine::insertSourceDocumentLine(
+        #                                                            sourceDocumentHeaderRecId,
+        #                                                            tableNum(ProjInvoiceItem),
+        #                                                            enumStr(SourceDocumentLine_ProjectInvoice),
+        #                                                            SourceDocumentLine_ProjectInvoice::ProjectItemInvoiceLine,
+        #                                                            DateTimeUtil::date(
+        #                                                                DateTimeUtil::applyTimeZoneOffset(
+        #                                                                    sourceDocumentHeader.CreatedDateTime,
+        #                                                                    DateTimeUtil::getUserPreferredTimeZone())));
+        #
+        #                sourceDocumentLineRecId = sourceDocumentLine.RecId;
+        #
+        #                updateInventory(salesParmLine, sourceDocumentLineRecId);
+        #            }
+        #
+        #            if (!projInvoiceJour.SourceDocumentHeader && sourceDocumentHeaderRecId)
+        #            {
+        #                projInvoiceJour.SourceDocumentHeader = sourceDocumentHeaderRecId;
+        #                projInvoiceJour.doUpdate();
+        #            }
+        #
+        #            _projInvoiceItem.SourceDocumentLine = sourceDocumentLineRecId;
+        #            _projInvoiceItem.doUpdate();
+        #
+        #            salesLineType = salesLine.type();
+        #            salesLineType.updateSalesLine(null);
+        #            salesLine.doUpdate();
+        #
+        #            salesTable = salesLine.salesTable(true);
+        #            salesTable.updateDocumentStatus(DocumentStatus::Invoice);
+        #            salesTable.updateBackStatus();
+        #            salesTable.updateSalesType();
+        #
+        #            delete_from salesParmSubLine
+        #                where salesParmSubLine.JournalRefRecId == custPackingSlipTrans.RecId;
+        #
+        #            salesParmLine.doDelete();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #moveSpecTrans
+        #protected void moveSpecTrans(ProjInvoiceJour _projInvoiceJour)
+        #{
+        #    ProjTable   projTable;
+        #    SpecTrans   specTrans;
+        #
+        #    while select crossCompany TableId, RecId, DataAreaId from projTable
+        #        where projTable.ProjInvoiceProjId == _projInvoiceJour.ProjInvoiceProjId
+        #        join forupdate specTrans
+        #            where specTrans.SpecTableId == projTable.TableId &&
+        #                  specTrans.SpecRecId   == projTable.RecId &&
+        #                  specTrans.SpecCompany == projTable.DataAreaId
+        #    {
+        #        specTrans.SpecTableId   = _projInvoiceJour.TableId;
+        #        specTrans.SpecRecId     = _projInvoiceJour.RecId;
+        #        specTrans.SpecCompany   = _projInvoiceJour.company();
+        #        specTrans.update();
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmJournalTable
+        #public Common parmJournalTable(Common _journalTable = projInvoiceJour)
+        #{
+        #    projInvoiceJour = _journalTable as ProjInvoiceJour;
+        #
+        #    return projInvoiceJour;
+        #}
+      ENDSOURCE
+      SOURCE #parmParmTable
+        #public Common parmParmTable(Common _parmTable = projInvoiceParmTable)
+        #{
+        #    projInvoiceParmTable = _parmTable as ProjInvoiceParmTable;
+        #
+        #    return projInvoiceParmTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmStorno
+        #public boolean parmStorno(boolean _storno = false)
+        #{
+        #    boolean ret;
+        #    ProjFormLetter projFormLetter = this.parmFormletter() as ProjFormLetter;
+        #
+        #    ret = projFormLetter.storno() && LedgerParameters::find().TransactionReversalCorrection;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #postCustVend
+        #/// <summary>
+        #/// Performs customer and vendor related postings.
+        #/// </summary>
+        #protected void postCustVend()
+        #{
+        #    CustVoucherProject  projVoucher;
+        #    CustTrans           custTrans;
+        #    LedgerTransTxt      ledgerTransTxt;
+        #    CustTransRefType    refType;
+        #    SettlementType      setType;
+        #    // <GEECZ>
+        #    //AmountMST           amountMST;
+        #    // </GEECZ>
+        #
+        #    if (creditNote)
+        #    {
+        #        ledgerTransTxt = LedgerTransTxt::ProjectCreditNoteCust;
+        #    }
+        #    else
+        #    {
+        #        ledgerTransTxt = LedgerTransTxt::ProjectInvoiceCust;
+        #    }
+        #
+        #    this.moveSpecTrans(projInvoiceJour);
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+        #    {
+        #        setType = SettlementType::SelectedTransact;
+        #    }
+        #    else
+        #    {
+        #        setType = SpecTrans::getSpecTransCount(projInvoiceJour.DataAreaId, projInvoiceJour.TableId, projInvoiceJour.RecId)
+        #                                               ? SettlementType::SelectedTransact :
+        #                                                 CustParameters::find().AutoSettle == NoYes::Yes ?
+        #                                                 SettlementType::OpenTransact : SettlementType::None;
+        #    }
+        #    projVoucher = CustVendVoucher::constructProject(projInvoiceJour.InvoiceAccount,
+        #                                                    // < positive when withhold and negative when release split and combine AR accounts >
+        #                                                    projInvoiceJour.InvoiceAmount,
+        #                                                    projInvoiceJour.CurrencyId,
+        #                                                    ledgerTransTxt,
+        #                                                    projInvoiceJour.DefaultDimension,
+        #                                                    projInvoiceJour.PostingProfile,
+        #                                                    LedgerPostingType::CustBalance,
+        #                                                    projInvoiceJour.Payment,
+        #                                                    setType,
+        #                                                    HcmWorker::userId2Worker(curUserId()),
+        #                                                    NoYes::Yes,
+        #                                                    projInvoiceJour.ProjInvoiceId,
+        #                                                    projInvoiceJour.CashDiscDate,
+        #                                                    projInvoiceJour.CashDisc,
+        #                                                    projInvoiceJour.DueDate,
+        #                                                    projInvoiceJour,
+        #                                                    TypeOfCreditmaxCheck::None,
+        #                                                    projInvoiceJour.CashDiscCode,
+        #                                                    projInvoiceJour.OrderAccount);
+        #
+        #    // <GEECZ>
+        #    /*
+        #    amountMST = projProposalTotals.projAmountMST_CZ();
+        #    if(amountMST)
+        #    {
+        #        projVoucher.parmAmountMST(amountMST);
+        #    }
+        #    */
+        #    // </GEECZ>
+        #
+        #    // <GBR>
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        projVoucher.parmAmountCur(projProposalTotals.custTransAmount_BR());
+        #    }
+        #    // </GBR>
+        #
+        #    projVoucher.parmFixedExchRate(fixedExchRate);
+        #    projVoucher.parmExchRate(projInvoiceJour.ExchRate);
+        #    projVoucher.parmExchRateSecondary(projInvoiceJour.ExchrateSecondary);
+        #    projVoucher.setInvoiceJournal(projInvoiceJour);
+        #    projVoucher.parmBypassCreditCheck(projInvoiceJour.creditCardBypassCreditLimit());
+        #    projVoucher.parmFormLetter(projInvoiceJour.InvoiceAccount);
+        #    projVoucher.parmThirdPartyBankAccountId(CustTable::find(projInvoiceJour.OrderAccount).BankAccount);
+        #
+        #    if (projInvoiceJour.InvoiceAmount < 0)
+        #    {
+        #        refType = CustTransRefType::CreditNote;
+        #    }
+        #    else
+        #    {
+        #        refType = CustTransRefType::Invoice;
+        #    }
+        #
+        #    projVoucher.setTransRef(refType, projInvoiceJour.ProjInvoiceId);
+        #    projVoucher.parmDirectDebitMandateRecId(projInvoiceJour.DirectDebitMandate);
+        #
+        #    // <GIN>
+        #    if (TaxWithholdParameters_IN::checkTaxParameters())
+        #    {
+        #        projVoucher.parmTaxWithholdAmount_IN(projProposalTotals.parmTaxWithholdAmount_IN());
+        #    }
+        #    // </GIN>
+        #
+        #    projVoucher.post(ledgerVoucher, custTrans);
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAARRetainage)))
+        #    {
+        #        this.insertCustomerRetention();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postEndPostBR
+        #private void postEndPostBR()
+        #{
+        #    this.updateProjInvoiceTransTaxWithholdGroup();
+        #
+        #    this.postFiscalDocument_BR();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postFiscalDocument_BR
+        #private void postFiscalDocument_BR()
+        #{
+        #    FiscalDocumentPost_BR   fiscalDocumentPost;
+        #    ProjInvoiceJour         projInvoiceJourToCancel;
+        #
+        #    if (projProposalJour.InvoiceType == ProjInvoiceType::DebitNote_BR)
+        #    {
+        #        return;
+        #    }
+        #
+        #    if (!this.creditNote())
+        #    {
+        #        if(projInvoiceJour.isProforma())
+        #        {
+        #            fiscalDocumentPost = new FiscalDocumentPost_BR(
+        #                FiscalDocumentParmDataCreator_BR::fromProjectProFormaInvoice(projInvoiceJour, projProposalTotals, projInvoiceTable, projProposalJour, journalTmpTaxWorkTrans));
+        #        }
+        #        else
+        #        {
+        #            fiscalDocumentPost = new FiscalDocumentPost_BR(
+        #                FiscalDocumentParmDataCreator_BR::fromProjectInvoice(projInvoiceJour, projProposalTotals, projInvoiceTable, projProposalJour));
+        #        }
+        #
+        #        fiscalDocumentPost.run();
+        #    }
+        #    else
+        #    {
+        #        select  RecId,
+        #                LedgerVoucher,
+        #                InvoiceDate,
+        #                ReasonTableRef from projInvoiceJourToCancel
+        #            where projInvoiceJourToCancel.ProposalId == tmpInvoiceCancel.RefProposalId;
+        #
+        #        if (tmpInvoiceCancel.RecId)
+        #        {
+        #            FiscalDocumentPost_BR::cancelFiscalDocument(FiscalDocument_BR::findByRef(projInvoiceJourToCancel.TableId, projInvoiceJourToCancel.RecId),
+        #                                                        projInvoiceJour.LedgerVoucher,
+        #                                                        projInvoiceJourToCancel.InvoiceDate,
+        #                                                        '',
+        #                                                        ReasonTableRef::find(projInvoiceJourToCancel.ReasonTableRef).ReasonComment);
+        #
+        #            delete_from tmpInvoiceCancel
+        #                where projInvoiceJourToCancel.ProposalId == tmpInvoiceCancel.RefProposalId;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postMarkUpJour
+        #private void postMarkUpJour(SalesTable _salesTableMarkup)
+        #{
+        #    markup.postInvoice(1,
+        #                       projProposalTotals.orderBalance(_salesTableMarkup.RecId),
+        #                       _salesTableMarkup,
+        #                       ledgerVoucher,
+        #                       _salesTableMarkup.DefaultDimension,
+        #                       projInvoiceJour);
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupTable
+        #protected void postMarkupTable()
+        #{
+        #    QueryRun            queryRun;
+        #    SalesTable          salesTableMarkup;
+        #
+        #    queryRun = new QueryRun(projProposalJour.querySalesTable(false));
+        #
+        #    while (queryRun.next())
+        #    {
+        #        if (queryRun.changed(tableNum(SalesTable)))
+        #        {
+        #            salesTableMarkup = queryRun.get(tableNum(SalesTable));
+        #            if (salesTableMarkup)
+        #            {
+        #                this.postMarkUpJour(salesTableMarkup);
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #projAdjustBudget
+        #/// <summary>
+        #///    Adjusts the budget of the project.
+        #/// </summary>
+        #/// <returns>
+        #///    true if the  budget was adjusted; otherwise, false.
+        #/// </returns>
+        #private boolean projAdjustBudget()
+        #{
+        #    boolean isBudgetadjusted, isBudgetReversed = true;
+        #
+        #    if (projBudgetTransactionReverse)
+        #    {
+        #        projBudgetTransactionManager = ProjBudgetTransactionManager::newProjBudgetTransactionManager(projBudgetTransactionReverse);
+        #        isBudgetReversed = projBudgetTransactionManager.adjustBudget(ProjBudgetAdjustmentType::Decrement);
+        #    }
+        #
+        #    if (isBudgetReversed && projBudgetTransactionNormal)
+        #    {
+        #        projBudgetTransactionManager = ProjBudgetTransactionManager::newProjBudgetTransactionManager(projBudgetTransactionNormal);
+        #        isBudgetadjusted = projBudgetTransactionManager.adjustBudget(ProjBudgetAdjustmentType::Decrement);
+        #    }
+        #
+        #    return isBudgetadjusted;
+        #}
+      ENDSOURCE
+      SOURCE #projInvoiceCostUpdate_CZ
+        #private void projInvoiceCostUpdate_CZ(RefRecId _saleRefRecId)
+        #{
+        #    ProjInvoiceCostDetail     projInvoiceCostDetailOriginal;
+        #    ProjInvoiceCostDetail     projInvoiceCostDetailReverse;
+        #
+        #    ttsbegin;
+        #
+        #    select forupdate RefRecId from projInvoiceCostDetailOriginal
+        #        index hint SaleIdx
+        #        where  projInvoiceCostDetailOriginal.SaleRefRecId == _saleRefRecId
+        #           && !projInvoiceCostDetailOriginal.RefRecId;
+        #
+        #    select forupdate RefRecId from projInvoiceCostDetailReverse
+        #        index hint SaleIdx
+        #        where  projInvoiceCostDetailReverse.SaleRefRecId == _saleRefRecId
+        #           &&  projInvoiceCostDetailReverse.RecId != projInvoiceCostDetailOriginal.RecId
+        #           && !projInvoiceCostDetailReverse.RefRecId;
+        #
+        #    projInvoiceCostDetailReverse.RefRecId = projInvoiceCostDetailOriginal.RecId;
+        #
+        #    projInvoiceCostDetailOriginal.RefRecId = projInvoiceCostDetailReverse.RecId;
+        #
+        #    projInvoiceCostDetailReverse.update();
+        #    projInvoiceCostDetailOriginal.update();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #projInvoiceEmplUpdate_CZ
+        #private void projInvoiceEmplUpdate_CZ(RefRecId _saleRefRecId)
+        #{
+        #    ProjInvoiceEmplDetail     projInvoiceEmplDetailOriginal;
+        #    ProjInvoiceEmplDetail     projInvoiceEmplDetailReverse;
+        #
+        #    ttsbegin;
+        #
+        #    select forupdate RefRecId from projInvoiceEmplDetailOriginal
+        #        index hint SaleIdx
+        #        where  projInvoiceEmplDetailOriginal.SaleRefRecId == _saleRefRecId
+        #           && !projInvoiceEmplDetailOriginal.RefRecId;
+        #
+        #    select forupdate RefRecId from projInvoiceEmplDetailReverse
+        #        index hint SaleIdx
+        #        where  projInvoiceEmplDetailReverse.SaleRefRecId == _saleRefRecId
+        #           &&  projInvoiceEmplDetailReverse.RecId != projInvoiceEmplDetailOriginal.RecId
+        #           && !projInvoiceEmplDetailReverse.RefRecId;
+        #
+        #    projInvoiceEmplDetailReverse.RefRecId = projInvoiceEmplDetailOriginal.RecId;
+        #
+        #    projInvoiceEmplDetailOriginal.RefRecId = projInvoiceEmplDetailReverse.RecId;
+        #
+        #    projInvoiceEmplDetailReverse.update();
+        #    projInvoiceEmplDetailOriginal.update();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #projInvoiceItemUpdate_CZ
+        #private void projInvoiceItemUpdate_CZ(RefRecId _saleRefRecId)
+        #{
+        #    ProjInvoiceItemDetail       projInvoiceItemDetailOriginal;
+        #    ProjInvoiceItemDetail       projInvoiceItemDetailReverse;
+        #
+        #    ttsbegin;
+        #    select forupdate RefRecId from projInvoiceItemDetailOriginal
+        #        index hint SaleIdx
+        #        where  projInvoiceItemDetailOriginal.SaleRefRecId == _saleRefRecId
+        #           && !projInvoiceItemDetailOriginal.RefRecId;
+        #
+        #    select forupdate RefRecId from projInvoiceItemDetailReverse
+        #        index hint SaleIdx
+        #        where  projInvoiceItemDetailReverse.SaleRefRecId == _saleRefRecId
+        #           &&  projInvoiceItemDetailReverse.RecId != projInvoiceItemDetailOriginal.RecId
+        #           && !projInvoiceItemDetailReverse.RefRecId;
+        #
+        #    projInvoiceItemDetailReverse.RefRecId = projInvoiceItemDetailOriginal.RecId;
+        #
+        #    projInvoiceItemDetailOriginal.RefRecId = projInvoiceItemDetailReverse.RecId;
+        #
+        #    projInvoiceItemDetailReverse.update();
+        #    projInvoiceItemDetailOriginal.update();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #projInvoiceOnAccUpdate_CZ
+        #private void projInvoiceOnAccUpdate_CZ(RefRecId _saleRefRecId)
+        #{
+        #    ProjInvoiceOnAccDetail  projInvoiceOnAccDetailOriginal;
+        #    ProjInvoiceOnAccDetail  projInvoiceOnAccDetailReverse;
+        #
+        #    ttsbegin;
+        #
+        #    select forupdate RefRecId from projInvoiceOnAccDetailOriginal
+        #        index hint SaleIdx
+        #        where  projInvoiceOnAccDetailOriginal.SaleRefRecId == _saleRefRecId
+        #           && !projInvoiceOnAccDetailOriginal.RefRecId;
+        #
+        #    select forupdate RefRecId from projInvoiceOnAccDetailReverse
+        #        index hint SaleIdx
+        #        where  projInvoiceOnAccDetailReverse.SaleRefRecId == _saleRefRecId
+        #           &&  projInvoiceOnAccDetailReverse.RecId != projInvoiceOnAccDetailOriginal.RecId
+        #           && !projInvoiceOnAccDetailReverse.RefRecId;
+        #
+        #    projInvoiceOnAccDetailReverse.RefRecId = projInvoiceOnAccDetailOriginal.RecId;
+        #
+        #    projInvoiceOnAccDetailOriginal.RefRecId = projInvoiceOnAccDetailReverse.RecId;
+        #
+        #    projInvoiceOnAccDetailReverse.update();
+        #    projInvoiceOnAccDetailOriginal.update();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #projInvoiceRevenueUpdate_CZ
+        #private void projInvoiceRevenueUpdate_CZ(RefRecId _saleRefRecId)
+        #{
+        #    ProjInvoiceRevenueDetail     projInvoiceRevenueDetailOriginal;
+        #    ProjInvoiceRevenueDetail     projInvoiceRevenueDetailReverse;
+        #
+        #    ttsbegin;
+        #
+        #    select forupdate RefRecId from projInvoiceRevenueDetailOriginal
+        #        index hint SaleIdx
+        #        where  projInvoiceRevenueDetailOriginal.SaleRefRecId == _saleRefRecId
+        #           && !projInvoiceRevenueDetailOriginal.RefRecId;
+        #
+        #    select forupdate RefRecId from projInvoiceRevenueDetailReverse
+        #        index hint SaleIdx
+        #        where  projInvoiceRevenueDetailReverse.SaleRefRecId == _saleRefRecId
+        #           &&  projInvoiceRevenueDetailReverse.RecId != projInvoiceRevenueDetailOriginal.RecId
+        #           && !projInvoiceRevenueDetailReverse.RefRecId;
+        #
+        #    projInvoiceRevenueDetailReverse.RefRecId = projInvoiceRevenueDetailOriginal.RecId;
+        #
+        #    projInvoiceRevenueDetailOriginal.RefRecId = projInvoiceRevenueDetailReverse.RecId;
+        #
+        #    projInvoiceRevenueDetailReverse.update();
+        #    projInvoiceRevenueDetailOriginal.update();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #reverseProjBudgetTransaction
+        #private boolean reverseProjBudgetTransaction(ProjTransIdBase _projTransId)
+        #{
+        #    ProjBudgetReductionHistory  projBudgetReductionHistory;
+        #    boolean                     reverseTransaction = false;
+        #
+        #    projBudgetReductionHistory = ProjBudgetReductionHistory::findByProjTransId(_projTransId);
+        #
+        #    if (projBudgetReductionHistory && projBudgetReductionHistory.SalesAmountReduced > 0)
+        #    {
+        #        reverseTransaction = true;
+        #    }
+        #
+        #    return reverseTransaction;
+        #}
+      ENDSOURCE
+      SOURCE #reverseSubscriptionAccruals
+        #protected void reverseSubscriptionAccruals(
+        #    ProjProposalRevenue         projProposalRevenue,
+        #    ProjTransRevenueProposal    projTransRevenueProposal)
+        #{
+        #    SMAAccruePeriodLine     smaAccruePeriodLine;
+        #    FiscalCalendarPeriod    fiscalCalendarPeriod;
+        #    FiscalCalendarYear      fiscalCalendarYear;
+        #    RecId                   calendarRecId;
+        #    ProjRevenueTransId      projRevenueTransId  = projProposalRevenue.TransId;
+        #    List                    smaAccruePeriodLineList;
+        #    TransDate               smaAccruePeriodLinePostingDate;
+        #
+        #
+        #    // This function posts SMAAccruePeriodLines from _linesList using _postingDate.
+        #    void postLinesFromList(List _linesList, TransDate _postingDate)
+        #    {
+        #        SMAAccruePeriodLine     line;
+        #        ListEnumerator          linesListEnumerator = _linesList.getEnumerator();
+        #
+        #        this.smaInitVoucher(projRevenueTransId, _postingDate);
+        #        while (linesListEnumerator.moveNext())
+        #        {
+        #            line = linesListEnumerator.current();
+        #            ProjPost::newEnterSMAAccrued(line, ledgerVoucherSMA, true, line.PostingDate, false).postTrans();
+        #        }
+        #        ledgerVoucherSMA.end();
+        #    }
+        #
+        #
+        #
+        #    switch (SMAParametersSubscription::find().SubReverseAccruedOnCredit)
+        #    {
+        #        case  SMAReverseAccruedOnCredit::Manual :
+        #            if ((select count(RecId) from smaAccruePeriodLine
+        #                    where smaAccruePeriodLine.ProjRevenueTransId  == projRevenueTransId
+        #                       && smaAccruePeriodLine.PostingDate).RecId != 0)
+        #            {
+        #                throw error(strFmt("@SYS84341"));
+        #            }
+        #            break;
+        #
+        #        case SMAReverseAccruedOnCredit::PostingDate :
+        #            smaAccruePeriodLineList = new List(Types::Record);
+        #
+        #            smaAccruePeriodLinePostingDate = dateNull();
+        #
+        #            while select smaAccruePeriodLine
+        #                order by smaAccruePeriodLine.PostingDate
+        #                where smaAccruePeriodLine.ProjRevenueTransId  == projRevenueTransId
+        #                   && smaAccruePeriodLine.PostingDate         != dateNull()
+        #            {
+        #
+        #                calendarRecId = CompanyInfo::fiscalCalendarRecId();
+        #                fiscalCalendarYear = FiscalCalendarYear::findYearByCalendarDate(calendarRecId, smaAccruePeriodLine.Todate);
+        #
+        #                select firstonly fiscalCalendarPeriod
+        #                    where   fiscalCalendarPeriod.EndDate    >= smaAccruePeriodLine.Todate &&
+        #                            fiscalCalendarPeriod.StartDate  <= smaAccruePeriodLine.Todate &&
+        #                            fiscalCalendarPeriod.Type       == FiscalPeriodType::Operating &&
+        #                            fiscalCalendarPeriod.FiscalCalendarYear == fiscalCalendarYear.RecId;
+        #
+        #                if (fiscalCalendarPeriod.currentLedgerPeriodStatus() !=  FiscalPeriodStatus::Open)
+        #                {
+        #                    this.smaInitVoucher(projRevenueTransId,smaAccruePeriodLine.PostingDate);
+        #                    ProjPost::newEnterSMAAccrued(smaAccruePeriodLine, ledgerVoucherSMA, true,smaAccruePeriodLine.PostingDate,false).postTrans();
+        #                    ledgerVoucherSMA.end();
+        #                }
+        #                // If posting date is the same as previous line add it to list
+        #                // and process in a single voucher later on.
+        #                else if (smaAccruePeriodLine.PostingDate == smaAccruePeriodLinePostingDate)
+        #                {
+        #                    smaAccruePeriodLineList.addEnd(smaAccruePeriodLine);
+        #                }
+        #                // If the date is different then process already accumulated lines
+        #                // and add current line to new accumulation list.
+        #                else
+        #                {
+        #                    if (!smaAccruePeriodLineList.empty())
+        #                    {
+        #                        postLinesFromList(smaAccruePeriodLineList, smaAccruePeriodLinePostingDate);
+        #                        smaAccruePeriodLineList = new List(Types::Record);
+        #                    }
+        #
+        #                    smaAccruePeriodLineList.addEnd(smaAccruePeriodLine);
+        #                    smaAccruePeriodLinePostingDate = smaAccruePeriodLine.PostingDate;
+        #                }
+        #            }
+        #
+        #            // Process accrue lines
+        #            if (!smaAccruePeriodLineList.empty())
+        #            {
+        #                postLinesFromList(smaAccruePeriodLineList, smaAccruePeriodLinePostingDate);
+        #            }
+        #
+        #            break;
+        #
+        #        case SMAReverseAccruedOnCredit::InvoiceDate :
+        #            this.smaInitVoucher(projRevenueTransId,projInvoiceJour.InvoiceDate);
+        #            while select smaAccruePeriodLine
+        #                where smaAccruePeriodLine.ProjRevenueTransId    == projRevenueTransId
+        #                   && smaAccruePeriodLine.PostingDate           != dateNull()
+        #            {
+        #                ProjPost::newEnterSMAAccrued(smaAccruePeriodLine, ledgerVoucherSMA, true,smaAccruePeriodLine.PostingDate,false).postTrans();
+        #            }
+        #            ledgerVoucherSMA.end();
+        #
+        #            break;
+        #    }
+        #
+        #    delete_from smaAccruePeriodLine
+        #        where   smaAccruePeriodLine.ProjRevenueTransId  == projRevenueTransId;
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #roundingOffSign
+        #/// <summary>
+        #/// Gets a rounding sign.
+        #/// </summary>
+        #/// <returns>
+        #/// The rounding sign.
+        #/// </returns>
+        #protected int roundingOffSign()
+        #{
+        #    return -1;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #public void run()
+        #{
+        #    //--> Credit card begin
+        #
+        #    super();
+        #
+        #    //-->
+        #    CreditCardPosting::runProjectInvoice(this);
+        #}
+      ENDSOURCE
+      SOURCE #setTaxTo
+        #/// <summary>
+        #/// Retrieves a <c>ProjPost</c> object that has a <c>Tax</c> object that is assigned to it.
+        #/// </summary>
+        #/// <param name="_post">
+        #/// The <c>ProjPost</c> parameter that will have a <c>Tax</c> object assigned to it.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>ProjPost</c> object.
+        #/// </returns>
+        #/// <remarks>
+        #/// This is a localized method for Eastern Europe.
+        #/// </remarks>
+        #protected ProjPost setTaxTo(ProjPost _post)
+        #{
+        #    _post.parmTax_RU(this.tax());
+        #    return _post;
+        #}
+        #// </GEERU>
+      ENDSOURCE
+      SOURCE #smaInitVoucher
+        #protected void smaInitVoucher(
+        #    ProjRevenueTransId  _projRevenueTransId,
+        #    TransDate           _transDate)
+        #{
+        #    LedgerVoucherObject         ledgerVoucherObject;
+        #    ProjTrans                   projTrans;
+        #    ProjRevenueTrans            projRevenueTrans;
+        #    ProjLedger                  projLedger;
+        #
+        #    projRevenueTrans    = ProjRevenueTrans::find(_projRevenueTransId, true) ;
+        #    voucherSMA            = NumberSeq::newGetNum(ProjParameters::numRefProjPeriodVoucher()).num();
+        #    projTrans           = ProjTrans::newProjRevenueTrans(projRevenueTrans);
+        #    projLedger          = ProjLedger::newProjectSales(projTrans, projTrans.transId(),
+        #                                                      projRevenueTrans.TransactionOrigin,
+        #                                                      ProjOrigin::Subscription);
+        #
+        #    transactionTxtSMA      = new TransactionTxt(LedgerTransTxt::SMASubscription,
+        #                                             CompanyInfo::languageId(),
+        #                                             _transDate,
+        #                                             projTrans.transId(),
+        #                                             voucherSMA);
+        #
+        #    ledgerVoucherSMA       = LedgerVoucher::newLedgerPost(DetailSummary::Summary,
+        #                                                       SysModule::Project,
+        #                                                       ProjParameters::numRefProjPeriodVoucher().numberSequenceTable().NumberSequence,
+        #                                                       TransactionLogType::SMASubscription,
+        #                                                       transactionTxtSMA.txt());
+        #
+        #    ledgerVoucherObject = LedgerVoucherObject::newVoucher(voucherSMA,
+        #                                                          _transDate,
+        #                                                          SysModule::Project,
+        #                                                          LedgerTransType::Project);
+        #
+        #    ledgerVoucherSMA.addVoucher(ledgerVoucherObject);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #sourceLine
+        #/// <summary>
+        #/// Gets the source line record for the current journal line.
+        #/// </summary>
+        #/// <returns>
+        #/// A source line record.
+        #/// </returns>
+        #protected Common sourceLine()
+        #{
+        #    Common ret;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #sourceTable
+        #/// <summary>
+        #/// Gets the source header record for the journal header.
+        #/// </summary>
+        #/// <returns>
+        #/// A source header record.
+        #/// </returns>
+        #protected Common sourceTable()
+        #{
+        #    Common ret;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #tradeCalcTax
+        #protected Object tradeCalcTax()
+        #{
+        #    return SalesCalcTax::construct(this.parmJournalTable());
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogTxt
+        #/// <summary>
+        #/// Gets an instance of the <c>TransTxt</c> object.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>TransTxt</c> object.
+        #/// </returns>
+        #protected TransTxt transactionLogTxt()
+        #{
+        #    return "@SYS50149";
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogType
+        #protected TransactionLogType transactionLogType()
+        #{
+        #    return TransactionLogType::ProjInvoice;
+        #}
+      ENDSOURCE
+      SOURCE #updateDate
+        #/// <summary>
+        #/// Gets the transaction Date.
+        #/// </summary>
+        #/// <returns>
+        #/// A transaction date.
+        #/// </returns>
+        #protected TransDate updateDate()
+        #{
+        #    return projInvoiceJour.InvoiceDate;
+        #}
+      ENDSOURCE
+      SOURCE #updateDueDate_ES
+        #/// <summary>
+        #/// Updates the due date for the <c>projInvoiceJour</c> record.
+        #/// </summary>
+        #/// <param name="_dueDate">
+        #/// The due date.
+        #/// </param>
+        #protected void updateDueDate_ES(TransDate _dueDate)
+        #{
+        #    if (!projInvoiceJour.DueDate ||
+        #       (_dueDate && _dueDate < projInvoiceJour.DueDate))
+        #    {
+        #        projInvoiceJour.DueDate = _dueDate;
+        #        projInvoiceJour.update();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateJournalTable
+        #/// <summary>
+        #/// Updates the journal header.
+        #/// </summary>
+        #protected void updateJournalTable()
+        #{
+        #    projInvoiceJour.update();
+        #}
+      ENDSOURCE
+      SOURCE #updateProjInvoiceTransTaxWithholdGroup
+        #private void updateProjInvoiceTransTaxWithholdGroup()
+        #{
+        #    ProjInvoiceTransTaxWithholdGroups_BR projInvoiceTransTaxWithholdGroups;
+        #    TaxWithholdGroup taxWithholdGroup;
+        #
+        #    taxWithholdGroup = CustTable::find(projInvoiceJour.InvoiceAccount).TaxWithholdGroup_TH;
+        #
+        #    update_recordset projInvoiceTransTaxWithholdGroups
+        #        setting TaxWithholdGroup = taxWithholdGroup
+        #        where projInvoiceTransTaxWithholdGroups.ProjInvoiceJour == projInvoiceJour.RecId;
+        #}
+      ENDSOURCE
+      SOURCE #updateSourceTable
+        #/// <summary>
+        #/// Updates the source table for the journal header.
+        #/// </summary>
+        #protected void updateSourceTable()
+        #{
+        #    // <GBR>
+        #    ProjProposalJour projProposalJourlocal;
+        #
+        #    // The code is used for Debit note feature cration, cacellation and Invoice cancellation.
+        #    if(BrazilParameters::isEnabled())
+        #    {
+        #        select * from tmpInvoiceCancel
+        #            where tmpInvoiceCancel.ProposalId == projProposalJour.ProposalId;
+        #
+        #        if(ProjParameters::find().EnableInvoiceProposalWorkflow == NoYes::No)
+        #        {
+        #            if(tmpInvoiceCancel.RecId)
+        #            {
+        #                ttsbegin;
+        #
+        #                select forupdate projProposalJourlocal
+        #                    where projProposalJourlocal.ProposalId == tmpInvoiceCancel.RefProposalId;
+        #
+        #                if(projProposalJourlocal.LineProperty == ProjLinePropertyCode::DebitNote_BR)
+        #                {
+        #                    projProposalJourlocal.LineProperty = ProjLinePropertyCode::DebitNoteCanceled_BR;
+        #                }
+        #                else
+        #                {
+        #                    projProposalJourlocal.LineProperty = ProjLinePropertyCode::InvoiceCanceled_BR;
+        #                }
+        #                projProposalJourlocal.update();
+        #
+        #                ttscommit;
+        #
+        #                if(projProposalJour.LineProperty == ProjLinePropertyCode::DebitNoteCanceled_BR ||
+        #                    projProposalJour.InvoiceType == ProjInvoiceType::DebitNote_BR)
+        #                {
+        #                    info(strFmt("@GLS510033", projProposalJourlocal.ProjInvoiceId));
+        #                }
+        #                else
+        #                {
+        #                    info(strFmt("@GLS510003", projProposalJourlocal.ProjInvoiceId));
+        #                }
+        #            }
+        #        }
+        #
+        #        if(projProposalJour.InvoiceType == ProjInvoiceType::DebitNote_BR)
+        #        {
+        #            projProposalJour.LineProperty        = ProjLinePropertyCode::DebitNote_BR;
+        #        }
+        #        else
+        #        {
+        #            projProposalJour.LineProperty        = ProjLinePropertyCode::Invoiced;
+        #        }
+        #    }
+        #    else
+        #    {
+        #    // </GBR>
+        #       projProposalJour.LineProperty        = ProjLinePropertyCode::Invoiced;
+        #    // <GBR>
+        #    }
+        #    // </GBR>
+        #    projProposalJour.LedgerVoucher       = projInvoiceJour.LedgerVoucher;
+        #    projProposalJour.SalesOrderbalance   = projInvoiceJour.SalesOrderbalance;
+        #    projProposalJour.update();
+        #
+        #    projProposalJour.update();
+        #
+        #}
+      ENDSOURCE
+      SOURCE #validateNoTax
+        #private void validateNoTax(ProjTrans projTrans)
+        #{
+        #    if (taxParameters.ValidateTaxCode)
+        #    {
+        #        postingMainAccount = DimensionStorage::getMainAccountFromLedgerDimension(ProjPosting::getLedgerDimension(ProjAccountType::RevenueAccount,
+        #                                projTrans.projId(),
+        #                                projTrans.categoryId(),
+        #                                projTrans.fundingSource()));
+        #
+        #        if (!Tax::checkNoTax(postingMainAccount,
+        #                                projTrans.taxGroup(),
+        #                                projTrans.taxItemGroup()))
+        #        {
+        #            throw error("@SYS21533");
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validateTaxExport_CN
+        #private boolean validateTaxExport_CN()
+        #{
+        #    TaxValidateForTaxIntegration_CN    taxValidateForTaxIntegration;
+        #    boolean returnValue;
+        #
+        #    returnValue = true;
+        #    if (CustParameters::isTaxIntegrationSystem_CN())
+        #    {
+        #            taxValidateForTaxIntegration = TaxValidateForTaxIntegration_CN::construct(projProposalJour);
+        #            returnValue = taxValidateForTaxIntegration.validate();
+        #    }
+        #    return returnValue;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static ProjInvoiceJournalPost construct()
+        #{
+        #    return new ProjInvoiceJournalPost();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

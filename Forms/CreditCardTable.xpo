@@ -1,0 +1,1351 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardTable
+  PROPERTIES
+    Name                #CreditCardTable
+    Origin              #{5E5D3978-EFD8-44F6-9DBA-2539DDA4F7D3}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    LogisticsPostalAddressFormHandler   addressController;
+      #    SysFormSplitter_X                   m_vSplitter;
+      #
+      #    CreditCardParameters                ccParameters;
+      #    CustTable                           custTable;
+      #    SalesTable                          salesTable;
+      #    CustAccount                         custAccount;
+      #    LogisticsLocationRecId              postalAddressLocation;
+      #}
+    ENDSOURCE
+    SOURCE #autoUpdate
+      #void autoUpdate()
+      #{
+      #    creditCardTerminalTable     terminalTable = CreditCardTerminalTable::findTerminalWithId(creditCardTable.ProfileTerminalId);
+      #    ;
+      #    if (CreditCardTable.CreditCardType == CreditCardType::Stored
+      #        || CreditCardTable.CreditCardType == CreditCardType::PayPal)
+      #    {
+      #        return;
+      #    }
+      #
+      #    switch (terminalTable.Processor)
+      #    {
+      #        case    CreditCardProcessor::AuthorizeNet,CreditCardProcessor::Orbital,
+      #                CreditCardProcessor::Cybersource,CreditCardProcessor::AdFlex :
+      #            element.updateProfile();
+      #    }
+      #
+      #
+      #}
+    ENDSOURCE
+    SOURCE #createHostedEntry
+      #void createHostedEntry()
+      #{
+      #    URL                         url = ccParameters.HostedURL;
+      #    System.Exception            e;
+      #    dialog                      dlg;
+      #    dialogGroup                 dlgGroup;
+      #    dialogField                 dlgField;
+      #    CreditCardTerminalTable     terminal = CreditCardTerminalTable::findTerminalWithId(ccParameters.TerminalId);
+      #    CreditCardMerchantFirstData fdMerchant;
+      #    CreditCardMerchantWorldPay  fdWorldPay;
+      #    ;
+      #    if (!custAccount)
+      #    {
+      #        dlg = new dialog("@ACC1861");
+      #        dlgGroup = dlg.addGroup("@SYS316441");
+      #        dlgField = dlg.addField(extendedTypeStr(custAccount));
+      #
+      #        if (dlg.run())
+      #        {
+      #            custAccount = dlgField.value();
+      #        }
+      #
+      #    }
+      #
+      #    if (!terminal)
+      #        throw error(strFmt("@ACC1845",ccParameters.TerminalId));
+      #
+      #    if (strFind(url,"/",strLen(url)-1,1))
+      #    {
+      #        url = subStr(url,1,strLen(url)-1);
+      #    }
+      #
+      #    //--> Add values needed to url.  Will need to this based on processor soon.
+      #    url += '?Accountnum=' + custAccount;
+      #    url += '&DATAAREAID=' + creditCardTable.dataAreaId;
+      #    url += '&TERMINALID=' + ccParameters.TerminalId;
+      #    if (terminal.Processor == CreditCardProcessor::FirstData)
+      #    {
+      #        fdMerchant = CreditCardMerchantFirstData::find(terminal.TerminalId);
+      #        url += '&TransactionKey=' + fdMerchant.TransactionKey;
+      #        url += '&HostedPageID=' + fdMerchant.HostPayPageId;
+      #        url += '&AXCONFIG=' + fdMerchant.HostPayConfiguration;
+      #    }
+      #    else if (terminal.Processor == CreditCardProcessor::WorldPay)
+      #    {
+      #        fdWorldPay = CreditCardMerchantWorldPay::find(terminal.TerminalId);
+      #        url += '&TransactionKey=' + fdWorldPay.TransactionKey;
+      #        url += '&HostedPageID=' + fdWorldPay.HostPayPageId;
+      #        url += '&AXCONFIG=' + fdWorldPay.HostPayConfiguration;
+      #    }
+      #
+      #    try
+      #    {
+      #        System.Diagnostics.Process::Start(url);
+      #    }
+      #    catch (Exception::CLRError)
+      #    {
+      #        e = CLRInterop::getLastException();
+      #        while( e )
+      #        {
+      #            info( e.get_Message() );
+      #            e = e.get_InnerException();
+      #        }
+      #    }
+      #
+      #    //--> Reset custAccount for next time
+      #    custAccount = "";
+      #}
+    ENDSOURCE
+    SOURCE #createProfile
+      #void createProfile()
+      #{
+      #    creditCardTerminalTable     terminalTable = CreditCardProcessGroups::resolveTerminalforToken(creditCardTable);
+      #    ;
+      #    if (CreditCardTable.CreditCardType == CreditCardType::Stored
+      #        || CreditCardTable.CreditCardType == CreditCardType::PayPal)
+      #    {
+      #        return;
+      #    }
+      #
+      #    creditCardTable.ProfileTerminalId = terminalTable.TerminalId;
+      #
+      #    switch (terminalTable.Processor)
+      #    {
+      #        case CreditCardProcessor::Cybersource   :
+      #            CreditCardCybersourceXMLBuilder139::createProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::AuthorizeNet  :
+      #            CreditCardADNCIMBuilder::createProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::Orbital       :
+      #            CreditCardOrbitalXMLBuilder50::createProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::Heartland     :
+      #            CreditCardHeartlandXMLBuilder::createProfile(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::AdFlex        :
+      #            CreditCardAdflexXMLBuilder17::createProfile(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::FirstData        :
+      #            CreditCardFirstData::createToken(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::UDCC        :
+      #            CreditCardUDCCBuilder::createProfile(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::OpenEdge        :
+      #            CreditCardopenEdgeBuilder::createProfile(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::WorldPay        :
+      #            CreditCardSecureNetBuilder::createProfile(CreditCardTable);
+      #            break;
+      #        default :
+      #            throw error("@ACC1379");
+      #    }
+      #
+      #    creditCardTable_ds.research(true);
+      #}
+    ENDSOURCE
+    SOURCE #deleteProfile
+      #void deleteProfile()
+      #{
+      #    creditCardTerminalTable     terminalTable = CreditCardTerminalTable::findTerminalWithId(creditCardTable.ProfileTerminalId);
+      #    ;
+      #    if (CreditCardTable.CreditCardType == CreditCardType::Stored
+      #        || CreditCardTable.CreditCardType == CreditCardType::PayPal)
+      #    {
+      #        return;
+      #    }
+      #
+      #    switch (terminalTable.Processor)
+      #    {
+      #
+      #        case CreditCardProcessor::AuthorizeNet  :
+      #            CreditCardADNCIMBuilder::deleteProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::Orbital       :
+      #            CreditCardOrbitalXMLBuilder50::deleteProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::Cybersource       :
+      #            CreditCardCybersourceXMLBuilder139::deleteeProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::AdFlex        :
+      #            CreditCardAdflexXMLBuilder17::deleteProfile(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::UDCC        :
+      #            CreditCardUDCCBuilder::deleteProfile(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::OpenEdge        :
+      #            CreditCardOpenEdgeBuilder::deleteProfile(CreditCardTable);
+      #            break;
+      #        default :
+      #            warning("@ACC1379");
+      #    }
+      #
+      #}
+    ENDSOURCE
+    SOURCE #getAddressController
+      #public LogisticsPostalAddressFormHandler getAddressController()
+      #{
+      #    return addressController;
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    super();
+      #
+      #    m_vSplitter = new SysFormSplitter_X(vSplitter, gridContainer, element);
+      #
+      #
+      #    if (element.args().dataset() == TableNum(smmBusRelTable))
+      #    {
+      #        CreditCardTable_BusRelAccount.visible(true);
+      #        CreditCardTable_CustAccount.visible(false);
+      #
+      #    }
+      #    else if (element.args().dataset() == TableNum(custTable))
+      #    {
+      #        CreditCardTable_BusRelAccount.visible(false);
+      #        CreditCardTable_CustAccount.visible(true);
+      #        custTable = element.args().record();
+      #        custAccount = custTable.AccountNum;
+      #    }
+      #    else if (element.args().dataset() == TableNum(salesTable))
+      #    {
+      #        salesTable = element.args().record();
+      #        custAccount = salesTable.InvoiceAccount;
+      #    }
+      #
+      #    ccParameters = CreditCardParameters::findParameter();
+      #}
+    ENDSOURCE
+    SOURCE #parmPostalAddressLocation
+      #public LogisticsLocationRecId parmPostalAddressLocation(LogisticsLocationRecId _postalAddressLocation = creditCardTable.Location)
+      #{
+      #    postalAddressLocation = _postalAddressLocation;
+      #    return postalAddressLocation;
+      #}
+    ENDSOURCE
+    SOURCE #readProfile
+      #void readProfile()
+      #{
+      #    creditCardTerminalTable     terminalTable = CreditCardTerminalTable::findTerminalWithId(creditCardTable.ProfileTerminalId);
+      #    ;
+      #    switch (terminalTable.Processor)
+      #    {
+      #
+      #        case CreditCardProcessor::AuthorizeNet  :
+      #            //CreditCardADNCIMBuilder::updateProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::Orbital       :
+      #            CreditCardOrbitalXMLBuilder50::readProfile(creditCardTable);
+      #            break;
+      #        default :
+      #            warning("@ACC1379");
+      #    }
+      #
+      #}
+    ENDSOURCE
+    SOURCE #setAddress
+      #void setAddress()
+      #{
+      #    DirPartyLocation            partyLocation;
+      #    DirPartyLocationRole        partyLocationRole;
+      #    LogisticsLocationRole       locationRole;
+      #    ;
+      #    ccParameters = CreditCardParameters::findParameter();
+      #
+      #    if (CreditCardTable.Location)
+      #    {
+      #        if (Box::yesNo("@ACC1683", DialogButton::Yes, "@SYS54006") == DialogButton::No)
+      #        {
+      #            throw error("@SYS110943");
+      #        }
+      #    }
+      #
+      #    if (ccParameters)
+      #    {
+      #        if (ccParameters.AutoAddress)
+      #        {
+      #            if (CreditCardTable.CustAccount)
+      #            {
+      #                while select party,RecId,IsPostalAddress from partyLocation
+      #                    join partyLocationRole
+      #                    where partyLocation.Party == CustTable::find(CreditCardTable.CustAccount).Party
+      #                    && partyLocation.RecId == partyLocationRole.PartyLocation
+      #                    && partyLocation.IsPostalAddress == NoYes::Yes
+      #                {
+      #                    select locationRole
+      #                        where locationRole.RecId == partyLocationRole.LocationRole
+      #                        && locationRole.Name == ccParameters.LocationRoleName;
+      #
+      #                    if (locationRole)
+      #                    {
+      #                        CreditCardTable.Location = LogisticsPostalAddress::findByLocation(partyLocation.Location).Location;
+      #                    }
+      #                }
+      #            }
+      #            else
+      #            {
+      #                while select party,RecId,IsPostalAddress from partyLocation
+      #                    join partyLocationRole
+      #                    where partyLocation.Party == smmBusRelTable::find(CreditCardTable.BusRelAccount).Party
+      #                    && partyLocation.RecId == partyLocationRole.PartyLocation
+      #                {
+      #                    select locationRole
+      #                        where locationRole.RecId == partyLocationRole.LocationRole
+      #                        && locationRole.Name == ccParameters.LocationRoleName;
+      #
+      #                    if (locationRole)
+      #                    {
+      #                        CreditCardTable.Location = LogisticsPostalAddress::findByLocation(partyLocation.Location).Location;
+      #                        addressController.callerActive();
+      #                    }
+      #                }
+      #            }
+      #        }
+      #    }
+      #
+      #
+      #    //LogisticsPostalAddress.data(LogisticsPostalAddress::findByLocation(CreditCardTable.Location));
+      #    //info("Address %1 assigned",LogisticsPostalAddress.Address);
+      #    creditCardTable_ds.active();
+      #}
+    ENDSOURCE
+    SOURCE #setButton
+      #void setButton()
+      #{
+      #    ;
+      #    if (creditCardTable.Profile)
+      #    {
+      #        CreditCardTableSecureLookup.enabled(false);
+      #    }
+      #    else
+      #    {
+      #        CreditCardTableSecureLookup.enabled(true);
+      #    }
+      #
+      #
+      #
+      #}
+    ENDSOURCE
+    SOURCE #updateProfile
+      #void updateProfile()
+      #{
+      #    creditCardTerminalTable     terminalTable = CreditCardTerminalTable::find();
+      #    ;
+      #    switch (terminalTable.Processor)
+      #    {
+      #
+      #        case CreditCardProcessor::AuthorizeNet  :
+      #            CreditCardADNCIMBuilder::updateProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::Orbital       :
+      #            CreditCardOrbitalXMLBuilder50::updateProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::Cybersource       :
+      #            CreditCardCybersourceXMLBuilder139::updateProfile(creditCardTable);
+      #            break;
+      #        case CreditCardProcessor::UDCC       :
+      #            CreditCardUDCCBuilder::updateProfile(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::PayPal        :
+      #            CreditCardBraintreeXMLBuilder::processCustomerVault(CreditCardTable);
+      #            break;
+      #        case CreditCardProcessor::WorldPay        :
+      #            CreditCardSecureNetBuilder::updatePaymentProfile(CreditCardTable);
+      #        default :
+      #            warning("@ACC1379");
+      #    }
+      #
+      #
+      #    creditCardTable_ds.research(true);
+      #
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD CreditCardId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CreditCardNum
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    if (!CreditCardTable::validate(creditCardTable.CreditCardNum))
+                #        throw error("@ACC77");
+                #
+                #    super();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CustAccount
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.setAddress();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD BusRelAccount
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.setAddress();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD UsePostalAddress
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #create
+          #public void create(boolean _append = false)
+          #{
+          #
+          #    ;
+          #    if (ccParameters.UseHostedEntry)
+          #    {
+          #        element.createHostedEntry();
+          #    }
+          #    else
+          #    {
+          #        super(_append);
+          #    }
+          #}
+        ENDSOURCE
+        SOURCE #initValue
+          #public void initValue()
+          #{
+          #    super();
+          #
+          #    if (CreditCardTable.CustAccount || CreditCardTable.BusRelAccount)
+          #    {
+          #        element.setAddress();
+          #    }
+          #}
+        ENDSOURCE
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    if (!CreditCardTable.RecId)
+          #    {
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNum)).visible(true);
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNumSecure)).visible(false);
+          #    }
+          #    else
+          #    {
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNum)).visible(false);
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNumSecure)).visible(true);
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNumSecure)).allowEdit(false);
+          #    }
+          #
+          #    element.setButton();
+          #
+          #    ret = super();
+          #
+          #
+          #    /*if (ret)
+          #    {
+          #        addressController.callerActive();
+          #        addressController.callerUpdateButtons(newAddress, editAddress, clearAddress, mapButton);
+          #    }*/
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@ACC29
+      DataSource          #CreditCardTable
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+      Style               #SimpleListDetails
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          ElementPosition     #858993458
+          HierarchyParent     #AddressTab
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane1
+          ElementPosition     #715827882
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab1
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane1
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ActionsButtonGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #ActionPaneTab1
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #NewDeleteGroup
+          ElementPosition     #1073741822
+          HierarchyParent     #ActionPaneTab1
+          DataSource          #CreditCardTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          AllowEdit           #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #GridContainer
+          MultiSelect         #No
+          ShowRowLabels       #No
+          DataSource          #CreditCardTable
+          GridLinesStyle      #Vertical
+          AlternateRowShading #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Body
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          Style               #MarginlessContainer
+          Columns             #3
+          Columnspace         #0
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Cardholder
+          ElementPosition     #1288490187
+          HierarchyParent     #General
+          DataSource          #CreditCardTable
+          DataGroup           #Cardholder
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DeliveryAddress
+          ElementPosition     #1288490187
+          HierarchyParent     #AddressTab
+          FrameType           #None
+          DataSource          #CreditCardTable
+          DataGroup           #Address
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DetailsHeader
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1717986916
+          HierarchyParent     #Body
+          FrameType           #None
+          Style               #MarginlessContainer
+          TopMargin           #5
+          RightMargin         #5
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GridContainer
+          AutoDeclaration     #Yes
+          Width               #300
+          Height              #Column height
+          ElementPosition     #858993458
+          HierarchyParent     #Body
+          Style               #BorderlessGridContainer
+          RightMargin         #0
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Information
+          ElementPosition     #858993458
+          HierarchyParent     #General
+          DataSource          #CreditCardTable
+          DataGroup           #Information
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #OverviewDetail
+          ElementPosition     #1073741822
+          HierarchyParent     #DetailsHeader
+          FrameType           #None
+          BackgroundColor     #Window background
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Profile
+          AllowEdit           #No
+          ElementPosition     #1717986916
+          HierarchyParent     #General
+          DataSource          #CreditCardTable
+          DataGroup           #Profile
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #SecureInfo
+          ElementPosition     #1431655764
+          HierarchyParent     #Setup
+          DataSource          #CreditCardTable
+          DataGroup           #SecureInfo
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #VSplitter
+          AutoDeclaration     #Yes
+          ElementPosition     #1288490187
+          HierarchyParent     #Body
+          Style               #SplitterVerticalContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #MenuButton
+          HelpText            #@ACC1613
+          ElementPosition     #1431655764
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS81103
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    ;
+            #    if (creditCardTable.Profile)
+            #    {
+            #        createProfile.enabled(false);
+            #        updateProfile.enabled(true);
+            #        deleteProfile.enabled(true);
+            #    }
+            #    else
+            #    {
+            #        createProfile.enabled(true);
+            #        updateProfile.enabled(false);
+            #        deleteProfile.enabled(false);
+            #    }
+            #
+            #    super();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REFERENCEGROUP
+        PROPERTIES
+          Name                #CreditCardTable_Location
+          AllowEdit           #No
+          ElementPosition     #1717986916
+          HierarchyParent     #AddressTab
+          DataSource          #CreditCardTable
+          ReferenceField      #Location
+          ReplacementFieldGroup #AddressDisplay
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #Tab
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          HierarchyParent     #DetailsHeader
+          Tabs                #4
+          Style               #FastTabs
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #AddressTab
+          ElementPosition     #1717986916
+          HierarchyParent     #Tab
+          Caption             #@SYS9362
+          DataSource          #CreditCardTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #General
+          ElementPosition     #858993458
+          HierarchyParent     #Tab
+          Caption             #@SYS2952
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Setup
+          ElementPosition     #1288490187
+          HierarchyParent     #Tab
+          Caption             #@SYS2186
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #CreateProfile
+          AutoDeclaration     #Yes
+          HelpText            #@ACC1481
+          ElementPosition     #715827882
+          HierarchyParent     #MenuButton
+          Text                #@ACC1332
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    element.createProfile();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #DeleteProfile
+          AutoDeclaration     #Yes
+          HelpText            #@ACC1482
+          ElementPosition     #1073741823
+          HierarchyParent     #MenuButton
+          Text                #@ACC1380
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    element.deleteProfile();
+            #
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ReadProfile
+          Visible             #No
+          HelpText            #@ACC1418
+          ElementPosition     #1789569705
+          HierarchyParent     #MenuButton
+          Text                #@SYS11559
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    element.readProfile();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #UpdateProfile
+          AutoDeclaration     #Yes
+          HelpText            #@ACC1483
+          ElementPosition     #1431655764
+          HierarchyParent     #MenuButton
+          Text                #@ACC1382
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    element.updateProfile();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #CreditCardTable_PrimaryCard
+          ElementPosition     #1879048185
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          DataSource          #CreditCardTable
+          DataField           #PrimaryCard
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardType
+          ElementPosition     #1610612730
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #CreditCardType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DeleteButton
+          ElementPosition     #1610612733
+          HierarchyParent     #NewDeleteGroup
+          Text                #@sys14425
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          Primary             #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #NewButton
+          ElementPosition     #1073741822
+          HierarchyParent     #NewDeleteGroup
+          ButtonDisplay       #Text & Image left
+          NormalImage         #11045
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          Command             #260
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardTableSecureLookup
+          AutoDeclaration     #Yes
+          HelpText            #@ACC1039
+          ElementPosition     #1073741823
+          HierarchyParent     #ButtonGroup
+          DataSource          #CreditCardTable
+          MenuItemName        #CreditCardTableSecureLookup
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardTrans
+          HelpText            #@ACC1038
+          ElementPosition     #715827882
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS2368
+          MenuItemName        #CreditCardTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EditAddress
+          AutoDeclaration     #Yes
+          ElementPosition     #1288490187
+          HierarchyParent     #ActionsButtonGroup
+          ButtonDisplay       #Image only
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          DataSource          #CreditCardTable
+          MenuItemName        #DirPartyPostalAddressEdit
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args        args;
+            #    ;
+            #    args = new Args();
+            #    args.caller(element);
+            #    args.record(CreditCardTable);
+            #
+            #    DirPartyPostalAddressFormHandler::main(args);
+            #
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #LogisticsLocationSelect
+          AutoDeclaration     #Yes
+          ElementPosition     #1717986916
+          HierarchyParent     #ActionsButtonGroup
+          Text                #@ACC1716
+          ButtonDisplay       #Text & Image left
+          SaveRecord          #No
+          DataSource          #CreditCardTable
+          MenuItemName        #LogisticsLocationSelect
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #LogisticsPostalAddressNew
+          HelpText            #@SYS342027
+          ElementPosition     #858993458
+          HierarchyParent     #ActionsButtonGroup
+          ButtonDisplay       #Image only
+          SaveRecord          #No
+          MenuItemName        #CustDirPartyPostalAddressNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_BusRelAccount
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741820
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #BusRelAccount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardId
+          ElementPosition     #536870910
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardId1
+          ElementPosition     #1073741822
+          HierarchyParent     #OverviewDetail
+          DataSource          #CreditCardTable
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_CustAccount
+          AutoDeclaration     #Yes
+          ElementPosition     #805306365
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #CustAccount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_Name
+          ElementPosition     #1342177275
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #Name
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_Name1
+          ElementPosition     #1610612733
+          HierarchyParent     #OverviewDetail
+          DataSource          #CreditCardTable
+          DataField           #Name
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SecureInfo_CreditCardNum
+          ElementPosition     #715827882
+          HierarchyParent     #SecureInfo
+          DataSource          #CreditCardTable
+          DataField           #CreditCardNum
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #textChange
+            #public void textChange()
+            #{
+            #    ;
+            #    element.delAutoCompleteString(this);
+            #
+            #    super();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

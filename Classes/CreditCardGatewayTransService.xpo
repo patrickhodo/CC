@@ -1,0 +1,70 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardGatewayTransService
+    PROPERTIES
+      Name                #CreditCardGatewayTransService
+      Origin              #{261CC71F-CAA8-434F-8F47-7A993FEF2176}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardGatewayTransService
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #storeTrans
+        #/// <summary>
+        #/// Creates credit card transactions from a custom schema
+        #/// </summary>
+        #/// <param name="dataContract">
+        #/// The data contract of the report
+        #/// </param>
+        #/// <returns>
+        #///  Transaction id from the CreditCardTrans table
+        #/// </returns>
+        #/// <remarks>
+        #/// AifCollectionTypeAttribute is used to define strongly typed containers for data
+        #/// </remarks>
+        #[SysEntryPointAttribute(true),
+        #AifCollectionTypeAttribute('return', Types::Class, classstr('CreditCardTransDataContract'))]
+        #public CreditCardTransID storeTrans(CreditCardTransDataContract     dataContract)
+        #{
+        #    CreditCardTable             ccTable;
+        #    CreditCardTrans             ccTrans;
+        #    CreditCardGatewayTrans      gatewayTrans = new CreditCardGatewayTrans();
+        #    ;
+        #    ttsBegin;
+        #    //--> In order to proceed, we need either the Credit Card Id or create one.
+        #    if (dataContract.profileId())
+        #    {
+        #        ccTable =  gatewayTrans.createProfile(dataContract);
+        #    }
+        #    else
+        #    {
+        #        ccTable = CreditCardTable::find(dataContract.creditCardId());
+        #    }
+        #
+        #    if (!ccTable)
+        #    {
+        #        throw error(strFmt("@ACC1823",dataContract.creditCardId()));
+        #    }
+        #
+        #    ccTrans = gatewayTrans.createTransFromDatacontract(dataContract,ccTable);
+        #
+        #    ttsCommit;
+        #
+        #    return ccTrans.TransID;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

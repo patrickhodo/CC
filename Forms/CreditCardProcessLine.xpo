@@ -1,0 +1,511 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardProcessLine
+  PROPERTIES
+    Name                #CreditCardProcessLine
+    Origin              #{20C3E8D5-3DA7-45F2-8D25-1D223DE5F025}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #}
+    ENDSOURCE
+    SOURCE #enablePrimary
+      #void enablePrimary()
+      #{
+      #    ;
+      #    if (creditCardProcessLine.SetPrimary)
+      #    {
+      #        if (creditCardProcessLine.CurrencyCode
+      #            || creditCardProcessLine.CreditCardTypeActive
+      #            || creditCardProcessLine.CountryRegionId)
+      #        {
+      #            if (box::okCancel(strFmt("@ACC1208"),DialogButton::Cancel) == DialogButton::Ok)
+      #            {
+      #                creditCardProcessLine.CreditCardTypeActive = NoYes::No;
+      #                creditCardProcessLine.CurrencyCode          = "";
+      #                creditCardProcessLine.CountryRegionId       = "";
+      #                creditCardProcessLine_ds.refresh();
+      #            }
+      #            else
+      #            {
+      #                throw error("@SYS70800");
+      #            }
+      #        }
+      #
+      #        creditCardProcessLine_ds.object(FieldNum(creditCardProcessLine,CreditCardTypeActive)).enabled(false);
+      #        creditCardProcessLine_ds.object(FieldNum(creditCardProcessLine,CurrencyCode)).enabled(false);
+      #        creditCardProcessLine_ds.object(FieldNum(creditCardProcessLine,CountryRegionId)).enabled(false);
+      #        creditCardProcessLine_ds.object(fieldNum(CreditCardProcessLine,Priority)).enabled(false);
+      #    }
+      #    else
+      #    {
+      #        creditCardProcessLine_ds.object(FieldNum(creditCardProcessLine,CreditCardTypeActive)).enabled(true);
+      #        creditCardProcessLine_ds.object(FieldNum(creditCardProcessLine,CurrencyCode)).enabled(true);
+      #        creditCardProcessLine_ds.object(FieldNum(creditCardProcessLine,CountryRegionId)).enabled(true);
+      #        creditCardProcessLine_ds.object(fieldNum(CreditCardProcessLine,Priority)).enabled(true);
+      #    }
+      #
+      #    element.enableTypes();
+      #}
+    ENDSOURCE
+    SOURCE #enableTypes
+      #void enableTypes()
+      #{
+      #    ;
+      #    if (creditCardProcessLine.CreditCardTypeActive == NoYes::Yes)
+      #    {
+      #        creditCardProcessLine_ds.object(FieldNum(creditCardProcessLine,CreditCardType)).enabled(true);
+      #    }
+      #    else
+      #    {
+      #        creditCardProcessLine_ds.object(FieldNum(creditCardProcessLine,CreditCardType)).enabled(false);
+      #    }
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardProcessLine
+          Table               #CreditCardProcessLine
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD CreditCardTypeActive
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.enableTypes();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CreditCardType
+            PROPERTIES
+              Enabled             #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD SetPrimary
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    ;
+                #    element.enablePrimary();
+                #
+                #    super();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    super();
+          #
+          #    this.query().dataSourceNo(1).addOrderByField(fieldNum(CreditCardProcessLine,SetPrimary),SortOrder::Descending);
+          #    this.query().dataSourceNo(1).addOrderByField(fieldNum(CreditCardProcessLine,Priority),SortOrder::Descending);
+          #}
+        ENDSOURCE
+        SOURCE #initValue
+          #public void initValue()
+          #{
+          #    super();
+          #
+          #    element.enableTypes();
+          #}
+        ENDSOURCE
+        SOURCE #write
+          #public void write()
+          #{
+          #    CreditCardProcessLine       processLine;
+          #    ;
+          #    select processLine
+          #        where processLine.ProcessGroupId == creditCardProcessLine.ProcessGroupId
+          #        && processLine.SetPrimary == NoYes::Yes;
+          #
+          #    if (!processLine && creditCardProcessLine.SetPrimary == NoYes::No)
+          #    {
+          #        throw error("@ACC1209");
+          #    }
+          #
+          #    super();
+          #}
+        ENDSOURCE
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    element.enableTypes();
+          #    element.enablePrimary();
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@ACC1244
+      DataSource          #CreditCardProcessLine
+      Style               #SimpleList
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          ElementPosition     #715827882
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #NewDeleteGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab
+          DataSource          #CreditCardProcessLine
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #Body
+          MultiSelect         #No
+          ShowRowLabels       #No
+          DataSource          #CreditCardProcessLine
+          AlternateRowShading #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Body
+          Height              #Column height
+          ElementPosition     #1431655764
+          Style               #BorderlessGridContainer
+          DataSource          #CreditCardProcessLine
+          Columns             #3
+          Columnspace         #0
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #CreditCardProcessLine_CreditCardTypeActive
+          ElementPosition     #1073741820
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          DataSource          #CreditCardProcessLine
+          DataField           #CreditCardTypeActive
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #CreditCardProcessLine_SetPrimary
+          ElementPosition     #805306365
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          DataSource          #CreditCardProcessLine
+          DataField           #SetPrimary
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardProcessLine_CreditCardType
+          ElementPosition     #1342177275
+          HierarchyParent     #Grid
+          DataSource          #CreditCardProcessLine
+          DataField           #CreditCardType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DeleteButton
+          ElementPosition     #1610612733
+          HierarchyParent     #NewDeleteGroup
+          Text                #@sys14425
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          Primary             #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #NewButton
+          ElementPosition     #1073741822
+          HierarchyParent     #NewDeleteGroup
+          ButtonDisplay       #Text & Image left
+          NormalImage         #11045
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          Command             #260
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL INTEDIT
+        PROPERTIES
+          Name                #CreditCardProcessLine_Priority
+          ElementPosition     #939524092
+          HierarchyParent     #Grid
+          DataSource          #CreditCardProcessLine
+          DataField           #Priority
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardProcessLine_CountryRegionId
+          ElementPosition     #1610612730
+          HierarchyParent     #Grid
+          DataSource          #CreditCardProcessLine
+          DataField           #CountryRegionId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardProcessLine_CurrencyCode
+          ElementPosition     #1879048185
+          HierarchyParent     #Grid
+          DataSource          #CreditCardProcessLine
+          DataField           #CurrencyCode
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardProcessLine_CustAccount
+          ElementPosition     #1431655760
+          HierarchyParent     #Grid
+          DataSource          #CreditCardProcessLine
+          DataField           #CustAccount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardProcessLine_SalesOriginId
+          ElementPosition     #1521134245
+          HierarchyParent     #Grid
+          DataSource          #CreditCardProcessLine
+          DataField           #SalesOriginId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardProcessLine_TerminalId
+          ElementPosition     #2013265915
+          HierarchyParent     #Grid
+          DataSource          #CreditCardProcessLine
+          DataField           #TerminalId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

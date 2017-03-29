@@ -1,0 +1,451 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #AxCreditCardTable
+    PROPERTIES
+      Name                #AxCreditCardTable
+      Extends             #AxInternalBase
+      Origin              #{302E6D07-E986-46CE-8767-538C147AA135}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #axOrig
+        #public AxInternalBase axOrig()
+        #{
+        #    return super();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class AxCreditCardTable extends AxInternalBase
+        #{
+        #    CreditCardTable CreditCardTable;
+        #
+        #    //int             cacheRecordIdx;//TODO delete if no cache record
+        #    //int             cacheObjectIdx;//TODO delete if no cache object
+        #    str             localdel_County;
+        #    str             localdel_State;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #creditCardTable
+        #public CreditCardTable creditCardTable(CreditCardTable _creditCardTable = creditCardTable)
+        #{
+        #    if (!prmisdefault(_creditCardTable))
+        #    {
+        #        this.setCurrentRecordFromExternal(_creditCardTable);
+        #    }
+        #
+        #    return this.currentRecord();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #currentRecord
+        #public Common currentRecord(Common _CreditCardTable = CreditCardTable)
+        #{
+        #    if (!prmisdefault(_CreditCardTable))
+        #    {
+        #        super(_CreditCardTable);
+        #        CreditCardTable = _CreditCardTable;
+        #    }
+        #    else
+        #    {
+        #        super();
+        #    }
+        #
+        #    return CreditCardTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #emptyRecord
+        #protected Common emptyRecord()
+        #{
+        #    CreditCardTable localCreditCardTable;
+        #    ;
+        #    return localCreditCardTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #init
+        #protected void init()
+        #{
+        #    super();
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmBusRelAccount
+        #public smmBusRelAccount parmBusRelAccount(smmBusRelAccount _busRelAccount = '')
+        #{
+        #    if (!prmisdefault(_busRelAccount))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, BusRelAccount), _busRelAccount);
+        #    }
+        #
+        #    return creditCardTable.BusRelAccount;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCorporateCard
+        #public NoYesId parmCorporateCard(NoYesId _corporateCard = NoYes::No)
+        #{
+        #    if (!prmisdefault(_corporateCard))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, CorporateCard), _corporateCard);
+        #    }
+        #
+        #    return creditCardTable.CorporateCard;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCPCValue
+        #public String30 parmCPCValue(String30 _cPCValue = '')
+        #{
+        #    if (!prmisdefault(_cPCValue))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, CPCValue), _cPCValue);
+        #    }
+        #
+        #    return creditCardTable.CPCValue;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCreditCardId
+        #public CreditCardId parmCreditCardId(CreditCardId _creditCardId = '')
+        #{
+        #    if (!prmisdefault(_creditCardId))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, CreditCardId), _creditCardId);
+        #    }
+        #
+        #    return creditCardTable.CreditCardId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCreditCardNum
+        #public CreditCardNumEncrypt parmCreditCardNum(CreditCardNumEncrypt _creditCardNum = '')
+        #{
+        #    if (!prmisdefault(_creditCardNum))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, CreditCardNum), _creditCardNum);
+        #    }
+        #
+        #    return creditCardTable.CreditCardNum;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCreditCardNumSecure
+        #public CreditCardNum parmCreditCardNumSecure(CreditCardNum _creditCardNumSecure = '')
+        #{
+        #    if (!prmisdefault(_creditCardNumSecure))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, CreditCardNumSecure), _creditCardNumSecure);
+        #    }
+        #
+        #    return creditCardTable.CreditCardNumSecure;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCreditCardType
+        #public CreditCardType parmCreditCardType(CreditCardType _creditCardType = CreditCardType::Visa)
+        #{
+        #    if (!prmisdefault(_creditCardType))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, CreditCardType), _creditCardType);
+        #    }
+        #
+        #    return creditCardTable.CreditCardType;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCustAccount
+        #public str parmCustAccount(str _custAccount = '')
+        #{
+        #    DictField   dictField;
+        #    ;
+        #    if (!prmisdefault(_custAccount))
+        #    {
+        #        dictField = new DictField(tablenum(CreditCardTable),fieldnum(CreditCardTable,CustAccount));
+        #        if(this.valueMappingInbound())
+        #        {
+        #            this.validateInboundString(_custAccount,dictField,this.mapPolicy().xMLMapCustAccount());
+        #            _custAccount = this.axCustAccount(_custAccount);
+        #        }
+        #        else
+        #        {
+        #            this.validateInboundString(_custAccount,dictField);
+        #        }
+        #        this.setField(fieldNum(CreditCardTable, CustAccount), _custAccount);
+        #    }
+        #
+        #    if (this.valueMappingOutbound())
+        #    {
+        #        return this.axCustAccount(creditCardTable.CustAccount);
+        #    }
+        #    else
+        #    {
+        #        return creditCardTable.CustAccount;
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmEmail
+        #public Email parmEmail(Email _email = '')
+        #{
+        #    if (!prmisdefault(_email))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, Email), _email);
+        #    }
+        #
+        #    return creditCardTable.Email;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmExpirationDate
+        #public CreditCardExpirationDate parmExpirationDate(CreditCardExpirationDate _expirationDate = dateNull())
+        #{
+        #    if (!prmisdefault(_expirationDate))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, ExpirationDate), _expirationDate);
+        #    }
+        #
+        #    return creditCardTable.ExpirationDate;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmInactive
+        #public NoYesId parmInactive(NoYesId _inactive = NoYes::No)
+        #{
+        #    if (!prmisdefault(_inactive))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, Inactive), _inactive);
+        #    }
+        #
+        #    return creditCardTable.Inactive;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmLocation
+        #public LogisticsLocationRecId parmLocation(LogisticsLocationRecId _location = 0)
+        #{
+        #    if (!prmisdefault(_location))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, Location), _location);
+        #    }
+        #
+        #    return creditCardTable.Location;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmLogisticsLocationId
+        #public LogisticsLocationId parmLogisticsLocationId(LogisticsLocationId _logisticsLocationId = '')
+        #{
+        #    if (!prmisdefault(_logisticsLocationId))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, LogisticsLocationId), _logisticsLocationId);
+        #    }
+        #
+        #    return creditCardTable.LogisticsLocationId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmName
+        #public Name parmName(Name _name = '')
+        #{
+        #    if (!prmisdefault(_name))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, Name), _name);
+        #    }
+        #
+        #    return creditCardTable.Name;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmNameOnCard
+        #public Name parmNameOnCard(Name _nameOnCard = '')
+        #{
+        #    if (!prmisdefault(_nameOnCard))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, NameOnCard), _nameOnCard);
+        #    }
+        #
+        #    return creditCardTable.NameOnCard;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmPaymentProfileId
+        #public CreditCardProfileId parmPaymentProfileId(CreditCardProfileId _paymentProfileId = '')
+        #{
+        #    if (!prmisdefault(_paymentProfileId))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, PaymentProfileId), _paymentProfileId);
+        #    }
+        #
+        #    return creditCardTable.PaymentProfileId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmPhone
+        #public Phone parmPhone(Phone _phone = '')
+        #{
+        #    if (!prmisdefault(_phone))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, Phone), _phone);
+        #    }
+        #
+        #    return creditCardTable.Phone;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmPrimaryCard
+        #public NoYesId parmPrimaryCard(NoYesId _primaryCard = NoYes::No)
+        #{
+        #    if (!prmisdefault(_primaryCard))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, PrimaryCard), _primaryCard);
+        #    }
+        #
+        #    return creditCardTable.PrimaryCard;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProfile
+        #public NoYesId parmProfile(NoYesId _profile = NoYes::No)
+        #{
+        #    if (!prmisdefault(_profile))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, Profile), _profile);
+        #    }
+        #
+        #    return creditCardTable.Profile;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProfileId
+        #public CreditCardProfileId parmProfileId(CreditCardProfileId _profileId = '')
+        #{
+        #    if (!prmisdefault(_profileId))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, ProfileId), _profileId);
+        #    }
+        #
+        #    return creditCardTable.ProfileId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProfileTerminalId
+        #public CreditCardTerminalId parmProfileTerminalId(CreditCardTerminalId _profileTerminalId = '')
+        #{
+        #    if (!prmisdefault(_profileTerminalId))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, ProfileTerminalId), _profileTerminalId);
+        #    }
+        #
+        #    return creditCardTable.ProfileTerminalId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmSalesId
+        #public SalesId parmSalesId(SalesId _salesId = '')
+        #{
+        #    if (!prmisdefault(_salesId))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, SalesId), _salesId);
+        #    }
+        #
+        #    return CreditCardTable.SalesId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmSoloIssueNum
+        #public CreditCardSoloIssueNum parmSoloIssueNum(CreditCardSoloIssueNum _soloIssueNum = '')
+        #{
+        #    if (!prmisdefault(_soloIssueNum))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, SoloIssueNum), _soloIssueNum);
+        #    }
+        #
+        #    return creditCardTable.SoloIssueNum;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmSoloStartDate
+        #public CreditCardSoloStartDate parmSoloStartDate(CreditCardSoloStartDate _soloStartDate = dateNull())
+        #{
+        #    if (!prmisdefault(_soloStartDate))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, SoloStartDate), _soloStartDate);
+        #    }
+        #
+        #    return creditCardTable.SoloStartDate;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmSvActivated
+        #public NoYesId parmSvActivated(NoYesId _svActivated = NoYes::No)
+        #{
+        #    if (!prmisdefault(_svActivated))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, SvActivated), _svActivated);
+        #    }
+        #
+        #    return creditCardTable.SvActivated;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmUsePostalAddress
+        #public NoYesId parmUsePostalAddress(NoYesId _usePostalAddress = NoYes::No)
+        #{
+        #    if (!prmisdefault(_usePostalAddress))
+        #    {
+        #        this.setField(fieldNum(CreditCardTable, UsePostalAddress), _usePostalAddress);
+        #    }
+        #
+        #    return creditCardTable.UsePostalAddress;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #setTableFields
+        #protected void setTableFields()
+        #{
+        #    this.currentRecord().defaultRow();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #valueMapDependingFields
+        #protected void valueMapDependingFields()
+        #{
+        #    super();
+        #
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #construct
+        #static AxCreditCardTable construct()
+        #{
+        #    return new AxCreditCardTable();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #newCreditCardTable
+        #public static AxCreditCardTable newCreditCardTable(CreditCardTable _CreditCardTable)
+        #{
+        #    AxCreditCardTable AxCreditCardTable = AxCreditCardTable::construct();
+        #    ;
+        #    AxCreditCardTable.CreditCardTable(_CreditCardTable);
+        #
+        #    return AxCreditCardTable;
+        #}
+        #
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

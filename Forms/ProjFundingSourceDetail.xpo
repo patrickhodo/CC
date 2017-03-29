@@ -1,0 +1,885 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #ProjFundingSourceDetail
+  PROPERTIES
+    Name                #ProjFundingSourceDetail
+    Origin              #{FFB74479-585F-4569-851C-E8E895A7298D}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    DimensionDefaultingController   dimensionDefaultingController;
+      #    Object                          callerForm;
+      #    TmpProjGrantFundingSource       tmpProjGrantFundingSource;
+      #}
+    ENDSOURCE
+    SOURCE #close
+      #public void close()
+      #{
+      #    super();
+      #    if (callerForm && formHasMethod(callerForm, identifierStr(setTmpProjGrantFunding)))
+      #    {
+      #        callerForm.setTmpProjGrantFunding(projFundingSource.DefaultDimension, tmpProjGrantFundingSource.FundingSourceId);
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #getTmpProjGrantFundingSource
+      #public TmpProjGrantFundingSource getTmpProjGrantFundingSource()
+      #{
+      #    return tmpProjGrantFundingSource;
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    Common c = element.args().record();
+      #
+      #    if (element.args().caller().name() == formStr(ProjInvoiceProposalDetail))
+      #    {
+      #        element.args().copyCallerQuery(CopyCallerQuery::No);
+      #    }
+      #
+      #    super();
+      #
+      #    callerForm = element.args().caller();
+      #
+      #    dimensionDefaultingController = DimensionDefaultingController::constructInTabWithValues(false, true, true, 0, this, tabFinancialDimensions, "@SYS101181");
+      #    dimensionDefaultingController.parmAttributeValueSetDataSource(projFundingSource_ds, fieldStr(ProjFundingSource, DefaultDimension));
+      #
+      #    if(callerForm.name() == formStr(ProjGrantFundingDialog))
+      #    {
+      #        tmpProjGrantFundingSource = element.args().record();
+      #    }
+      #
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #ProjFundingSource
+          Table               #ProjFundingSource
+        ENDPROPERTIES
+        
+        FIELDLIST
+          REFERENCEFIELD InvoiceLocation
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    AddressView.setFocus();
+                #}
+              ENDSOURCE
+              SOURCE #jumpRef
+                #public void jumpRef()
+                #{
+                #    Args            args          = new Args();
+                #    DirPartyTable   dirPartyTable = DirPartyTable::findRec(projFundingSource.Party);
+                #
+                #    args.lookupTable(tableNum(DirPartyTable));
+                #    args.lookupRecord(dirPartyTable);
+                #    args.caller(element);
+                #
+                #    new MenuFunction(menuitemDisplayStr(DirPartyTable), MenuItemType::Display).run(args);
+                #}
+              ENDSOURCE
+              SOURCE #lookupReference
+                #public Common lookupReference(FormReferenceControl _formReferenceControl)
+                #{
+                #    Common ret;
+                #
+                #    CustTable   custTable;
+                #
+                #    if (projFundingSource.FundingType == ProjFundingType::Grant)
+                #    {
+                #        custTable = CustTable::find(ProjGrant::find(projFundingSource.ProjGrant).CustAccount);
+                #    }
+                #    else
+                #    {
+                #        custTable = CustTable::find(projFundingSource.CustAccount);
+                #    }
+                #
+                #    if(callerForm.name() == formStr(ProjGrantFundingDialog))
+                #    {
+                #        custTable = CustTable::find(element.args().parm());
+                #    }
+                #
+                #    ret = LogisticsLocationSelectionLookup::lookupAddressForm(_formReferenceControl, custTable,
+                #        [LogisticsLocationRoleType::Invoice], true);
+                #
+                #    return ret;
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDREFERENCEFIELD
+          
+          DATAFIELD ContactPersonId
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #lookup
+                #public void lookup(FormControl _formControl, str _filterStr)
+                #{
+                #    ContactPerson::lookupCustContactPerson(_formControl,
+                #                                           ProjFundingSource.CustAccount,
+                #                                           _formControl,
+                #                                           ProjFundingSource.ContactPersonId);
+                #
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CreditCardId
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #lookup
+                #public void lookup(FormControl _formControl, str _filterStr)
+                #{
+                #    ;
+                #
+                #    CreditCardTable::lookupCustCreditCardProjFund(_formControl,ProjFundingSource.CustAccount,ProjFundingSource);
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #delete
+          #public void delete()
+          #{
+          #    super();
+          #
+          #    dimensionDefaultingController.deleted();
+          #}
+        ENDSOURCE
+        SOURCE #active
+          #public int active()
+          #{
+          #    CustTable       custTable;
+          #    DirPartyName    dirPartyName;
+          #    int             ret;
+          #
+          #    element.lock();
+          #
+          #    ret = super();
+          #
+          #    dimensionDefaultingController.activated();
+          #
+          #    switch (projFundingSource.FundingType)
+          #    {
+          #        case ProjFundingType::Customer :
+          #            dirPartyName = CustTable::findByPartyRecId(projFundingSource.Party).AccountNum;
+          #            Other.visible(true);
+          #            break;
+          #
+          #        case ProjFundingType::Grant :
+          #            dirPartyName = ProjGrant::find(projFundingSource.ProjGrant).GrantId;
+          #            break;
+          #
+          #        case ProjFundingType::OnHoldFundingSource :
+          #        case ProjFundingType::Organization :
+          #            // Organization or OnHold (both are the same)
+          #            dirPartyName = DirPartyTable::findRec(projFundingSource.Party).Name;
+          #            break;
+          #    }
+          #
+          #    if (projFundingSource.FundingType == ProjFundingType::Customer)
+          #    {
+          #        custTable = CustTable::findByPartyRecId(projFundingSource.Party);
+          #        if (custTable.AccountNum)
+          #        {
+          #            if (CustTable::isCustDKPublic(custTable.AccountNum) == NoYes::Yes)
+          #            {
+          #               EInvoice.visible(true);
+          #               GiroMoneyTransferSlip.visible(true);
+          #            }
+          #        }
+          #    }
+          #    else if (projFundingSource.FundingType != ProjFundingType::Grant)
+          #    {
+          #        paymentAndInvoice.visible(false);
+          #    }
+          #
+          #    if (projFundingSource.FundingType != ProjFundingType::Grant)
+          #    {
+          #        grantCustomer.enabled(false);
+          #        grantCustomer.visible(false);
+          #    }
+          #
+          #    if (projFundingSource.FundingType == ProjFundingType::Organization ||
+          #        projFundingSource.FundingType == ProjFundingType::OnHoldFundingSource)
+          #    {
+          #        address.enabled(false);
+          #    }
+          #    else
+          #    {
+          #        address.enabled(true);
+          #    }
+          #
+          #    element.unLock();
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+        SOURCE #write
+          #public void write()
+          #{
+          #    super();
+          #
+          #    dimensionDefaultingController.writing();
+          #}
+        ENDSOURCE
+        SOURCE #grantCustomer
+          #// BP Deviation documented
+          #public display CustAccount grantCustomer(ProjFundingSource  _projFundingSource)
+          #{
+          #    return ProjGrant::find(_projFundingSource.ProjGrant).CustAccount;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@SYS319827
+      TitleDatasource     #ProjFundingSource
+      DataSource          #ProjFundingSource
+      StatusBarStyle      #Simple
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Contact
+          AutoDeclaration     #Yes
+          ElementPosition     #1431655764
+          HierarchyParent     #Other
+          DataSource          #ProjFundingSource
+          DataGroup           #Contact
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CreditCard
+          ElementPosition     #1879048189
+          HierarchyParent     #PaymentAndInvoice
+          Caption             #@ACC1423
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #EInvoice
+          AutoDeclaration     #Yes
+          Visible             #No
+          ElementPosition     #1073741823
+          HierarchyParent     #Other
+          DataSource          #ProjFundingSource
+          DataGroup           #EInvoice
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GiroMoneyTransferSlip
+          AutoDeclaration     #Yes
+          Visible             #No
+          ElementPosition     #1789569705
+          HierarchyParent     #Other
+          DataSource          #ProjFundingSource
+          DataGroup           #GiroMoneyTransferSlip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupCC
+          ElementPosition     #1431655764
+          HierarchyParent     #CreditCard
+          FrameType           #None
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Identification
+          ElementPosition     #1431655764
+          HierarchyParent     #General
+          DataSource          #ProjFundingSource
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Invoice
+          ElementPosition     #1610612733
+          HierarchyParent     #PaymentAndInvoice
+          Caption             #@SYS14204
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PaymentGroup
+          ElementPosition     #1073741822
+          HierarchyParent     #PaymentAndInvoice
+          Caption             #@SYS828
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #References
+          AutoDeclaration     #Yes
+          ElementPosition     #715827882
+          HierarchyParent     #Other
+          DataSource          #ProjFundingSource
+          DataGroup           #References
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REFERENCEGROUP
+        PROPERTIES
+          Name                #ProjFundingSource_InvoiceLocation
+          PreviewPartRef      #ProjFundingSourceAddressPreviewPart
+          ElementPosition     #1288490187
+          HierarchyParent     #Address
+          DataSource          #ProjFundingSource
+          ReferenceField      #InvoiceLocation
+          ReplacementFieldGroup #Description
+          Label               #@SYS54098
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #Tab
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741823
+          Style               #FastTabs
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Address
+          AutoDeclaration     #Yes
+          Width               #Column width
+          ElementPosition     #1073741823
+          HierarchyParent     #Tab
+          BackgroundColor     #Window background
+          Caption             #@SYS80373
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #General
+          Width               #Column width
+          ElementPosition     #715827882
+          HierarchyParent     #Tab
+          Caption             #@SYS2952
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Other
+          AutoDeclaration     #Yes
+          Visible             #No
+          Width               #Column width
+          ElementPosition     #1610612733
+          HierarchyParent     #Tab
+          Caption             #@SYS108846
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #PaymentAndInvoice
+          AutoDeclaration     #Yes
+          Width               #Column width
+          ElementPosition     #1342177278
+          HierarchyParent     #Tab
+          Caption             #@SYS828
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #tabFinancialDimensions
+          AutoDeclaration     #Yes
+          NeededPermission    #Manual
+          Width               #Column width
+          ElementPosition     #1879048188
+          HierarchyParent     #Tab
+          BackgroundColor     #Window background
+          Caption             #@SYS138491
+          HideIfEmpty         #No
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #pageActivated
+            #public void pageActivated()
+            #{
+            #    dimensionDefaultingController.pageActivated();
+            #
+            #    super();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #Group_FundingType
+          AllowEdit           #No
+          ElementPosition     #1227133512
+          HierarchyParent     #Identification
+          DataSource          #ProjFundingSource
+          DataField           #FundingType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardAdhocCreate
+          AutoDeclaration     #Yes
+          HelpText            #@ACC115
+          ElementPosition     #1610612733
+          HierarchyParent     #GroupCC
+          ButtonDisplay       #Image only
+          NormalImage         #11421
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          DataSource          #ProjFundingSource
+          MenuItemName        #CreditCardAdhocCreate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #AddressView
+          AutoDeclaration     #Yes
+          ElementPosition     #1717986916
+          HierarchyParent     #Address
+          DataSource          #ProjFundingSource
+          DataMethod          #address
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #grantCustomer
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS310004
+          ConfigurationKey    #ProjGrant
+          ElementPosition     #1840700268
+          HierarchyParent     #Identification
+          Label               #@SYS300251
+          DataSource          #ProjFundingSource
+          DataMethod          #grantCustomer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Group_ContractId
+          AllowEdit           #No
+          ElementPosition     #613566756
+          HierarchyParent     #Identification
+          DataSource          #ProjFundingSource
+          DataField           #ContractId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Group_FundingSourceId
+          ElementPosition     #920350134
+          HierarchyParent     #Identification
+          DataSource          #ProjFundingSource
+          DataField           #FundingSourceId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Group_M_editProjFunder
+          AllowEdit           #No
+          HelpText            #@SYS322360
+          ElementPosition     #1533916890
+          HierarchyParent     #Identification
+          Label               #@SYS302
+          DataSource          #ProjFundingSource
+          DataMethod          #editProjFunder
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InvoiceName
+          ElementPosition     #858993458
+          HierarchyParent     #Address
+          DataSource          #ProjFundingSource
+          DataField           #InvoiceName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Process_CreditCardId
+          ElementPosition     #1073741822
+          HierarchyParent     #GroupCC
+          DataSource          #ProjFundingSource
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjFundingSource_CashDiscountId
+          ElementPosition     #1227133512
+          HierarchyParent     #PaymentGroup
+          DataSource          #ProjFundingSource
+          DataField           #CashDiscountId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjFundingSource_IndividualBuffer
+          ElementPosition     #1533916890
+          HierarchyParent     #PaymentGroup
+          DataSource          #ProjFundingSource
+          DataField           #IndividualBuffer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjFundingSource_LanguageId
+          ElementPosition     #1610612733
+          HierarchyParent     #Invoice
+          DataSource          #ProjFundingSource
+          DataField           #LanguageId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjFundingSource_NumberSequenceGroupId
+          ElementPosition     #1073741822
+          HierarchyParent     #Invoice
+          DataSource          #ProjFundingSource
+          DataField           #NumberSequenceGroupId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjFundingSource_PaymentscheduleId
+          ElementPosition     #920350134
+          HierarchyParent     #PaymentGroup
+          DataSource          #ProjFundingSource
+          DataField           #PaymentscheduleId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjFundingSource_PaymentTermsId
+          ElementPosition     #613566756
+          HierarchyParent     #PaymentGroup
+          DataSource          #ProjFundingSource
+          DataField           #PaymentTermsId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjFundingSource_PostingProfile
+          ElementPosition     #1840700268
+          HierarchyParent     #PaymentGroup
+          DataSource          #ProjFundingSource
+          DataField           #PostingProfile
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjFundingSource_TaxPeriodPaymentCode_PL
+          ElementPosition     #1994091957
+          HierarchyParent     #Identification
+          DataSource          #ProjFundingSource
+          DataField           #TaxPeriodPaymentCode_PL
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+  ASSOCIATEDFORM #LogisticsAddressZipCodeLookup
+    PROPERTIES
+      Form                #LogisticsAddressZipCodeLookup
+      AccessLevel         #Delete
+      SystemManaged       #No
+      ManagedBy           #CodeAnalysis
+    ENDPROPERTIES
+    
+  ENDASSOCIATEDFORM
+  
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+  ASSOCIATEDFORM #LogisticsAddressZipCodeLookup
+    PROPERTIES
+      Form                #LogisticsAddressZipCodeLookup
+      AccessLevel         #Delete
+      SystemManaged       #No
+      ManagedBy           #CodeAnalysis
+    ENDPROPERTIES
+    
+  ENDASSOCIATEDFORM
+  
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+  ASSOCIATEDFORM #LogisticsAddressZipCodeLookup
+    PROPERTIES
+      Form                #LogisticsAddressZipCodeLookup
+      AccessLevel         #Delete
+      SystemManaged       #No
+      ManagedBy           #CodeAnalysis
+    ENDPROPERTIES
+    
+  ENDASSOCIATEDFORM
+  
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

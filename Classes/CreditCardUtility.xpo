@@ -1,0 +1,194 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardUtility
+    PROPERTIES
+      Name                #CreditCardUtility
+      Origin              #{AB862F4E-286A-4323-8936-F8F434EBF8BA}
+      LegacyId            #20026
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardUtility
+        #{
+        #
+        #}
+      ENDSOURCE
+      SOURCE #addEncrypt
+        #static protected ClrObject addEncrypt()
+        #{
+        #    return System.Text.Encoding::get_ASCII().GetBytes('CreditCard');
+        #}
+      ENDSOURCE
+      SOURCE #binl2b64
+        #/*
+        # * Convert an array of little-endian words to a base64 encoded string.
+        # */
+        #static public str binl2b64(Array binarray)
+        #{
+        #    str tab = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        #    str ret = '';
+        #    int i;
+        #    ;
+        #
+        #    for(i = 0; i < binarray.lastIndex() * 32; i += 6)
+        #    {
+        #        ret += substr(tab,(((binarray.value(i>>5 + 1) << (i mod 32)) & 0x3f) | ((binarray.value(i>>5 + 2) >> (32-i mod 32)) & 0x3f))+1,1);
+        #    }
+        #    return ret;
+        #}
+        #
+        #//error in code, when i=96, attempts to read binarray(5) from (binarray.value(i>>5 + 2) and this does not exist
+        #//binarray has just 4 elements
+      ENDSOURCE
+      SOURCE #decrypt
+        #public server static str decrypt(str encrStr, str key)
+        #{
+        #    InteropPermission   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ClrObject           cArray;
+        #    ClrObject           pdb;
+        #    ClrObject           decryptedData;
+        #    System.String       result;
+        #    ;
+        #    clrPermission.assert();
+        #    try
+        #    {
+        #        cArray  = System.Convert::FromBase64String(encrStr);
+        #        pdb     = new ClrObject('System.Security.Cryptography.PasswordDeriveBytes' , key, CreditCardUtility::addEncrypt());
+        #        decryptedData = CreditCardUtility::decryptByteArray(cArray, pdb.GetBytes(32), pdb.GetBytes(16));
+        #        result = System.Text.Encoding::get_ASCII().GetString(decryptedData);
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        result = '';
+        #    }
+        #
+        #    return result;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #decryptByteArray
+        #protected static ClrObject decryptByteArray(ClrObject    cipherData,
+        #                                                   ClrObject    key,
+        #                                                   ClrObject    iv)
+        #{
+        #    ClrObject               cryptoStream;
+        #    ClrObject               decryptor;
+        #    ClrObject               streamMode;
+        #    ClrObject               alg;
+        #    System.IO.MemoryStream  ms;
+        #    ;
+        #    try
+        #    {
+        #        ms = new System.IO.MemoryStream();
+        #        streamMode = ClrInterop::parseClrEnum('System.Security.Cryptography.CryptoStreamMode', 'Write');
+        #        alg = System.Security.Cryptography.Rijndael::Create();
+        #
+        #        alg.set_Key(key);
+        #        alg.set_IV(iv);
+        #
+        #        decryptor = alg.CreateDecryptor();
+        #        cryptoStream = new ClrObject('System.Security.Cryptography.CryptoStream' , ms, decryptor, streamMode);
+        #
+        #        cryptoStream.Write(cipherData, 0, cipherData.get_Length());
+        #        cryptoStream.Close();
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        retry;
+        #    }
+        #    return ms.ToArray();
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #encrypt
+        #// Encrypt a string into a string using a password
+        #public static str encrypt(str _clearText, str _password)
+        #{
+        #    InteropPermission   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ClrObject           clearBytes;
+        #    ClrObject           pdb;
+        #    ClrObject           encryptedData;
+        #    System.String       result;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    clearBytes = System.Text.Encoding::get_ASCII().GetBytes(_clearText);
+        #    pdb = new ClrObject('System.Security.Cryptography.PasswordDeriveBytes' , _password, CreditCardUtility::addEncrypt());
+        #    encryptedData = CreditCardUtility::EncryptByteArray(clearBytes, pdb.GetBytes(32), pdb.GetBytes(16));
+        #    result = ClrInterop::staticInvoke('System.Convert', 'ToBase64String', encryptedData);
+        #    return result;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #encryptByteArray
+        #protected static ClrObject encryptByteArray(ClrObject       clearData,
+        #                                            ClrObject       key,
+        #                                            ClrObject       iv)
+        #{
+        #    ClrObject                   cryptoStream;
+        #    ClrObject                   encryptor;
+        #    System.IO.MemoryStream      ms;
+        #    ClrObject                   streamMode;
+        #    ClrObject                   alg;
+        #    ;
+        #
+        #    ms = new System.IO.MemoryStream();
+        #    streamMode = ClrInterop::parseClrEnum('System.Security.Cryptography.CryptoStreamMode', 'Write');
+        #
+        #    alg = System.Security.Cryptography.Rijndael::Create();
+        #
+        #    alg.set_Key(key);
+        #    alg.set_IV(iv);
+        #
+        #    encryptor = alg.CreateEncryptor();
+        #    cryptoStream = new ClrObject('System.Security.Cryptography.CryptoStream' , ms, encryptor, streamMode);
+        #
+        #    cryptoStream.Write(clearData, 0, clearData.get_Length());
+        #
+        #    cryptoStream.Close();
+        #
+        #    return ms.ToArray();
+        #}
+      ENDSOURCE
+      SOURCE #str2binl
+        #/*
+        # * Convert an 8-bit character string to a sequence of 16-word blocks, stored
+        # * as an array, and append appropriate padding for MD4/5 calculation.
+        # * If any of the characters are >255, the high byte is silently ignored.
+        # */
+        #public static Array str2binl(str string)
+        #{
+        #    int     nblk = ((strlen(string) + 8) >> 6) + 1; // number of 16-word blocks
+        #    Array   blks = new Array(Types::Integer);
+        #    int     i;
+        #    ;
+        #//nblk * 16
+        #
+        #    for(i = 1; i < nblk * 16 + 1; i++)
+        #    {
+        #        blks.value(i,0);
+        #    }
+        #    for(i = 0; i < strlen(string); i++)
+        #    {
+        #        blks.value(i>>2 + 1,blks.value(i>>2 + 1) | (char2num(string,i+1) & 0xff) << ((i mod 4) * 8));
+        #
+        #    }
+        #    blks.value(i>>2 + 1,blks.value(i>>2 + 1) | 0x80 << ((i mod 4) * 8));
+        #    blks.value(nblk*16-2+1,strlen(string) * 8);
+        #
+        #    return blks;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

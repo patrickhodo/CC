@@ -1,0 +1,66 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DST
+
+; 
+; --------------------------------------------------------------------------------
+DSTVERSION 6
+
+DATASET #CreditCardTableDS
+  PROPERTIES
+    Name                #CreditCardTableDS
+    Origin              #{37E35DDB-6C72-4451-8525-0709BBFDBB71}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class DataSetRun extends ObjectRun
+      #{
+      #}
+    ENDSOURCE
+    SOURCE #getCustomer
+      #public CustAccount getCustomer()
+      #{
+      #    return DirPersonUser::current().custAccount();
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    super();
+          #
+          #    this.query().dataSourceNo(1).addRange(
+          #        fieldNum(CreditCardTable,CustAccount)).value(DirPersonUser::current().custAccount());
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+ENDDATASET
+
+
+***Element: END

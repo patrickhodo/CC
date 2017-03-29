@@ -1,0 +1,1630 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardTransAcc_CreditCardTrans_1
+    PROPERTIES
+      Name                #CreditCardTransAcc_CreditCardTrans_1
+      Extends             #AfStronglyTypedDataContainer
+      Origin              #{AB80A239-24D9-4711-AA20-80660111E704}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///    The <c>CreditCardTransAcc_CreditCardTrans_1</c> class is the data object class that is exposed through the <c>CreditCardTransAccService</c> class.
+        #/// </summary>
+        ##AxdCreditCardTransDCT
+        #[AifDataContainerTypeAttribute(#CreditCardTrans_CreditCardTrans_1)]
+        #class CreditCardTransAcc_CreditCardTrans_1 extends AfStronglyTypedDataContainer
+        #{
+        #    #define.Location('Location')
+        #    #define.CVDResponseStr('CVDResponseStr')
+        #    #define.Xid('Xid')
+        #    #define.WorkerProcessor('WorkerProcessor')
+        #    #define.Voucher('Voucher')
+        #    #define.VoiceAuth('VoiceAuth')
+        #    #define.VeresEnrolled('VeresEnrolled')
+        #    #define.UsePayPalRef('UsePayPalRef')
+        #    #define.TrxType('TrxType')
+        #    #define.TransType('TransType')
+        #    #define.TransID('TransID')
+        #    #define.TransDate('TransDate')
+        #    #define.TransCurrencyCode('TransCurrencyCode')
+        #    #define.TerminalId('TerminalId')
+        #    #define.SoloStartDate('SoloStartDate')
+        #    #define.SoloIssueNum('SoloIssueNum')
+        #    #define.SmmQuotationId('SmmQuotationId')
+        #    #define.SalesId('SalesId')
+        #    #define.RetrevalRefNum('RetrevalRefNum')
+        #    #define.Result('Result')
+        #    #define.ResponseRefRecId('ResponseRefRecId')
+        #    #define.ResponseLevel('ResponseLevel')
+        #    #define.RepMsg('RepMsg')
+        #    #define.RemovedFromBatch('RemovedFromBatch')
+        #    #define.RegisteredDate('RegisteredDate')
+        #    #define.Registered('Registered')
+        #    #define.RefRecId('RefRecId')
+        #    #define.RecVersion('RecVersion')
+        #    #define.RecurringToken('RecurringToken')
+        #    #define.RecId('RecId')
+        #    #define.ProjProposalId('ProjProposalId')
+        #    #define.ProfileId('ProfileId')
+        #    #define.Profile('Profile')
+        #    #define.PrivateLabel('PrivateLabel')
+        #    #define.PNRef('PNRef')
+        #    #define.PayPalReferenceId('PayPalReferenceId')
+        #    #define.ParesStatus('ParesStatus')
+        #    #define.PackingSlipId('PackingSlipId')
+        #    #define.OrigID('OrigID')
+        #    #define.OrigDateTime('OrigDateTime')
+        #    #define.OrbitalTxRefNum('OrbitalTxRefNum')
+        #    #define.OrbitalTxRefIdx('OrbitalTxRefIdx')
+        #    #define.OneTimeTrans('OneTimeTrans')
+        #    #define.OneTimeDateExp('OneTimeDateExp')
+        #    #define.NameOnCard('NameOnCard')
+        #    #define.JournalOrig('JournalOrig')
+        #    #define.InvoiceId('InvoiceId')
+        #    #define.IAvs('IAvs')
+        #    #define.EntrySource('EntrySource')
+        #    #define.ECIRaw('ECIRaw')
+        #    #define.Debit('Debit')
+        #    #define.CybersourceToken('CybersourceToken')
+        #    #define.CVDSent('CVDSent')
+        #    #define.CVDResponse('CVDResponse')
+        #    #define.CustomerRef('CustomerRef')
+        #    #define.CustInvoiceRefRecId('CustInvoiceRefRecId')
+        #    #define.CustAccount('CustAccount')
+        #    #define.CurrencyCode('CurrencyCode')
+        #    #define.CreditCardVoucher('CreditCardVoucher')
+        #    #define.CreditCardType('CreditCardType')
+        #    #define.CreditCardNumSecure('CreditCardNumSecure')
+        #    #define.CreditCardNumEncrypt('CreditCardNumEncrypt')
+        #    #define.CreditCardId('CreditCardId')
+        #    #define.CommercialSalesTax('CommercialSalesTax')
+        #    #define.CommercialLocalTax('CommercialLocalTax')
+        #    #define.CommercialCard('CommercialCard')
+        #    #define.CommerceIndicator('CommerceIndicator')
+        #    #define.Comment2('Comment2')
+        #    #define.Comment1('Comment1')
+        #    #define.CollectionInidicator('CollectionInidicator')
+        #    #define.CitiPlan('CitiPlan')
+        #    #define.CID('CID')
+        #    #define.CAVV('CAVV')
+        #    #define.BusRelAccount('BusRelAccount')
+        #    #define.BatchTransNumber('BatchTransNumber')
+        #    #define.BatchPaymentechNum('BatchPaymentechNum')
+        #    #define.BatchNumber('BatchNumber')
+        #    #define.BatchLastTrans('BatchLastTrans')
+        #    #define.AVSPhone('AVSPhone')
+        #    #define.AVSEmail('AVSEmail')
+        #    #define.AvsAddr('AvsAddr')
+        #    #define.AuthSource('AuthSource')
+        #    #define.AuthNetId('AuthNetId')
+        #    #define.AuthCode('AuthCode')
+        #    #define.AmountMST('AmountMST')
+        #    #define.AmountCur('AmountCur')
+        #    #define.AAV('AAV')
+        #    #define.TxRefGuid('TxRefGuid')
+        #    #define._DocumentHash('_DocumentHash')
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createLocation
+        #public LogisticsPostalAddressKey createLocation()
+        #{
+        #    return this.get_NewContainer(#Location);
+        #}
+      ENDSOURCE
+      SOURCE #exists_DocumentHash
+        #public boolean exists_DocumentHash()
+        #{
+        #    return this.exists(#_DocumentHash);
+        #}
+      ENDSOURCE
+      SOURCE #existsAAV
+        #public boolean existsAAV()
+        #{
+        #    return this.exists(#AAV);
+        #}
+      ENDSOURCE
+      SOURCE #existsAmountCur
+        #public boolean existsAmountCur()
+        #{
+        #    return this.exists(#AmountCur);
+        #}
+      ENDSOURCE
+      SOURCE #existsAmountMST
+        #public boolean existsAmountMST()
+        #{
+        #    return this.exists(#AmountMST);
+        #}
+      ENDSOURCE
+      SOURCE #existsAuthCode
+        #public boolean existsAuthCode()
+        #{
+        #    return this.exists(#AuthCode);
+        #}
+      ENDSOURCE
+      SOURCE #existsAuthNetId
+        #public boolean existsAuthNetId()
+        #{
+        #    return this.exists(#AuthNetId);
+        #}
+      ENDSOURCE
+      SOURCE #existsAuthSource
+        #public boolean existsAuthSource()
+        #{
+        #    return this.exists(#AuthSource);
+        #}
+      ENDSOURCE
+      SOURCE #existsAvsAddr
+        #public boolean existsAvsAddr()
+        #{
+        #    return this.exists(#AvsAddr);
+        #}
+      ENDSOURCE
+      SOURCE #existsAVSEmail
+        #public boolean existsAVSEmail()
+        #{
+        #    return this.exists(#AVSEmail);
+        #}
+      ENDSOURCE
+      SOURCE #existsAVSPhone
+        #public boolean existsAVSPhone()
+        #{
+        #    return this.exists(#AVSPhone);
+        #}
+      ENDSOURCE
+      SOURCE #existsBatchLastTrans
+        #public boolean existsBatchLastTrans()
+        #{
+        #    return this.exists(#BatchLastTrans);
+        #}
+      ENDSOURCE
+      SOURCE #existsBatchNumber
+        #public boolean existsBatchNumber()
+        #{
+        #    return this.exists(#BatchNumber);
+        #}
+      ENDSOURCE
+      SOURCE #existsBatchPaymentechNum
+        #public boolean existsBatchPaymentechNum()
+        #{
+        #    return this.exists(#BatchPaymentechNum);
+        #}
+      ENDSOURCE
+      SOURCE #existsBatchTransNumber
+        #public boolean existsBatchTransNumber()
+        #{
+        #    return this.exists(#BatchTransNumber);
+        #}
+      ENDSOURCE
+      SOURCE #existsBusRelAccount
+        #public boolean existsBusRelAccount()
+        #{
+        #    return this.exists(#BusRelAccount);
+        #}
+      ENDSOURCE
+      SOURCE #existsCAVV
+        #public boolean existsCAVV()
+        #{
+        #    return this.exists(#CAVV);
+        #}
+      ENDSOURCE
+      SOURCE #existsCID
+        #public boolean existsCID()
+        #{
+        #    return this.exists(#CID);
+        #}
+      ENDSOURCE
+      SOURCE #existsCitiPlan
+        #public boolean existsCitiPlan()
+        #{
+        #    return this.exists(#CitiPlan);
+        #}
+      ENDSOURCE
+      SOURCE #existsCollectionInidicator
+        #public boolean existsCollectionInidicator()
+        #{
+        #    return this.exists(#CollectionInidicator);
+        #}
+      ENDSOURCE
+      SOURCE #existsComment1
+        #public boolean existsComment1()
+        #{
+        #    return this.exists(#Comment1);
+        #}
+      ENDSOURCE
+      SOURCE #existsComment2
+        #public boolean existsComment2()
+        #{
+        #    return this.exists(#Comment2);
+        #}
+      ENDSOURCE
+      SOURCE #existsCommerceIndicator
+        #public boolean existsCommerceIndicator()
+        #{
+        #    return this.exists(#CommerceIndicator);
+        #}
+      ENDSOURCE
+      SOURCE #existsCommercialCard
+        #public boolean existsCommercialCard()
+        #{
+        #    return this.exists(#CommercialCard);
+        #}
+      ENDSOURCE
+      SOURCE #existsCommercialLocalTax
+        #public boolean existsCommercialLocalTax()
+        #{
+        #    return this.exists(#CommercialLocalTax);
+        #}
+      ENDSOURCE
+      SOURCE #existsCommercialSalesTax
+        #public boolean existsCommercialSalesTax()
+        #{
+        #    return this.exists(#CommercialSalesTax);
+        #}
+      ENDSOURCE
+      SOURCE #existsCreditCardId
+        #public boolean existsCreditCardId()
+        #{
+        #    return this.exists(#CreditCardId);
+        #}
+      ENDSOURCE
+      SOURCE #existsCreditCardNumEncrypt
+        #public boolean existsCreditCardNumEncrypt()
+        #{
+        #    return this.exists(#CreditCardNumEncrypt);
+        #}
+      ENDSOURCE
+      SOURCE #existsCreditCardNumSecure
+        #public boolean existsCreditCardNumSecure()
+        #{
+        #    return this.exists(#CreditCardNumSecure);
+        #}
+      ENDSOURCE
+      SOURCE #existsCreditCardType
+        #public boolean existsCreditCardType()
+        #{
+        #    return this.exists(#CreditCardType);
+        #}
+      ENDSOURCE
+      SOURCE #existsCreditCardVoucher
+        #public boolean existsCreditCardVoucher()
+        #{
+        #    return this.exists(#CreditCardVoucher);
+        #}
+      ENDSOURCE
+      SOURCE #existsCurrencyCode
+        #public boolean existsCurrencyCode()
+        #{
+        #    return this.exists(#CurrencyCode);
+        #}
+      ENDSOURCE
+      SOURCE #existsCustAccount
+        #public boolean existsCustAccount()
+        #{
+        #    return this.exists(#CustAccount);
+        #}
+      ENDSOURCE
+      SOURCE #existsCustInvoiceRefRecId
+        #public boolean existsCustInvoiceRefRecId()
+        #{
+        #    return this.exists(#CustInvoiceRefRecId);
+        #}
+      ENDSOURCE
+      SOURCE #existsCustomerRef
+        #public boolean existsCustomerRef()
+        #{
+        #    return this.exists(#CustomerRef);
+        #}
+      ENDSOURCE
+      SOURCE #existsCVDResponse
+        #public boolean existsCVDResponse()
+        #{
+        #    return this.exists(#CVDResponse);
+        #}
+      ENDSOURCE
+      SOURCE #existsCVDResponseStr
+        #public boolean existsCVDResponseStr()
+        #{
+        #    return this.exists(#CVDResponseStr);
+        #}
+      ENDSOURCE
+      SOURCE #existsCVDSent
+        #public boolean existsCVDSent()
+        #{
+        #    return this.exists(#CVDSent);
+        #}
+      ENDSOURCE
+      SOURCE #existsCybersourceToken
+        #public boolean existsCybersourceToken()
+        #{
+        #    return this.exists(#CybersourceToken);
+        #}
+      ENDSOURCE
+      SOURCE #existsDebit
+        #public boolean existsDebit()
+        #{
+        #    return this.exists(#Debit);
+        #}
+      ENDSOURCE
+      SOURCE #existsECIRaw
+        #public boolean existsECIRaw()
+        #{
+        #    return this.exists(#ECIRaw);
+        #}
+      ENDSOURCE
+      SOURCE #existsEntrySource
+        #public boolean existsEntrySource()
+        #{
+        #    return this.exists(#EntrySource);
+        #}
+      ENDSOURCE
+      SOURCE #existsIAvs
+        #public boolean existsIAvs()
+        #{
+        #    return this.exists(#IAvs);
+        #}
+      ENDSOURCE
+      SOURCE #existsInvoiceId
+        #public boolean existsInvoiceId()
+        #{
+        #    return this.exists(#InvoiceId);
+        #}
+      ENDSOURCE
+      SOURCE #existsJournalOrig
+        #public boolean existsJournalOrig()
+        #{
+        #    return this.exists(#JournalOrig);
+        #}
+      ENDSOURCE
+      SOURCE #existsLocation
+        #public boolean existsLocation()
+        #{
+        #    return this.exists(#Location);
+        #}
+      ENDSOURCE
+      SOURCE #existsNameOnCard
+        #public boolean existsNameOnCard()
+        #{
+        #    return this.exists(#NameOnCard);
+        #}
+      ENDSOURCE
+      SOURCE #existsOneTimeDateExp
+        #public boolean existsOneTimeDateExp()
+        #{
+        #    return this.exists(#OneTimeDateExp);
+        #}
+      ENDSOURCE
+      SOURCE #existsOneTimeTrans
+        #public boolean existsOneTimeTrans()
+        #{
+        #    return this.exists(#OneTimeTrans);
+        #}
+      ENDSOURCE
+      SOURCE #existsOrbitalTxRefIdx
+        #public boolean existsOrbitalTxRefIdx()
+        #{
+        #    return this.exists(#OrbitalTxRefIdx);
+        #}
+      ENDSOURCE
+      SOURCE #existsOrbitalTxRefNum
+        #public boolean existsOrbitalTxRefNum()
+        #{
+        #    return this.exists(#OrbitalTxRefNum);
+        #}
+      ENDSOURCE
+      SOURCE #existsOrigDateTime
+        #public boolean existsOrigDateTime()
+        #{
+        #    return this.exists(#OrigDateTime);
+        #}
+      ENDSOURCE
+      SOURCE #existsOrigID
+        #public boolean existsOrigID()
+        #{
+        #    return this.exists(#OrigID);
+        #}
+      ENDSOURCE
+      SOURCE #existsPackingSlipId
+        #public boolean existsPackingSlipId()
+        #{
+        #    return this.exists(#PackingSlipId);
+        #}
+      ENDSOURCE
+      SOURCE #existsParesStatus
+        #public boolean existsParesStatus()
+        #{
+        #    return this.exists(#ParesStatus);
+        #}
+      ENDSOURCE
+      SOURCE #existsPayPalReferenceId
+        #public boolean existsPayPalReferenceId()
+        #{
+        #    return this.exists(#PayPalReferenceId);
+        #}
+      ENDSOURCE
+      SOURCE #existsPNRef
+        #public boolean existsPNRef()
+        #{
+        #    return this.exists(#PNRef);
+        #}
+      ENDSOURCE
+      SOURCE #existsPrivateLabel
+        #public boolean existsPrivateLabel()
+        #{
+        #    return this.exists(#PrivateLabel);
+        #}
+      ENDSOURCE
+      SOURCE #existsProfile
+        #public boolean existsProfile()
+        #{
+        #    return this.exists(#Profile);
+        #}
+      ENDSOURCE
+      SOURCE #existsProfileId
+        #public boolean existsProfileId()
+        #{
+        #    return this.exists(#ProfileId);
+        #}
+      ENDSOURCE
+      SOURCE #existsProjProposalId
+        #public boolean existsProjProposalId()
+        #{
+        #    return this.exists(#ProjProposalId);
+        #}
+      ENDSOURCE
+      SOURCE #existsRecId
+        #public boolean existsRecId()
+        #{
+        #    return this.exists(#RecId);
+        #}
+      ENDSOURCE
+      SOURCE #existsRecurringToken
+        #public boolean existsRecurringToken()
+        #{
+        #    return this.exists(#RecurringToken);
+        #}
+      ENDSOURCE
+      SOURCE #existsRecVersion
+        #public boolean existsRecVersion()
+        #{
+        #    return this.exists(#RecVersion);
+        #}
+      ENDSOURCE
+      SOURCE #existsRefRecId
+        #public boolean existsRefRecId()
+        #{
+        #    return this.exists(#RefRecId);
+        #}
+      ENDSOURCE
+      SOURCE #existsRegistered
+        #public boolean existsRegistered()
+        #{
+        #    return this.exists(#Registered);
+        #}
+      ENDSOURCE
+      SOURCE #existsRegisteredDate
+        #public boolean existsRegisteredDate()
+        #{
+        #    return this.exists(#RegisteredDate);
+        #}
+      ENDSOURCE
+      SOURCE #existsRemovedFromBatch
+        #public boolean existsRemovedFromBatch()
+        #{
+        #    return this.exists(#RemovedFromBatch);
+        #}
+      ENDSOURCE
+      SOURCE #existsRepMsg
+        #public boolean existsRepMsg()
+        #{
+        #    return this.exists(#RepMsg);
+        #}
+      ENDSOURCE
+      SOURCE #existsResponseLevel
+        #public boolean existsResponseLevel()
+        #{
+        #    return this.exists(#ResponseLevel);
+        #}
+      ENDSOURCE
+      SOURCE #existsResult
+        #public boolean existsResult()
+        #{
+        #    return this.exists(#Result);
+        #}
+      ENDSOURCE
+      SOURCE #existsRetrevalRefNum
+        #public boolean existsRetrevalRefNum()
+        #{
+        #    return this.exists(#RetrevalRefNum);
+        #}
+      ENDSOURCE
+      SOURCE #existsSalesId
+        #public boolean existsSalesId()
+        #{
+        #    return this.exists(#SalesId);
+        #}
+      ENDSOURCE
+      SOURCE #existsSmmQuotationId
+        #public boolean existsSmmQuotationId()
+        #{
+        #    return this.exists(#SmmQuotationId);
+        #}
+      ENDSOURCE
+      SOURCE #existsSoloIssueNum
+        #public boolean existsSoloIssueNum()
+        #{
+        #    return this.exists(#SoloIssueNum);
+        #}
+      ENDSOURCE
+      SOURCE #existsSoloStartDate
+        #public boolean existsSoloStartDate()
+        #{
+        #    return this.exists(#SoloStartDate);
+        #}
+      ENDSOURCE
+      SOURCE #existsTerminalId
+        #public boolean existsTerminalId()
+        #{
+        #    return this.exists(#TerminalId);
+        #}
+      ENDSOURCE
+      SOURCE #existsTransCurrencyCode
+        #public boolean existsTransCurrencyCode()
+        #{
+        #    return this.exists(#TransCurrencyCode);
+        #}
+      ENDSOURCE
+      SOURCE #existsTransDate
+        #public boolean existsTransDate()
+        #{
+        #    return this.exists(#TransDate);
+        #}
+      ENDSOURCE
+      SOURCE #existsTransID
+        #public boolean existsTransID()
+        #{
+        #    return this.exists(#TransID);
+        #}
+      ENDSOURCE
+      SOURCE #existsTransType
+        #public boolean existsTransType()
+        #{
+        #    return this.exists(#TransType);
+        #}
+      ENDSOURCE
+      SOURCE #existsTrxType
+        #public boolean existsTrxType()
+        #{
+        #    return this.exists(#TrxType);
+        #}
+      ENDSOURCE
+      SOURCE #existsTxRefGuid
+        #public boolean existsTxRefGuid()
+        #{
+        #    return this.exists(#TxRefGuid);
+        #}
+      ENDSOURCE
+      SOURCE #existsUsePayPalRef
+        #public boolean existsUsePayPalRef()
+        #{
+        #    return this.exists(#UsePayPalRef);
+        #}
+      ENDSOURCE
+      SOURCE #existsVeresEnrolled
+        #public boolean existsVeresEnrolled()
+        #{
+        #    return this.exists(#VeresEnrolled);
+        #}
+      ENDSOURCE
+      SOURCE #existsVoiceAuth
+        #public boolean existsVoiceAuth()
+        #{
+        #    return this.exists(#VoiceAuth);
+        #}
+      ENDSOURCE
+      SOURCE #existsVoucher
+        #public boolean existsVoucher()
+        #{
+        #    return this.exists(#Voucher);
+        #}
+      ENDSOURCE
+      SOURCE #existsWorkerProcessor
+        #public boolean existsWorkerProcessor()
+        #{
+        #    return this.exists(#WorkerProcessor);
+        #}
+      ENDSOURCE
+      SOURCE #existsXid
+        #public boolean existsXid()
+        #{
+        #    return this.exists(#Xid);
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #public void new()
+        #{
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #parm_DocumentHash
+        #public str parm_DocumentHash(str _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#_DocumentHash, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#_DocumentHash);
+        #}
+      ENDSOURCE
+      SOURCE #parmAAV
+        #public CreditCardPNRef parmAAV(CreditCardPNRef _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AAV, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AAV);
+        #}
+      ENDSOURCE
+      SOURCE #parmAmountCur
+        #public AmountCur parmAmountCur(AmountCur _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AmountCur, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AmountCur);
+        #}
+      ENDSOURCE
+      SOURCE #parmAmountMST
+        #public AmountMST parmAmountMST(AmountMST _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AmountMST, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AmountMST);
+        #}
+      ENDSOURCE
+      SOURCE #parmAuthCode
+        #public CreditCardAuthCode parmAuthCode(CreditCardAuthCode _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AuthCode, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AuthCode);
+        #}
+      ENDSOURCE
+      SOURCE #parmAuthNetId
+        #public CreditCardAuthNetId parmAuthNetId(CreditCardAuthNetId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AuthNetId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AuthNetId);
+        #}
+      ENDSOURCE
+      SOURCE #parmAuthSource
+        #public CreditCardAuthSource parmAuthSource(CreditCardAuthSource _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AuthSource, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AuthSource);
+        #}
+      ENDSOURCE
+      SOURCE #parmAvsAddr
+        #public CreditCardAvsAddr parmAvsAddr(CreditCardAvsAddr _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AvsAddr, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AvsAddr);
+        #}
+      ENDSOURCE
+      SOURCE #parmAVSEmail
+        #public Email parmAVSEmail(Email _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AVSEmail, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AVSEmail);
+        #}
+      ENDSOURCE
+      SOURCE #parmAVSPhone
+        #public Phone parmAVSPhone(Phone _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AVSPhone, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AVSPhone);
+        #}
+      ENDSOURCE
+      SOURCE #parmBatchLastTrans
+        #public NoYesId parmBatchLastTrans(NoYesId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BatchLastTrans, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BatchLastTrans);
+        #}
+      ENDSOURCE
+      SOURCE #parmBatchNumber
+        #public CreditCardBatchNumber parmBatchNumber(CreditCardBatchNumber _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BatchNumber, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BatchNumber);
+        #}
+      ENDSOURCE
+      SOURCE #parmBatchPaymentechNum
+        #public CreditCardBatchNumber parmBatchPaymentechNum(CreditCardBatchNumber _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BatchPaymentechNum, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BatchPaymentechNum);
+        #}
+      ENDSOURCE
+      SOURCE #parmBatchTransNumber
+        #public CreditCardBatchNumber parmBatchTransNumber(CreditCardBatchNumber _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BatchTransNumber, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BatchTransNumber);
+        #}
+      ENDSOURCE
+      SOURCE #parmBusRelAccount
+        #public smmBusRelAccount parmBusRelAccount(smmBusRelAccount _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BusRelAccount, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BusRelAccount);
+        #}
+      ENDSOURCE
+      SOURCE #parmCAVV
+        #public CreditCardPNRef parmCAVV(CreditCardPNRef _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CAVV, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CAVV);
+        #}
+      ENDSOURCE
+      SOURCE #parmCID
+        #public CreditCardCID parmCID(CreditCardCID _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CID, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CID);
+        #}
+      ENDSOURCE
+      SOURCE #parmCitiPlan
+        #public CreditCardCitiPlan parmCitiPlan(CreditCardCitiPlan _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CitiPlan, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CitiPlan);
+        #}
+      ENDSOURCE
+      SOURCE #parmCollectionInidicator
+        #public CreditCardRepMsg parmCollectionInidicator(CreditCardRepMsg _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CollectionInidicator, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CollectionInidicator);
+        #}
+      ENDSOURCE
+      SOURCE #parmComment1
+        #public CreditCardComment parmComment1(CreditCardComment _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Comment1, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Comment1);
+        #}
+      ENDSOURCE
+      SOURCE #parmComment2
+        #public CreditCardComment parmComment2(CreditCardComment _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Comment2, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Comment2);
+        #}
+      ENDSOURCE
+      SOURCE #parmCommerceIndicator
+        #public CreditCardRepMsg parmCommerceIndicator(CreditCardRepMsg _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CommerceIndicator, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CommerceIndicator);
+        #}
+      ENDSOURCE
+      SOURCE #parmCommercialCard
+        #public NoYesId parmCommercialCard(NoYesId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CommercialCard, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CommercialCard);
+        #}
+      ENDSOURCE
+      SOURCE #parmCommercialLocalTax
+        #public CreditCardCommercialTaxFlag parmCommercialLocalTax(CreditCardCommercialTaxFlag _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CommercialLocalTax, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CommercialLocalTax);
+        #}
+      ENDSOURCE
+      SOURCE #parmCommercialSalesTax
+        #public TaxAmountCur parmCommercialSalesTax(TaxAmountCur _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CommercialSalesTax, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CommercialSalesTax);
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardId
+        #public CreditCardId parmCreditCardId(CreditCardId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CreditCardId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CreditCardId);
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardNumEncrypt
+        #public CreditCardNumEncrypt parmCreditCardNumEncrypt(CreditCardNumEncrypt _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CreditCardNumEncrypt, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CreditCardNumEncrypt);
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardNumSecure
+        #public CreditCardNum parmCreditCardNumSecure(CreditCardNum _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CreditCardNumSecure, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CreditCardNumSecure);
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardType
+        #public CreditCardType parmCreditCardType(CreditCardType _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CreditCardType, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CreditCardType);
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardVoucher
+        #public CreditCardVoucherId parmCreditCardVoucher(CreditCardVoucherId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CreditCardVoucher, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CreditCardVoucher);
+        #}
+      ENDSOURCE
+      SOURCE #parmCurrencyCode
+        #public str parmCurrencyCode(str _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CurrencyCode, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CurrencyCode);
+        #}
+      ENDSOURCE
+      SOURCE #parmCustAccount
+        #public str parmCustAccount(str _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CustAccount, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CustAccount);
+        #}
+      ENDSOURCE
+      SOURCE #parmCustInvoiceRefRecId
+        #public RefRecId parmCustInvoiceRefRecId(RefRecId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CustInvoiceRefRecId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CustInvoiceRefRecId);
+        #}
+      ENDSOURCE
+      SOURCE #parmCustomerRef
+        #public CreditCardReferenceId parmCustomerRef(CreditCardReferenceId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CustomerRef, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CustomerRef);
+        #}
+      ENDSOURCE
+      SOURCE #parmCVDResponse
+        #public CreditCardCVDResponse parmCVDResponse(CreditCardCVDResponse _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CVDResponse, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CVDResponse);
+        #}
+      ENDSOURCE
+      SOURCE #parmCVDResponseStr
+        #public CreditCardCVDResponseStr parmCVDResponseStr(CreditCardCVDResponseStr _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CVDResponseStr, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CVDResponseStr);
+        #}
+      ENDSOURCE
+      SOURCE #parmCVDSent
+        #public CreditCardCVDValues parmCVDSent(CreditCardCVDValues _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CVDSent, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CVDSent);
+        #}
+      ENDSOURCE
+      SOURCE #parmCybersourceToken
+        #public CreditCardCybersourceToken parmCybersourceToken(CreditCardCybersourceToken _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CybersourceToken, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CybersourceToken);
+        #}
+      ENDSOURCE
+      SOURCE #parmDebit
+        #public NoYes parmDebit(NoYes _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Debit, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Debit);
+        #}
+      ENDSOURCE
+      SOURCE #parmECIRaw
+        #public CreditCardECIRaw parmECIRaw(CreditCardECIRaw _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ECIRaw, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ECIRaw);
+        #}
+      ENDSOURCE
+      SOURCE #parmEntrySource
+        #public CreditCardEntrySource parmEntrySource(CreditCardEntrySource _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#EntrySource, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#EntrySource);
+        #}
+      ENDSOURCE
+      SOURCE #parmIAvs
+        #public CreditCardIAvs parmIAvs(CreditCardIAvs _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#IAvs, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#IAvs);
+        #}
+      ENDSOURCE
+      SOURCE #parmInvoiceId
+        #public CustInvoiceId parmInvoiceId(CustInvoiceId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#InvoiceId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#InvoiceId);
+        #}
+      ENDSOURCE
+      SOURCE #parmJournalOrig
+        #public CreditCardJournalOrig parmJournalOrig(CreditCardJournalOrig _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#JournalOrig, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#JournalOrig);
+        #}
+      ENDSOURCE
+      SOURCE #parmLocation
+        #public LogisticsPostalAddressKey parmLocation(LogisticsPostalAddressKey _value = null)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Container(#Location, _value);
+        #    }
+        #
+        #    return this.get_Container(#Location);
+        #}
+      ENDSOURCE
+      SOURCE #parmNameOnCard
+        #public Name parmNameOnCard(Name _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#NameOnCard, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#NameOnCard);
+        #}
+      ENDSOURCE
+      SOURCE #parmOneTimeDateExp
+        #public CreditCardExpirationDate parmOneTimeDateExp(CreditCardExpirationDate _value = dateNull())
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#OneTimeDateExp, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#OneTimeDateExp);
+        #}
+      ENDSOURCE
+      SOURCE #parmOneTimeTrans
+        #public NoYesId parmOneTimeTrans(NoYesId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#OneTimeTrans, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#OneTimeTrans);
+        #}
+      ENDSOURCE
+      SOURCE #parmOrbitalTxRefIdx
+        #public CreditCardOrbitalTxRefIdx parmOrbitalTxRefIdx(CreditCardOrbitalTxRefIdx _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#OrbitalTxRefIdx, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#OrbitalTxRefIdx);
+        #}
+      ENDSOURCE
+      SOURCE #parmOrbitalTxRefNum
+        #public CreditCardOrbitalTxRefNum parmOrbitalTxRefNum(CreditCardOrbitalTxRefNum _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#OrbitalTxRefNum, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#OrbitalTxRefNum);
+        #}
+      ENDSOURCE
+      SOURCE #parmOrigDateTime
+        #public TransDateTime parmOrigDateTime(TransDateTime _value = utcDateTimeNull())
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#OrigDateTime, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#OrigDateTime);
+        #}
+      ENDSOURCE
+      SOURCE #parmOrigID
+        #public CreditCardPNRef parmOrigID(CreditCardPNRef _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#OrigID, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#OrigID);
+        #}
+      ENDSOURCE
+      SOURCE #parmPackingSlipId
+        #public PackingSlipId parmPackingSlipId(PackingSlipId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#PackingSlipId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#PackingSlipId);
+        #}
+      ENDSOURCE
+      SOURCE #parmParesStatus
+        #public CreditCardParesStatus parmParesStatus(CreditCardParesStatus _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ParesStatus, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ParesStatus);
+        #}
+      ENDSOURCE
+      SOURCE #parmPayPalReferenceId
+        #public CreditCardReferenceId parmPayPalReferenceId(CreditCardReferenceId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#PayPalReferenceId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#PayPalReferenceId);
+        #}
+      ENDSOURCE
+      SOURCE #parmPNRef
+        #public CreditCardPNRef parmPNRef(CreditCardPNRef _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#PNRef, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#PNRef);
+        #}
+      ENDSOURCE
+      SOURCE #parmPrivateLabel
+        #public CreditCardPrivateLabel parmPrivateLabel(CreditCardPrivateLabel _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#PrivateLabel, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#PrivateLabel);
+        #}
+      ENDSOURCE
+      SOURCE #parmProfile
+        #public NoYesId parmProfile(NoYesId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Profile, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Profile);
+        #}
+      ENDSOURCE
+      SOURCE #parmProfileId
+        #public CreditCardProfileId parmProfileId(CreditCardProfileId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ProfileId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ProfileId);
+        #}
+      ENDSOURCE
+      SOURCE #parmProjProposalId
+        #public ProjProposalId parmProjProposalId(ProjProposalId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ProjProposalId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ProjProposalId);
+        #}
+      ENDSOURCE
+      SOURCE #parmRecId
+        #public RecId parmRecId(RecId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RecId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RecId);
+        #}
+      ENDSOURCE
+      SOURCE #parmRecurringToken
+        #public CreditCardRecurringToken parmRecurringToken(CreditCardRecurringToken _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RecurringToken, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RecurringToken);
+        #}
+      ENDSOURCE
+      SOURCE #parmRecVersion
+        #public RecVersion parmRecVersion(RecVersion _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RecVersion, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RecVersion);
+        #}
+      ENDSOURCE
+      SOURCE #parmRefRecId
+        #public RefRecId parmRefRecId(RefRecId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RefRecId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RefRecId);
+        #}
+      ENDSOURCE
+      SOURCE #parmRegistered
+        #public NoYesId parmRegistered(NoYesId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Registered, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Registered);
+        #}
+      ENDSOURCE
+      SOURCE #parmRegisteredDate
+        #public TransDate parmRegisteredDate(TransDate _value = dateNull())
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RegisteredDate, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RegisteredDate);
+        #}
+      ENDSOURCE
+      SOURCE #parmRemovedFromBatch
+        #public NoYesId parmRemovedFromBatch(NoYesId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RemovedFromBatch, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RemovedFromBatch);
+        #}
+      ENDSOURCE
+      SOURCE #parmRepMsg
+        #public CreditCardRepMsg parmRepMsg(CreditCardRepMsg _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RepMsg, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RepMsg);
+        #}
+      ENDSOURCE
+      SOURCE #parmResponseLevel
+        #public ErrorTolerance parmResponseLevel(ErrorTolerance _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ResponseLevel, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ResponseLevel);
+        #}
+      ENDSOURCE
+      SOURCE #parmResult
+        #public TransTxt parmResult(TransTxt _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Result, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Result);
+        #}
+      ENDSOURCE
+      SOURCE #parmRetrevalRefNum
+        #public CreditCardRetrievalRefNum parmRetrevalRefNum(CreditCardRetrievalRefNum _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RetrevalRefNum, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RetrevalRefNum);
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesId
+        #public SalesId parmSalesId(SalesId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#SalesId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#SalesId);
+        #}
+      ENDSOURCE
+      SOURCE #parmSmmQuotationId
+        #public smmQuotationId parmSmmQuotationId(smmQuotationId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#SmmQuotationId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#SmmQuotationId);
+        #}
+      ENDSOURCE
+      SOURCE #parmSoloIssueNum
+        #public CreditCardSoloIssueNum parmSoloIssueNum(CreditCardSoloIssueNum _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#SoloIssueNum, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#SoloIssueNum);
+        #}
+      ENDSOURCE
+      SOURCE #parmSoloStartDate
+        #public CreditCardSoloStartDate parmSoloStartDate(CreditCardSoloStartDate _value = dateNull())
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#SoloStartDate, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#SoloStartDate);
+        #}
+      ENDSOURCE
+      SOURCE #parmTerminalId
+        #public CreditCardTerminalId parmTerminalId(CreditCardTerminalId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#TerminalId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#TerminalId);
+        #}
+      ENDSOURCE
+      SOURCE #parmTransCurrencyCode
+        #public CurrencyCodeISO parmTransCurrencyCode(CurrencyCodeISO _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#TransCurrencyCode, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#TransCurrencyCode);
+        #}
+      ENDSOURCE
+      SOURCE #parmTransDate
+        #public TransDate parmTransDate(TransDate _value = dateNull())
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#TransDate, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#TransDate);
+        #}
+      ENDSOURCE
+      SOURCE #parmTransID
+        #public CreditCardTransID parmTransID(CreditCardTransID _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#TransID, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#TransID);
+        #}
+      ENDSOURCE
+      SOURCE #parmTransType
+        #public CreditCardTrxType parmTransType(CreditCardTrxType _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#TransType, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#TransType);
+        #}
+      ENDSOURCE
+      SOURCE #parmTrxType
+        #public CreditCardTrxTypeId parmTrxType(CreditCardTrxTypeId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#TrxType, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#TrxType);
+        #}
+      ENDSOURCE
+      SOURCE #parmTxRefGuid
+        #public CreditCardTxRefGuid parmTxRefGuid(CreditCardTxRefGuid _value = str2guid(''))
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#TxRefGuid, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#TxRefGuid);
+        #}
+      ENDSOURCE
+      SOURCE #parmUsePayPalRef
+        #public NoYesId parmUsePayPalRef(NoYesId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#UsePayPalRef, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#UsePayPalRef);
+        #}
+      ENDSOURCE
+      SOURCE #parmVeresEnrolled
+        #public CreditCardVeresEnrolled parmVeresEnrolled(CreditCardVeresEnrolled _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#VeresEnrolled, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#VeresEnrolled);
+        #}
+      ENDSOURCE
+      SOURCE #parmVoiceAuth
+        #public NoYesId parmVoiceAuth(NoYesId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#VoiceAuth, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#VoiceAuth);
+        #}
+      ENDSOURCE
+      SOURCE #parmVoucher
+        #public Voucher parmVoucher(Voucher _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Voucher, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Voucher);
+        #}
+      ENDSOURCE
+      SOURCE #parmWorkerProcessor
+        #public DirPartyNumber parmWorkerProcessor(DirPartyNumber _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#WorkerProcessor, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#WorkerProcessor);
+        #}
+      ENDSOURCE
+      SOURCE #parmXid
+        #public TransTxt parmXid(TransTxt _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Xid, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Xid);
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

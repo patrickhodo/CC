@@ -1,0 +1,224 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantRealEx
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantRealEx
+      Label               #@ACC1272
+      FormRef             #creditCardterminalTable
+      TitleField1         #TerminalId
+      TitleField2         #URL
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdIdx
+      ClusterIndex        #TerminalIdIdx
+      DeveloperDocumentation  #@ACC1425
+      Origin              #{D75FB6C1-8676-4EE2-8923-2675BDD51E09}
+      LegacyId            #20032
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Account
+        STRING
+        PROPERTIES
+          Name                #Account
+          Label               #@SYS24500
+          Table               #CreditCardMerchantRealEx
+          Origin              #{21AB5E3D-57AE-418B-8103-0EB2D5595A5A}
+          LegacyId            #20004
+          ExtendedDataType    #CreditCardClientNum
+        ENDPROPERTIES
+        
+      FIELD #Industry
+        ENUM
+        PROPERTIES
+          Name                #Industry
+          Table               #CreditCardMerchantRealEx
+          Origin              #{0D6688C6-551A-4C9D-AE6E-0D00CFACA6AF}
+          LegacyId            #20005
+          EnumType            #CreditCardIndustryCybersource
+        ENDPROPERTIES
+        
+      FIELD #MerchantId
+        STRING
+        PROPERTIES
+          Name                #MerchantId
+          Label               #@ACC603
+          Table               #CreditCardMerchantRealEx
+          Origin              #{0CE8087D-28CC-4472-99AC-046306C46796}
+          LegacyId            #20003
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #PartnerPwd
+        STRING
+        PROPERTIES
+          Name                #PartnerPwd
+          Label               #@ACC1274
+          Table               #CreditCardMerchantRealEx
+          Origin              #{C5309F10-6B08-4ED8-A1FF-5A848BD0DA44}
+          LegacyId            #20006
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #RefundPwd
+        STRING
+        PROPERTIES
+          Name                #RefundPwd
+          Label               #@ACC1276
+          Table               #CreditCardMerchantRealEx
+          Origin              #{EA3FE7F0-9A33-4C64-9B92-AC6FC3FC6219}
+          LegacyId            #20007
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantRealEx
+          Origin              #{5CE65952-C29D-4BE9-AF11-65D9A62FA3AA}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #URL
+        STRING
+        PROPERTIES
+          Name                #URL
+          Table               #CreditCardMerchantRealEx
+          Origin              #{B64A91D3-0375-420F-BECE-0D940FC348A8}
+          LegacyId            #20002
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Industry
+        PROPERTIES
+          Name                #Industry
+          Label               #@ACC634
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Industry
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Interface
+        PROPERTIES
+          Name                #Interface
+          Label               #@SYS69603
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Merchant
+        PROPERTIES
+          Name                #Merchant
+          Label               #@ACC1012
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #MerchantId
+          #Account
+          #PartnerPwd
+          #RefundPwd
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdIdx
+      PROPERTIES
+        Name                #TerminalIdIdx
+        AllowDuplicates     #No
+        Origin              #{703C96DA-AEEC-4269-B26D-666B6ED5CB6B}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

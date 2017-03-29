@@ -1,0 +1,254 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardResponseTable
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardResponseTable
+      Label               #@ACC1670
+      TitleField1         #TerminalId
+      TitleField2         #Description
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      PrimaryIndex        #ResponseTerminalTypeValue
+      ClusterIndex        #ResponseTerminalTypeValue
+      DeveloperDocumentation  #@ACC1741
+      Origin              #{073F5A8D-B9D9-4FAA-9746-3C8B4340831C}
+      LegacyId            #20043
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Description
+        STRING
+        PROPERTIES
+          Name                #Description
+          Table               #CreditCardResponseTable
+          Origin              #{11336E9B-7A0A-4565-8728-63B6FA32BC73}
+          LegacyId            #20005
+          ExtendedDataType    #Description
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #ResponseLevel
+        ENUM
+        PROPERTIES
+          Name                #ResponseLevel
+          HelpText            #@ACC1748
+          Table               #CreditCardResponseTable
+          Origin              #{66D20632-BF27-47E6-8320-1635C8C1E91E}
+          LegacyId            #20004
+          EnumType            #ErrorTolerance
+        ENDPROPERTIES
+        
+      FIELD #ResponseType
+        ENUM
+        PROPERTIES
+          Name                #ResponseType
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardResponseTable
+          Origin              #{EF772809-F242-4F50-A245-967E6CF7A735}
+          LegacyId            #20001
+          EnumType            #CreditCardResponseType
+        ENDPROPERTIES
+        
+      FIELD #ResponseValue
+        STRING
+        PROPERTIES
+          Name                #ResponseValue
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardResponseTable
+          Origin              #{F9891643-6D6B-455D-A0B7-5DA0E82986F9}
+          LegacyId            #20003
+          ExtendedDataType    #CreditCardResponseValue
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardResponseTable
+          Origin              #{4AEA544A-FCF3-4F8E-A43B-661586CEF5D8}
+          LegacyId            #20002
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #Description
+          #ResponseType
+          #ResponseValue
+          #ResponseLevel
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #ResponseLevel
+          #ResponseType
+          #ResponseValue
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS53631
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #Description
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Response
+        PROPERTIES
+          Name                #Response
+          Label               #@SYS80247
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ResponseType
+          #ResponseValue
+          #ResponseLevel
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #ResponseTerminalTypeValue
+      PROPERTIES
+        Name                #ResponseTerminalTypeValue
+        AllowDuplicates     #No
+        Origin              #{2F987082-EE51-438E-AEF3-201677BC7592}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+        #ResponseType
+        #ResponseValue
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTrans
+        PROPERTIES
+          Name                #CreditCardTrans
+          Table               #CreditCardTrans
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RecId
+            RelatedField        #ResponseRefRecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #checkResponseTable
+        #static CreditCardTrans checkResponseTable(CreditCardTrans        ccTrans)
+        #{
+        #    CreditCardResponseTable     responseTable;
+        #    SalesTableCC                salesTableCC;
+        #    ;
+        #    ttsBegin;
+        #
+        #    ccTrans.selectForUpdate(true);
+        #    while select ResponseLevel,RecId,ResponseValue from responseTable
+        #        where responseTable.TerminalId == ccTrans.TerminalId
+        #    {
+        #        switch (responseTable.ResponseType)
+        #        {
+        #            case    CreditCardResponseType::Result  :
+        #                if (strLRTrim(ccTrans.Result) == strLRTrim(responseTable.ResponseValue))
+        #                    ccTrans.ResponseLevel = responseTable.ResponseLevel;
+        #                    ccTrans.ResponseRefRecId = responseTable.RecId;
+        #                break;
+        #            case    CreditCardResponseType::AVS     :
+        #                if (ccTrans.AvsAddr == strLRTrim(responseTable.ResponseValue))
+        #                    ccTrans.ResponseLevel = responseTable.ResponseLevel;
+        #                    ccTrans.ResponseRefRecId = responseTable.RecId;
+        #                break;
+        #            case    CreditCardResponseType::CVD     :
+        #                if (enum2value(ccTrans.CVDResponse) == strLRTrim(responseTable.ResponseValue))
+        #                    ccTrans.ResponseLevel = responseTable.ResponseLevel;
+        #                    ccTrans.ResponseRefRecId = responseTable.RecId;
+        #                break;
+        #        }
+        #
+        #    }
+        #
+        #    ttsCommit;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findRecId
+        #static CreditCardResponseTable findRecId(RefRecId       refRecId)
+        #{
+        #    CreditCardResponseTable     responseTable;
+        #    ;
+        #    select firstonly responseTable
+        #        where responseTable.RecId == refRecId;
+        #
+        #    return responseTable;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

@@ -1,0 +1,204 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #AxdCreditCardAcc
+    PROPERTIES
+      Name                #AxdCreditCardAcc
+      Extends             #AxdBase
+      RunOn               #Server
+      Origin              #{00BB7CD9-CF06-4689-990D-0A0115C0B0FA}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class AxdCreditCardAcc extends AxdBase
+        #{
+        #    #define.CreditCardTable_DataSourceName('CreditCardTable')
+        #}
+        #
+      ENDSOURCE
+      SOURCE #deleteList
+        #public AifResult deleteList(AifEntityKeyList            _aifEntityKeyList,
+        #                            AifEndpointActionPolicyInfo _actionPolicyInfo,
+        #                            AifConstraintListCollection _constraintListCollection)
+        #{
+        #    throw error(strfmt("@SYS94920"));
+        #}
+        #
+      ENDSOURCE
+      SOURCE #expandDimensions
+        #public boolean expandDimensions()
+        #{
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #expandSurrogateForeignKeys
+        #public boolean expandSurrogateForeignKeys()
+        #{
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findEntityKeyList
+        #public AifEntityKeyList findEntityKeyList(AifQueryCriteria            _queryCriteria,
+        #                                          AifEndpointActionPolicyInfo _actionPolicyInfo)
+        #{
+        #    throw error(strfmt("@SYS94920"));
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getActionList
+        #public AifActionInfoList getActionList()
+        #{
+        #    AifActionInfoList   Actions = new AifActionInfoList();
+        #    AifActionInfo       aifActionInfo;
+        #    ;
+        #    aifActionInfo = new AifActionInfo();
+        #    aifActionInfo.parmActionId(strfmt('%1%2', methodstr(AxdBase, findList), this.getName()));
+        #    aifActionInfo.parmActionType(AifActionType::QueryDocuments);
+        #    aifActionInfo.parmExternalName(aifActionInfo.parmActionId());
+        #    aifActionInfo.parmMethodName(methodstr(AxdBase, findList));
+        #    aifActionInfo.parmLabel("@ACC1621");
+        #    aifActionInfo.parmDescription("@ACC1622");
+        #    aifActionInfo.parmDisplayMenuItemName(menuitemdisplaystr(AifDocConfiguration));
+        #
+        #    actions.add(aifActionInfo);
+        #
+        #    aifActionInfo = new AifActionInfo();
+        #    aifActionInfo.parmActionId(strfmt('%1%2', methodstr(AxdBase, readList), this.getName()));
+        #    aifActionInfo.parmActionType(AifActionType::SendDocumentList);
+        #    aifActionInfo.parmExternalName(aifActionInfo.parmActionId());
+        #    aifActionInfo.parmMethodName(methodstr(AxdBase, readList));
+        #    aifActionInfo.parmLabel("@ACC1623");
+        #    aifActionInfo.parmDescription("@ACC1624");
+        #    aifActionInfo.parmDisplayMenuItemName(menuitemdisplaystr(AifDocConfiguration));
+        #
+        #    actions.add(aifActionInfo);
+        #
+        #    aifActionInfo = new AifActionInfo();
+        #    aifActionInfo.parmActionId(strfmt('%1%2', methodstr(AxdBase, createList), this.getName()));
+        #    aifActionInfo.parmActionType(AifActionType::ReceiveDocumentList);
+        #    aifActionInfo.parmExternalName(aifActionInfo.parmActionId());
+        #    aifActionInfo.parmMethodName(methodstr(AxdBase, createList));
+        #    aifActionInfo.parmLabel("@ACC1625");
+        #    aifActionInfo.parmDescription("@ACC1626");
+        #    aifActionInfo.parmDisplayMenuItemName(menuitemdisplaystr(AifDocConfiguration));
+        #
+        #    actions.add(aifActionInfo);
+        #
+        #    aifActionInfo = new AifActionInfo();
+        #    aifActionInfo.parmActionId(strfmt('%1%2', methodstr(AxdBase, updateList), this.getName()));
+        #    aifActionInfo.parmActionType(AifActionType::ProcessEntityList);
+        #    aifActionInfo.parmExternalName(aifActionInfo.parmActionId());
+        #    aifActionInfo.parmMethodName(methodstr(AxdBase, updateList));
+        #    aifActionInfo.parmLabel("@ACC1627");
+        #    aifActionInfo.parmDescription("@ACC1628");
+        #    aifActionInfo.parmDisplayMenuItemName(menuitemdisplaystr(AifDocConfiguration));
+        #
+        #    actions.add(aifActionInfo);
+        #
+        #    return actions;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getConstraintList
+        #public void getConstraintList(Common _curRec, AifConstraintList _constraintList)
+        #{
+        #    AifConstraint  aifConstraint = new AifConstraint();
+        #    CreditCardTable    CreditCardTable;
+        #    ;
+        #    if (!(_curRec is CreditCardTable))
+        #    {
+        #         throw error(strfmt("@SYS23396",funcname()));
+        #    }
+        #    CreditCardTable = _curRec ;
+        #    aifConstraint.parmType(AIFConstraintType::Customer);
+        #    aifConstraint.parmId(CreditCardTable.CustAccount);
+        #    _constraintList.addConstraint(aifConstraint) ;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getLabel
+        #public LabelString getLabel()
+        #{
+        #    return "@ACC1656";
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getQueryName
+        #public QueryName getQueryName()
+        #{
+        #    return querystr(CreditCardTable);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #prepareForSaveExtended
+        #public boolean prepareForSaveExtended(
+        #    AxdStack                    _axBcStack,
+        #    str                         _dataSourceName,
+        #    AxdRecordProcessingContext  _recordProcessingContext,
+        #    AxInternalBase              _childRecord)
+        #{
+        #    AxCreditCardTable axbc_CreditCardTable;
+        #
+        #
+        #    switch (_dataSourceName)
+        #    {
+        #        // ----------------------------------------------------------------------
+        #        // Process CreditCardTable records
+        #        // ----------------------------------------------------------------------
+        #        case #CreditCardTable_DataSourceName:
+        #
+        #            axbc_CreditCardTable = _axBcStack.top();
+        #            switch (_recordProcessingContext)
+        #            {
+        #                // Ensure CreditCardTable record is saved
+        #                case AxdRecordProcessingContext::AfterAllChildRecordsProcessed:
+        #                    if (!axbc_CreditCardTable.isProcessed())
+        #                    {
+        #                        return true;
+        #                    }
+        #
+        #                    return false;
+        #            }
+        #
+        #            return false;
+        #
+        #        // ----------------------------------------------------------------------
+        #        // Unsupported data sources
+        #        // ----------------------------------------------------------------------
+        #        default:
+        #            error(strfmt("@SYS88979",classId2Name(classidget(_axBcStack.top()))));
+        #            return false;
+        #    }
+        #
+        #    return false;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #prepareForUpdateExtended
+        #public boolean prepareForUpdateExtended(
+        #    AxdStack                    _axBcStack,
+        #    str                         _dataSourceName,
+        #    AxdRecordProcessingContext  _recordProcessingContext,
+        #    AxInternalBase              _childRecord)
+        #{
+        #    return this.prepareForSaveExtended(
+        #        _axBcStack,
+        #        _dataSourceName,
+        #        _recordProcessingContext,
+        #        _childRecord);
+        #}
+        #
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

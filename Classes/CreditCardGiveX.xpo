@@ -1,0 +1,457 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardGiveX
+    PROPERTIES
+      Name                #CreditCardGiveX
+      Origin              #{AB04BADF-B601-4969-835E-B214A39594F8}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeResponseCard
+        #Map analyzeResponseCard(TempStr                 msg,
+        #                                CreditCardTable             _ccTable)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList;
+        #    XmlNode                         elementParent;
+        #    Counter                         cnt;
+        #    TempStr                         tmpStr;
+        #    TempStr                         node;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #
+        #    ;
+        #    ttsbegin;
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    nodeList = xmlResult.documentElement().childNodes().item(0).childNodes().item(0).childNodes().item(0).childNodes().item(0).childNodes();
+        #
+        #    elementParent = nodeList.item(0);
+        #    nodeList = elementParent.childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be one node <TXN>
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        response.insert(node + int2str(cnt),elementParent.innerText());
+        #
+        #    }
+        #
+        #    //--> Map Lookups
+        #
+        #    ttscommit;
+        #
+        #    return response;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #public TempStr build(Counter        transType)
+        #{
+        #    TempStr       parmList;
+        #    ;
+        #    switch (transType)
+        #    {
+        #        case 909    :
+        #            parmList = this.buildBalance();
+        #            break;
+        #        case 904    :
+        #            parmList = this.buildRegister();
+        #            break;
+        #        case 906    :
+        #            parmList = this.buildActivation();
+        #            break;
+        #
+        #
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildActivation
+        #private str buildActivation()
+        #{
+        #    xmlTextWriter                   xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    XmlTextWriter.writeStartElement('methodCall');
+        #    xmlTextWriter.writeStartElement('methodName');
+        #    xmlTextWriter.writeString('dc_906');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('params');
+        #    //--> Param node
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString('en');
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node Transaction Id
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(int642str(ccTable.RecId));
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node UserId
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(this.parmMerchantGiveX().UserId);
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node Password
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(this.parmMerchantGiveX().PartnerPwd);
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node GiveX number
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(CreditCardTable::retrieveValue(this.parmCreditCardTable()
+        #        ,systemDateGet()));
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node amount
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString("50.00");
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End params node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End method call node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return xmlTextWriter.writeToString();
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildBalance
+        #private str buildBalance()
+        #{
+        #    xmlTextWriter                   xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    XmlTextWriter.writeStartElement('methodCall');
+        #    xmlTextWriter.writeStartElement('methodName');
+        #    xmlTextWriter.writeString('dc_909');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('params');
+        #    //--> Param node
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString('en');
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node Transaction Id
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(int642str(ccTable.RecId));
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node UserId
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(this.parmMerchantGiveX().UserId);
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #
+        #    //--> Param node GiveX number
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(CreditCardTable::retrieveValue(this.parmCreditCardTable()
+        #        ,systemDateGet()));
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End params node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End method call node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return xmlTextWriter.writeToString();
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildRegister
+        #private str buildRegister()
+        #{
+        #    xmlTextWriter                   xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    XmlTextWriter.writeStartElement('methodCall');
+        #    xmlTextWriter.writeStartElement('methodName');
+        #    xmlTextWriter.writeString('dc_904');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('params');
+        #    //--> Param node
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString('en');
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node Transaction Id
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(int642str(ccTable.RecId));
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node UserId
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(this.parmMerchantGiveX().UserId);
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node Password
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(this.parmMerchantGiveX().PartnerPwd);
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Param node Amount number
+        #    xmlTextWriter.writeStartElement('param');
+        #    xmlTextWriter.writeStartElement('value');
+        #    xmlTextWriter.writeStartElement('string');
+        #    xmlTextWriter.writeString(this.parmCreditCardTable().CreditCardId);
+        #    //--> End String node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Value node
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End param node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End params node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End method call node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return xmlTextWriter.writeToString();
+        #
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantGiveX
+        #boolean checkMerchantGiveX(CreditCardMerchantGiveX  ccMerchantGiveX)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantGiveX.UserId)
+        #       throw error("@ACC53");
+        #    else if (!ccMerchantGiveX.URL)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardGiveX
+        #{
+        #    CreditCardMerchantGiveX             giveX;
+        #    CreditCardTable                     ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #method2
+        #private void method2()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardTable
+        #CreditCardTable parmCreditCardTable(CreditCardTable _ccTable = ccTable)
+        #{
+        #    ;
+        #    ccTable = _ccTable;
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantGiveX
+        #CreditCardMerchantGiveX parmMerchantGiveX(CreditCardMerchantGiveX _c = giveX)
+        #{
+        #    ;
+        #    giveX = _c;
+        #    return giveX;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static Map construct(CreditCardTable        ccTable,
+        #                     int                    transType)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantGiveX            ccMerchantGiveX;
+        #
+        #    //--> RealEx Specific variables
+        #    CreditCardGiveX                     xmlBuilder = new CreditCardGiveX();
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    URL                                 url;
+        #    TempStr                             response;
+        #    TempStr                             parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantGiveX
+        #        where ccMerchantGiveX.TerminalId == CreditCardTerminalTable::findStoredValue().TerminalId;
+        #
+        #    xmlBuilder.parmMerchantGiveX(ccMerchantGiveX);
+        #    xmlBuilder.parmCreditCardTable(ccTable);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantGiveX(ccMerchantGiveX);
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build(transType);
+        #
+        #    try
+        #    {
+        #        url = ccMerchantGiveX.URL + ':' + int2str(ccMerchantGiveX.HostPort) + '/';
+        #        WebRequest = System.Net.WebRequest::Create(url);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml; charset=utf-8');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(webResponse.GetResponseStream());
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #
+        #
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        webRequest.Abort();
+        #
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    return xmlBuilder.analyzeResponseCard(response,ccTable);
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

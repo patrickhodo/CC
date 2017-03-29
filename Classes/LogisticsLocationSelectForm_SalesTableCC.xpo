@@ -1,0 +1,109 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #LogisticsLocationSelectForm_SalesTableCC
+    PROPERTIES
+      Name                #LogisticsLocationSelectForm_SalesTableCC
+      Extends             #LogisticsLocationSelectForm
+      Origin              #{5E27B139-3363-423A-8872-42EFCFA8D053}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class LogisticsLocationSelectForm_SalesTableCC extends LogisticsLocationSelectForm
+        #{
+        #    SalesTableCC        salesTableCC;
+        #}
+      ENDSOURCE
+      SOURCE #copyAddressToCaller
+        #/// <summary>
+        #///    Copies the selected address to the calling record.
+        #/// </summary>
+        #/// <param name="_transferFromTable">
+        #///    The source of the address.
+        #/// </param>
+        #/// <param name="_addressRecId">
+        #///    The selected address.
+        #/// </param>
+        #public void copyAddressToCaller(Common _transferFromTable, LogisticsPostalAddressRecId _addressRecId)
+        #{
+        #    salesTableCC.Location = _addressRecId;
+        #}
+      ENDSOURCE
+      SOURCE #defaultSource
+        #/// <summary>
+        #/// The initial selected source for addresses on the form.
+        #/// </summary>
+        #/// <returns>
+        #/// LogisticslocationSelectSourceType corresponding to the address source.
+        #/// </returns>
+        #public LogisticsLocationSelectSourceType defaultSource()
+        #{
+        #    // CreditCardTable table has no AddressRefTableId+AddressRefRecId columns.
+        #    return LogisticsLocationSelectSourceType::Customer;
+        #}
+      ENDSOURCE
+      SOURCE #getLogisticsPostalAddressRecId
+        #/// <summary>
+        #///   Gets the record ID of the <c>LogisticsPostalAddress</c> that is currently selected.
+        #/// </summary>
+        #/// <returns>
+        #///   The <c>LogisticsPostalAddress</c> record ID.
+        #/// </returns>
+        #public recId getLogisticsPostalAddressRecId()
+        #{
+        #    return salesTableCC.Location;
+        #}
+      ENDSOURCE
+      SOURCE #getLookupRecord
+        #/// <summary>
+        #///   Gets the record the target form's grid should have selected upon openning.
+        #/// </summary>
+        #/// <returns>
+        #///   The record to be selected.
+        #/// </returns>
+        #public Common getLookupRecord()
+        #{
+        #    // CreditCardTable table has no AddressRefTableId+AddressRefRecId columns.
+        #    Common addressOwner = super();
+        #    SalesTable      salesTable;
+        #    ;
+        #
+        #    if(salesTableCC)
+        #    {
+        #        salesTable = salesTable::find(SalesTableCC.SalesId);
+        #        if(salesTable.CustAccount)
+        #        {
+        #            addressOwner = CustTable::find(salesTable.CustAccount);
+        #        }
+        #    }
+        #
+        #    return addressOwner;
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #protected void init(SalesTableCC _salesTableTable)
+        #{
+        #    SalesTableCC = _salesTableTable;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static logisticsLocationSelectForm_salesTableCC construct(SalesTableCC _salesTableCC)
+        #{
+        #    LogisticsLocationSelectForm_SalesTableCC     logisticsLocationSelectForm_salesTableCC;
+        #    logisticsLocationSelectForm_salesTableCC =  new LogisticsLocationSelectForm_SalesTableCC();
+        #    logisticsLocationSelectForm_salesTableCC.init(_salesTableCC);
+        #
+        #    return logisticsLocationSelectForm_salesTableCC;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

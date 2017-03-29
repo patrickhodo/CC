@@ -1,0 +1,1346 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardTSYSTransITBuilder
+    PROPERTIES
+      Name                #CreditCardTSYSTransITBuilder
+      Extends             #CreditCardAdv
+      RunOn               #Server
+      Origin              #{3AE0E936-91D8-4E00-8C97-7671AB33BB6F}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #build
+        #str build(CreditCardTrans       _ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM/.NET objects used in this method do NOT violate the security standards
+        #    TempStr                         parmList;
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    select ccTSYS
+        #        where ccTSYS.TerminalId == _ccTrans.TerminalId;
+        #
+        #    if (!ccTSYS)
+        #    {
+        #        throw error("@ACC1725");
+        #    }
+        #
+        #    this.parmCreditCardMerchantTSYS(ccTSYS);
+        #    this.parmParameters(CreditCardParameters::findParameterWithTerminal(ccTSYS.TerminalId));
+        #    this.parmccTrans(_ccTrans);
+        #    this.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #
+        #
+        #    switch (this.parmccTrans().TransType)
+        #    {
+        #        case    CreditCardTrxType::A        :
+        #            parmList += this.buildAuth();
+        #            break;
+        #        case    CreditCardTrxType::C        :
+        #            if (_ccTrans.OrigID == '')
+        #            {
+        #                parmList += this.buildUnreferencedReturn();
+        #            }
+        #            else
+        #            {
+        #                parmList += this.buildReturn();
+        #            }
+        #            break;
+        #        case    CreditCardTrxType::D        :
+        #            if (ccTrans.VoiceAuth == NoYes::Yes)
+        #            {
+        #                parmList = this.buildMarkforCapture();
+        #            }
+        #            else
+        #            {
+        #                parmList += this.buildCapture();
+        #            }
+        #            break;
+        #        case    CreditCardTrxType::S        :
+        #            parmList += this.buildSale();
+        #            break;
+        #        case    CreditCardTrxType::V        :
+        #            parmList += this.buildVoid();
+        #            break;
+        #    }
+        #
+        #
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccTSYS.URL);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('application/x-www-form-urlencoded');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #
+        #    return response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildAuth
+        #str buildAuth()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XmlTextWriter::newXml();
+        #    xmlTextWriter.formatting(XmlFormatting::None);
+        #
+        #    xmlTextWriter.writeStartElement('Auth');
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement('deviceID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Key
+        #    xmlTextWriter.writeStartElement('transactionKey');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().Key);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('cardDataSource');
+        #    xmlTextWriter.writeString('MANUAL');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionAmount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    /*xmlTextWriter.writeStartElement('Time_Stamp');
+        #    dateTime = DateTimeUtil::toFormattedStr(DateTimeUtil::getSystemDateTime(),213,2,4,2,4,4,1,1);
+        #    xmlTextWriter.writeString(dateTime);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Currency Code
+        #    xmlTextWriter.writeStartElement('Currency_Code');
+        #    xmlTextWriter.writeString(CompanyInfo::standardCurrency());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Country Code
+        #    xmlTextWriter.writeStartElement('Country_Code');
+        #    xmlTextWriter.writeString('USA');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Info close
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Card Info
+        #    xmlTextWriter.writeStartElement('Card_Info');*/
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    /*xmlTextWriter.writeStartElement('Type');
+        #    if (ccTable)
+        #    {
+        #        xmlTextWriter.writeString(this.getCardType(ccTable.CreditCardType));
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeString(this.getCardType(this.parmccTrans().CreditCardType));
+        #    }
+        #    xmlTextWriter.writeEndElement();*/
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('cardNumber');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('cardNumber');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('expirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('expirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> CVV
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement('cvv2');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress())
+        #    {
+        #        xmlTextWriter.writeStartElement('addressLine1');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        if (this.parmPostalAddress().ZipCode)
+        #        {
+        #            xmlTextWriter.writeStartElement('zip');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #    }
+        #
+        #    //--> Write end InfoNox_Interface
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #str buildCapture()
+        #{
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XmlTextWriter::newXml();
+        #    xmlTextWriter.formatting(XmlFormatting::None);
+        #
+        #    xmlTextWriter.writeStartElement('Capture');
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement('deviceID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Key
+        #    xmlTextWriter.writeStartElement('transactionKey');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().Key);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionAmount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionID');
+        #    xmlTextWriter.writeString(this.parmccTrans().OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Write end InfoNox_Interface
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildMarkForCapture
+        #str buildMarkForCapture()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    TempStr             dateTime;
+        #    ;
+        #    xmlTextWriter = XmlTextWriter::newXml();
+        #    xmlTextWriter.formatting(XmlFormatting::None);
+        #
+        #    xmlTextWriter.writeStartElement('ForcedAuth');
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement('deviceID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Key
+        #    xmlTextWriter.writeStartElement('transactionKey');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().Key);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('cardDataSource');
+        #    xmlTextWriter.writeString('MANUAL');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionAmount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('cardNumber');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('cardNumber');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('expirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('expirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> AuthCode
+        #    xmlTextWriter.writeStartElement('authTimestamp');
+        #    //dateTime = DateTimeUtil::toFormattedStr(DateTimeUtil::getSystemDateTime(),213,2,1,2,1,4,1,1);
+        #    dateTime = DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime());
+        #    xmlTextWriter.writeString(dateTime);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> AuthTimeStamp
+        #    xmlTextWriter.writeStartElement('authCode');
+        #    xmlTextWriter.writeString(this.parmccTrans().AuthCode);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Write end InfoNox_Interface
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildReturn
+        #str buildReturn()
+        #{
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XmlTextWriter::newXml();
+        #    xmlTextWriter.formatting(XmlFormatting::None);
+        #
+        #    xmlTextWriter.writeStartElement('Return');
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement('deviceID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Key
+        #    xmlTextWriter.writeStartElement('transactionKey');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().Key);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionAmount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(abs(this.parmccTrans().AmountMST))));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Currency Code
+        #    xmlTextWriter.writeStartElement('currencyCode');
+        #    xmlTextWriter.writeString(CompanyInfo::standardCurrency());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionID');
+        #    xmlTextWriter.writeString(this.parmccTrans().OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #    //--> Write end InfoNox_Interface
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildSale
+        #str buildSale()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XmlTextWriter::newXml();
+        #    xmlTextWriter.formatting(XmlFormatting::None);
+        #
+        #    xmlTextWriter.writeStartElement('Sale');
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement('deviceID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Key
+        #    xmlTextWriter.writeStartElement('transactionKey');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().Key);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('cardDataSource');
+        #    xmlTextWriter.writeString('MANUAL');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionAmount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('cardNumber');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('cardNumber');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('expirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('expirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> CVV
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement('cvv2');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress())
+        #    {
+        #        xmlTextWriter.writeStartElement('addressLine1');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        if (this.parmPostalAddress().ZipCode)
+        #        {
+        #            xmlTextWriter.writeStartElement('zip');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #    }
+        #
+        #    //--> Write end InfoNox_Interface
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildTSYSLogin
+        #xmlTextWriter buildTSYSLogin(XmlTextWriter  xmlTextWriter)
+        #{
+        #    ;
+        #    //--> Device_Info
+        #    xmlTextWriter.writeStartElement('Device_Info');
+        #
+        #    //--> Merchant Id
+        #    xmlTextWriter.writeStartElement('Merchant_ID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().MerchantId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement('Device_ID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Key
+        #    xmlTextWriter.writeStartElement('Transaction_Key');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().Key);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close out Device_Info
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return xmlTextWriter;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildUnreferencedReturn
+        #str buildUnreferencedReturn()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XmlTextWriter::newXml();
+        #    xmlTextWriter.formatting(XmlFormatting::None);
+        #
+        #    xmlTextWriter.writeStartElement('Return');
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement('deviceID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Key
+        #    xmlTextWriter.writeStartElement('transactionKey');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().Key);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('cardDataSource');
+        #    xmlTextWriter.writeString('MANUAL');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionAmount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(abs(this.parmccTrans().AmountMST))));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Currency Code
+        #    xmlTextWriter.writeStartElement('currencyCode');
+        #    xmlTextWriter.writeString(CompanyInfo::standardCurrency());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('cardNumber');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('cardNumber');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('expirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('expirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> CVV
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement('cvv2');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> Write end InfoNox_Interface
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #str buildVoid()
+        #{
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = XmlTextWriter::newXml();
+        #    xmlTextWriter.formatting(XmlFormatting::None);
+        #
+        #    xmlTextWriter.writeStartElement('Void');
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement('deviceID');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Key
+        #    xmlTextWriter.writeStartElement('transactionKey');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantTSYS().Key);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionAmount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('transactionID');
+        #    xmlTextWriter.writeString(this.parmccTrans().OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Write end InfoNox_Interface
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardTSYSTransITBuilder extends CreditCardAdv
+        #{
+        #    CreditCardMerchantTSYS              ccTSYS;
+        #    CreditCardParameters                ccParams;
+        #}
+      ENDSOURCE
+      SOURCE #getCardholder
+        #private str getCardholder()
+        #{
+        #    TempStr     cardholder;
+        #    ;
+        #    switch (this.parmCreditCardMerchantTSYS().Cardholder)
+        #    {
+        #        case    CreditCardCardholder::Internet  :
+        #            cardholder = 'INTERNET';
+        #            break;
+        #        case    CreditCardCardholder::Mail  :
+        #            cardholder = 'MAIL';
+        #            break;
+        #        case    CreditCardCardholder::Phone  :
+        #            cardholder = 'PHONE';
+        #            break;
+        #        case    CreditCardCardholder::Internet  :
+        #            cardholder = 'INTERNET';
+        #            break;
+        #    }
+        #
+        #    return cardholder;
+        #}
+      ENDSOURCE
+      SOURCE #getCardType
+        #private str getCardType(CreditCardType      ccType)
+        #{
+        #    TempStr     cardType;
+        #    ;
+        #    switch (ccType)
+        #    {
+        #        case    CreditCardType::AmericanExpress :
+        #            cardType = 'X';
+        #            break;
+        #        case    CreditCardType::Diners :
+        #            cardType = 'I';
+        #            break;
+        #        case    CreditCardType::Discover :
+        #            cardType = 'R';
+        #            break;
+        #        case    CreditCardType::JCB :
+        #            cardType = 'J';
+        #            break;
+        #        case    CreditCardType::Stored :
+        #            cardType = 'G';
+        #            break;
+        #        case    CreditCardType::MasterCard :
+        #            cardType = 'M';
+        #            break;
+        #        case    CreditCardType::Visa :
+        #            cardType = 'V';
+        #            break;
+        #        default :
+        #            throw error("@ACC1731");
+        #    }
+        #
+        #    return cardType;
+        #}
+      ENDSOURCE
+      SOURCE #getCustomerInfo
+        #str getCustomerInfo()
+        #{
+        #    #define.amp('&')
+        #    TempStr                 parmList;
+        #    TempStr                 temp;
+        #    ContactPerson           contactPerson;
+        #    LogisticsPostalAddress  logistics = LogisticsPostalAddress::findRecId(this.parmccTrans().Location);
+        #    LogisticsPostalAddress  delivery;
+        #    DirPersonName           personName;
+        #    ;
+        #    //--> Customer information
+        #    parmList = 'x_cust_id=' + this.parmccTrans().CustAccount;
+        #    parmList += #amp;
+        #
+        #    //--> AVS Information
+        #    temp = System.Web.HttpUtility::UrlEncode(logistics.Street);
+        #    parmList += 'x_address=' + temp;
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_zip=' + logistics.ZipCode;
+        #    parmList += #amp;
+        #
+        #    salesTable = SalesTable::find(this.parmccTrans().SalesId);
+        #    delivery = LogisticsPostalAddress::findRecId(SalesTable.deliveryLocation());
+        #
+        #    if (salesTable && SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::Yes)
+        #    {
+        #        temp = System.Web.HttpUtility::UrlEncode(CustTable::find(salesTable.CustAccount).name());
+        #        parmList += 'x_ship_to_company=' + temp;
+        #
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.Street);
+        #        parmList += 'x_ship_to_address=' + temp;
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.City);
+        #        parmList += 'x_ship_to_city=' + temp;
+        #        parmList += #amp;
+        #
+        #        parmList += 'x_ship_to_state=' + delivery.State;
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.ZipCode);
+        #        parmList += 'x_ship_to_zip=' + temp;
+        #        parmList += #amp;
+        #
+        #        parmList += 'x_ship_to_country=' + delivery.CountryRegionId;
+        #        parmList += #amp;
+        #
+        #        contactPerson = ContactPerson::find(salesTable.ContactPersonId);
+        #
+        #        if (contactPerson)
+        #        {
+        #            personName = DirPersonName::find(contactPerson.Party);
+        #            if (personName.FirstName)
+        #            {
+        #                temp = System.Web.HttpUtility::UrlEncode(personName.FirstName);
+        #                parmList += 'x_ship_to_first_name=' + temp;
+        #                parmList += #amp;
+        #            }
+        #            if (personName.LastName)
+        #            {
+        #                temp = System.Web.HttpUtility::UrlEncode(personName.LastName);
+        #                parmList += 'x_ship_to_last_name=' + temp;
+        #                parmList += #amp;
+        #            }
+        #        }
+        #    }
+        #
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #getCVV2
+        #private str getCVV2()
+        #{
+        #    ;
+        #    switch (ccTrans.CVDSent)
+        #    {
+        #        case CreditCardCVDValues::Provided  :
+        #            return 'PRESENT';
+        #        case CreditCardCVDValues::NotReadable   :
+        #            return 'ILLEGIBLE';
+        #        case CreditCardCVDValues::NotAvailable  :
+        #            return 'NOT_PRESENT';
+        #        default:
+        #            return 'NOT_PROVIDED';
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getExpDate
+        #str getExpDate()
+        #{
+        #    TempStr                 ExpDate;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #
+        #    ExpDate = month +'/'+ccYear;
+        #
+        #    return ExpDate;
+        #}
+      ENDSOURCE
+      SOURCE #ibuildAuth
+        #str ibuildAuth()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    TempStr             dateTime;
+        #    ;
+        #    xmlTextWriter = XmlTextWriter::newXml();
+        #    xmlTextWriter.formatting(XmlFormatting::Indented);
+        #
+        #    xmlTextWriter.writeStartElement('InfoNox_Interface');
+        #    xmlTextWriter.writeStartElement('TransNox_API_Interface');
+        #    xmlTextWriter.writeStartElement('CardRQ');
+        #
+        #    xmlTextWriter = this.buildTSYSLogin(xmlTextWriter);
+        #
+        #    //--> Transaction info
+        #    xmlTextWriter.writeStartElement('Transaction_Info');
+        #    xmlTextWriter.writeStartElement('Service_Code');
+        #    xmlTextWriter.writeString('CREDIT');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('SubServiceCode');
+        #    xmlTextWriter.writeString('MODIFY');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('Amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('Time_Stamp');
+        #    dateTime = DateTimeUtil::toFormattedStr(DateTimeUtil::getSystemDateTime(),213,2,4,2,4,4,1,1);
+        #    xmlTextWriter.writeString(dateTime);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Currency Code
+        #    xmlTextWriter.writeStartElement('Transaction_ID');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Currency Code
+        #    xmlTextWriter.writeStartElement('Currency_Code');
+        #    xmlTextWriter.writeString(CompanyInfo::standardCurrency());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Country Code
+        #    xmlTextWriter.writeStartElement('Country_Code');
+        #    xmlTextWriter.writeString('USA');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction Info close
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Card Info
+        #    xmlTextWriter.writeStartElement('Card_Info');
+        #
+        #    xmlTextWriter.writeStartElement('Type');
+        #    xmlTextWriter.writeString('V');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('Number');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('Number');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ExpirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ExpirationDate');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> CVV
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement('CVV2_Availability');
+        #        xmlTextWriter.writeString(this.getCVV2());
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('CVV2');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    xmlTextWriter.writeStartElement('Entry_Mode');
+        #    xmlTextWriter.writeString('MANUAL');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('Cardholder');
+        #    xmlTextWriter.writeString('PHONE');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-> End Card_Info
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End CardRQ
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Write the TaxNox_API_interface end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    //--> Write end InfoNox_Interface
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardMerchantTSYS
+        #CreditCardMerchantTSYS parmCreditCardMerchantTSYS(CreditCardMerchantTSYS _ccTSYS = ccTSYS)
+        #{
+        #    ;
+        #    ccTSYS = _ccTSYS;
+        #    return ccTSYS;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #firstName parmFirstName(Name     _name)
+        #{
+        #    TempStr     tmpStr;
+        #    Counter     marker;
+        #    Counter     len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmLastName
+        #firstName parmLastName(Name     _name)
+        #{
+        #    TempStr     tmpStr;
+        #    TempStr     reduction;
+        #    Counter     marker;
+        #    Counter     len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker+1);
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmParameters
+        #CreditCardParameters parmParameters(CreditCardParameters _ccParams = ccParams)
+        #{
+        #    ;
+        #    ccParams = _ccParams;
+        #    return ccParams;
+        #}
+      ENDSOURCE
+      SOURCE #getResponse
+        #static str getResponse(str 1 response)
+        #{
+        #    TempStr     r;
+        #    ;
+        #    switch (response)
+        #    {
+        #        case '1'    :
+        #            r = '0';  //<-- Approved in our jargon
+        #            break;
+        #        default     :
+        #            r = response;
+        #            break;
+        #    }
+        #
+        #    return r;
+        #}
+      ENDSOURCE
+      SOURCE #getTransactionKey
+        #static str getTransactionKey(CreditCardTerminalId   terminalId)
+        #{
+        #    TempStr                         parmList,response;
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    CreditCardMerchantTSYS          merchantTsys;
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList;
+        #    Counter                         cnt;
+        #    TempStr                         node;
+        #    XmlNode                         elementParent;
+        #    Map                             responseMap = new Map(Types::String,Types::String);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #
+        #    try
+        #    {
+        #        select merchantTsys
+        #            where merchantTsys.TerminalId == terminalId;
+        #
+        #        if (!merchantTsys)
+        #        {
+        #            throw error("@ACC1725");
+        #        }
+        #
+        #        parmList = '<GenerateKey>';
+        #        parmList += '<mid>'+merchantTsys.MerchantId+'</mid>';
+        #        parmList += '<userID>'+merchantTsys.UserId+'</userID>';
+        #        parmList += '<password>'+merchantTsys.Pwd+'</password>';
+        #        if (merchantTsys.Key)
+        #        {
+        #            parmList += '<transactionKey>'+merchantTsys.Key+'</transactionKey>';
+        #        }
+        #        parmList += '</GenerateKey>';
+        #
+        #        WebRequest = System.Net.WebRequest::Create(merchantTsys.URL);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('application/x-www-form-urlencoded');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #
+        #        xmlResult = new XMLDocument();
+        #        xmlResult.loadXml(response);
+        #        nodeList = xmlResult.documentElement().childNodes();
+        #        cnt = nodeList.length();
+        #
+        #        //--> This should be one node <TXN>
+        #        for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #        {
+        #            elementParent = nodeList.item(cnt);
+        #            node = elementParent.nodeName();
+        #            responseMap.insert(node,elementParent.innerText());
+        #        }
+        #
+        #        if (responseMap.exists('transactionKey'))
+        #        {
+        #            merchantTsys.Key = responseMap.lookup('transactionKey');
+        #        }
+        #
+        #        if (responseMap.exists('responseMessage'))
+        #        {
+        #            if (responseMap.lookup('responseMessage')=='Success')
+        #            {
+        #                info("@ACC1729");
+        #            }
+        #            else
+        #            {
+        #                throw error(strFmt("@ACC1730",responseMap.lookup('responseMessage')));
+        #            }
+        #        }
+        #
+        #
+        #        merchantTsys.write();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #
+        #    return response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getTSYSResponse
+        #static CreditCardTrans getTSYSResponse(TempStr                msg,
+        #                                CreditCardTrans                     ccTrans)
+        #{
+        #    XmlTextReader                   xmlReader = XmlTextReader::newXml(msg);
+        #    Map                             response = new Map(Types::String,Types::String);
+        #    TempStr                         name,value;
+        #    ;
+        #
+        #    while (xmlReader.read())
+        #    {
+        #        switch (xmlReader.nodeType())
+        #        {
+        #            case XmlNodeType::Element   :
+        #                name = xmlReader.localName();
+        #                break;
+        #            case XmlNodeType::Text      :
+        #                value = xmlReader.value();
+        #                break;
+        #            case XmlNodeType::EndElement    :
+        #                response.insert(name,value);
+        #                break;
+        #        }
+        #    }
+        #
+        #    ttsbegin;
+        #    ccTRans.selectForUpdate(true);
+        #
+        #    //--> Map Lookups
+        #    if (response.exists('responseCode'))
+        #    {
+        #        ccTrans.Result = response.lookup('responseCode');
+        #        if (ccTrans.Result == 'A0000')
+        #        {
+        #            ccTrans.Result = '0';
+        #        }
+        #        if (ccTrans.Result == 'A0002')
+        #        {
+        #            ccTrans.Result = '0';
+        #            ccTrans.AmountMST = response.lookup('processedAmount');
+        #            ccTrans.AmountCur = Currency::curAmount(ccTrans.AmountMST,ccTrans.CurrencyCode);
+        #        }
+        #        ccTrans.RepMsg = response.lookup('responseMessage');
+        #    }
+        #
+        #    if (response.exists('transactioniD'))
+        #    {
+        #        ccTrans.PNRef = response.lookup('transactioniD');
+        #    }
+        #
+        #    if (response.exists('authCode'))
+        #    {
+        #        ccTrans.AuthCode = response.lookup('authCode');
+        #    }
+        #
+        #    if (response.exists('addressVerificationCode'))
+        #    {
+        #        ccTrans.AvsAddr = response.lookup('addressVerificationCode');
+        #    }
+        #
+        #    if (response.exists('cvvVerificationCode'))
+        #    {
+        #        ccTrans.CVDResponseStr = response.lookup('cvvVerificationCode');
+        #    }
+        #
+        #    ccTrans.write();
+        #    ttscommit;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #settleBatch
+        #static str settleBatch(CreditCardTerminalId   terminalId)
+        #{
+        #    TempStr                         parmList,response;
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    CreditCardMerchantTSYS          merchantTsys;
+        #    XmlTextReader                   xmlReader;
+        #    Map                             responseMap = new Map(Types::String,Types::String);
+        #    TempStr                         name,value;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #
+        #    try
+        #    {
+        #        select merchantTsys
+        #            where merchantTsys.TerminalId == terminalId;
+        #
+        #        if (!merchantTsys)
+        #        {
+        #            throw error("@ACC1725");
+        #        }
+        #
+        #        parmList = '<InfoNox_Interface>';
+        #        parmList += '<TransNox_API_Interface>';
+        #        parmList += '<BatchCloseRQ>';
+        #        parmList += '<Device_Info>';
+        #        parmList += '<Merchant_ID>'+merchantTsys.MerchantId+'</Merchant_ID>';
+        #        parmList += '<Device_ID>'+merchantTsys.DeviceId+'</Device_ID>';
+        #        parmList += '<Operator>'+merchantTsys.UserId+'</Operator>';
+        #        parmList += '<Password>'+merchantTsys.Pwd+'</Password>';
+        #        parmList += '</Device_Info>';
+        #        parmList += '</BatchCloseRQ>';
+        #        parmList += '</TransNox_API_Interface>';
+        #        parmList += '</InfoNox_Interface>';
+        #
+        #        WebRequest = System.Net.WebRequest::Create(merchantTsys.URL);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('application/x-www-form-urlencoded');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #
+        #        xmlReader = xmlReader::newXml(response);
+        #
+        #        while (xmlReader.read())
+        #        {
+        #            switch (xmlReader.nodeType())
+        #            {
+        #                case XmlNodeType::Element   :
+        #                    name = xmlReader.localName();
+        #                    break;
+        #                case XmlNodeType::Text      :
+        #                    value = xmlReader.value();
+        #                    break;
+        #                case XmlNodeType::EndElement    :
+        #                    responseMap.insert(name,value);
+        #                    break;
+        #            }
+        #        }
+        #
+        #
+        #        if (responseMap.exists('Message'))
+        #        {
+        #            if (responseMap.lookup('Message')=='APPROVED')
+        #            {
+        #                info(responseMap.lookup('Message'));
+        #            }
+        #            else
+        #            {
+        #                throw error(responseMap.lookup('Message'));
+        #            }
+        #        }
+        #
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #
+        #    return response;
+        #
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

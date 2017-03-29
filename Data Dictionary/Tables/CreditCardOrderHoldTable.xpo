@@ -1,0 +1,338 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardOrderHoldTable
+    EnforceFKRelation 1
+    PROPERTIES
+      Name                #CreditCardOrderHoldTable
+      Label               #@MCR10327
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #SurrogateKey
+      ClusterIndex        #SurrogateKey
+      Origin              #{4F89CE1D-527A-4997-8FE5-0D01746085F0}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AVS
+        ENUM
+        PROPERTIES
+          Name                #AVS
+          Label               #@ACC619
+          HelpText            #@ACC620
+          Table               #CreditCardOrderHoldTable
+          Origin              #{FF376FDA-DFDE-46FB-8612-EE3AA6488BF2}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #CVD
+        ENUM
+        PROPERTIES
+          Name                #CVD
+          Label               #@ACC631
+          HelpText            #@ACC1081
+          Visible             #No
+          Table               #CreditCardOrderHoldTable
+          Origin              #{C72F2B92-11B7-41AA-B6A3-24987DBD515A}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #EnforceCapture
+        ENUM
+        PROPERTIES
+          Name                #EnforceCapture
+          Label               #@ACC152
+          HelpText            #@ACC153
+          Table               #CreditCardOrderHoldTable
+          Origin              #{B749DD0C-3795-4862-A1A0-4C6FA6808A47}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #MCRHoldCode
+        STRING
+        PROPERTIES
+          Name                #MCRHoldCode
+          Mandatory           #Yes
+          Table               #CreditCardOrderHoldTable
+          Origin              #{8C89D920-56C0-446B-845A-DED6DA9E5629}
+          ExtendedDataType    #MCRHoldCode
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Table               #CreditCardOrderHoldTable
+          Origin              #{5FB271E9-E122-49EE-BF23-45EFED8F62BC}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #CVD
+          #AVS
+          #EnforceCapture
+          #MCRHoldCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CVD
+          #AVS
+          #MCRHoldCode
+          #TerminalId
+          #EnforceCapture
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AVS
+          #EnforceCapture
+          #CVD
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalOrderHoldIdx
+      PROPERTIES
+        Name                #TerminalOrderHoldIdx
+        AllowDuplicates     #No
+        Origin              #{4232A551-7209-43C0-9CC4-3066AD5824F0}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+        #MCRHoldCode
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardParameters
+        PROPERTIES
+          Name                #CreditCardParameters
+          Table               #CreditCardParameters
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRHoldCodeTable
+        PROPERTIES
+          Name                #MCRHoldCodeTable
+          Table               #MCRHoldCodeTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #MCRHoldCode
+            RelatedField        #MCRHoldCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #checkHolds
+        #static boolean checkHolds(SalesTable    salesTable)
+        #{
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardOrderHoldTable        orderHoldTable;
+        #    MCRHoldCodeTrans                holdCodeTrans;
+        #    SalesTableCC                    salesTableCC;
+        #    ;
+        #
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(CreditCardTrans::resolveTerminalforSalesTable(salesTable).TerminalId);
+        #
+        #    while select orderHoldTable
+        #        where orderHoldTable.TerminalId == ccParameters.TerminalId
+        #    {
+        #        if (orderHoldTable.EnforceCapture)
+        #        {
+        #            select forupdate holdCodeTrans
+        #                where holdCodeTrans.MCRHoldCode == orderHoldTable.MCRHoldCode
+        #                && holdCodeTrans.InventRefId == salesTable.SalesId;
+        #
+        #            if (!holdCodeTrans)
+        #            {
+        #                select salesTableCC
+        #                    where salesTableCC.SalesId == salesTable.SalesId
+        #                    && salesTableCC.Processed == NoYes::Yes
+        #                    && salesTableCC.Cancelled == NoYes::No;
+        #
+        #                if (!salesTableCC)
+        #                {
+        #                    holdCodeTrans.initValue();
+        #                    holdCodeTrans.InventRefId = salesTable.SalesId;
+        #                    holdCodeTrans.MCRHoldCode = orderHoldTable.MCRHoldCode;
+        #                    holdCodeTrans.MCRHoldDateTime = DateTimeUtil::getSystemDateTime();
+        #                    holdCodeTrans.write();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                select salesTableCC
+        #                    where salesTableCC.SalesId == salesTable.SalesId
+        #                    && salesTableCC.Processed == NoYes::Yes
+        #                    && salesTableCC.Cancelled == NoYes::No;
+        #
+        #                if (salesTableCC && holdCodeTrans.MCRCleared == NoYes::No)
+        #                {
+        #                    holdCodeTrans.MCRCleared = NoYes::Yes;
+        #                    holdCodeTrans.MCRClearedUser = curUserId();
+        #                    holdCodeTrans.write();
+        #                }
+        #            }
+        #        }
+        #
+        #        if (orderHoldTable.AVS)
+        #        {
+        #            select holdCodeTrans
+        #                where holdCodeTrans.MCRHoldCode == orderHoldTable.MCRHoldCode
+        #                && holdCodeTrans.InventRefId == salesTable.SalesId;
+        #
+        #            if (!holdCodeTrans)
+        #            {
+        #                select salesTableCC
+        #                    where salesTableCC.SalesId == salesTable.SalesId
+        #                    && salesTableCC.Processed == NoYes::Yes
+        #                    && salesTableCC.Cancelled == NoYes::No
+        #                    && salesTableCC.Location != 0;
+        #
+        #                if (!salesTableCC)
+        #                {
+        #                    holdCodeTrans.initValue();
+        #                    holdCodeTrans.InventRefId = salesTable.SalesId;
+        #                    holdCodeTrans.MCRHoldCode = orderHoldTable.MCRHoldCode;
+        #                    holdCodeTrans.MCRHoldDateTime = DateTimeUtil::getSystemDateTime();
+        #                    holdCodeTrans.write();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                select salesTableCC
+        #                    where salesTableCC.SalesId == salesTable.SalesId
+        #                    && salesTableCC.Processed == NoYes::Yes
+        #                    && salesTableCC.Cancelled == NoYes::No;
+        #
+        #                if (salesTableCC && holdCodeTrans.MCRCleared == NoYes::No)
+        #                {
+        #                    holdCodeTrans.MCRCleared = NoYes::Yes;
+        #                    holdCodeTrans.MCRClearedUser = curUserId();
+        #                    holdCodeTrans.write();
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #createAuthHold
+        #public static boolean createAuthHold(SalesTable                salesTable,
+        #                                 CreditCardTerminalId       terminalId)
+        #{
+        #    CreditCardOrderHoldTable        orderHoldTable;
+        #    MCRHoldCodeTrans                holdCodeTrans;
+        #    boolean                         ret = false;
+        #    ;
+        #    while select orderHoldTable
+        #        where orderHoldTable.TerminalId == terminalId
+        #    {
+        #        select holdCodeTrans
+        #            where holdCodeTrans.InventRefId == salesTable.SalesId
+        #            && holdCodeTrans.MCRHoldCode == orderHoldTable.MCRHoldCode;
+        #
+        #        if (orderHoldTable.EnforceCapture && holdCodeTrans.RecId == 0)
+        #        {
+        #            holdCodeTrans.initValue();
+        #            holdCodeTrans.InventRefId = salesTable.SalesId;
+        #            holdCodeTrans.MCRHoldCode = orderHoldTable.MCRHoldCode;
+        #            holdCodeTrans.MCRHoldDateTime = DateTimeUtil::getSystemDateTime();
+        #            holdCodeTrans.write();
+        #
+        #            ret = true;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

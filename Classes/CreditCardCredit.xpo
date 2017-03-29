@@ -1,0 +1,445 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardCredit
+    PROPERTIES
+      Name                #CreditCardCredit
+      Extends             #CreditCardAdv
+      RunOn               #Server
+      Origin              #{B0864071-6292-4B5B-B49C-95B540CD66CC}
+      LegacyId            #20007
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #public class CreditCardCredit extends CreditCardAdv
+        #{
+        #    /*
+        #    COPYRIGHT 2004, Red Maple Press, Inc.
+        #    ALL RIGHTS RESERVED
+        #
+        #    For information on the license or copyright of this software, please
+        #    contact our offices at +1 972 980 6963
+        #    or at www.redmaple.com
+        #
+        #    */
+        #
+        #    AddressZipCodeId    zipCodeId;
+        #    CreditCardComment   ccComment;
+        #    CreditCardTransId   creditCardTransId;
+        #}
+      ENDSOURCE
+      SOURCE #createTrans
+        #CreditCardTrans createTrans(CreditCardTrans    _ccTrans)
+        #{
+        #    CreditCardTrans         newCCTrans;
+        #    ;
+        #    if (result)
+        #    {
+        #        ttsbegin;
+        #
+        #        select forupdate newCCTrans where newCCTrans.RecId == _ccTrans.RecId;
+        #
+        #        if (!newCCTrans)
+        #            throw error(strFmt("@ACC142"));
+        #
+        #        newccTrans.Result               =   Result;
+        #        newccTrans.AuthCode             =   AuthCode;
+        #        newccTrans.AuthNetId            =   netId;
+        #        newccTrans.AuthSource           =   authSource;
+        #        newccTrans.AvsAddr              =   AvsAddr;
+        #        newccTrans.IAvs                 =   IAvs;
+        #        newccTrans.PNRef                =   pnRef;
+        #        newccTrans.RepMsg               =   RepMsg;
+        #        newccTrans.Comment1             =   Comment;
+        #        newccTrans.Comment2             =   Comment2;
+        #        newccTrans.RetrevalRefNum       =   retrievalNum;
+        #        newccTrans.BatchTransNumber     =   sequenceId;
+        #        newccTrans.BatchPaymentechNum   =   batch;
+        #        newccTrans.CVDResponse          =   cvdResponse;
+        #        newccTrans.OrbitalTxRefNum      =   txtRef;
+        #        newccTrans.OrbitalTxRefIdx      =   txtRefIdx;
+        #        newccTrans.CybersourceToken     =   token;
+        #
+        #        //--> Set to unregistered
+        #        newCCTrans.Registered      =   NoYes::No;
+        #
+        #        if (!newCCTrans.Voucher)
+        #        {
+        #            newCCTrans.Voucher         =   this.parmccVoucher();
+        #        }
+        #
+        #
+        #        newCCTrans.write();
+        #
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        newccTrans = this.parmccTrans();
+        #    }
+        #
+        #    return newCCTrans;
+        #}
+      ENDSOURCE
+      SOURCE #processPayPal
+        #str processPayPal()
+        #{
+        #    CreditCardTable         ccTable;
+        #    COM                     cc;
+        #    CreditCardStr           ParmList;
+        #    CreditCardStr           ExpDate;
+        #    CreditCardStr           month;
+        #    CreditCardStr           ccYear;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    CreditCardStr           tmpParmListCC;
+        #    CreditCardStr           tmpParmListDate;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantVerisign
+        #        where ccMerchantVerisign.TerminalId  ==  ccTrans.TerminalId;
+        #
+        #
+        #    if (ccMerchantVerisign.InterfaceType == CreditCardPayPalInterfaceType::SDK)
+        #    {
+        #        //<--Check for all required fields
+        #        this.checkMerchantPayPal();
+        #        //<--Instatiate COM Object
+        #        //cc = New COM('PFProCOMControl.PFProCOMControl.1');
+        #        cc = New COM('PayPal.Payments.Communication.PayflowNETAPI');
+        #
+        #        //<--Create Context line
+        #        //ccLong = cc.createContext(  ccMerchantVerisign.HostAddress,
+        #        cc.setParameters(  ccMerchantVerisign.HostAddress,
+        #                                    ccMerchantVerisign.HostPort,
+        #                                    ccMerchantVerisign.Timeout ? 30 : ccMerchantVerisign.Timeout,
+        #                                    ccMerchantVerisign.ProxyAddress,
+        #                                    ccMerchantVerisign.ProxyPort,
+        #                                    ccMerchantVerisign.ProxyLogin,
+        #                                    ccMerchantVerisign.ProxyPwd,
+        #                                    '',
+        #                                    '',
+        #                                    '',
+        #                                    '',
+        #                                    true);
+        #
+        #        if (!this.parmReferenceId())
+        #        {
+        #            this.parmReferenceId(cc.GenerateRequestId());
+        #        }
+        #
+        #        //<--Retrieve Basic ParmList
+        #        ParmList = this.BuildParmListPayPal();
+        #
+        #        ParmList += 'TRXTYPE=' + this.parmTrxType() + '&';
+        #        ParmList += 'TENDER=C&';
+        #
+        #
+        #        //<--Retrieve CC Information
+        #        select ccTable where ccTable.CreditCardId == creditCardId;
+        #
+        #        if (!ccTable)
+        #        {
+        #            if (!this.parmAuthCode()) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (this.parmTrxType() == 'C' && !this.parmOrigId())
+        #                {
+        #                    tmpParmListCC += this.parmccTrans().CreditCardNumSecure;
+        #                }
+        #                else
+        #                {
+        #                    tmpParmListCC += this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                tmpParmListCC += this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #            }
+        #
+        #
+        #            //--> Create date
+        #            month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #            if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ExpDate =  month + ccYear;
+        #            tmpParmListDate += ExpDate;
+        #        }
+        #        else
+        #        {
+        #            tmpParmListCC += CreditCardTable::retrieveValue(ccTable);
+        #
+        #            //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ExpDate =  month + ccYear;
+        #            tmpParmListDate += ExpDate;
+        #        }
+        #
+        #
+        #        if (this.parmOrigId())
+        #        {
+        #            ParmList += 'ORIGID=' + this.parmOrigId();
+        #        }
+        #        else
+        #        {
+        #            ParmList += 'ACCT=' + tmpParmListCC + '&';
+        #            ExpDate =  'EXPDATE=' + tmpParmListDate;
+        #            ParmList += ExpDate;
+        #            ParmList += '&AMT=';
+        #            ParmList += strltrim(this.parmCCAmountstr());
+        #        }
+        #
+        #
+        #
+        #        //Process Transaction
+        #        //Response = cc.SubmitTransaction(ccLong, ParmList, strLen(ParmList));
+        #        response = cc.SubmitTransaction(ParmList,this.parmReferenceId());
+        #
+        #    }
+        #    else if (ccMerchantVerisign.InterfaceType == CreditCardPayPalInterfaceType::HTTPS)
+        #    {
+        #        response = this.processPayPalHTTPS();
+        #    }
+        #    else
+        #    {
+        #        response = CreditCardBraintreeXMLBuilder::processBraintree(ccTrans);
+        #    }
+        #
+        #    return Response;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #processPayPalHTTPS
+        #str processPayPalHTTPS()
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #
+        #    CreditCardTable         ccTable;
+        #    CreditCardStr           ParmList;
+        #    CreditCardStr           ExpDate;
+        #    CreditCardStr           month;
+        #    CreditCardStr           ccYear;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    CreditCardStr           tmpParmListCC;
+        #    CreditCardStr           tmpParmListDate;
+        #    HttpRequest                         request;
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantVerisign
+        #        where ccMerchantVerisign.TerminalId == ccTrans.TerminalId;
+        #    //<--Check for all required fields
+        #    this.checkMerchantPayPal();
+        #
+        #    if (!this.parmReferenceId())
+        #    {
+        #        this.parmReferenceId(WinAPI::createGUID());
+        #    }
+        #
+        #    //<--Retrieve Basic ParmList
+        #    ParmList = this.BuildParmListPayPal();
+        #
+        #    ParmList += 'TRXTYPE=' + this.parmTrxType() + '&';
+        #    ParmList += 'TENDER=C&';
+        #
+        #
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        if (!this.parmAuthCode()) //<-- If this is a voice auth, the credit card is not encrypted
+        #        {
+        #            if (this.parmTrxType() == 'C' && !this.parmOrigId())
+        #            {
+        #                tmpParmListCC += this.parmccTrans().CreditCardNumSecure;
+        #            }
+        #            else
+        #            {
+        #                tmpParmListCC += this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #            }
+        #        }
+        #        else
+        #        {
+        #            tmpParmListCC += this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #        }
+        #
+        #
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #        if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,2);
+        #        }
+        #
+        #        ExpDate =  month + ccYear;
+        #        tmpParmListDate += ExpDate;
+        #    }
+        #    else
+        #    {
+        #        tmpParmListCC += CreditCardTable::retrieveValue(ccTable);
+        #
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,2);
+        #        }
+        #
+        #        ExpDate =  month + ccYear;
+        #        tmpParmListDate += ExpDate;
+        #    }
+        #
+        #
+        #    if (this.parmOrigId())
+        #    {
+        #        ParmList += 'ORIGID=' + this.parmOrigId();
+        #    }
+        #    else
+        #    {
+        #        ParmList += 'ACCT=' + tmpParmListCC + '&';
+        #        ExpDate =  'EXPDATE=' + tmpParmListDate;
+        #        ParmList += ExpDate;
+        #        ParmList += '&AMT=';
+        #        ParmList += strltrim(this.parmCCAmountstr());
+        #    }
+        #
+        #
+        #    request = new HTTPRequest();
+        #    request.open('POST',ccMerchantVerisign.HostAddress);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.setRequestHeader('Content-Type','namevalue');
+        #    request.setRequestHeader('X-VPS-REQUEST-ID',this.parmReferenceId());
+        #    request.setRequestHeader('X-VPS-CLIENTTIMEOUT',int2str(ccMerchantVerisign.Timeout));
+        #    request.setRequestHeader('X-VPS-VITINTEGRATION-PRODUCT','RedMaple');
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #    return Response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #server static CreditCardTrans construct(CreditCardTrans ccTrans,
+        #                                  CreditCardSwipe ccSwipe)
+        #
+        #{
+        #    CreditCardCredit       ccCredit;
+        #    CreditCardParameters   ccParameters;
+        #    CreditCardStr          total;
+        #    CreditCardStr          response;
+        #    CreditCardTrans        updateCCTrans;
+        #
+        #    Voucher                voucher;
+        #    ;
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #
+        #    if (!ccParameters)
+        #        //<--Error Reported
+        #        throw error("@ACC140");
+        #
+        #    total   = num2str(ccTrans.AmountMST,10,2,1,2);
+        #
+        #    ccCredit = new CreditCardCredit();
+        #    ccCredit.parmCCId(ccTrans.CreditCardId);
+        #    ccCredit.parmEmtrySource(ccTrans.EntrySource);
+        #    ccCredit.parmTrxType(ccTrans.TrxType);
+        #
+        #    //--> Currency is determined by process group in creditCardTrans.resolveTerminalforSalesTableCC
+        #    if (ccTrans.TransCurrencyCode != companyinfo::standardCurrency())
+        #    {
+        #        ccCredit.parmccAmount(ccTrans.AmountCur);
+        #    }
+        #    else
+        #    {
+        #        ccCredit.parmccAmount(ccTrans.AmountMST);
+        #    }
+        #
+        #    ccCredit.parmOrigId(ccTrans.OrigID);
+        #    ccCredit.parmEmtrySource(ccTrans.EntrySource);
+        #    ccCredit.parmTrxType(ccTrans.TrxType);
+        #    ccCredit.parmccAmountStr(ccTrans.AmountMST);
+        #    ccCredit.parmYearType(ccParameters.DateType);
+        #    ccCredit.parmccTrans(ccTrans);
+        #    ccCredit.parmTerminalTable(CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId));
+        #
+        #    if (ccSwipe)
+        #        ccCredit.parmSwipe(ccSwipe);
+        #
+        #    //<-- Test Mode
+        #    if (ccParameters.Testing == NoYes::No)
+        #    {
+        #        response = ccCredit.run();
+        #        ccCredit.analyzeResponse(response);
+        #    }
+        #    else
+        #    {
+        #        ccCredit.updateForDemo(ccTrans);
+        #    }
+        #
+        #    //<--Update the Transaction record
+        #    updateCCTrans = ccCredit.createTrans(ccTrans);
+        #
+        #    //<-- Customer Journal
+        #    if (ccParameters.CreateLedger == NoYes::Yes
+        #        && updateCCTrans.Result == '0'
+        #        && ccTrans.JournalOrig == CreditCardJournalOrig::System)
+        #    {
+        #        voucher = creditCardCustLedger::construct(ccTrans.CustAccount,
+        #            ccTrans.AmountCur,
+        #            ccTrans.TransID);
+        #
+        #        ccCredit.parmccVoucher(voucher);
+        #    }
+        #
+        #    return updateCCTrans;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

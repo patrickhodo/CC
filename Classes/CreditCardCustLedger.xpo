@@ -1,0 +1,431 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardCustLedger
+    PROPERTIES
+      Name                #CreditCardCustLedger
+      Origin              #{AC5D0BCA-790F-4224-8448-AECCC6748128}
+      LegacyId            #20008
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardCustLedger
+        #{
+        #    LedgerJournalTable          ledgerJournalTable;
+        #    LedgerJournalTrans          ledgerJournalTrans;
+        #    CreditCardTransID           creditCardTransID;
+        #    CreditCardParameters        ccParameters;
+        #    CreditCardBanks             ccBanks;
+        #    AmountCur                   totPayment;
+        #    AmountCur                   amtPaid;
+        #    AmountCur                   amtDue;
+        #    Voucher                     voucher;
+        #    AmountMST                   totAmount;
+        #    CreditCardTrans             ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #createCreditJournal
+        #void createCreditJournal(CustAccount   custAccount)
+        #{
+        #    CustTable                   custTable;
+        #    name                        journalName;
+        #
+        #    ;
+        #    custTable       = CustTable::find(custAccount);
+        #
+        #    if (custTable)
+        #    {
+        #        ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #
+        #        journalName =  date2str(SystemDateGet(),-1,-1,-1,-1,-1,-1,0) + ' ' + ccParameters.JournalText;
+        #
+        #        select ledgerJournalTable where ledgerJournalTable.Name == journalName
+        #                && ledgerJournalTable.JournalType == LedgerJournalType::CustPayment
+        #                && ledgerJournalTable.Posted == NoYes::No;
+        #
+        #        if (!ledgerJournalTable)
+        #        {
+        #            this.createCustLedger(journalName);
+        #        }
+        #
+        #        //--> totPayment must be negative
+        #        if (totPayment < 0)
+        #        {
+        #            this.createCustLedgerTrans(custAccount);
+        #        }
+        #
+        #        //--> Create sibling record for Payment Journal
+        #        if (ledgerJournalTrans)
+        #        {
+        #            this.createLedgerJournalTransCC();
+        #        }
+        #
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createCustLedger
+        #void createCustLedger(name  journalName)
+        #{
+        #    LedgerJournalTableData              ledgerJournalTableData = JournalTableData::newTable(ledgerJournalTable);
+        #    LedgerJournalName                   ledgerJournalName;
+        #
+        #    CustPaymModeTable                   custPaymModeTable;
+        #    ;
+        #    if (!ccParameters.LedgerJournalNameId)
+        #        throw error("@ACC249");
+        #
+        #    select firstonly journalName,JournalType from ledgerJournalName
+        #        where ledgerJournalName.JournalName == ccParameters.LedgerJournalNameId;
+        #
+        #    if (ledgerJournalName.JournalType != LedgerJournalType::CustPayment)
+        #        throw error("@ACC250");
+        #
+        #
+        #    ledgerJournalTable.initFromLedgerJournalName(ccParameters.LedgerJournalNameId);
+        #
+        #    // force the currency to be the order currency
+        #    custPaymModeTable = CustPaymModeTable::find(ccParameters.PaymMode);
+        #    ledgerJournalTable.OffsetAccountType = custPaymModeTable.AccountType;
+        #    ledgerJournalTable.parmOffsetLedgerDimension(custPaymModeTable.offsetLedgerDimension());
+        #
+        #    ledgerJournalTable.JournalType = ledgerJournalType::CustPayment;
+        #    ledgerJournalTable.JournalNum  = ledgerJournalTableData.nextJournalId();
+        #    ledgerJournalTable.JournalName = ledgerJournalName.JournalName;
+        #
+        #    //<--Create name based on Credit Card Parameters
+        #    switch (this.parmCCParameters().JournalByBank)
+        #    {
+        #        case CreditCardJournalByType::Bank  :
+        #            if (this.parmCCBanks())
+        #            {
+        #                ledgerJournalTable.Name         =   journalName + ' ' + this.parmCCBanks().AccountId;
+        #            }
+        #            else
+        #            {
+        #                ledgerJournalTable.Name         =   journalName;
+        #            }
+        #            break;
+        #
+        #        case CreditCardJournalByType::Terminal  :
+        #                ledgerJournalTable.Name         =   journalName + ' ' + this.parmCCTrans().TerminalId;
+        #
+        #            break;
+        #        default:
+        #                ledgerJournalTable.Name         =   journalName;
+        #
+        #    }
+        #
+        #    ledgerJournalTable.insert();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createCustLedgerTrans
+        #void createCustLedgerTrans(CustAccount custAccount)
+        #{
+        #    LedgerJournalEngine_CustPayment     ledgerJournalEngine = new LedgerJournalEngine_CustPayment();
+        #    CustTable                           custTable = CustTable::find(custAccount);
+        #    ;
+        #
+        #    // create journal line
+        #    ledgerJournalTrans.clear();
+        #    ledgerJournalTrans.initValue();
+        #    ledgerJournalEngine.newJournalActive(ledgerJournalTable);
+        #    ledgerJournalEngine.initValue(ledgerJournalTrans);
+        #
+        #    ledgerJournalTrans.DocumentDate     = SystemDateGet();
+        #    ledgerJournalTrans.TransDate        = SystemDateGet();
+        #
+        #    ledgerJournalTrans.DefaultDimension =  SalesTable::find(this.parmCCTrans().SalesId).DefaultDimension;
+        #    ledgerJournalTrans.OffsetDefaultDimension = ledgerJournalTrans.DefaultDimension;
+        #
+        #    //->  Account information
+        #    ledgerJournalTrans.parmAccount(custAccount);
+        #    ledgerJournalTrans.CurrencyCode     = ccTrans.CurrencyCode;
+        #    ledgerJournalEngine.currencyModified(ledgerJournalTrans);
+        #    ledgerJournalTrans.BankDepositVoucher=ccParameters.BankDepositVoucher;
+        #    ledgerJournalTrans.DefaultDimension = CustTable.DefaultDimension;
+        #
+        #    ledgerJournalTrans.SettleVoucher    = SettlementType::None;
+        #
+        #    //--> Bank transaction typ
+        #    ledgerJournalTrans.BankTransType    = ccParameters.BankTransactionType;
+        #    ledgerJournalTrans.TransactionType  = ledgerTransType::Payment;
+        #    ledgerJournalTrans.OffsetCompany    = curExt();
+        #    ledgerJournalTrans.OffsetTxt        = ccParameters.OffsetTxt ? ccParameters.OffsetTxt : ccTrans.SalesId;
+        #    ledgerJournalTrans.OffsetDefaultDimension = custTable.DefaultDimension;
+        #    ledgerJournalTrans.Txt              = this.parmCCTransID();
+        #    ledgerJournalTrans.PaymReference    = this.parmCCTransID();
+        #
+        #    //--> Amount is reversed, as a payment is a credit, a return is a debit
+        #    ledgerJournalTrans.amountCur2DebCred(-totPayment);
+        #
+        #    if (this.parmCCBanks())
+        #    {
+        #        ledgerJournalTrans.OffsetAccountType    = LedgerJournalACType::Bank;
+        #        ledgerJournalTrans.parmOffsetAccount(ccBanks.AccountId);
+        #    }
+        #    else
+        #    {
+        #        ledgerJournalTrans.OffsetAccountType    = ccParameters.AccountType;
+        #        ledgerJournalTrans.parmOffsetLedgerDimension(ccParameters.LedgerDimension);
+        #
+        #    }
+        #
+        #    if (ccParameters.PaymMode)
+        #    {
+        #        ledgerJournalTrans.PaymMode = ccParameters.PaymMode;
+        #    }
+        #
+        #    if (this.parmCCTrans().TransType == CreditCardTrxType::S
+        #        && this.parmCCParameters().SaleAsPrePay == NoYes::Yes)
+        #    {
+        #        ledgerJournalTrans.Prepayment = NoYes::Yes;
+        #        ledgerJournalTrans.PostingProfile = this.parmCCParameters().PostingProfile;
+        #    }
+        #
+        #     ledgerJournalTrans.insert();
+        #}
+      ENDSOURCE
+      SOURCE #createLedgerJournalTransCC
+        #void createLedgerJournalTransCC()
+        #{
+        #    LedgerJournalTransCC    ledgerJournalTransCC;
+        #    ;
+        #    ledgerJournalTransCC.clear();
+        #    ledgerJournalTransCC.JournalNum     = ledgerJournalTable.JournalNum;
+        #    ledgerJournalTransCC.JournalOrig    = CreditCardJournalOrig::System;
+        #    ledgerJournalTransCC.LineNum        = ledgerJournalTrans.LineNum;
+        #    ledgerJournalTransCC.TransID        = this.parmCCTransID();
+        #
+        #    if (ccTrans.PNRef)
+        #    {
+        #        ledgerJournalTransCC.PNRef      = ccTrans.PNRef;
+        #    }
+        #    else
+        #    {
+        #        ledgerJournalTransCC.PNRef      = ccTrans.OrigID;
+        #    }
+        #
+        #    ledgerJournalTransCC.Processed      = NoYes::Yes;
+        #    ledgerJournalTransCC.Voucher        = ledgerJournalTrans.Voucher;
+        #    ledgerJournalTransCC.insert();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createPaymentJournal
+        #void createPaymentJournal(CustAccount   custAccount)
+        #{
+        #    CustTable                   custTable;
+        #    name                        journalName;
+        #    ;
+        #    custTable       = CustTable::find(custAccount);
+        #
+        #    if (custTable)
+        #    {
+        #        journalName =  date2str(SystemDateGet(),-1,-1,-1,-1,-1,-1,0) + ' ' + this.parmCCParameters().JournalText;
+        #
+        #        switch (this.parmCCParameters().JournalByBank)
+        #        {
+        #            case CreditCardJournalByType::Bank  :
+        #                if (this.parmCCBanks())
+        #                {
+        #                    select ledgerJournalTable where ledgerJournalTable.Name == journalName + ' ' + this.parmCCBanks().AccountId
+        #                        && ledgerJournalTable.JournalType == LedgerJournalType::CustPayment
+        #                        && ledgerJournalTable.Posted == NoYes::No
+        #                        && ledgerJournalTable.SystemBlocked == NoYes::No;
+        #                }
+        #                else
+        #                {
+        #                    select ledgerJournalTable where ledgerJournalTable.Name == journalName
+        #                        && ledgerJournalTable.JournalType == LedgerJournalType::CustPayment
+        #                        && ledgerJournalTable.Posted == NoYes::No
+        #                        && ledgerJournalTable.SystemBlocked == NoYes::No;
+        #                }
+        #                break;
+        #
+        #            case CreditCardJournalByType::Terminal  :
+        #                select ledgerJournalTable where ledgerJournalTable.Name == journalName + ' ' + this.parmCCTrans().TerminalId
+        #                        && ledgerJournalTable.JournalType == LedgerJournalType::CustPayment
+        #                        && ledgerJournalTable.Posted == NoYes::No
+        #                        && ledgerJournalTable.SystemBlocked == NoYes::No;
+        #                break;
+        #            default:
+        #                select ledgerJournalTable where ledgerJournalTable.Name == journalName
+        #                    && ledgerJournalTable.JournalType == LedgerJournalType::CustPayment
+        #                    && ledgerJournalTable.Posted == NoYes::No
+        #                    && ledgerJournalTable.SystemBlocked == NoYes::No;
+        #
+        #        }
+        #
+        #
+        #        if (!ledgerJournalTable)
+        #        {
+        #            this.createCustLedger(journalName);
+        #        }
+        #
+        #        //--> If totPayment has any, then create open cash receipt
+        #        if (totPayment > 0)
+        #        {
+        #            this.createCustLedgerTrans(custAccount);
+        #        }
+        #        else
+        #        {
+        #            this.createCustLedgerTrans(custAccount);
+        #        }
+        #
+        #        //--> Create sibling record for Payment Journal
+        #        if (ledgerJournalTrans)
+        #        {
+        #            this.createLedgerJournalTransCC();
+        #        }
+        #
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #parmCCBanks
+        #CreditCardBanks parmCCBanks(CreditCardBanks _ccBanks = ccBanks)
+        #{
+        #    ;
+        #    ccBanks = _ccBanks;
+        #    return ccBanks;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCParameters
+        #CreditCardParameters parmCCParameters(CreditCardParameters _ccParameters = ccParameters)
+        #{
+        #    ;
+        #
+        #    ccParameters = _ccParameters;
+        #    return ccParameters;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCTrans
+        #CreditCardTrans parmCCTrans(CreditCardTrans _ccTrans = ccTrans)
+        #{
+        #    ;
+        #    ccTrans = _ccTrans;
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCTransID
+        #CreditCardTransID parmCCTransID(CreditCardTransID _ccTrans = creditCardTransID)
+        #{
+        #    ;
+        #    creditCardTransID = _ccTrans;
+        #    return creditCardTransID;
+        #}
+      ENDSOURCE
+      SOURCE #parmtotAmount
+        #AmountCur parmtotAmount(AmountCur _totAmount = totAmount)
+        #{
+        #    ;
+        #
+        #    totAmount = _totAmount;
+        #    return totAmount;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #Voucher run(   CustAccount custAccount,
+        #               AmountMST   mstAmount,
+        #               CreditCardTransID  ccTransID)
+        #{
+        #    ;
+        #    ttsbegin;
+        #
+        #    select forupdate ccTrans where ccTrans.TransID == this.parmCCTransID();
+        #
+        #    totPayment = mstAmount;
+        #
+        #    this.parmCCParameters(CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId));
+        #    this.parmCCBanks(CreditCardBanks::find(ccTrans.CreditCardType,ccTrans.TerminalId));
+        #    this.parmCCTrans(ccTrans);
+        #
+        #    if (totPayment > 0 || this.parmCCParameters().JournalByRefund == NoYes::No)
+        #    {
+        #        this.createPaymentJournal(custAccount);
+        #    }
+        #    else
+        #    {
+        #        //<-- Credit Notes
+        #        this.createCreditJournal(custAccount);
+        #    }
+        #
+        #    ccTrans.Voucher     =   ledgerJournalTrans.Voucher;
+        #    ccTrans.update();
+        #
+        #    ttscommit;
+        #    return voucher;
+        #
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #construct
+        #static Voucher construct(  CustAccount custAccount,
+        #                           AmountCur   totAmount,
+        #                           CreditCardTransID ccTransID)
+        #{
+        #    CreditCardCustLedger        custLedger;
+        #    Voucher                     voucher;
+        #    ;
+        #    custLedger = new CreditCardCustLedger();
+        #
+        #    //<-- Place Transaction ID to be used
+        #    custLedger.parmCCTransID(ccTransID);
+        #
+        #    if (custAccount)
+        #    {
+        #        voucher = custLedger.run(custAccount,totAmount,ccTransID);
+        #    }
+        #
+        #    return voucher;
+        #}
+      ENDSOURCE
+      SOURCE #createSettlement
+        #static void createSettlement(CustTrans      invoiceTrans,
+        #                             CustTrans      paymentTrans)
+        #{
+        #    CustSettlement          custSettlementInv;
+        #    CustSettlement          custSettlementPay;
+        #    ;
+        #    ttsbegin;
+        #    custSettlementInv.TransRecId    = invoiceTrans.RecId;
+        #    custSettlementInv.TransDate     = today();
+        #    custSettlementInv.OffsetTransVoucher = paymentTrans.Voucher;
+        #    custSettlementInv.AccountNum    = invoiceTrans.AccountNum;
+        #    custSettlementInv.SettleAmountCur = invoiceTrans.SettleAmountCur;
+        #    custSettlementInv.SettleAmountMST = invoiceTrans.SettleAmountMST;
+        #    custSettlementInv.OffsetRecid   = paymentTrans.RecId;
+        #    custSettlementInv.DueDate       = today();
+        #    custSettlementInv.ExchAdjustment= invoiceTrans.ExchAdjustment;
+        #    custSettlementInv.CustCashDiscDate = invoiceTrans.DueDate;
+        #    custSettlementInv.CanBeReversed = NoYes::Yes;
+        #    custSettlementInv.insert();
+        #
+        #    custSettlementPay.TransRecId    = paymentTrans.RecId;
+        #    custSettlementPay.TransDate     = today();
+        #    custSettlementpay.OffsetTransVoucher = invoiceTrans.Voucher;
+        #    custSettlementPay.AccountNum    = paymentTrans.AccountNum;
+        #    custSettlementPay.SettleAmountCur = paymentTrans.SettleAmountCur;
+        #    custSettlementPay.SettleAmountMST = paymentTrans.SettleAmountMST;
+        #    custSettlementPay.OffsetRecid    = invoiceTrans.RecId;
+        #    custSettlementPay.DueDate       = today();
+        #    custSettlementPay.ExchAdjustment= paymentTrans.ExchAdjustment;
+        #    custSettlementPay.CustCashDiscDate = paymentTrans.DueDate;
+        #    custSettlementPay.CanBeReversed = NoYes::Yes;
+        #    custSettlementPay.insert();
+        #    ttscommit;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

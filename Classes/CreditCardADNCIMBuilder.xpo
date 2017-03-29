@@ -1,0 +1,2961 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardADNCIMBuilder
+    PROPERTIES
+      Name                #CreditCardADNCIMBuilder
+      Extends             #CreditCardADNBuilder
+      RunOn               #Server
+      Origin              #{6B93B21E-82EA-43A9-B542-76428B63468F}
+      LegacyId            #20070
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeResponse
+        #void analyzeResponse(CreditCardStr    msg)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    Counter                         cnt,childCnt,childCnt2;
+        #    Counter                         i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //createCustomerProfileResponse
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt ++)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        tmpStr = elementParent.innerText();
+        #
+        #        switch (node)
+        #        {
+        #            case 'messages'  :
+        #                if (elementParent && elementParent.hasChildNodes())
+        #                {
+        #                    childNodeList = elementParent.childNodes();
+        #
+        #                    i = childNodeList.length();
+        #                    for(childCnt =0; childCnt < i;childCnt++)
+        #                    {
+        #                        elementChild2 = childNodeList.item(childCnt);
+        #                        node = elementChild2.nodeName();
+        #
+        #                        tmpStr = elementChild2.innerXML();
+        #
+        #                        switch (node)
+        #                        {
+        #                            case    'resultCode'        :
+        #                                if (elementChild2.innerXml() == 'Ok')
+        #                                {
+        #                                    result = '0';
+        #                                }
+        #                                else
+        #                                {
+        #                                    errorMessage = elementChild2.innerText();
+        #                                }
+        #                                break;
+        #                            case    'customerProfileId'        :
+        #                                this.parmProfileId(elementChild2.innerXml());
+        #                                break;
+        #                            case    'message'       :
+        #                                childNodeLst2 = elementChild2.childNodes();
+        #                                for (childCnt2 = 0;childCnt2 < childNodeLst2.length();childCnt2++)
+        #                                {
+        #                                    elementChild3 = childNodeLst2.item(childCnt2);
+        #                                    switch (elementChild3.nodeName())
+        #                                    {
+        #                                        case 'resultCode' :
+        #                                            tmpStr = elementChild3.innerXml();
+        #                                            if (elementChild3.innerXML() != 'Ok')
+        #                                            {
+        #                                                result = elementChild3.innerXML();
+        #                                                repMsg = CreditCardCybersourceXMLBuilder::returnError(result);
+        #                                            }
+        #                                            break;
+        #                                        case    'code'       :
+        #                                            authcode = elementChild3.innerXML();
+        #                                            errorMessage += ' ' + elementChild3.innerXml();
+        #                                            break;
+        #                                        case    'text' :
+        #                                            repMsg = elementChild3.innerXML();
+        #                                            errorMessage += ' ' + elementChild3.innerXml();
+        #                                            break;
+        #                                    }
+        #
+        #                                break;
+        #                            }
+        #                            //--> End case
+        #                        }
+        #                        //--> End swtich
+        #                    }
+        #                    //--> End for
+        #
+        #                }
+        #                //--> end if
+        #
+        #                break;
+        #            case    'customerProfileId' :
+        #                this.parmProfileId(elementParent.innerXml());
+        #                break;
+        #            case    'customerPaymentProfileIdList'    :
+        #                if (elementParent && elementParent.hasChildNodes())
+        #                {
+        #                    childNodeList = elementParent.childNodes();
+        #
+        #                    i = childNodeList.length();
+        #                    for(childCnt =0; childCnt < i;childCnt++)
+        #                    {
+        #                        elementChild2 = childNodeList.item(childCnt);
+        #                        node = elementChild2.nodeName();
+        #
+        #                        this.parmPayProfileId(elementChild2.innerText());
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    this.parmPayProfileId(elementParent.innerText());
+        #                }
+        #                break;
+        #            case    'customerPaymentProfileId'  :
+        #                this.parmPayProfileId(elementParent.innerXml());
+        #                break;
+        #            case    'directResponse'    :
+        #                this.analyzeADNReponse(elementParent.innerXml());
+        #                break;
+        #        }
+        #
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzeTransResponse
+        #str analyzeTransResponse(str    msg)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    Counter                         cnt,childCnt,childCnt2;
+        #    Counter                         i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   rtnCode;
+        #
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //createCustomerProfileResponse
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt ++)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        tmpStr = elementParent.innerText();
+        #
+        #        switch (node)
+        #        {
+        #            case 'messages'  :
+        #                if (elementParent && elementParent.hasChildNodes())
+        #                {
+        #                    childNodeList = elementParent.childNodes();
+        #
+        #                    i = childNodeList.length();
+        #                    for(childCnt =0; childCnt < i;childCnt++)
+        #                    {
+        #                        elementChild2 = childNodeList.item(childCnt);
+        #                        node = elementChild2.nodeName();
+        #
+        #                        tmpStr = elementChild2.innerXML();
+        #
+        #                        switch (node)
+        #                        {
+        #                            case    'resultCode'        :
+        #                                if (elementChild2.innerXml() == 'Ok')
+        #                                {
+        #                                    result = '0';
+        #                                }
+        #                                else
+        #                                {
+        #                                    errorMessage = elementChild2.innerText();
+        #                                }
+        #                                break;
+        #                            case    'customerProfileId'        :
+        #                                this.parmProfileId(elementChild2.innerXml());
+        #                                break;
+        #                            case    'message'       :
+        #                                childNodeLst2 = elementChild2.childNodes();
+        #                                for (childCnt2 = 0;childCnt2 < childNodeLst2.length();childCnt2++)
+        #                                {
+        #                                    elementChild3 = childNodeLst2.item(childCnt2);
+        #                                    switch (elementChild3.nodeName())
+        #                                    {
+        #                                        case 'resultCode' :
+        #                                            tmpStr = elementChild3.innerXml();
+        #                                            if (elementChild3.innerXML() != 'Ok')
+        #                                            {
+        #                                                result = elementChild3.innerXML();
+        #                                                repMsg = CreditCardCybersourceXMLBuilder::returnError(result);
+        #                                            }
+        #                                            break;
+        #                                        case    'code'       :
+        #                                            authcode = elementChild3.innerXML();
+        #                                            errorMessage += ' ' + elementChild3.innerXml();
+        #                                            break;
+        #                                        case    'text' :
+        #                                            repMsg = elementChild3.innerXML();
+        #                                            errorMessage += ' ' + elementChild3.innerXml();
+        #                                            rtnCode = errorMessage;
+        #                                            break;
+        #                                    }
+        #                                }
+        #                                break;
+        #                            //--> End case
+        #                        }
+        #                        //--> End swtich
+        #                    }
+        #                    //--> End for
+        #
+        #                }
+        #                //--> end if
+        #
+        #                break;
+        #            case    'customerProfileId' :
+        #                this.parmProfileId(elementParent.innerXml());
+        #                break;
+        #            case    'customerPaymentProfileIdList'    :
+        #                if (elementParent && elementParent.hasChildNodes())
+        #                {
+        #                    childNodeList = elementParent.childNodes();
+        #
+        #                    i = childNodeList.length();
+        #                    for(childCnt =0; childCnt < i;childCnt++)
+        #                    {
+        #                        elementChild2 = childNodeList.item(childCnt);
+        #                        node = elementChild2.nodeName();
+        #
+        #                        this.parmPayProfileId(elementChild2.innerText());
+        #                    }
+        #                }
+        #                break;
+        #            case    'directResponse'    :
+        #                this.analyzeADNReponse(elementParent.innerXml());
+        #                rtnCode = elementParent.innerXML();
+        #                break;
+        #        }
+        #
+        #    }
+        #
+        #    return rtnCode;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildAuthProfile
+        #xml buildAuthProfile(CreditCardTrans       _ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      transaction;
+        #    XMLElement                      xmlGen;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #
+        #    if (ccTrans.TerminalId != CreditCardTable::find(_ccTrans.CreditCardId).ProfileTerminalId)
+        #    {
+        #        throw error(strFmt("@ACC1692"));
+        #    }
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + int642str(_ccTrans.RecId) + '<refId>';
+        #
+        #    request = xmlDocument.createElement('transaction');
+        #
+        #    //--Transaction
+        #    xmlGen = xmlDocument.createElement('profileTransAuthOnly');
+        #    //--> Amount
+        #    transaction = xmlDocument.createElement('amount');
+        #    transaction.innerText(num2str(_ccTrans.AmountCur,9,2,1,0));
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> Tax
+        #    //if (ccTrans.CommercialSalesTax)
+        #    //{
+        #        //--> TODO
+        #    //}
+        #
+        #    //--> Profile
+        #    transaction = xmlDocument.createElement('customerProfileId');
+        #    transaction.innerText(_ccTrans.ProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> customer Payment Profile Id
+        #    transaction = xmlDocument.createElement('customerPaymentProfileId');
+        #    transaction.innerText(CreditCardTable::find(_ccTrans.CreditCardId).PaymentProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> CVD
+        #    if (_ccTrans.CID)
+        #    {
+        #        transaction = xmlDocument.createElement('cardCode');
+        #        transaction.innerText(_ccTrans.CID);
+        #        xmlGen.appendChild(transaction);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</createCustomerProfileTransactionRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCaptureProfile
+        #xml buildCaptureProfile(CreditCardTrans       _ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      transaction;
+        #    XMLElement                      xmlGen;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + int642str(_ccTrans.RecId) + '<refId>';
+        #
+        #    request = xmlDocument.createElement('transaction');
+        #
+        #    //--Transaction
+        #    xmlGen = xmlDocument.createElement('priorAuthCaptureTransaction');
+        #    //--> Amount
+        #    transaction = xmlDocument.createElement('amount');
+        #    transaction.innerText(num2str(_ccTrans.AmountCur,9,2,1,0));
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> Tax
+        #    //if (ccTrans.CommercialSalesTax)
+        #    //{
+        #        //--> TODO
+        #    //}
+        #
+        #    //--> Profile
+        #    transaction = xmlDocument.createElement('customerProfileId');
+        #    transaction.innerText(_ccTrans.ProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> customer Payment Profile Id
+        #    transaction = xmlDocument.createElement('customerPaymentProfileId');
+        #    transaction.innerText(CreditCardTable::find(_ccTrans.CreditCardId).PaymentProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> CVD
+        #    /*transaction = xmlDocument.createElement('cardCode');
+        #    transaction.innerText(_ccTrans.CID);
+        #    xmlGen.appendChild(transaction);*/
+        #
+        #    //--> Approval code
+        #    transaction = xmlDocument.createElement('approvalCode');
+        #    transaction.innerText(_ccTrans.AuthCode);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</createCustomerProfileTransactionRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCreditProfile
+        #xml buildCreditProfile(CreditCardTrans       _ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      transaction;
+        #    XMLElement                      xmlGen;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    if (ccTrans.TerminalId != CreditCardTable::find(_ccTrans.CreditCardId).ProfileTerminalId)
+        #    {
+        #        throw error(strFmt("@ACC1692"));
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + int642str(_ccTrans.RecId) + '<refId>';
+        #
+        #    request = xmlDocument.createElement('transaction');
+        #
+        #    //--Transaction
+        #    xmlGen = xmlDocument.createElement('profileTransRefund');
+        #    //--> Amount
+        #    transaction = xmlDocument.createElement('amount');
+        #    transaction.innerText(num2str(_ccTrans.AmountCur,9,2,1,0));
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> Tax
+        #    //if (ccTrans.CommercialSalesTax)
+        #    //{
+        #        //--> TODO
+        #    //}
+        #
+        #    //--> Profile
+        #    transaction = xmlDocument.createElement('customerProfileId');
+        #    transaction.innerText(_ccTrans.ProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> customer Payment Profile Id
+        #    transaction = xmlDocument.createElement('customerPaymentProfileId');
+        #    transaction.innerText(CreditCardTable::find(_ccTrans.CreditCardId).PaymentProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #
+        #    //--> Approval code
+        #    transaction = xmlDocument.createElement('transId');
+        #    transaction.innerText(_ccTrans.OrigID);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</createCustomerProfileTransactionRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDeletePayProfile
+        #xml buildDeletePayProfile(CreditCardTable       ccTable)
+        #{
+        #    CreditCardStr                   parmAll;
+        #    ;
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    //--> Build header
+        #    parmAll = '<deleteCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmAll += this.buildHeader();
+        #
+        #    parmAll += '<customerProfileId>' + ccTable.ProfileId + '</customerProfileId>';
+        #    parmAll += '<customerPaymentProfileId>' + ccTable.PaymentProfileId + '<customerPaymentProfileId>';
+        #
+        #    //--> End Body
+        #    parmAll += '</deleteCustomerPaymentProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDeleteProfile
+        #xml buildDeleteProfile(CreditCardTable       ccTable)
+        #{
+        #    TempStr                         parmAll;
+        #    ;
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    //--> Build header
+        #    parmAll = '<deleteCustomerProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmAll += this.buildHeader();
+        #
+        #    parmAll += '<customerProfileId>' + ccTable.ProfileId + '</customerProfileId>';
+        #
+        #    //--> End Body
+        #    parmAll += '</deleteCustomerProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildGetPaymentProfile
+        #xml buildGetPaymentProfile(CreditCardTable         ccTable)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      customerType;
+        #    XMLElement                      payment;
+        #    TempStr                         month;
+        #    TempStr                         ccYear;
+        #    TempStr                         tmp;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum && ccTable.ProfileId)
+        #    {
+        #        throw error(strFmt("@ACC1693",ccTable.ProfileId));
+        #    }
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<getCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    parmHeader += '<customerProfileId>' + ccTable.ProfileId + '</customerProfileId>';
+        #    parmHeader += '<customerPaymentProfileId>' + ccTable.PaymentProfileId + '</customerPaymentProfileId>';
+        #
+        #
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #
+        #    //--> End Body
+        #    parmAll += '</getCustomerPaymentProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildHeader
+        #str buildHeader()
+        #{
+        #    CreditCardStr                   tmpstr;
+        #    ;
+        #
+        #    tmpStr+= '<merchantAuthentication>';
+        #    tmpStr+= '<name>' + this.parmCreditCardMerchantADN().LoginId +'</name>';
+        #    tmpStr+= '<transactionKey>' + this.parmCreditCardMerchantADN().TransKey + '</transactionKey>';
+        #    tmpStr+= '</merchantAuthentication>';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNonCCProfile
+        #xml buildNonCCProfile(CustTable     custTable)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    Email                           email;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    parmHeader = '<createCustomerProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    request = xmlDocument.createElement('profile');
+        #
+        #    //--> Customer information
+        #    xmlGen = xmlDocument.createElement('merchantCustomerId');
+        #    xmlGen.innerText(custTable.AccountNum);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Description reference
+        #    xmlGen = xmlDocument.createElement('description');
+        #    xmlGen.innerText(custTable.Name());
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Email reference
+        #    xmlGen = xmlDocument.createElement('email');
+        #    email = custTable.email() ? custTable.email() : 'none@nemo.com';
+        #    xmlGen.innerText();
+        #    request.appendChild(xmlGen);
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '<validationMode>none</validationMode>';
+        #    parmAll += '</createCustomerProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildPaymentProfile
+        #xml buildPaymentProfile(CreditCardTable         ccTable,
+        #                        CreditCardTable         profileTable)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      customerType;
+        #    XMLElement                      payment;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    CreditCardStr                   tmp;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum && ccTable.ProfileId)
+        #    {
+        #        throw error(strFmt("@ACC1693",ccTable.ProfileId));
+        #    }
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + ccTable.CreditCardId + '<refId>';
+        #    parmHeader += '<customerProfileId>' + profileTable.ProfileId + '</customerProfileId>';
+        #
+        #    request = xmlDocument.createElement('paymentProfile');
+        #
+        #    customerType = xmlDocument.createElement('customerType');
+        #    customerType.innerText('business');
+        #    request.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmFirstName(ccTable.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmLastName(ccTable.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('company');
+        #    tmp = System.Web.HttpUtility::UrlEncode(CustTable::find(ccTable.CustAccount).Name());
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('address');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().Street);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().City);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().State);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('zip');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().ZipCode);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().CountryRegionId);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    tmp = System.Web.HttpUtility::UrlEncode(ccTable.Phone);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #    request.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('payment');
+        #    payment = xmlDocument.createElement('creditCard');
+        #
+        #    billTo = xmlDocument.createElement('cardNumber');
+        #    billTo.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    payment.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationDate');
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #
+        #    billTo.innerText(ccyear + '-' + month);
+        #    payment.appendChild(billTo);
+        #    customerTYpe.appendChild(payment);
+        #    request.appendChild(customerType);
+        #
+        #    //--> Card code cannot be used here.
+        #    //billTo = xmlDocument.createElement('cardCode');
+        #    //billTo.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    //payment.appendChild(billTo);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '<validationMode>liveMode</validationMode>';
+        #    parmAll += '</createCustomerPaymentProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildPaymentProfilefromManual
+        #xml buildPaymentProfilefromManual(SalesTableCC                  salesTableCC,
+        #                           CreditCardNumber                     ccNum,
+        #                           CreditCardExpirationDate             expDate,
+        #                           CreditCardCID                        _cid,
+        #                           CreditCardStr                        nameOnCard,
+        #                           CreditCardType                       creditCardType,
+        #                           CreditCardTable                      profileTable)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      customerType;
+        #    XMLElement                      payment;
+        #    XMLElement                      xmlGen;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    CreditCardStr                   tmp;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!profileTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + ccTable.CreditCardId + '<refId>';
+        #    parmHeader += '<customerProfileId>' + profileTable.ProfileId + '</customerProfileId>';
+        #
+        #    request = xmlDocument.createElement('paymentProfile');
+        #
+        #    customerType = xmlDocument.createElement('customerType');
+        #    customerType.innerText('business');
+        #    request.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmFirstName(nameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmLastName(nameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('company');
+        #    tmp = System.Web.HttpUtility::UrlEncode(CustTable::find(profileTable.CustAccount).Name());
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('address');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().Street);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().City);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().State);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('zip');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().ZipCode);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().CountryRegionId);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    tmp = System.Web.HttpUtility::UrlEncode(profileTable.Phone);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #    xmlGen.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('payment');
+        #    payment = xmlDocument.createElement('creditCard');
+        #
+        #    billTo = xmlDocument.createElement('cardNumber');
+        #    billTo.innerText(CreditCardTable::retrieveValueNum(ccNum));
+        #    payment.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationDate');
+        #    month =  int2str(Mthofyr(expDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    ccYear = int2str(Year(expDate));
+        #
+        #    billTo.innerText(ccyear + '-' + month);
+        #    payment.appendChild(billTo);
+        #
+        #    //--> Card code cannot be used here.
+        #    if (cid)
+        #    {
+        #        billTo = xmlDocument.createElement('cardCode');
+        #        billTo.innerText(cid);
+        #        payment.appendChild(billTo);
+        #    }
+        #
+        #    payment.appendChild(billTo);
+        #    customerTYpe.appendChild(payment);
+        #    xmlGen.appendChild(customerType);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '<validationMode>liveMode</validationMode>';
+        #    parmAll += '</createCustomerPaymentProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildPaymentProfilefromTrans
+        #xml buildPaymentProfilefromTrans(CreditCardTrans         _ccTrans,
+        #                        CreditCardTable         profileTable)
+        #{
+        #    CreditCardStr                   parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      customerType;
+        #    XMLElement                      payment;
+        #    XMLElement                      xmlGen;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   parmHeader;
+        #    CreditCardStr                   ccYear;
+        #    CreditCardStr                   tmp;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!profileTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + ccTable.CreditCardId + '<refId>';
+        #    parmHeader += '<customerProfileId>' + profileTable.ProfileId + '</customerProfileId>';
+        #
+        #    request = xmlDocument.createElement('paymentProfile');
+        #
+        #    customerType = xmlDocument.createElement('customerType');
+        #    customerType.innerText('business');
+        #    request.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmFirstName(_ccTrans.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmLastName(_ccTrans.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('company');
+        #    tmp = System.Web.HttpUtility::UrlEncode(CustTable::find(_ccTrans.CustAccount).Name());
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('address');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().Street);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().City);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().State);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('zip');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().ZipCode);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().CountryRegionId);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    tmp = System.Web.HttpUtility::UrlEncode(_ccTrans.AVSPhone);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #    xmlGen.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('payment');
+        #    payment = xmlDocument.createElement('creditCard');
+        #
+        #    billTo = xmlDocument.createElement('cardNumber');
+        #    billTo.innerText(CreditCardTable::retrieveValueNum(_ccTrans.CreditCardNumEncrypt));
+        #    payment.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationDate');
+        #    month =  int2str(Mthofyr(_ccTrans.OneTimeDateExp));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    ccYear = int2str(Year(_ccTrans.OneTimeDateExp));
+        #
+        #    billTo.innerText(ccyear + '-' + month);
+        #    payment.appendChild(billTo);
+        #    customerTYpe.appendChild(payment);
+        #    xmlGen.appendChild(customerType);
+        #
+        #    //--> Card code cannot be used here.
+        #    //billTo = xmlDocument.createElement('cardCode');
+        #    //billTo.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    //payment.appendChild(billTo);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '<validationMode>liveMode</validationMode>';
+        #    parmAll += '</createCustomerPaymentProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfile
+        #xml buildProfile(CreditCardTable       ccTable)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      customerType;
+        #    XMLElement                      payment;
+        #    XMLElement                      xmlGen;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    CreditCardStr                   tmp;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum && ccTable.ProfileId)
+        #    {
+        #        throw error(strFmt("@ACC1693",ccTable.ProfileId));
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum)
+        #    {
+        #        throw error(strFmt("@ACC1694"));
+        #    }
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + ccTable.CreditCardId + '<refId>';
+        #
+        #    request = xmlDocument.createElement('profile');
+        #
+        #    if (ccTable.SalesId)
+        #    {
+        #        //--> Customer information
+        #        xmlGen =xmlDocument.createElement('merchantCustomerId');
+        #        xmlGen.innerText(ccTable.SalesId);
+        #        request.appendChild(xmlGen);
+        #    }
+        #    else if (ccTable.OneTimeRefRecId != 0)
+        #    {
+        #        //--> Customer information
+        #        xmlGen =xmlDocument.createElement('merchantCustomerId');
+        #        xmlGen.innerText(ccTable.getPrimaryOneTimeId());
+        #        request.appendChild(xmlGen);
+        #    }
+        #    else
+        #    {
+        #        //--> Customer information
+        #        xmlGen =xmlDocument.createElement('merchantCustomerId');
+        #        xmlGen.innerText(ccTable.CustAccount);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> Description reference
+        #    xmlGen = xmlDocument.createElement('description');
+        #    xmlGen.innerText(CustTable::find(ccTable.CustAccount).Name());
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> email
+        #    xmlGen = xmlDocument.createElement('email');
+        #    if (ccTable.Email)
+        #    {
+        #        xmlGen.innerText(ccTable.Email);
+        #    }
+        #    else
+        #    {
+        #        xmlGen.innerText('null@authorize.net');
+        #    }
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('paymentProfiles');
+        #
+        #    customerType = xmlDocument.createElement('customerType');
+        #    customerType.innerText('business');
+        #    xmlGen.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmFirstName(ccTable.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmLastName(ccTable.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('company');
+        #    tmp = System.Web.HttpUtility::UrlEncode(CustTable::find(ccTable.CustAccount).Name());
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    if (this.parmPostalAddress().Street)
+        #    {
+        #        billTo = xmlDocument.createElement('address');
+        #        tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().Street);
+        #        billTo.innerText(tmp);
+        #        customerType.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().city)
+        #    {
+        #        billTo = xmlDocument.createElement('city');
+        #        tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().City);
+        #        billTo.innerText(tmp);
+        #        customerType.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().State)
+        #    {
+        #        billTo = xmlDocument.createElement('state');
+        #        tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().State);
+        #        billTo.innerText(tmp);
+        #        customerType.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        billTo = xmlDocument.createElement('zip');
+        #        tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().ZipCode);
+        #        billTo.innerText(tmp);
+        #        customerType.appendChild(billTo);
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        billTo = xmlDocument.createElement('country');
+        #        tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().CountryRegionId);
+        #        billTo.innerText(tmp);
+        #        customerType.appendChild(billTo);
+        #    }
+        #
+        #    if (ccTable.Phone)
+        #    {
+        #        billTo = xmlDocument.createElement('phoneNumber');
+        #        tmp = System.Web.HttpUtility::UrlEncode(ccTable.Phone);
+        #        billTo.innerText(tmp);
+        #        customerType.appendChild(billTo);
+        #    }
+        #    xmlGen.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('payment');
+        #    payment = xmlDocument.createElement('creditCard');
+        #
+        #    billTo = xmlDocument.createElement('cardNumber');
+        #    billTo.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    payment.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationDate');
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #
+        #    billTo.innerText(ccyear + '-' + month);
+        #    payment.appendChild(billTo);
+        #    customerTYpe.appendChild(payment);
+        #    xmlGen.appendChild(customerType);
+        #
+        #    //--> Card code cannot be used here.
+        #    //billTo = xmlDocument.createElement('cardCode');
+        #    //billTo.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    //payment.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '<validationMode>liveMode</validationMode>';
+        #    parmAll += '</createCustomerProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfileFromManual
+        #xml buildProfileFromManual(SalesTableCC                 salesTableCC,
+        #                           CreditCardNumber             ccNum,
+        #                           CreditCardExpirationDate     expDate,
+        #                           CreditCardCID                _cid,
+        #                           CreditCardStr                nameOnCard)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      customerType;
+        #    XMLElement                      payment;
+        #    XMLElement                      xmlGen;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    CreditCardStr                   tmp;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!SalesTable::find(salesTableCC.SalesId).InvoiceAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    if (!ccNum)
+        #    {
+        #        throw error(strFmt("@ACC1694"));
+        #    }
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + ccTable.CreditCardId + '<refId>';
+        #
+        #    request = xmlDocument.createElement('profile');
+        #
+        #    //--> Customer information
+        #    xmlGen = xmlDocument.createElement('merchantCustomerId');
+        #    xmlGen.innerText(SalesTable::find(salesTableCC.SalesId).InvoiceAccount);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Description reference
+        #    xmlGen = xmlDocument.createElement('description');
+        #    xmlGen.innerText(nameOnCard);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> email
+        #    xmlGen = xmlDocument.createElement('email');
+        #    if (salesTable::find(salesTableCC.SalesId).Email)
+        #    {
+        #        xmlGen.innerText(salesTable::find(salesTableCC.SalesId).Email);
+        #    }
+        #    else
+        #    {
+        #        xmlGen.innerText('null@authorize.net');
+        #    }
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('paymentProfiles');
+        #
+        #    customerType = xmlDocument.createElement('customerType');
+        #    customerType.innerText('business');
+        #    xmlGen.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmFirstName(nameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmLastName(nameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('company');
+        #    tmp = System.Web.HttpUtility::UrlEncode(salesTable::find(salesTableCC.SalesId).DeliveryName);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('address');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().Street);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().City);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().State);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('zip');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().ZipCode);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().CountryRegionId);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    customerType = xmlDocument.createElement('payment');
+        #    payment = xmlDocument.createElement('creditCard');
+        #
+        #    billTo = xmlDocument.createElement('cardNumber');
+        #    billTo.innerText(ccNum);
+        #    payment.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationDate');
+        #    month =  int2str(Mthofyr(expDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    ccYear = int2str(Year(expDate));
+        #
+        #    billTo.innerText(ccyear + '-' + month);
+        #    payment.appendChild(billTo);
+        #    customerTYpe.appendChild(payment);
+        #    xmlGen.appendChild(customerType);
+        #
+        #    //--> Card code cannot be used here.
+        #    if (_cid)
+        #    {
+        #        billTo = xmlDocument.createElement('cardCode');
+        #        billTo.innerText(_cid);
+        #        payment.appendChild(billTo);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '<validationMode>liveMode</validationMode>';
+        #    parmAll += '</createCustomerProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfileFromReferance
+        #xml buildProfileFromReferance(CreditCardPNRef       _pnRef)
+        #{
+        #    CreditCardStr                   parmAll;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #
+        #    //--> Build envelop by hand
+        #    parmAll = '<createCustomerProfileFromTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmAll += this.buildHeader();
+        #
+        #    //Transaction id
+        #    parmAll += '<transId>' + _pnRef + '</transId>';
+        #    parmAll += '</createCustomerProfileFromTransactionRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfileFromTrans
+        #xml buildProfileFromTrans(CreditCardTrans       _ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      billTo;
+        #    XMLElement                      customerType;
+        #    XMLElement                      payment;
+        #    XMLElement                      xmlGen;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    CreditCardStr                   tmp;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!_ccTrans.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    if (!_ccTrans.CreditCardNumEncrypt && _ccTrans.ProfileId)
+        #    {
+        #        throw error(strFmt("@ACC1693",_ccTrans.ProfileId));
+        #    }
+        #
+        #    if (!_ccTrans.CreditCardNumEncrypt)
+        #    {
+        #        throw error(strFmt("@ACC1694"));
+        #    }
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + ccTable.CreditCardId + '<refId>';
+        #
+        #    request = xmlDocument.createElement('profile');
+        #
+        #    //--> Customer information
+        #    xmlGen =xmlDocument.createElement('merchantCustomerId');
+        #    xmlGen.innerText(_ccTrans.CustAccount);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Description reference
+        #    xmlGen = xmlDocument.createElement('description');
+        #    xmlGen.innerText(_ccTrans.NameOnCard);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> email
+        #    xmlGen = xmlDocument.createElement('email');
+        #    if (_ccTrans.AVSEmail)
+        #    {
+        #        xmlGen.innerText(_ccTrans.AVSEmail);
+        #    }
+        #    else
+        #    {
+        #        xmlGen.innerText('null@authorize.net');
+        #    }
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Bill to informatin
+        #    xmlGen = xmlDocument.createElement('paymentProfiles');
+        #
+        #    customerType = xmlDocument.createElement('customerType');
+        #    customerType.innerText('business');
+        #    xmlGen.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmFirstName(_ccTrans.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmLastName(_ccTrans.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('company');
+        #    tmp = System.Web.HttpUtility::UrlEncode(CustTable::find(_ccTrans.CustAccount).Name());
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('address');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().Street);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().City);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().State);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('zip');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().ZipCode);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().CountryRegionId);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    tmp = System.Web.HttpUtility::UrlEncode(_ccTrans.AVSPhone);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #    xmlGen.appendChild(customerType);
+        #
+        #    customerType = xmlDocument.createElement('payment');
+        #    payment = xmlDocument.createElement('creditCard');
+        #
+        #    billTo = xmlDocument.createElement('cardNumber');
+        #    billTo.innerText(CreditCardTable::retrieveValueNum(_ccTrans.CreditCardNumEncrypt));
+        #    payment.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationDate');
+        #    month =  int2str(Mthofyr(_ccTrans.OneTimeDateExp));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    ccYear = int2str(Year(_ccTrans.OneTimeDateExp));
+        #
+        #    billTo.innerText(ccyear + '-' + month);
+        #    payment.appendChild(billTo);
+        #    customerTYpe.appendChild(payment);
+        #    xmlGen.appendChild(customerType);
+        #
+        #    //--> Card code cannot be used here.
+        #    //billTo = xmlDocument.createElement('cardCode');
+        #    //billTo.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    //payment.appendChild(billTo);
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '<validationMode>liveMode</validationMode>';
+        #    parmAll += '</createCustomerProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildSaleProfile
+        #xml buildSaleProfile(CreditCardTrans       _ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      transaction;
+        #    XMLElement                      xmlGen;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    if (ccTrans.TerminalId != CreditCardTable::find(_ccTrans.CreditCardId).ProfileTerminalId)
+        #    {
+        #        throw error(strFmt("@ACC1514"));
+        #    }
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + int642str(_ccTrans.RecId) + '<refId>';
+        #
+        #    request = xmlDocument.createElement('transaction');
+        #
+        #    //--Transaction
+        #    xmlGen = xmlDocument.createElement('profileTransAuthCapture');
+        #    //--> Amount
+        #    transaction = xmlDocument.createElement('amount');
+        #    transaction.innerText(num2str(_ccTrans.AmountCur,9,2,1,0));
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> Tax
+        #    //if (ccTrans.CommercialSalesTax)
+        #    //{
+        #        //--> TODO
+        #    //}
+        #
+        #    //--> Profile
+        #    transaction = xmlDocument.createElement('customerProfileId');
+        #    transaction.innerText(_ccTrans.ProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> customer Payment Profile Id
+        #    transaction = xmlDocument.createElement('customerPaymentProfileId');
+        #    transaction.innerText(CreditCardTable::find(_ccTrans.CreditCardId).PaymentProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> CVD
+        #    if (_ccTrans.CID)
+        #    {
+        #        transaction = xmlDocument.createElement('cardCode');
+        #        transaction.innerText(_ccTrans.CID);
+        #        xmlGen.appendChild(transaction);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</createCustomerProfileTransactionRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildTransaction
+        #str buildTransaction(CreditCardTrans       _ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardStr                   parmList;
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    CreditCardStr                   locResponse;
+        #    ;
+        #    clrPermission.assert();
+        #    select ccADN
+        #        where ccADN.TerminalId == _ccTrans.TerminalId;
+        #
+        #    if (!ccADN)
+        #    {
+        #        throw error("@ACC1209");
+        #    }
+        #
+        #    this.parmCreditCardMerchantADN(ccADN);
+        #    this.parmccTrans(_ccTrans);
+        #
+        #    switch (this.parmccTrans().TransType)
+        #    {
+        #        case    CreditCardTrxType::A        :
+        #            parmList += this.buildAuthProfile(_ccTrans);
+        #            break;
+        #        case    CreditCardTrxType::C        :
+        #            parmList += this.buildCreditProfile(_ccTrans);
+        #            break;
+        #        case    CreditCardTrxType::D        :
+        #            parmList += this.buildCaptureProfile(_ccTrans);
+        #            break;
+        #        case    CreditCardTrxType::S        :
+        #            parmList += this.buildSaleProfile(_ccTrans);
+        #            break;
+        #        case    CreditCardTrxType::V        :
+        #            parmList += this.buildVoidProfile(_ccTrans);
+        #            break;
+        #    }
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccAdn.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    locResponse = this.analyzeTransResponse(response);
+        #
+        #    return locResponse;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildUpdateProfile
+        #xml buildUpdateProfile(CreditCardTable       ccTable)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      billTo;
+        #    XMLElement                      customerType;
+        #    XmlElement                      payment;
+        #    CreditCardStr                   month;
+        #    CreditCardStr                   ccYear;
+        #    CreditCardStr                   tmp;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<updateCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + ccTable.CreditCardId + '<refId>';
+        #    parmHeader += '<customerProfileId>' + ccTable.ProfileId + '</customerProfileId>';
+        #    parmHeader += '<paymentProfile>';
+        #
+        #    //--> Bill to informatin
+        #    customerType = xmlDocument.createElement('billTo');
+        #
+        #    billTo = xmlDocument.createElement('firstName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmFirstName(ccTable.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('lastName');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmLastName(ccTable.NameOnCard));
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('company');
+        #    tmp = System.Web.HttpUtility::UrlEncode(CustTable::find(ccTable.CustAccount).Name());
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('address');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().Street);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('city');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().City);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('state');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().State);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('zip');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().ZipCode);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('country');
+        #    tmp = System.Web.HttpUtility::UrlEncode(this.parmPostalAddress().CountryRegionId);
+        #    billTo.innerText(tmp);
+        #    customerType.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('phoneNumber');
+        #    tmp = System.Web.HttpUtility::UrlEncode(ccTable.Phone);
+        #    billTo.innerText(tmp);
+        #
+        #    customerType.appendChild(billTo);
+        #
+        #    customerType = xmlDocument.createElement('payment');
+        #    payment = xmlDocument.createElement('creditCard');
+        #
+        #    billTo = xmlDocument.createElement('cardNumber');
+        #    billTo.innerText('XXXX'+subStr(cctable.CreditCardNumSecure,strlen(cctable.CreditCardNumSecure)-3,4));
+        #    payment.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expirationDate');
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #
+        #    billTo.innerText(ccyear + '-' + month);
+        #    payment.appendChild(billTo);
+        #    customerType.appendChild(payment);
+        #
+        #
+        #    parmRequest = customerType.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '<customerPaymentProfileId>' + ccTable.PaymentProfileId + '</customerPaymentProfileId>';
+        #    parmAll += '</paymentProfile>';
+        #
+        #
+        #    parmAll += '</updateCustomerPaymentProfileRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVoidProfile
+        #xml buildVoidProfile(CreditCardTrans       _ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmRequest,parmAll;
+        #    XMLElement                      request;
+        #    XMLElement                      transaction;
+        #    XMLElement                      xmlGen;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = '<createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">';
+        #    parmHeader += this.buildHeader();
+        #
+        #    //parmHeader += '<refId>' + int642str(_ccTrans.RecId) + '<refId>';
+        #
+        #    request = xmlDocument.createElement('transaction');
+        #
+        #    //--Transaction
+        #    xmlGen = xmlDocument.createElement('profileTransVoid');
+        #
+        #    //--> Profile
+        #    transaction = xmlDocument.createElement('customerProfileId');
+        #    transaction.innerText(_ccTrans.ProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> Customer Payment Profile Id
+        #    transaction = xmlDocument.createElement('customerPaymentProfileId');
+        #    transaction.innerText(CreditCardTable::find(_ccTrans.CreditCardId).PaymentProfileId);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    //--> Approval code
+        #    transaction = xmlDocument.createElement('transId');
+        #    transaction.innerText(_ccTrans.OrigID);
+        #    xmlGen.appendChild(transaction);
+        #
+        #    request.appendChild(xmlGen);
+        #    parmRequest = request.xml();
+        #    parmAll = '<?xml version="1.0" encoding="utf-8"?>';
+        #    parmAll += parmHeader;
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</createCustomerProfileTransactionRequest>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantADN
+        #boolean checkMerchantADN(CreditCardMerchantADN  ccMerchantADN)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantADN.LoginId)
+        #       throw error("@ACC1393");
+        #    else if (!ccMerchantADN.CIMHostAddress)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardADNCIMBuilder extends CreditCardADNBuilder
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardProfileId             profileId;
+        #    CreditCardProfileiD             payProfileId;
+        #    ErrorMsg                        errorMessage;
+        #}
+      ENDSOURCE
+      SOURCE #parmErrorMessage
+        #str parmErrorMessage(str    _errorMessage = errorMessage)
+        #{
+        #    ;
+        #    errorMessage = _errorMessage;
+        #    return errorMessage;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #firstName parmFirstName(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmLastName
+        #firstName parmLastName(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    str         reduction;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker+1);
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmPayProfileId
+        #CreditCardProfileId parmPayProfileId(CreditCardProfileId   _payProfileId = payProfileId)
+        #{
+        #    ;
+        #    payProfileId = _payProfileId;
+        #    return payProfileId;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmProfileId
+        #CreditCardProfileId parmProfileId(CreditCardProfileId   _profileId = profileId)
+        #{
+        #    ;
+        #    profileId = _profileId;
+        #    return profileId;
+        #}
+      ENDSOURCE
+      SOURCE #updateCCTrans
+        #void updateCCTrans()
+        #{
+        #    ;
+        #}
+      ENDSOURCE
+      SOURCE #updateTrans
+        #CreditCardTrans updateTrans(CreditCardTrans        _ccTrans)
+        #{
+        #    ;
+        #    _ccTrans.Result               =   Result;
+        #    _ccTrans.AuthCode             =   AuthCode;
+        #    _ccTrans.AuthNetId            =   netId;
+        #    _ccTrans.AuthSource           =   authSource;
+        #    _ccTrans.AvsAddr              =   AvsAddr;
+        #    _ccTrans.IAvs                 =   IAvs;
+        #    _ccTrans.PNRef                =   pnRef;
+        #    _ccTrans.RepMsg               =   RepMsg;
+        #    _ccTrans.Comment1             =   Comment;
+        #    _ccTrans.Comment2             =   Comment2;
+        #    _ccTrans.RetrevalRefNum       =   retrievalNum;
+        #    _ccTrans.BatchTransNumber     =   sequenceId;
+        #    _ccTrans.BatchPaymentechNum   =   batch;
+        #    _ccTrans.CVDResponse          =   cvdResponse;
+        #    _ccTrans.OrbitalTxRefNum      =   txtRef;
+        #    _ccTrans.OrbitalTxRefIdx      =   txtRefIdx;
+        #    _ccTrans.PayPalReferenceId    =   this.parmReferenceId();
+        #    _ccTrans.CybersourceToken     =   token;
+        #
+        #    return _ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #createNonCCProfile
+        #static CreditCardProfileId createNonCCProfile(CustTable  custTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1695");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #    parmList  = adnBuilder.buildNonCCProfile(custTable);
+        #
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #        throw error(response);
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        return adnBuilder.parmProfileId();
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #static void createProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     locCCTable;
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1695");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #    if (ccTable.Location)
+        #    {
+        #        adnBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #    }
+        #    else
+        #    {
+        #        adnBuilder.parmPostalAddress(DirParty::primaryPostalAddress(CustTable::find(ccTable.CustAccount).Party));
+        #    }
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #
+        #    //--> A.N only allows 10 cards per customer account.  For one time customers, this is limiting.
+        #    //--> We will use Sales orders if that flag is used.
+        #    if (ccTable.SalesId)
+        #    {
+        #        select locCCTable where locCCTable.SalesId == ccTable.SalesId
+        #            && locCCTable.Profile == NoYes::Yes
+        #            && locCCTable.ProfileTerminalId == ccMerchantADN.TerminalId;
+        #    }
+        #    else if (ccTable.OneTimeRefRecId != 0)
+        #    {
+        #        select locCCTable where locCCTable.OneTimeRefRecId == ccTable.OneTimeRefRecId
+        #            && locCCTable.OneTimeRefTableId == ccTable.OneTimeRefTableId
+        #            && locCCTable.Profile == NoYes::Yes
+        #            && locCCTable.ProfileTerminalId == ccMerchantADN.TerminalId;
+        #    }
+        #    else
+        #    {
+        #        select locCCTable where locCCTable.CustAccount == ccTable.CustAccount
+        #            && locCCTable.Profile == NoYes::Yes
+        #            && locCCTable.ProfileTerminalId == ccMerchantADN.TerminalId;
+        #    }
+        #
+        #    if (!locCCTable)
+        #    {
+        #        //--> Build  Node
+        #        parmList  = adnBuilder.buildProfile(ccTable);
+        #    }
+        #    else
+        #    {
+        #        adnBuilder.parmProfileId(locCCTable.ProfileId);
+        #        parmList = adnBuilder.buildPaymentProfile(ccTable,locCCTable);
+        #    }
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #        throw error(response);
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.ProfileId = adnBuilder.parmProfileId();
+        #        ccTable.PaymentProfileId = adnBuilder.parmPayProfileId();
+        #        ccTable.CreditCardNum = '';
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createProfileFromAuth
+        #static void createProfileFromAuth(CreditCardTrans      ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     ccTable;
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #
+        #    str                                 response;
+        #    str                                 parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1695");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #    adnBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTrans.Location));
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #
+        #    select ccTable where ccTable.CustAccount == ccTrans.CustAccount
+        #        && ccTable.Profile == NoYes::Yes;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Build  Node
+        #        parmList  = adnBuilder.buildProfileFromTrans(ccTrans);
+        #    }
+        #    else
+        #    {
+        #        parmList = adnBuilder.buildPaymentProfileFromTrans(ccTrans,ccTable);
+        #    }
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.initValue();
+        #        ccTable.CustAccount     = ccTrans.CustAccount;
+        #        ccTable.CreditCardType  = ccTrans.CreditCardType;
+        #        ccTable.Email           = ccTrans.AVSEmail;
+        #        ccTable.NameOnCard      = ccTrans.NameOnCard;
+        #        ccTAble.Phone           = ccTrans.AVSPhone;
+        #        ccTable.Location        = ccTrans.Location;
+        #        ccTable.Profile         = NoYes::Yes;
+        #        ccTable.ProfileId       = adnBuilder.parmProfileId();
+        #        ccTable.PaymentProfileId = adnBuilder.parmPayProfileId();
+        #        ccTable.CreditCardNum   = '';
+        #        ccTAble.insert();
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1399",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createProfileFromManual
+        #static void createProfileFromManual(SalesTableCC                salesTableCC,
+        #                           CreditCardNumber                     ccNum,
+        #                           CreditCardExpirationDate             expDate,
+        #                           CreditCardCID                        _cid,
+        #                           str                                  nameOnCard,
+        #                           CreditCardType                       creditCardType)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     ccTable;
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #
+        #    str                                 response;
+        #    str                                 parmList;
+        #    SalesTable                          salesTable = SalesTable::find(salesTableCC.SalesId);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #    adnBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(salesTableCC.Location));
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #
+        #    select ccTable where ccTable.CustAccount == SalesTable::find(salesTableCC.SalesId).InvoiceAccount
+        #        && ccTable.Profile == NoYes::Yes;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Build  Node
+        #        parmList  = adnBuilder.buildProfileFromManual(salesTableCC,ccNum,expDate,_cid,nameonCard);
+        #    }
+        #    else
+        #    {
+        #        parmList = adnBuilder.buildPaymentProfilefromManual(salesTableCC,ccNum,expDate,_cid,nameonCard,creditcardType,ccTable);
+        #    }
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.initValue();
+        #        ccTable.CustAccount     = salesTable.InvoiceAccount;
+        #        ccTable.CreditCardType  = creditCardType;
+        #        ccTable.Email           = salesTable.Email;
+        #        ccTable.Location        = salesTable.deliveryLocation();
+        #        ccTable.NameOnCard      = nameOnCard;
+        #        ccTable.Profile         = NoYes::Yes;
+        #        ccTable.ProfileId       = adnBuilder.parmProfileId();
+        #        ccTable.PaymentProfileId = adnBuilder.parmPayProfileId();
+        #        ccTable.CreditCardNum   = '';
+        #        ccTAble.insert();
+        #        ttscommit;
+        #
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1399",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createProfileFromRef
+        #static CreditCardProfileId createProfileFromRef(CreditCardPNRef      pnRef,
+        #                                 CreditCardTrans      ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     ccTable;
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #
+        #    str                                 response;
+        #    str                                 parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1695");
+        #    }
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #
+        #    parmList = adnBuilder.buildProfileFromReferance(pnRef);
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.initValue();
+        #        ccTable.CustAccount     = ccTrans.CustAccount;
+        #        ccTable.CreditCardType  = ccTrans.CreditCardType;
+        #        ccTable.Email           = ccTrans.AVSEmail;
+        #        ccTable.NameOnCard      = ccTrans.NameOnCard;
+        #        ccTAble.Phone           = ccTrans.AVSPhone;
+        #        ccTable.Location        = ccTrans.Location;
+        #        ccTable.Profile         = NoYes::Yes;
+        #        ccTable.ProfileId       = adnBuilder.parmProfileId();
+        #        ccTable.PaymentProfileId = adnBuilder.parmPayProfileId();
+        #        ccTable.CreditCardNum   = '';
+        #        ccTAble.insert();
+        #        ttscommit;
+        #
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1399",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #    return ccTable.PaymentProfileId;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createTransaction
+        #static str createTransaction(xml   parmList)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #
+        #    str                                 response;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    return response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #deleteProfile
+        #static void deleteProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     locCCTable;
+        #
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1695");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #
+        #    select locCCTable where locCCTable.CustAccount == ccTable.CustAccount
+        #        && locCCTable.Profile == NoYes::Yes;
+        #
+        #    if (!locCCTable)
+        #    {
+        #        //--> Build  Node
+        #        parmList  = adnBuilder.buildDeleteProfile(ccTable);
+        #    }
+        #    else
+        #    {
+        #        //--> Build  Node
+        #        parmList  = adnBuilder.buildDeletePayProfile(ccTable);
+        #    }
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::No;
+        #        ccTable.Inactive = NoYes::Yes;
+        #        ccTable.ProfileId = '';
+        #        ccTAble.update();
+        #        ttscommit;
+        #
+        #        info("@ACC1387");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1399",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getHostedProfilePage
+        #static CreditCardProfileId getHostedProfilePage(CustAccount    custAccount)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     locCCTable;
+        #    CustTable                           custTable = CustTable::find(custAccount);
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    CreditCardProfileId                 profileId;
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1695");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #
+        #    select locCCTable where locCCTable.CustAccount == custTable.AccountNum
+        #        && locCCTable.Profile == NoYes::Yes
+        #        && locCCTable.ProfileTerminalId == ccMerchantADN.TerminalId;
+        #
+        #    if (!locCCTable)
+        #    {
+        #        //--> Build  Node
+        #        profileId  = adnBuilder.buildNonCCProfile(custTable);
+        #    }
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #        throw error(response);
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        return adnBuilder.parmProfileId();
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getProfile
+        #static void getProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1695");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #    adnBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #
+        #    //--> Build  Node
+        #    parmList  = adnBuilder.buildGetPaymentProfile(ccTable);
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.ProfileId = adnBuilder.parmProfileId();
+        #        ccTable.CreditCardNum = '';
+        #        ccTAble.update();
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1620",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #updateProfile
+        #static void updateProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantADN               ccMerchantADN;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> ADN Specific variables
+        #    CreditCardADNCIMBuilder             adnBuilder = new CreditCardADNCIMBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #
+        #    str                                 response;
+        #    str                                 parmList;
+        #    ;
+        #    //--> Currently not supported
+        #    //warning("@ACC1806");
+        #
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantADN
+        #        where ccMerchantADN.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantADN)
+        #    {
+        #        throw error("@ACC1695");
+        #    }
+        #
+        #    adnBuilder.parmCreditCardMerchantADN(ccMerchantADN);
+        #    adnBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    adnBuilder.checkMerchantADN(ccMerchantADN);
+        #
+        #    //--> Build  Node
+        #    parmList  = adnBuilder.buildUpdateProfile(ccTable);
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantADN.CIMHostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    adnBuilder.analyzeResponse(response);
+        #
+        #    if (adnBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        if (adnBuilder.parmProfileId())
+        #        {
+        #            ccTable.ProfileId = adnBuilder.parmProfileId();
+        #        }
+        #        ccTable.CreditCardNum = '';
+        #        ccTAble.update();
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1620",adnBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

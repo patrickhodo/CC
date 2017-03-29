@@ -1,0 +1,801 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardBatchInquiry
+    PROPERTIES
+      Name                #CreditCardBatchInquiry
+      Origin              #{9D1DE695-12AC-4BB1-B372-8C8AB5C51232}
+      LegacyId            #20004
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzePaymentechResponse
+        #void analyzePaymentechResponse(str msg)
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    int             msgLen;
+        #    int             marker;
+        #    int             tmpmarker;
+        #    str             tmp;
+        #    ;
+        #    msgLen = strLen(msg);
+        #
+        #    if ( char2num(msg,1) != #STX)
+        #    {
+        #        throw error("@ACC649");
+        #    }
+        #    //--> Action Code
+        #    ActionCode = subStr(msg,2,1);
+        #
+        #    if (ActionCode == 'E')
+        #    {
+        #        errCode = subStr(msg,3,6);
+        #    }
+        #
+        #    this.parmBatchNum(subStr(msg,10,6));
+        #
+        #    this.parmRetrievalRef(str2int(subStr(msg,16,8)));
+        #
+        #    //--> Dates and Time
+        #    tmp = subStr(msg,65,10);
+        #
+        #    this.parmOpenDate(str2date(subStr(tmp,1,2) + '/' + subStr(tmp,3,2) + '/' + subStr(tmp,5,2),213));
+        #
+        #    this.parmOpenTime(str2time(subStr(tmp,7,2) + '/' + subStr(tmp,9,2)));
+        #
+        #    tmp = subStr(msg,75,10);
+        #
+        #    this.parmClosedDate(str2date(subStr(tmp,1,2) + '/' + subStr(tmp,3,2) + '/' + subStr(tmp,5,2),213));
+        #
+        #    this.parmClosedTime(str2time(subStr(tmp,7,2) + '/' + subStr(tmp,9,2)));
+        #
+        #    //--> Batch Transaction count
+        #    this.parmBatchTransCount(str2int(subStr(msg,85,6)));
+        #
+        #    //--> Net Batch Amount
+        #    tmpMarker = strScan(subStr(msg,91,11),'.',1,11);
+        #    this.parmBatchNetAmt(subStr(msg,91,tmpMarker+2));
+        #    marker = 91 + tmpMarker+2+2;  //<-- From Batch Amount, plus amount length, plus decimal, plus two FS
+        #
+        #    //--> Payment Type #1
+        #    this.parmPaymentType1(subStr(msg,marker,3));
+        #    marker += 3;
+        #
+        #    //--> Transaction Count #1
+        #    this.parmTransCount1(str2int(subStr(msg,marker,6)));
+        #    marker += 6;
+        #
+        #    //--> Net Amount #1
+        #    tmpmarker =  strScan(subSTr(msg,marker,11),'.',1,11);
+        #    this.parmNetAmt1(subStr(msg,marker,tmpmarker+2));
+        #
+        #    marker = 109 + tmpMarker + 2 + 1;
+        #
+        #    //--> Payment Type #2
+        #    this.parmPaymentType2(subStr(msg,marker,3));
+        #    marker += 3;
+        #
+        #    //--> Transaction Count #1
+        #    this.parmTransCount2(str2int(subStr(msg,marker,6)));
+        #    marker +=6;
+        #
+        #    //--> Net Amount #2
+        #    tmpmarker =  strScan(subSTr(msg,marker,11),'.',1,11);
+        #    this.parmNetAmt2(this.convert2num(subStr(msg,marker,tmpmarker+2)));
+        #
+        #    marker += tmpMarker + 2 + 1;
+        #
+        #    //--> Payment Type #3
+        #    this.parmPaymentType3(subStr(msg,marker,3));
+        #    marker += 3;
+        #
+        #    //--> Transaction Count #3
+        #    this.parmTransCount3(str2int(subStr(msg,marker,6)));
+        #    marker +=6;
+        #
+        #    //--> Net Amount #3
+        #    tmpmarker =  strScan(subSTr(msg,marker,11),'.',1,11);
+        #    this.parmNetAmt3(this.convert2num(subStr(msg,marker,tmpmarker+2)));
+        #
+        #     marker += tmpMarker + 2 + 1;
+        #
+        #    //--> Payment Type #4
+        #    this.parmPaymentType4(subStr(msg,marker,3));
+        #    marker += 3;
+        #
+        #    //--> Transaction Count #4
+        #    this.parmTransCount4(str2int(subStr(msg,marker,6)));
+        #    marker +=6;
+        #
+        #    //--> Net Amount #4
+        #    tmpmarker =  strScan(subSTr(msg,marker,11),'.',1,11);
+        #    this.parmNetAmt4(this.convert2num(subStr(msg,marker,tmpmarker+2)));
+        #
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildParmListInquiry
+        #str buildParmListInquiry()
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    str                     ParmList;
+        #    ;
+        #    //------------------------------------------
+        #    //--> Format from UTF197 -HCS 7.7 document//
+        #    //------------------------------------------
+        #    //--> STX
+        #    ParmList = num2char(#STX);
+        #
+        #    //--> System Indicator
+        #    ParmList += 'L.';
+        #
+        #    //--> Routing Indicator
+        #    ParmList += 'A02000';
+        #
+        #    //--> Client Number
+        #    ParmList += ccMerchantPaymentech.ClientNum;
+        #
+        #    //--> Merchant Number
+        #    ParmList += ccMerchantPaymentech.MerchantId;
+        #
+        #    //--> Terminal Number
+        #    ParmList += CreditCardUsers::find().TerminalId;
+        #
+        #    //--> Transaction sequence flag
+        #    //--> Indicates whether single transaction or batch
+        #    //--> 1 = Single Batch
+        #    //--> 2 = Multi Batch
+        #    ParmList += '1';  //<--single
+        #
+        #    ParmList += '000001';  //<-- Single transaction for now
+        #
+        #
+        #    //--> Transaction Class
+        #    ParmList += 'F';  //<-- This should always be 'F' for now
+        #
+        #    //--> Transaction Code
+        #    ParmList += '50';
+        #
+        #    //--> Current Terminal Batch
+        #    ParmList += '000000';
+        #
+        #    //--> Current Batch
+        #    Parmlist += '000';
+        #
+        #    //--> Transaction count
+        #    ParmList += '000000';
+        #
+        #    //--> Net Amount
+        #    ParmList += '0000000.00';
+        #
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    //--> Application name Release date and EPROM
+        #    Parmlist += 'CCPMCAX031105VERS.3.3.2';
+        #
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    ParmList += '00000000';
+        #
+        #    ParmList += num2char(#ETX);
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildParmListSettlement
+        #str buildParmListSettlement()
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    str                     ParmList;
+        #    ;
+        #    //------------------------------------------
+        #    //--> Format from UTF197 -HCS 7.7 document//
+        #    //------------------------------------------
+        #    //--> STX
+        #    ParmList = num2char(#STX);
+        #
+        #    //--> System Indicator
+        #    ParmList += 'L.';
+        #
+        #    //--> Routing Indicator
+        #    ParmList += 'A02000';
+        #
+        #    //--> Client Number
+        #    ParmList += ccMerchantPaymentech.ClientNum;
+        #
+        #    //--> Merchant Number
+        #    ParmList += ccMerchantPaymentech.MerchantId;
+        #
+        #    //--> Terminal Number
+        #    ParmList += CreditCardUsers::find().TerminalId;
+        #
+        #    //--> Transaction sequence flag
+        #    //--> Indicates whether single transaction or batch
+        #    //--> 1 = Single Batch
+        #    //--> 2 = Multi Batch
+        #    ParmList += '1';  //<--single
+        #
+        #    ParmList += '000001';  //<-- Single transaction for now
+        #
+        #
+        #    //--> Transaction Class
+        #    ParmList += 'F';  //<-- This should always be 'F' for now
+        #
+        #    //--> Transaction Code
+        #    ParmList += '51';
+        #
+        #    //--> Current Terminal Batch
+        #    ParmList += '000000';
+        #
+        #    //--> Current Batch
+        #    Parmlist += '000';
+        #
+        #    //--> Transaction count
+        #    ParmList += '000000';
+        #
+        #    //--> Net Amount
+        #    ParmList += '0000000.00';
+        #
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    //--> Application name Release date and EPROM
+        #    Parmlist += 'CCPMCAX031105VERS.3.3.2';
+        #
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    ParmList += '00000000';
+        #
+        #    ParmList += num2char(#ETX);
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantPaymentech
+        #boolean checkMerchantPaymentech()
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantPaymentech.MerchantId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantPaymentech.Pwd)
+        #        throw error("@ACC54");
+        #    else if (!ccMerchantPaymentech.HostAddress)
+        #        throw error("@ACC56");
+        #    else if (!ccMerchantPaymentech.Port)
+        #        throw error("@ACC57");
+        #    else if (!ccMerchantPaymentech.ClientNum)
+        #        throw error("@ACC618");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardBatchInquiry
+        #{
+        #    CreditCardMerchantPaymentech    ccMerchantPaymentech;
+        #    CreditCardPaymentechBatch       ccBatch;
+        #    CreditCardBatchCommand          ccCommand;
+        #
+        #    int         batchTransactionCount;
+        #    str         batchNum;
+        #    int         batchRetievalRef;
+        #    str         netBatchAmount;
+        #    str         paymentType1;
+        #    int         transCount1;
+        #    str         netAmount1;
+        #    str         paymentType2;
+        #    int         transCount2;
+        #    str         netAmount2;
+        #    str         paymentType3;
+        #    int         transCount3;
+        #    str         netAmount3;
+        #    str         paymentType4;
+        #    int         transCount4;
+        #    str         netAmount4;
+        #
+        #    TimeHour24  openTime;
+        #    TimeHour24  closedTime;
+        #    date        openDate;
+        #    date        closedDate;
+        #
+        #    str         ActionCode;
+        #    str         errCode;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #convert2num
+        #str convert2num(str     string)
+        #{
+        #    int         strLength;
+        #    int         loc;
+        #    ;
+        #    strLength = strLen(string);
+        #    loc = strNFind(string,'0',1,strLength);
+        #
+        #    string = subStr(string,loc,strLength);
+        #
+        #    if (loc == 0)
+        #    {
+        #        string = strIns(string,'.',strLength-1);
+        #    }
+        #
+        #    return string;
+        #}
+      ENDSOURCE
+      SOURCE #createRecord
+        #void createRecord()
+        #{
+        #    ;
+        #    ccBatch.clear();
+        #    ccBatch.ActionCode      = actionCode;
+        #    ccBatch.BatchAmount     = str2num(this.parmBatchNetAmt());
+        #    ccBatch.BatchCommand    = ccCommand;
+        #    ccBatch.BatchNumber     = this.parmBatchNum();
+        #    ccBatch.BatchPmtType1   = this.getBatchPmtType(this.parmPaymentType1());
+        #    ccBatch.BatchPmtType2   = this.getBatchPmtType(this.parmPaymentType2());
+        #    ccBatch.BatchPmtType3   = this.getBatchPmtType(this.parmPaymentType3());
+        #    ccBatch.BatchPmtType4   = this.getBatchPmtType(this.parmPaymentType4());
+        #    ccBatch.BatchTransCount = this.parmBatchTransCount();
+        #    ccBatch.CloseDate       = this.parmClosedDate();
+        #    ccBatch.CloseTime       = this.parmClosedTime();
+        #    ccBatch.ErrorCode       = errCode;
+        #    ccBatch.NetAmount1      = str2num(this.parmNetAmt1());
+        #    ccBatch.NetAmount2      = str2num(this.parmNetAmt2());
+        #    ccBatch.NetAmount3      = str2num(this.parmNetAmt3());
+        #    ccBatch.NetAmount4      = str2num(this.parmNetAmt4());
+        #    ccBatch.OpenDate        = this.parmOpenDate();
+        #    ccBatch.OpenTime        = this.parmOpenTime();
+        #    ccBatch.RetrievalRefNum = int2str(this.parmRetrievalRef());
+        #    ccBatch.TransCount1     = this.parmTransCount1();
+        #    ccBatch.TransCount2     = this.parmTransCount2();
+        #    ccBatch.TransCount3     = this.parmTransCount3();
+        #    ccBatch.TransCount4     = this.parmTransCount4();
+        #    ccBatch.insert();
+        #}
+      ENDSOURCE
+      SOURCE #getBatchPmtType
+        #CreditCardBatchPmtType getBatchPmtType(str  type)
+        #{
+        #    CreditCardBatchPmtType  c;
+        #    ;
+        #    switch (strLRTrim(type))
+        #    {
+        #        case 'CR':
+        #            c = CreditCardBatchPmtType::CR;
+        #            break;
+        #        case 'DB':
+        #            c =  CreditCardBatchPmtType::DB;
+        #            break;
+        #        case 'AE':
+        #            c = CreditCardBatchPmtType::AE;
+        #            break;
+        #        case 'EB':
+        #            c = CreditCardBatchPmtType::EB;
+        #            break;
+        #    }
+        #
+        #    return c;
+        #}
+      ENDSOURCE
+      SOURCE #parmBatchNetAmt
+        #str parmBatchNetAmt(str _netBatchAmount = netBatchAmount)
+        #{
+        #    ;
+        #    netBatchAmount = _netBatchAmount;
+        #    return netBatchAmount;
+        #}
+      ENDSOURCE
+      SOURCE #parmBatchNum
+        #str parmBatchNum(str _batchNum = batchNum)
+        #{
+        #    ;
+        #    batchNum = _batchNum;
+        #    return batchNum;
+        #}
+      ENDSOURCE
+      SOURCE #parmBatchTransCount
+        #int parmBatchTransCount(int _batchTransactionCount = batchTransactionCount)
+        #{
+        #    ;
+        #    batchTransactionCount = _batchTransactionCount;
+        #    return batchTransactionCount;
+        #}
+      ENDSOURCE
+      SOURCE #parmClosedDate
+        #date parmClosedDate(date  _closedDate = closedDate)
+        #{
+        #    ;
+        #    closedDate = _closedDate;
+        #    return closedDate;
+        #}
+      ENDSOURCE
+      SOURCE #parmClosedTime
+        #TimeHour24 parmClosedTime(TimeHour24  _time = closedTime)
+        #{
+        #    ;
+        #    closedTime = _time;
+        #    return closedTime;
+        #}
+      ENDSOURCE
+      SOURCE #parmNetAmt1
+        #str parmNetAmt1(str _NetAmount1 = netAmount1)
+        #{
+        #    ;
+        #    netAmount1 = _netAmount1;
+        #    return netAmount1;
+        #}
+      ENDSOURCE
+      SOURCE #parmNetAmt2
+        #str parmNetAmt2(str _NetAmount2 = netAmount2)
+        #{
+        #    ;
+        #    netAmount2 = _netAmount2;
+        #    return netAmount2;
+        #}
+      ENDSOURCE
+      SOURCE #parmNetAmt3
+        #str parmNetAmt3(str _NetAmount3 = netAmount3)
+        #{
+        #    ;
+        #    netAmount3 = _netAmount3;
+        #    return netAmount3;
+        #}
+      ENDSOURCE
+      SOURCE #parmNetAmt4
+        #str parmNetAmt4(str _NetAmount4 = netAmount4)
+        #{
+        #    ;
+        #    netAmount4 = _netAmount4;
+        #    return netAmount4;
+        #}
+      ENDSOURCE
+      SOURCE #parmOpenDate
+        #date parmOpenDate(date  _openDate = openDate)
+        #{
+        #    ;
+        #    openDate = _openDate;
+        #    return openDate;
+        #}
+      ENDSOURCE
+      SOURCE #parmOpenTime
+        #TimeHour24 parmOpenTime(TimeHour24  _time = openTime)
+        #{
+        #    ;
+        #    openTime = _time;
+        #    return openTime;
+        #}
+      ENDSOURCE
+      SOURCE #parmPaymentType1
+        #str parmPaymentType1(str _paymentType1 = paymentType1)
+        #{
+        #    ;
+        #    paymentType1 = _paymentType1;
+        #    return paymentType1;
+        #}
+      ENDSOURCE
+      SOURCE #parmPaymentType2
+        #str parmPaymentType2(str _paymentType2 = paymentType2)
+        #{
+        #    ;
+        #    paymentType2 = _paymentType2;
+        #    return paymentType2;
+        #}
+      ENDSOURCE
+      SOURCE #parmPaymentType3
+        #str parmPaymentType3(str _paymentType3 = paymentType3)
+        #{
+        #    ;
+        #    paymentType3 = _paymentType3;
+        #    return paymentType3;
+        #}
+      ENDSOURCE
+      SOURCE #parmPaymentType4
+        #str parmPaymentType4(str _paymentType4 = paymentType4)
+        #{
+        #    ;
+        #    paymentType4 = _paymentType4;
+        #    return paymentType4;
+        #}
+      ENDSOURCE
+      SOURCE #parmRetrievalRef
+        #int parmRetrievalRef(int _batchRetievalRef = batchRetievalRef)
+        #{
+        #    ;
+        #    batchRetievalRef = _batchRetievalRef;
+        #    return batchRetievalRef;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransCount1
+        #int parmTransCount1(int _TransCount1 = transCount1)
+        #{
+        #    ;
+        #    transCount1 = _transCount1;
+        #    return transCount1;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransCount2
+        #int parmTransCount2(int _TransCount2 = transCount2)
+        #{
+        #    ;
+        #    transCount2 = _transCount2;
+        #    return transCount2;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransCount3
+        #int parmTransCount3(int _TransCount3 = transCount3)
+        #{
+        #    ;
+        #    transCount3 = _transCount3;
+        #    return transCount3;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransCount4
+        #int parmTransCount4(int _TransCount4 = transCount4)
+        #{
+        #    ;
+        #    transCount4 = _transCount4;
+        #    return transCount4;
+        #}
+      ENDSOURCE
+      SOURCE #processInquiry
+        #str processInquiry()
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    COM                     cc;
+        #    COMVariant              var;
+        #    COMVariant              in;
+        #
+        #    array                   input       = New array(types::String);
+        #    int                     strLength;
+        #    int                     i;
+        #    array                   output      = New array(types::String);
+        #    str                     peek;
+        #    int                     numpeek;
+        #    Object                  send         = New Object();
+        #
+        #    str                     ParmList;
+        #    str                     errorMsg;
+        #    int                     errorCode;
+        #    ;
+        #
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantPaymentech
+        #        where ccMerchantPaymentech.TerminalId ==  CreditCardParameters::findParameter().TerminalId;
+        #    //<--Check for all required fields
+        #    this.checkMerchantPaymentech();
+        #
+        #    //<--Instatiate COM Object
+        #    cc = New COM('Paymentech.IPOSTransaction');
+        #    var = New COMVariant(COMVariantInOut::In,COMVariantType::VT_SAFEARRAY);
+        #    in = New COMVariant(COMVariantInOut::Out_retVal,COMVariantType::VT_SAFEARRAY);
+        #
+        #    cc.TerminalID(CreditCardUsers::find().TerminalId);
+        #    cc.MerchantID(ccMerchantPaymentech.MerchantId);
+        #
+        #    cc.TransactionType('1');
+        #    cc.Method('DefaultMethod');
+        #    cc.Username(ccMerchantPaymentech.UserId);
+        #    cc.Password(ccMerchantPaymentech.Pwd);
+        #
+        #
+        #    cc.FirstInBatch('1');
+        #
+        #    //--> A and B Information
+        #    ParmList = this.buildParmListInquiry();
+        #
+        #    //-->  Begin Converting to Hex
+        #    strLength = strLen(ParmList);
+        #
+        #    for (i=1;i<=strLength;i++)
+        #    {
+        #        peek = subStr(ParmList,i,1);
+        #        numpeek = char2num((subStr(ParmList,i,1)),1);
+        #        output.value(i,int2str(numpeek));
+        #    }
+        #
+        #    var.safeArray(output,COMVariantType::VT_VARIANT);
+        #
+        #    //------------------------------------------------
+        #    //  Try/Catch information to Paymentech
+        #    //------------------------------------------------
+        #
+        #    try
+        #    {
+        #        send = cc.process(var);
+        #
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    in = send.data();
+        #
+        #    if (send.errorString() != '')
+        #    {
+        #        errorMsg = send.errorString();
+        #        errorCode = send.errorCode();
+        #        //gatewayError = send.GatewayError();
+        #        //httpError = send.HTTPError();
+        #    }
+        #    else
+        #    {
+        #        input = in.safeArray();
+        #
+        #        for (i=1;i<=input.lastIndex();i++)
+        #        {
+        #            errorMsg += num2char(input.value(i));
+        #        }
+        #    }
+        #
+        #    return errorMsg;
+        #}
+      ENDSOURCE
+      SOURCE #processSettlement
+        #str processSettlement()
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    COM                     cc;
+        #    COMVariant              var;
+        #    COMVariant              in;
+        #
+        #    array                   input       = New array(types::String);
+        #    int                     strLength;
+        #    int                     i;
+        #    array                   output      = New array(types::String);
+        #    str                     peek;
+        #    int                     numpeek;
+        #    Object                  send         = New Object();
+        #    str                     ParmList;
+        #
+        #    str                     errorMsg;
+        #    int                     errorCode;
+        #    ;
+        #
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantPaymentech
+        #        where ccMerchantPaymentech.TerminalId ==  CreditCardParameters::findParameter().TerminalId;
+        #    //<--Check for all required fields
+        #    this.checkMerchantPaymentech();
+        #
+        #    //<--Instatiate COM Object
+        #    cc = New COM('Paymentech.IPOSTransaction');
+        #    var = New COMVariant(COMVariantInOut::In,COMVariantType::VT_SAFEARRAY);
+        #    in = New COMVariant(COMVariantInOut::Out_retVal,COMVariantType::VT_SAFEARRAY);
+        #
+        #    cc.TerminalID(CreditCardUsers::find().TerminalId);
+        #    cc.MerchantID(ccMerchantPaymentech.MerchantId);
+        #
+        #    cc.TransactionType('1');
+        #    cc.Method('DefaultMethod');
+        #    cc.Username(ccMerchantPaymentech.UserId);
+        #    cc.Password(ccMerchantPaymentech.Pwd);
+        #
+        #
+        #    cc.FirstInBatch('0');
+        #
+        #    //--> A and B Information
+        #    ParmList = this.buildParmListSettlement();
+        #
+        #    //-->  Begin Converting to Hex
+        #    strLength = strLen(ParmList);
+        #
+        #    for (i=1;i<=strLength;i++)
+        #    {
+        #        peek = subStr(ParmList,i,1);
+        #        numpeek = char2num((subStr(ParmList,i,1)),1);
+        #        output.value(i,int2str(numpeek));
+        #    }
+        #
+        #    var.safeArray(output,COMVariantType::VT_VARIANT);
+        #
+        #    //------------------------------------------------
+        #    //  Try/Catch information to Paymentech
+        #    //------------------------------------------------
+        #
+        #    try
+        #    {
+        #        send = cc.process(var);
+        #
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    in = send.data();
+        #
+        #    if (send.errorString() != '')
+        #    {
+        #        errorMsg = send.errorString();
+        #        errorCode = send.errorCode();
+        #        //gatewayError = send.GatewayError();
+        #        //httpError = send.HTTPError();
+        #    }
+        #    else
+        #    {
+        #        input = in.safeArray();
+        #
+        #        for (i=1;i<=input.lastIndex();i++)
+        #        {
+        #            errorMsg += num2char(input.value(i));
+        #        }
+        #    }
+        #
+        #    return errorMsg;
+        #}
+      ENDSOURCE
+      SOURCE #runInquiry
+        #void runInquiry()
+        #{
+        #    str         returnMsg;
+        #    ;
+        #    ccCommand = CreditCardBatchCommand::Inquiry;
+        #    returnMsg = this.processInquiry();
+        #
+        #    this.analyzePaymentechResponse(returnMsg);
+        #
+        #    this.createRecord();
+        #}
+      ENDSOURCE
+      SOURCE #runSettlement
+        #void runSettlement()
+        #{
+        #    str         returnMsg;
+        #    ;
+        #    ccCommand = CreditCardBatchCommand::Settle;
+        #    returnMsg = this.processSettlement();
+        #
+        #    this.analyzePaymentechResponse(returnMsg);
+        #
+        #    this.createRecord();
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static void construct(CreditCardBatchCommand    ccCommand)
+        #{
+        #    CreditCardBatchInquiry      ccBatchInquiry = new CreditCardBatchInquiry();
+        #    ;
+        #    switch (ccCommand)
+        #    {
+        #        case CreditCardBatchCommand::Inquiry:
+        #            ccBatchInquiry.runInquiry();
+        #            break;
+        #        case CreditCardBatchCommand::Settle:
+        #
+        #            break;
+        #    }
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

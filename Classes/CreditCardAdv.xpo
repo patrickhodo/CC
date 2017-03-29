@@ -1,0 +1,3371 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardAdv
+    PROPERTIES
+      Name                #CreditCardAdv
+      Origin              #{AE6F93E8-20CB-43FB-B746-8F32666FD20E}
+      LegacyId            #20031
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeAdflexResponse
+        #void analyzeAdflexResponse(str msg)
+        #{
+        #    ;
+        #    this.parmccTrans(CreditCardAdflexXMLBuilder::analyzeResponse(msg,this.parmccTrans()));
+        #}
+      ENDSOURCE
+      SOURCE #analyzeADNReponse
+        #void analyzeADNReponse(str msg)
+        #{
+        #    // Best Practice deviation documented
+        #    // Cannot find a string in a variable when using label
+        #
+        #    int                         findAmp;
+        #    int                         findEqual;
+        #    int                         findNext;
+        #    int                         i;
+        #    str                         tmpResult;
+        #    str                         errCode;
+        #    container                   c;
+        #    CreditCardMerchantADN       ccADNMerchant;
+        #    ;
+        #    select ResponseType from ccADNMerchant
+        #        where ccADNMerchant.TerminalId == ccTrans.TerminalId;
+        #
+        #    if (ccADNMerchant.ResponseType == CreditCardADNResponseType::HTML)
+        #    {
+        #        //--> Any errors:
+        #        tmpResult =     substr(msg,1,strLen(msg));
+        #        findAmp   =     strScan(tmpResult,'errors have occurred.',1,strLen(tmpResult)) + 21;
+        #        if (findAmp != 1)
+        #        {
+        #            findEqual =     strFind(tmpResult,'</H3>',findAmp,strLen(tmpResult)) + 6;
+        #            findNext  =     strFind(tmpResult,')',findEqual,strLen(tmpResult));
+        #            errCode   =     subStr(tmpResult,findEqual,findNext-findEqual);
+        #
+        #            findAmp   =     strFind(tmpResult,'<',findNext+1,strLen(tmpResult));
+        #            repMsg    =     subStr(tmpResult,findNext+1,findAmp-findNext-1);
+        #
+        #            i = str2int(errCode);
+        #            if (i!=0)
+        #            {
+        #                result = errCode;
+        #                return;
+        #            }
+        #        }
+        #
+        #        //Auth code
+        #        tmpResult =     substr(msg,1,strLen(msg));
+        #        findAmp   =     strScan(tmpResult,'<!--x_auth_code.val-->',1,strLen(tmpResult)) + 21;
+        #        findEqual =     strFind(tmpResult,'<',findAmp,strLen(tmpResult));
+        #        authcode  =     subStr(tmpResult,findAmp+1,6);
+        #
+        #
+        #        //Transaction id
+        #        findAmp   =     strScan(tmpResult,'<!--Transaction ID.val-->',1,strLen(tmpResult)) + 25;
+        #        findEqual =     strFind(tmpResult,'<',findAmp,strLen(tmpResult));
+        #        findNext  =     strFind(tmpResult,'&',findEqual,strLen(tmpResult));
+        #        pnRef  =     subStr(tmpResult,findAmp,findEqual-findAmp);
+        #
+        #        retrievalNum = pnRef;
+        #
+        #
+        #        if (pnRef)
+        #        {
+        #            result = '0';
+        #        }
+        #    }
+        #    else
+        #    {
+        #        tmpResult =     substr(msg,1,strLen(msg));
+        #
+        #        c = this.str2constr(msg);
+        #
+        #        result = CreditCardADNBuilder::getResponse(conPeek(c,1));
+        #
+        #        if (result != '0')
+        #        {
+        #            result = conPeek(c,3);
+        #            errCode = conPeek(c,3);
+        #            repMsg  = conPeek(c,4);
+        #        }
+        #
+        #        authCode = conPeek(c,5);
+        #        avsAddr  = conPeek(c,6);
+        #        pnRef    = conPeek(c,7);
+        #        retrievalNum = pnRef;
+        #
+        #        comment = conPeek(c,9);
+        #        cvdResponse = conPeek(c,38);
+        #
+        #
+        #
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #analyzeCommideaResponse
+        #void analyzeCommideaResponse(str msg)
+        #{
+        #    /*XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2,childNodeLst3,childNodeLst4;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild;
+        #    XmlNode                         elementChild2,elementChild3,elementChild4,elementChild5;
+        #    XmlNode                         currency;
+        #    XmlNode                         value;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2,childCnt3,childCnt4;
+        #    int                             i,j,k,l;
+        #    str                             tmpStr;
+        #    str                             node,nodeResponse;
+        #    str                             errMsg;
+        #    boolean                         accepted;
+        #    str                             rtnCode;
+        #
+        #    ;
+        #    msg = SysGSSearchStart::removeHTMLEncode(msg);
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #
+        #    tmpStr = xmlResult.xml();
+        #
+        #    result = '0';
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        //--> Second node should be the soap envelope body
+        #        if (cnt == 1)
+        #        {
+        #            //--> store in comment
+        #            comment = tmpStr;
+        #        }
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                childNodeLst2 = elementChild2.childNodes();
+        #                j = childNodeLst2.length();
+        #                for (childCnt2 = 0; childCnt2 < j;childCnt2++)
+        #                {
+        #                    elementChild3 = childNodeLst2.item(childCnt2);
+        #                    node = elementChild3.nodeName();
+        #                    switch (node)
+        #                    {
+        #                        case 'MsgData'  :
+        #                        {
+        #                            childNodeLst3 = elementChild3.childNodes();
+        #                            k = childNodeLst3.length();
+        #                            for (childCnt3 = 0;childCnt3 < k;childCnt3++)
+        #                            {
+        #                                elementChild4 = childNodeLst3.item(childCnt3);
+        #                                nodeResponse = elementChild4.nodeName();
+        #                                switch (nodeResponse)
+        #                                {
+        #                                    case 'transactionresponse','ERROR'  :
+        #                                    {
+        #                                        childNodeLst4 = elementChild4.childNodes();
+        #                                        l = childNodeLst4.length();
+        #                                        for (childCnt4=0;childCnt4 < l;childCnt4++)
+        #                                        {
+        #                                            elementChild5 = childNodeLst4.item(childCnt4);
+        #                                            node = elementChild5.nodeName();
+        #                                            switch (node)
+        #                                            {
+        #                                                case 'merchantreference'    :
+        #                                                {
+        #                                                    break;
+        #                                                }
+        #                                                case    'processingdb'      :
+        #                                                {
+        #                                                    comment2 = elementchild5.innerText();
+        #                                                    break;
+        #                                                }
+        #                                                case 'transactionid'        :
+        #                                                {
+        #                                                    retrievalNum = elementChild5.innerText();
+        #                                                    break;
+        #                                                }
+        #                                                case 'errormsg'             :
+        #                                                {
+        #                                                    result = elementchild5.innerText();
+        #                                                    errmsg = elementchild5.innerText();
+        #                                                    break;
+        #                                                }
+        #                                                case 'tid'                  :
+        #                                                {
+        #                                                    break;
+        #                                                }
+        #                                                case 'authcode'             :
+        #                                                {
+        #                                                    pnRef = elementChild5.innerText();
+        #                                                    authCode = elementchild5.innerText();
+        #                                                    break;
+        #                                                }
+        #                                                case 'authmessage'          :
+        #                                                {
+        #                                                    comment = elementChild5.innerText();
+        #                                                    repMsg = elementChild5.innerText();
+        #                                                    break;
+        #                                                }
+        #                                                case 'pcavsresult'          :
+        #                                                {
+        #                                                    break;
+        #                                                }
+        #                                                case 'ad1avsresult'         :
+        #                                                {
+        #                                                    AvsAddr = elementChild5.innerText();
+        #                                                    break;
+        #                                                }
+        #                                                case 'cvcresult'            :
+        #                                                {
+        #                                                    break;
+        #                                                }
+        #                                                case 'arc'                  :
+        #                                                {
+        #                                                    result = elementChild5.innerText();
+        #                                                    if (result == '00')
+        #                                                    {
+        #                                                        result = '0';
+        #                                                    }
+        #                                                    break;
+        #                                                }
+        #                                                case 'CODE'                 :
+        #                                                {
+        #                                                    result = elementChild5.innerText();
+        #                                                    break;
+        #                                                }
+        #                                                case 'MSGTXT'                :
+        #                                                {
+        #                                                    errmsg = elementChild5.innerText();
+        #                                                    repMsg = elementChild5.innerText();
+        #                                                    break;
+        #                                                }
+        #
+        #                                            }
+        #
+        #                                        }
+        #                                    }
+        #                                }
+        #                            }
+        #                            break;
+        #                        }
+        #                        default:
+        #                        {
+        #                            break;
+        #                        }
+        #                    }
+        #                }
+        #            }
+        #        }
+        #    }*/
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzeCybersourceResponse
+        #void analyzeCybersourceResponse(str msg)
+        #{
+        #    ;
+        #    this.parmccTrans(CreditCardCybersourceXMLBuilder::analyzeResponse(this.parmccTrans(),msg));
+        #}
+      ENDSOURCE
+      SOURCE #analyzeDPSResponse
+        #void analyzeDPSResponse(str msg)
+        #{
+        #    ;
+        #    ccTrans = CreditCardDPSXMLBuilder::analyzeDPSResponse(msg,ccTrans);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzeElavonResponse
+        #void analyzeElavonResponse(str msg)
+        #{
+        #    ;
+        #    this.parmccTrans(CreditCardElavonBuilder::getElavonResponse(msg,this.parmccTrans()));
+        #}
+      ENDSOURCE
+      SOURCE #analyzeFirstDataResponse
+        #void analyzeFirstDataResponse(str msg)
+        #{
+        #    //--> Since there can be multiple platforms, we have to abstract this out.
+        #
+        #    ccTrans = CreditCardFirstData::analyzeTransResponse(msg,ccTrans);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzeHeartlandResponse
+        #void analyzeHeartlandResponse(str msg)
+        #{
+        #    ;
+        #    ccTrans = CreditCardHeartlandXMLBuilder::analyzeHPSResponse(msg,ccTrans);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzeMonerisResponse
+        #void analyzeMonerisResponse(str msg)
+        #{
+        #
+        #    //-->We place the values in the transaction at the time of the response
+        #    //-->due to the COM object.  Nothing needed here.
+        #    ;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzeNetConnectError
+        #container analyzeNetConnectError(str msg)
+        #{
+        #    int             marker;
+        #    int             endMarker;
+        #    str             errCode;
+        #    container       c;
+        #    int             msgLen;
+        #
+        #    str 50          tmpMsg;
+        #    int             i;
+        #    ;
+        #    msgLen = strLen(msg);
+        #
+        #    marker = strFind(msg,'[',1,msgLen);
+        #    endMarker = strFind(msg,'],',1,msgLen);
+        #
+        #    errCode= subStr(msg,marker,endMarker-marker+1);
+        #
+        #    marker = strScan(msg,'] :',marker,msgLen);
+        #
+        #    marker += 3;
+        #    for (i=marker;i<msgLen;i+=10)
+        #    {
+        #        tmpMsg += subStr(msg,i,10);
+        #    }
+        #
+        #    repMsg = tmpMsg;
+        #
+        #    comment = msg;
+        #
+        #    c = conins(c,999,[errCode,pnRef,repMsg]);
+        #
+        #    return c;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeOpenEdgeReponse
+        #void analyzeOpenEdgeReponse(str msg)
+        #{
+        #    ;
+        #    this.parmccTrans(CreditCardOpenEdgeBuilder::analyzeResponse(msg,this.parmccTrans()));
+        #}
+      ENDSOURCE
+      SOURCE #analyzeOrbitalResponse
+        #container analyzeOrbitalResponse(str msg)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2;
+        #    int                             cnt,childCnt;
+        #    int                             i;
+        #    str                             tmpStr;
+        #    str                             node;
+        #    str                             errMsg;
+        #    str                             rtnCode;
+        #    container                       c;
+        #    str                             approvalStatus;
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'TxRefNum' :
+        #                        txtRef = elementChild2.innerText();
+        #                        pnRef = txtRef;
+        #                        break;
+        #                    case    'TxRefIdx'  :
+        #                        txtRefIdx = elementChild2.innerText();
+        #                        break;
+        #                    case    'ProcStatus'  :
+        #                        result = elementChild2.innerText();
+        #                        break;
+        #                    case    'RespCode'  :
+        #                        result = elementChild2.innerText();
+        #                        if (result == '00')
+        #                        {
+        #                            result = '0';
+        #                        }
+        #                        else
+        #                        {
+        #                            if (approvalStatus == '1' && result == '')
+        #                            {
+        #                                result = '0';
+        #                            }
+        #                            else
+        #                            {
+        #                                errMsg = result;
+        #                            }
+        #                        }
+        #                        break;
+        #                    case    'ApprovalStatus'  :
+        #                        approvalStatus = elementChild2.innerText();
+        #                        break;
+        #                    case    'CVV2RespCode'  :
+        #                        rtnCode = elementChild2.innerText();
+        #                        break;
+        #                    case    'AuthCode'  :
+        #                        authCode = elementChild2.innerText();
+        #                        break;
+        #                    case    'AVSRespCode'  :
+        #                        AvsAddr = elementChild2.innerText();
+        #                        break;
+        #                    case    'StatusMsg'     :
+        #                        repMsg = elementChild2.innerText();
+        #                        break;
+        #                    case    'OrderId'       :
+        #                        origID  = elementChild2.innerText();
+        #                        break;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #
+        #    if (errMsg)
+        #    {
+        #    c = conins(c,999,[result,txtRef,RepMsg]);
+        #    }
+        #    else
+        #    {
+        #    c = conins(c,999,[result,txtRef,Repmsg]);
+        #    }
+        #
+        #    return c;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzePaymentechResponse
+        #container analyzePaymentechResponse(str msg)
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    int             marker;
+        #    str             ActionCode;
+        #    str             authorization;
+        #    str             errCode;
+        #    container       c;
+        #    int             msgLen;
+        #    str             rtnCode;
+        #    str             cardType;
+        #    ;
+        #    msgLen = strLen(msg);
+        #
+        #    if (subStr(msg,1,16) == 'TransactionError')
+        #    {
+        #        c = this.analyzeNetConnectError(msg);
+        #    }
+        #    else if  ( char2num(msg,1) != #STX)
+        #    {
+        #        throw error("@ACC649");
+        #    }
+        #    else
+        #    {
+        #        //--> Action Code
+        #        ActionCode = subStr(msg,2,1);
+        #
+        #        if (ActionCode == 'E')
+        #        {
+        #            errCode = subStr(msg,4,6);
+        #            result = errCode;
+        #        }
+        #        else
+        #        {
+        #            authorization = subSTr(msg,4,6);
+        #            result = '0';
+        #        }
+        #
+        #        //--> AVS Response code
+        #        AvsAddr = subStr(msg,3,1);
+        #
+        #        if (strLRTrim(AvsAddr) != '')
+        #            comment = this.returnAVSMessage(AvsAddr);
+        #        else
+        #            comment = msg;
+        #
+        #        //--> Authorization/Error Code
+        #        if (this.parmTrxType() == 'C')
+        #        {
+        #            PNRef = 'Credit';
+        #        }
+        #        else
+        #        {
+        #            PNRef = subStr(msg,4,6);
+        #        }
+        #        //--> Auth Code
+        #        authCode = PNRef;
+        #
+        #        //--> Batch Number
+        #        batch = subStr(msg,10,6);
+        #
+        #        //--> Retrieval Number
+        #        retrievalNum = subStr(msg,16,8);
+        #
+        #        //--> Sequence Number
+        #        sequenceId = subStr(msg,24,6);
+        #
+        #        //--> RepMsg
+        #        repMsg = subStr(msg,30,32);
+        #
+        #        cardTYpe = subStr(msg,62,2);
+        #        if (cardType == 'VI')
+        #        {
+        #             //--> Interchange Compliance
+        #            comment2 = subStr(msg,65,40);
+        #            //--> Auth Net Id
+        #            netId = subStr(msg,106,2);
+        #
+        #            //-->Auth Source
+        #            authSource = subStr(msg,108,1);
+        #        }
+        #        else if (cardType == 'MC')
+        #        {
+        #             //--> Interchange Compliance
+        #            comment2 = subStr(msg,65,22);
+        #            //--> Auth Net Id
+        #            netId = subStr(msg,87,2);
+        #
+        #            //-->Auth Source
+        #            authSource = subStr(msg,89,1);
+        #
+        #        }
+        #
+        #        //--> CVD Token Information
+        #        marker= strScan(msg,'CV',1,msgLen-1);
+        #
+        #        rtnCode = subStr(msg,marker+4,1);
+        #
+        #        switch (rtnCode)
+        #        {
+        #            case 'M'    :
+        #                cvdResponse = CreditCardCVDResponse::M;
+        #                break;
+        #            case 'N'    :
+        #                cvdResponse = CreditCardCVDResponse::N;
+        #                break;
+        #            case 'P'    :
+        #                cvdResponse = CreditCardCVDResponse::P;
+        #                break;
+        #            case 'S'    :
+        #                cvdResponse = CreditCardCVDResponse::S;
+        #                break;
+        #            case 'U'    :
+        #                cvdResponse = CreditCardCVDResponse::U;
+        #                break;
+        #            default :
+        #                cvdResponse = CreditCardCVDREsponse::None;
+        #        }
+        #
+        #
+        #        if (errCode)
+        #        {
+        #            c = conins(c,999,[result,pnRef,repMsg]);
+        #        }
+        #        else
+        #        {
+        #            c = conins(c,999,[result,pnRef,Repmsg]);
+        #        }
+        #    }
+        #
+        #    return C;
+        #}
+      ENDSOURCE
+      SOURCE #analyzePayPalResponse
+        #void analyzePayPalResponse(str msg)
+        #{
+        #    int             findAmp;
+        #    int             findEqual;
+        #    int             findNext;
+        #    str             tmpResult;
+        #
+        #    //--> Woud have used XML Document, but could not get it to work properly or reliably
+        #    ;
+        #    //PNREF
+        #    tmpResult =     substr(msg,1,strLen(msg));
+        #    findAmp   =     strScan(tmpResult,'PNREF',1,strLen(tmpResult)) + 5;
+        #    findEqual =     strFind(tmpResult,'=',findAmp,strLen(tmpResult));
+        #    pnRef     =     subStr(tmpResult,findEqual+1,12);
+        #
+        #    //RepMsg
+        #    findAmp   =     strScan(tmpResult,'RESPMSG',1,strLen(tmpResult)) + 7;
+        #    findEqual =     strFind(tmpResult,'=',findAmp,strLen(tmpResult));
+        #    findNext  =     strFind(tmpResult,'&',findEqual,strLen(tmpResult));
+        #
+        #    if (findNext ==0)
+        #        repMsg    =     subStr(tmpResult,findEqual+1,strLen(tmpResult)-findEqual);
+        #    else
+        #        repMsg    = subStr(tmpResult,findEqual+1, findNext-findEqual-1);
+        #
+        #    Comment2  =     msg;
+        #
+        #    //Result
+        #    findAmp   =     strScan(tmpResult,'RESULT',1,strLen(tmpResult)) + 6;
+        #    findEqual =     strFind(tmpResult,'=',findAmp,strLen(tmpResult));
+        #    findNext  =     strFind(tmpResult,'&',findEqual,strLen(tmpResult));
+        #    result    =     subStr(tmpResult,findEqual+1,findnext-findEqual-1);
+        #
+        #
+        #    //AvsAddr
+        #    findAmp   =     strScan(tmpResult,'AVSADDR',1,strLen(tmpResult)) + 7;
+        #    findEqual =     strFind(tmpResult,'=',findAmp,strLen(tmpResult));
+        #    AvsAddr   =     subStr(tmpResult,findEqual+1,1);
+        #
+        #    //AvsZip
+        #    findAmp   =     strScan(tmpResult,'AVSZIP',1,strLen(tmpResult)) + 6;
+        #    findEqual =     strFind(tmpResult,'=',findAmp,strLen(tmpResult));
+        #    AvsZip    =     subStr(tmpResult,findEqual+1,findAmp-findEqual-1);
+        #
+        #    //IAvs
+        #    findAmp   =     strScan(tmpResult,'IAVS',1,strLen(tmpResult)) + 4;
+        #    findEqual =     strFind(tmpResult,'=',findAmp,strLen(tmpResult));
+        #    iavs      =     subStr(tmpResult,findEqual+1,findAmp-findEqual-1);
+        #
+        #    //Authcode
+        #    findAmp   =     strScan(tmpResult,'AUTHCODE',1,strLen(tmpResult)) + 6;
+        #    findEqual =     strFind(tmpResult,'=',findAmp,strLen(tmpResult));
+        #    authcode  =     subStr(tmpResult,findEqual+1,6);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzePayPalXResponse
+        #void analyzePayPalXResponse(str msg)
+        #{
+        #    str             tmpResult;
+        #    container       c = str2con(msg,'&');
+        #    container       tmpC;
+        #    int             i;
+        #    str             param;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    for (i=0;i<conLen(c);i++)
+        #    {
+        #        tmpResult = conPeek(c,i);
+        #        tmpC = str2con(tmpResult,'=');
+        #
+        #        param = conPeek(tmpC,1);
+        #        tmpResult = conPeek(tmpC,2);
+        #
+        #        switch (param)
+        #        {
+        #            case 'TRANSACTIONID'    :
+        #                pnRef = tmpResult;
+        #                break;
+        #            case 'PAYMENTSTATUS'    :
+        #                repMsg = tmpResult;
+        #                break;
+        #            case 'ACK'              :
+        #                if (tmpResult == 'Success')
+        #                {
+        #                    result = '0';
+        #                }
+        #                break;
+        #            case    'ERRORS'    :
+        #                result = tmpResult;
+        #                break;
+        #            case    'L_ERRORCODE0' :
+        #                result = tmpResult;
+        #                break;
+        #            case    'L_SHORTMESSAGE0'  :
+        #                repMsg = System.Web.HttpUtility::UrlDecode(tmpResult);
+        #                break;
+        #            case    'L_LONGMESSAGE0'    :
+        #                comment = System.Web.HttpUtility::UrlDecode(tmpREsult);
+        #                break;
+        #
+        #        }
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzeResponse
+        #void analyzeResponse(CreditCardStr msg)
+        #{
+        #    ;
+        #    switch (CreditCardTerminalTable::findTerminalWithId(this.parmccTrans().TerminalId).Processor)
+        #    {
+        #        case CreditCardProcessor::PayPal  :
+        #            if (CreditCardMerchantVerisign::find(this.parmccTrans().TerminalId).InterfaceType
+        #                == CreditcardPayPalInterfaceType::Braintree)
+        #            {
+        #                ccTrans = CreditCardBrainTreeXMLBuilder::analyzeResponse(msg, this.parmccTrans());
+        #            }
+        #            else
+        #            {
+        #                this.analyzePayPalResponse(msg);
+        #            }
+        #            break;
+        #        case CreditCardProcessor::Paymentech    :
+        #            this.analyzePaymentechResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::Orbital   :
+        #            this.analyzeOrbitalResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::AuthorizeNet       :
+        #            this.analyzeADNReponse(msg);
+        #            break;
+        #        case CreditCardProcessor::Cybersource   :
+        #            this.analyzeCybersourceResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::Moneris       :
+        #            this.analyzeMonerisResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::Commidea      :
+        #            this.analyzeCommideaResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::PayPalX   :
+        #            this.analyzePayPalXResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::FirstData :
+        #            this.analyzeFirstDataResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::Heartland :
+        #            this.analyzeHeartlandResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::DPS   :
+        #            this.analyzeDPSResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::AdFlex    :
+        #            this.analyzeAdflexResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::Elavon    :
+        #            this.analyzeElavonResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::TSYS    :
+        #            this.analyzeTSYSResponse(msg);
+        #            break;
+        #        case CreditCardProcessor::UDCC    :
+        #            this.analyzeUDCCReponse(msg);
+        #            break;
+        #        case CreditCardProcessor::OpenEdge    :
+        #            this.analyzeOpenEdgeReponse(msg);
+        #            break;
+        #        case CreditCardProcessor::WorldPay    :
+        #            this.analyzeWorldPayResponse(msg);
+        #            break;
+        #    }
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #analyzeTSYSResponse
+        #void analyzeTSYSResponse(str msg)
+        #{
+        #    ;
+        #    this.parmccTrans(CreditCardTSYSTransITBuilder::getTSYSResponse(msg,this.parmccTrans()));
+        #}
+      ENDSOURCE
+      SOURCE #analyzeUDCCReponse
+        #void analyzeUDCCReponse(str msg)
+        #{
+        #    ;
+        #    this.parmccTrans(CreditCardUDCCBuilder::analyzeResponse(msg,this.parmccTrans()));
+        #}
+      ENDSOURCE
+      SOURCE #analyzeWorldPayResponse
+        #void analyzeWorldPayResponse(str msg)
+        #{
+        #    ;
+        #    ccTrans = CreditCardSecureNetBuilder::analyzeResponse(msg,ccTrans);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildParmExtraPaymentech
+        #str buildParmExtraPaymentech()
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    TempStr                 ParmList;
+        #    ;
+        #    //------------------------------------------
+        #    //--> Format from UTF197 -HCS 7.7 document//
+        #    //------------------------------------------
+        #    //--> C Information
+        #    //--> Transaction Information
+        #    ParmList += strltrim(this.parmCCAmountstr());
+        #
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    //--> Filler
+        #    ParmList += '00000000';
+        #
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    //--> D Petroleum Industry
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    //--> E Interchange Compliance Data
+        #
+        #    ParmList += num2char(#FS);
+        #
+        #    //--> F Industry Specific Data
+        #    ParmList += CreditCardIndustryData::construct(ccTrans);
+        #
+        #    ParmList += num2char(#FS);
+        #
+        #    //--> G Miscellaneous Information
+        #    if (this.parmAuthCode())
+        #    {
+        #        ParmList += this.parmAuthCode();
+        #    }
+        #    else if (this.parmccTrans().OrigID)
+        #    {
+        #        ParmList += this.parmOrigId();
+        #    }
+        #
+        #    if (this.parmTerminalTable().IndustryHCS == CreditCardIndustryHCS::Direct
+        #        && this.parmTerminalTable().Processor == CreditCardProcessor::Paymentech
+        #        && this.parmAuthCode())
+        #    {
+        #        //--> Direct requires four FS if an authcode is used
+        #        ParmList += num2char(#FS);
+        #        ParmList += num2char(#FS);
+        #        ParmList += num2char(#FS);
+        #        ParmList += num2char(#FS);
+        #    }
+        #    else
+        #    {
+        #        //<-- Void Information, not applicable in a sale/auth/etc.
+        #        ParmList += num2char(#FS);
+        #
+        #        //--> H Address Verification Data
+        #        //--> Business address is not required at this point
+        #        ParmList += num2char(#FS);
+        #
+        #        if ( (CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId).AVS == NoYes::Yes && !this.parmOrigId() )
+        #             && !this.parmSwipe() //<-- AVS not supported in Swiped transactions
+        #             && (this.parmccTrans().TransType != CreditCardTrxType::D || this.parmccTrans().TransType != creditCardTrxType::C)
+        #             && !this.parmAuthCode())
+        #        {
+        #            if (this.parmPostalAddress().ZipCode)
+        #            {
+        #                if (this.parmPostalAddress().Street)
+        #                {
+        #                    ParmList += substr(this.parmPostalAddress().Street,1,20);
+        #                }
+        #                ParmList += num2char(#FS);
+        #                ParmList += this.parmPostalAddress().ZipCode;
+        #            }
+        #
+        #        }
+        #        else
+        #        {
+        #            ParmList += num2char(#FS);
+        #        }
+        #        ParmList += num2char(#FS);
+        #    }
+        #
+        #    //--> I Purchasing Card Information
+        #
+        #    ParmList += this.buildParmIndustryData();
+        #
+        #    //--> J Token Data
+        #
+        #    ParmList += this.buildParmTokenData();
+        #    /*
+        #    ParmList += num2char(#FS);*/
+        #
+        #    //--> K End of Packet
+        #
+        #    ParmList += num2char(#ETX);
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildParmIndustryData
+        #str buildParmIndustryData()
+        #{
+        #    #define.FS(28)
+        #    TempStr                 tmpParmList;
+        #    TempStr                 tmp;
+        #    int                     sLen;
+        #    DictEnum                dictEnum = new DictEnum(enumnum(CreditCardCommercialTaxFlag));
+        #    ;
+        #    if (this.parmccTrans().CommercialCard == NoYes::Yes)
+        #    {
+        #        //--> Customer Reference Number
+        #        //--> We fill in Invoice number here.  17 characters
+        #
+        #        //--> Check Sales Id for Underscore
+        #        if (SalesTable::find(this.parmccTrans().SalesId).CustomerRef != '')
+        #        {
+        #            sLen = strLen(SalesTable::find(this.parmccTrans().SalesId).CustomerRef);
+        #            if (strFind(SalesTable::find(this.parmccTrans().SalesId).CustomerRef,'_', 1,sLen) >0)
+        #            {
+        #                throw error("@ACC781");
+        #            }
+        #            tmpParmList += SalesTable::find(this.parmccTrans().SalesId).CustomerRef;
+        #
+        #            if (ccTrans.SalesId)
+        #            {
+        #                for (sLen=0;sLen<=17;sLen++)
+        #                {
+        #                    tmpParmList += ' ';
+        #                    sLen = strLen(tmpParmList);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                for (sLen=0;sLen<=17;sLen++)
+        #                {
+        #                    tmpParmList += '0';
+        #                    sLen = strLen(tmpParmList);
+        #                }
+        #            }
+        #
+        #        }
+        #        else
+        #        {
+        #            sLen = strLen(ccTrans.SalesId);
+        #            if (strFind(ccTrans.SalesId,'_', 1,sLen) >0)
+        #            {
+        #                ccTrans.SalesId = strReplace(ccTrans.SalesId,'_','');
+        #                //throw error('@ACC781');
+        #            }
+        #            tmpParmList += ccTrans.SalesId;
+        #
+        #            if (ccTrans.SalesId)
+        #            {
+        #                for (sLen=0;sLen<=17;sLen++)
+        #                {
+        #                    tmpParmList += ' ';
+        #                    sLen = strLen(tmpParmList);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                for (sLen=0;sLen<=17;sLen++)
+        #                {
+        #                    tmpParmList += '0';
+        #                    sLen = strLen(tmpParmList);
+        #                }
+        #            }
+        #
+        #        }
+        #
+        #
+        #
+        #
+        #
+        #        //--> Local Tax Flag
+        #        tmpParmList += int2str(dictEnum.index2Value(this.parmccTrans().CommercialLocalTax));
+        #        //--> Filler
+        #        tmpParmList += '        ';
+        #        //--> Destination Postal Code
+        #        tmpParmList += this.parmPostalAddress().ZipCode;
+        #
+        #        for (sLen=0;sLen<=35;sLen++)
+        #        {
+        #            tmpParmList += ' ';
+        #            sLen = strLen(tmpParmList);
+        #        }
+        #
+        #        //--> Sales Tax Amount
+        #        if (this.parmccTrans().CommercialSalesTax == 0
+        #            || this.parmccTrans().CommercialLocalTax == CreditCardCommercialTaxFlag::NonTaxable)
+        #        {
+        #            tmpParmList += '000000.00';
+        #        }
+        #        else
+        #        {
+        #            tmp = strLRTrim(num2str(this.parmccTrans().CommercialSalesTax,9,2,0,1));
+        #            sLen = strLen(tmp);
+        #
+        #            for (sLen=sLen;sLen<=9;sLen++)
+        #            {
+        #                tmp = '0' + tmp;
+        #                sLen = strLen(tmp);
+        #            }
+        #            tmpParmList += tmp;
+        #        }
+        #
+        #    }
+        #
+        #
+        #    tmpParmList += num2char(#FS);
+        #
+        #    return tmpParmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildParmListPaymentech
+        #str buildParmListPaymentech()
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    TempStr                 ParmList;
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ExpDate;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    int                     sLen;
+        #    int                     tmpLen;
+        #    TempStr                 tmpStr;
+        #    int                     findSentinel;
+        #    int                     swipeLen;
+        #    ;
+        #    //------------------------------------------
+        #    //--> Format from UTF197 -HCS 7.7 document//
+        #    //------------------------------------------
+        #    //--> STX
+        #    ParmList = num2char(#STX);
+        #
+        #    //--> System Indicator
+        #    ParmList += this.retSystemIndicator() + '.';
+        #
+        #    //--> Routing Indicator
+        #    ParmList += 'A02000';
+        #
+        #    //--> Client Number
+        #    ParmList += ccMerchantPaymentech.ClientNum;
+        #
+        #    //--> Merchant Number
+        #    ParmList += ccMerchantPaymentech.MerchantId;
+        #
+        #    //--> Terminal Number
+        #    ParmList += ccTrans.TerminalId;
+        #
+        #    //--> Transaction sequence flag
+        #    //--> Indicates whether single transaction or batch
+        #    //--> 1 = Single Transaction
+        #    //--> 2 = Multi Transaction
+        #    if (!this.parmccTrans().BatchNumber || this.parmccTrans().BatchLastTrans)
+        #    {
+        #        ParmList += '1';  //<--single transaction for now.
+        #    }
+        #    else
+        #    {
+        #        ParmList += '2';
+        #    }
+        #
+        #    if (!this.parmccTrans().BatchNumber)
+        #    {
+        #        //--> Sequence number
+        #        ParmList += '000001';  //<-- Single transaction for now
+        #    }
+        #    else
+        #    {
+        #        tmpLen = strLen(this.parmccTrans().BatchTransNumber);
+        #
+        #        if (tmpLen < 6)
+        #        {
+        #            for (sLen=tmpLen;sLen<=5;sLen++)
+        #            {
+        #                tmpStr = '0' + tmpStr;
+        #                sLen = strLen(tmpStr);
+        #            }
+        #        }
+        #
+        #        ParmList += tmpStr + this.parmccTrans().BatchTransNumber;
+        #    }
+        #
+        #    //--> Transaction Class
+        #    ParmList += 'F';  //<-- This should always be 'F' for now
+        #
+        #    //--> Transaction Code
+        #    ParmList += CreditCardTransCodes::construct(this.parmTrxType(),ccTrans,noYes::No); //<-- Transaction code 01=Sale, 02=Auth Only, ec.
+        #
+        #    //--> PIN Capability Code
+        #    if (this.parmTerminalTable().PINCapable == NoYes::No)
+        #    {
+        #        ParmList += '2';
+        #    }
+        #    else
+        #    {
+        #        ParmList += '1';
+        #    }
+        #
+        #    //--> Entry Data Source
+        #    if (this.parmEmtrySource()== CreditCardEntrySource::None)
+        #    {
+        #        throw error("@ACC648");
+        #    }
+        #
+        #    Parmlist += '0' + int2str(this.parmEmtrySource());
+        #
+        #    //--> 'B'
+        #    //ParmList += 'B';
+        #
+        #    //--> Account Information
+        #    //--> Only Entered information here.
+        #
+        #    if (!this.parmSwipe())
+        #    {
+        #
+        #        //<--Retrieve CC Information
+        #        select ccTable where ccTable.CreditCardId == this.parmccTrans().CreditCardId;
+        #
+        #        if (!ccTable)
+        #        {
+        #            //--> If this is a Capture, Credit or Void, we have to
+        #            //--> Retreive the data to continue
+        #            if ( (this.parmTrxType() == 'C' ||
+        #                this.parmTrxType() == 'D' ||
+        #                this.parmTrxType() == 'V') &&
+        #                this.parmccTrans())
+        #            {
+        #                ParmList += this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #
+        #                //--> FS
+        #                ParmList += num2char(#FS);
+        #
+        #                //--> Create date
+        #                month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #                if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ExpDate =  month + ccYear;
+        #                ParmList += ExpDate;
+        #            }
+        #            else if (this.parmccTrans().OneTimeTrans == NoYes::Yes)
+        #            {
+        #                //--> Manual Entry
+        #                if (!this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt))
+        #                    throw error("@ACC707");
+        #
+        #                ParmList += this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #
+        #                //--> FS
+        #                ParmList += num2char(#FS);
+        #
+        #                //--> Create date
+        #                month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #                if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ExpDate =  month + ccYear;
+        #                ParmList += ExpDate;
+        #
+        #            }
+        #            else
+        #            {
+        #                throw error(strFmt("@ACC141",creditCardId));
+        #            }
+        #        }
+        #        else
+        #        {
+        #            ParmList += CreditCardTable::retrieveValue(ccTable);
+        #
+        #            //--> FS
+        #            ParmList += num2char(#FS);
+        #
+        #            //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ExpDate =  month + ccYear;
+        #            ParmList += ExpDate;
+        #        }
+        #    }
+        #    //--> Swiped information
+        #    else
+        #    {
+        #        swipeLen = strLen(this.parmSwipe());
+        #
+        #
+        #        if (!this.parmSwipe())
+        #            throw error(strFmt("@ACC650"));
+        #
+        #        //--> Remove starting sentinel
+        #        findSentinel = strFind(this.parmSwipe(),'%',1,swipeLen);
+        #        if (findSentinel > 0)
+        #            this.parmSwipe(subStr(this.parmSwipe(),findSentinel+1,swipeLen));
+        #
+        #        //--> Remove ending sentitnel
+        #        swipeLen = strLen(this.parmSwipe());
+        #
+        #        if (strFind(this.parmSwipe(), '?',1, swipeLen))
+        #            this.parmSwipe(subStr(this.parmSwipe(),1,swipeLen-1));
+        #
+        #        ParmList += this.parmSwipe();
+        #    }
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildParmListPayPal
+        #str buildParmListPayPal()
+        #{
+        #    //--> Best practices deviation documented
+        #    TempStr                 ParmList;
+        #    ;
+        #    ParmList = 'USER=' + ccMerchantVerisign.UserId + '&';
+        #    ParmList += 'VENDOR=' + ccMerchantVerisign.VendorId + '&';
+        #    ParmList += 'PARTNER=' + ccMerchantVerisign.PartnerId + '&';
+        #    ParmList += 'PWD=' + ccMerchantVerisign.Pwd + '&';
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildParmListPayPalX
+        #str buildParmListPayPalX()
+        #{
+        #    //--> Best practices deviation documented
+        #    TempStr                 ParmList;
+        #    ;
+        #    ParmList = 'USER=' + ccMerchantPayPalX.UserId + '&';
+        #    ParmList += 'PWD=' + ccMerchantPayPalX.Pwd + '&';
+        #    ParmList += 'SIGNATURE=' + ccMerchantPayPalX.Signature + '&';
+        #    ParmList += 'VERSION=52&';
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildParmTokenData
+        #str buildParmTokenData()
+        #{
+        #    #define.FS(28)
+        #    TempStr                 tmpParmList;
+        #    DictEnum                dictEnum = new DictEnum(enumnum(CreditCardCommercialTaxFlag));
+        #    DictEnum                dictEnumCheck = new DictEnum(enumnum(CreditCardDuplicateCheck));
+        #    CreditCardTrans         recurCCTrans;
+        #    ;
+        #    //--> CV Information
+        #    if (CreditCardTable::CVDEligible(this.parmccType()))
+        #    {
+        #        if (CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId).CVD
+        #            && ( !this.parmSwipe() //<-- CVD not supported in Swiped transactions
+        #            || (this.parmccTrans().TransType != CreditCardTrxType::D || this.parmccTrans().TransType != creditCardTrxType::C)
+        #            || this.parmAuthCode()))
+        #        {
+        #            if (this.parmCID())
+        #            {
+        #                tmpParmList += 'CV';
+        #                tmpParmList += 'PI';
+        #                tmpParmList += int2str(dictEnum.index2Value(this.parmCVD()));
+        #                if (this.parmCVD() == CreditCardCVDValues::Provided)
+        #                {
+        #                    tmpParmList +='VF';
+        #
+        #                    if (this.parmccType() == CreditCardType::AmericanExpress)
+        #                    {
+        #                        tmpParmList += '4';
+        #                    }
+        #                    else
+        #                    {
+        #                        tmpParmList += '3';
+        #                    }
+        #
+        #                tmpParmList += this.parmCID();
+        #                }
+        #            }
+        #            else if (!this.parmCID() && this.parmCVD() == CreditCardCVDValues::NotReadable)
+        #            {
+        #                tmpParmList += 'CV';
+        #                tmpParmList += 'PI';
+        #                tmpParmList += int2str(dictEnum.index2Value(this.parmCVD()));
+        #
+        #            }
+        #
+        #        }
+        #
+        #        if (tmpParmList)
+        #            tmpParmList += num2char(#FS);
+        #    }
+        #
+        #    //--> DC Information (Dynamic Currency Conversion)
+        #    //--> Not Supported
+        #
+        #    //--> VA Informatoin (Verified by Visa)
+        #
+        #
+        #    //--> SC Information (MasterCard SecureCode)
+        #
+        #    //--> RE Information (Recuring Payment)
+        #    if (this.parmccTrans().RecurringToken != CreditCardRecurringToken::None)
+        #    {
+        #        tmpParmList += 'RE';
+        #        tmpParmList += 'R';
+        #        if (this.parmccTrans().RecurringToken == CreditCardRecurringToken::First)
+        #        {
+        #            tmpParmList += 'F';
+        #        }
+        #        else
+        #        {
+        #            tmpParmList += 'R';
+        #        }
+        #
+        #        if (tmpParmList)
+        #            tmpParmList += num2char(#FS);
+        #    }
+        #
+        #    //--> DU Information (Duplicate Trans Check)
+        #    tmpParmList += 'DU';
+        #
+        #    //--> See if a transaction was processed but nothing received
+        #    select recurCCTrans
+        #        where recurCCTrans.TransDate == this.parmccTrans().TransDate
+        #        && recurCCTrans.CustAccount == this.parmccTrans().CustAccount
+        #        && ((recurCCTrans.SalesId == this.parmccTrans().SalesId && recurCCTRans.SalesId != '')||
+        #        (recurCCTrans.Voucher == this.parmccTrans().Voucher && recurCCTrans.Voucher!= ''))
+        #        && recurCCTrans.CreditCardNumSecure == this.parmccTrans().CreditCardNumSecure
+        #        && recurCCTrans.AmountMST == this.parmccTrans().AmountMST
+        #        && recurCCTrans.RecId != this.parmccTrans().RecId
+        #        && recurCCTrans.Result == ''
+        #        && recurCCTrans.RepMsg == '';
+        #
+        #    if (recurCCTrans)
+        #    {
+        #        tmpParmList += '0' + int2str(dictEnumCheck.index2Value(CreditCardDuplicateCheck::All));
+        #    }
+        #    else
+        #    {
+        #        tmpParmList += '0' + int2str(dictEnumCheck.index2Value(CreditCardDuplicateCheck::None));
+        #    }
+        #    tmpParmList += num2char(#FS);
+        #
+        #
+        #    return tmpParmList;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantOrbital
+        #boolean checkMerchantOrbital()
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantPaymentech.MerchantId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantPaymentech.HostAddress)
+        #        throw error("@ACC56");
+        #    else if (!ccMerchantPaymentech.Port)
+        #        throw error("@ACC57");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantPaymentech
+        #boolean checkMerchantPaymentech()
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantPaymentech.MerchantId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantPaymentech.Pwd)
+        #        throw error("@ACC54");
+        #    else if (!ccMerchantPaymentech.HostAddress)
+        #        throw error("@ACC56");
+        #    else if (!ccMerchantPaymentech.Port)
+        #        throw error("@ACC57");
+        #    else if (!ccMerchantPaymentech.ClientNum)
+        #        throw error("@ACC618");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantPayPal
+        #boolean checkMerchantPayPal()
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantVerisign.UserId)
+        #       throw error("@ACC53");
+        #    else if (!ccMerchantVerisign.Pwd)
+        #        throw error("@ACC54");
+        #    else if (!ccMerchantVerisign.VendorId)
+        #        throw error("@ACC55");
+        #    else if (!ccMerchantVerisign.HostAddress)
+        #        throw error("@ACC56");
+        #    else if (!ccMerchantVerisign.HostPort)
+        #        throw error("@ACC57");
+        #    else if (!ccMerchantVerisign.PartnerId)
+        #        throw error("@ACC58");
+        #
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #public class CreditCardAdv
+        #{
+        #    /*
+        #    COPYRIGHT 2004-2015, Red Maple Press, Inc.
+        #    ALL RIGHTS RESERVED
+        #
+        #    For information on the license or copyright of this software, please
+        #    contact our offices at +1 972 980 6963
+        #    or at www.redmaple.com
+        #
+        #    */
+        #
+        #    CreditCardMerchantVerisign      ccMerchantVerisign;
+        #    CreditCardMerchantPaymentech    ccMerchantPaymentech;
+        #    CreditCardMerchantPayPalX       ccMerchantPayPalX;
+        #
+        #    CreditCardId                    creditCardId;
+        #    SalesTable                      salesTable;
+        #    AmountMST                       ccAmount;
+        #    CreditCardStr                   ccAmountStr;
+        #    AddressZipCodeId                zipCode;
+        #    CreditCardStr                   response;
+        #    container                       globalmsg;
+        #    CreditCardStr                   result;
+        #    CreditCardBatchNumber           batch;
+        #    CreditCardDateType              ccDateType;
+        #    CreditCardTrans                 ccTrans;
+        #    CreditCardTerminalTable         ccTerminal;
+        #
+        #    CreditCardPNRef                 pnRef;
+        #    CreditCardRepMsg                Repmsg;
+        #    CreditCardAuthCode              Authcode;
+        #    CreditCardAvsAddr               AvsAddr;
+        #    CreditCardAvsZip                AvsZip;
+        #    CreditCardIAvs                  IAvs;
+        #    CreditCardComment               Comment;
+        #    CreditCardComment               Comment2;
+        #    CreditCardTrxTypeId             trxType;
+        #    CreditCardCID                   cid;
+        #    CreditCardCVDValues             cvd;
+        #    CreditCardCVDResponse           cvdResponse;
+        #    CreditCardType                  type;
+        #    CreditCardEntrySource           entrySource;
+        #    CreditCardSwipe                 swipe;
+        #    CreditCardPNRef                 origID;
+        #    CreditCardBatchNumber           sequenceId;
+        #    CreditCardRetrievalRefNum       retrievalNum;
+        #    CreditCardOrbitalTxRefNum       txtRef;
+        #    CreditCardOrbitalTxRefIdx       txtRefIdx;
+        #    CreditCardAuthNetId             netId;
+        #    CreditCardAuthSource            authSource;
+        #    CreditCardReferenceId           referenceId;
+        #    CreditCardCybersourceToken      token;
+        #
+        #    Voucher                         voucher;
+        #    SalesId                         salesId;
+        #    smmQuotationId                  smmQuotationId;
+        #    LogisticsPostalAddress          postalAddress;
+        #    Amount                          processAmt;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createTrans
+        #CreditCardTrans createTrans(CreditCardTrans    _ccTrans)
+        #{
+        #    CreditCardTrans         newccTrans;
+        #    ;
+        #    ttsbegin;
+        #
+        #    select forupdate newccTrans where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    if (!newccTrans)
+        #        throw error(strFmt("@ACC142"));
+        #
+        #    newccTrans.Result               =   Result;
+        #    newccTrans.AuthCode             =   AuthCode;
+        #    newccTrans.AvsAddr              =   AvsAddr;
+        #    newccTrans.IAvs                 =   IAvs;
+        #    newccTrans.PNRef                =   pnRef;
+        #    newccTrans.RepMsg               =   RepMsg;
+        #    newccTrans.Comment1             =   Comment;
+        #    newccTrans.Comment2             =   Comment2;
+        #    newccTrans.RetrevalRefNum       =   retrievalNum;
+        #    newccTrans.BatchTransNumber     =   sequenceId;
+        #    newccTrans.BatchPaymentechNum   =   batch;
+        #    newccTrans.CVDResponse          =   cvdResponse;
+        #    newccTrans.OrbitalTxRefNum      =   txtRef;
+        #    newccTrans.PayPalReferenceId    =   this.parmReferenceId();
+        #
+        #    if (!newccTrans.Voucher)
+        #    {
+        #        newccTrans.Voucher         =   this.parmccVoucher();
+        #    }
+        #
+        #    //--> If the transaction is a swipe, we make it secure
+        #    if (newCCTrans.CreditCardNumSecure)
+        #    {
+        #        newccTrans.CreditCardNumSecure =  subStr(newccTrans.CreditCardNumSecure,1,4) + '********' +
+        #                subStr(newccTrans.CreditCardNumSecure,strlen(newccTrans.CreditCardNumSecure)-3,4);
+        #    }
+        #
+        #    newccTrans.update();
+        #    ttscommit;
+        #
+        #    return newccTRans;
+        #}
+      ENDSOURCE
+      SOURCE #errorMessage
+        #str errorMessage(str msg)
+        #{
+        #    TempStr                 errResponse;
+        #    ;
+        #    switch (CreditCardTerminalTable::find().Processor)
+        #    {
+        #        case CreditCardProcessor::PayPal  :
+        #            errResponse = this.errorMessagePayPal(msg);
+        #            break;
+        #        case CreditCardProcessor::Paymentech    :
+        #            errResponse= this.errorMessagePaymentech(msg);
+        #            break;
+        #        case CreditCardProcessor::Orbital   :
+        #            errResponse = this.errorMessageOrbital(msg);
+        #            break;
+        #    }
+        #
+        #
+        #
+        #    return errResponse;
+        #}
+      ENDSOURCE
+      SOURCE #errorMessageOrbital
+        #str errorMessageOrbital(str msg)
+        #{
+        #    ;
+        #    msg = strLRTrim(msg);
+        #
+        #    return msg;
+        #}
+      ENDSOURCE
+      SOURCE #errorMessagePaymentech
+        #str errorMessagePaymentech(str msg)
+        #{
+        #    TempStr     errorstr;
+        #    ;
+        #    msg = strLRTrim(msg);
+        #    switch (msg)
+        #    {
+        #        case "200" :
+        #            //Auth Declined
+        #            errorstr =(msg + " " + "@ACC653");
+        #            break;
+        #        case "201" :
+        #            //Call Voice Oper
+        #            errorstr =(msg + " " + "@ACC654");
+        #            break;
+        #        case "202" :
+        #            //Hold - Call
+        #            errorstr =(msg + " " + "@ACC655");
+        #            break;
+        #
+        #        case "203" :
+        #            //Call Voice Oper
+        #            errorstr =(msg + " " + "@ACC656");
+        #            break;
+        #
+        #        case "204" :
+        #            //Invalid Card No
+        #            errorstr =(msg + " " + "@ACC657");
+        #            break;
+        #        case "205" :
+        #            //Invalid Exp. Date
+        #            errorstr =(msg + " " + "@ACC658");
+        #            break;
+        #        default        :
+        #            //General error
+        #            errorstr =(msg + " " + "@ACC98");
+        #            break;
+        #
+        #
+        #    }
+        #
+        #    return errorstr;
+        #}
+      ENDSOURCE
+      SOURCE #errorMessagePayPal
+        #str errorMessagePayPal(str msg)
+        #{
+        #    TempStr     errorstr;
+        #    ;
+        #    switch (msg)
+        #    {
+        #        case "1" :
+        #            //User authentication failed
+        #            errorstr =(msg + " " + "@ACC62");
+        #            break;
+        #        case "2" :
+        #            //Invalid tender type
+        #            errorstr =(msg + " " + "@ACC63");
+        #            break;
+        #        case "3" :
+        #            //Invalid transaction type
+        #            errorstr =(msg + " " + "@ACC64");
+        #            break;
+        #        case "4"  :
+        #            //Invalid amount format
+        #            errorstr =(msg + " " + "@ACC65");
+        #            break;
+        #        case "5"   :
+        #            //Invalid merchant information
+        #            errorstr =(msg + " " + "@ACC66");
+        #            break;
+        #        case "7"    :
+        #            //Field format error
+        #            errorstr =(msg + " " + "@ACC67");
+        #            break;
+        #        case "8"   :
+        #            //Not a transaction server
+        #            errorstr =(msg + " " + "@ACC68");
+        #            break;
+        #        case "9"   :
+        #            //Too many parameters or invalid stream
+        #            errorstr =(msg + " " + "@ACC69");
+        #            break;
+        #        case "10"  :
+        #            //Too many line items
+        #            errorstr =(msg + " " + "@ACC70");
+        #            break;
+        #        case "11"   :
+        #            //Client timeout.  Waiting for response.
+        #            errorstr =(msg + " " + "@ACC71");
+        #            break;
+        #        case "12"   :
+        #            //Declined.
+        #            errorstr =(msg + " " + "@ACC72");
+        #            break;
+        #        case "13"   :
+        #            //Referral.
+        #            errorstr =(msg + " " + "@ACC73");
+        #            break;
+        #        case "19"    :
+        #            //Original transaction Id not found.
+        #            errorstr =(msg + " " + "@ACC74");
+        #            break;
+        #        case "20"     :
+        #            //Cannot find the customer reference number
+        #            errorstr =(msg + " " + "@ACC75");
+        #            break;
+        #        case "22"      :
+        #            //Invalid ABA number
+        #            errorstr =(msg + " " + "@ACC76");
+        #            break;
+        #        case "23"       :
+        #            //Invalid account number
+        #            errorstr =(msg + " " + "@ACC77");
+        #            break;
+        #        case "24"        :
+        #            //Invalid expiration date
+        #            errorstr =(msg + " " + "@ACC78");
+        #            break;
+        #        case "25"         :
+        #            //Invalid Host Mapping
+        #            errorstr =(msg + " " + "@ACC79");
+        #            break;
+        #        case "26"          :
+        #            //Invalid vendor account
+        #            errorstr =(msg + " " + "@ACC80");
+        #            break;
+        #        case "27"           :
+        #            //Invalid partner permissions
+        #            errorstr =(msg + " " + "@ACC81");
+        #            break;
+        #        case "28"            :
+        #            //Insufficient user permissions
+        #            errorstr =(msg + " " + "@ACC82");
+        #            break;
+        #        case "29"              :
+        #            //Invalid XML document.
+        #            errorstr =(msg + " " + "@ACC83");
+        #            break;
+        #        case "30"    :
+        #            //Duplicate transaction
+        #            errorstr =(msg + " " + "@ACC84");
+        #            break;
+        #        case "31"     :
+        #            //Error in adding the recurring profile
+        #            errorstr =(msg + " " + "@ACC85");
+        #            break;
+        #        case "50"      :
+        #            //Insufficient funds
+        #            errorstr =(msg + " " + "@ACC88");
+        #            break;
+        #        case "99"       :
+        #            //General error
+        #            errorstr =(msg + " " + "@SYS96731");
+        #            break;
+        #        case "100"       :
+        #            //Transaction type not supported by host
+        #            errorstr =(msg + " " + "@ACC87");
+        #            break;
+        #        case "101"        :
+        #            //Time-out value too small
+        #            errorstr =(msg + " " + "@ACC89");
+        #            break;
+        #        case "102"         :
+        #            //Processor not available
+        #            errorstr =(msg + " " + "@ACC90");
+        #            break;
+        #        case "103"          :
+        #            //Error reading response from host
+        #            errorstr =(msg + " " + "@ACC91");
+        #            break;
+        #        case "104"           :
+        #            //Timeout waiting for processor response. Try your transaction again.
+        #            errorstr =(msg + " " + "@ACC92");
+        #            break;
+        #        case "105"            :
+        #            //Credit error.
+        #            errorstr =(msg + " " + "@ACC93");
+        #            break;
+        #        case "106"             :
+        #            //Host not available
+        #            errorstr =(msg + " " + "@ACC94");
+        #            break;
+        #        case "108"              :
+        #            //Void error.
+        #            errorstr =(msg + " " + "@ACC95");
+        #            break;
+        #        case "109"               :
+        #            //Time out waiting for host response.
+        #            errorstr =(msg + " " + "@ACC96");
+        #            break;
+        #        case "111"                :
+        #            //Capture error.
+        #            errorstr =(msg + " " + "@ACC210");
+        #            break;
+        #        case "115"                 :
+        #            //Capture error.
+        #            errorstr =(msg + " " + "@ACC97");
+        #            break;
+        #
+        #        case "-1"                   :
+        #            //Failed to connect to host
+        #            errorstr = ("@ACC167");
+        #            break;
+        #
+        #        case "-2"                   :
+        #            //Failed to resolve hotname
+        #            errorstr = ("@ACC168");
+        #            break;
+        #
+        #        case "-5"                   :
+        #            //Failed to initialize SSL context
+        #            errorstr = ("@ACC169");
+        #            break;
+        #
+        #        case "-6"                   :
+        #            //Parameter list format error: & in name
+        #            errorstr = ("@ACC170");
+        #            break;
+        #
+        #        case "-7"                   :
+        #            //Parameter list format error: inavlid [] name length clause
+        #            errorstr = ("@ACC171");
+        #            break;
+        #
+        #        case "-8"                   :
+        #            //SSl failed to connect to host
+        #            errorstr = ("@ACC172");
+        #            break;
+        #
+        #        case "-9"                   :
+        #            //SSL read failed
+        #            errorstr = ("@ACC173");
+        #            break;
+        #
+        #        case "-10"                   :
+        #            //SSL write failed
+        #            errorstr = ("@ACC175");
+        #            break;
+        #
+        #        case "-11"                   :
+        #            //Proxy authorization failed
+        #            errorstr = ("@ACC176");
+        #            break;
+        #
+        #        case "-12"                   :
+        #            //Timeout waiting for response
+        #            errorstr = ("@ACC177");
+        #            break;
+        #
+        #        case "-13"                   :
+        #            //Select failure
+        #            errorstr = ("@ACC178");
+        #            break;
+        #
+        #        case "-14"                   :
+        #            //Too many connections
+        #            errorstr = ("@ACC179");
+        #            break;
+        #
+        #        case "-15"                   :
+        #            //Failed to set socket options
+        #            errorstr = ("@ACC174");
+        #            break;
+        #
+        #        case "-20"                   :
+        #            //Proxy read failed
+        #            errorstr = ("@ACC180");
+        #            break;
+        #
+        #        case "-21"                   :
+        #            //Proxy write failed
+        #            errorstr = ("@ACC181");
+        #            break;
+        #
+        #        case "-22"                   :
+        #            //Failed to initialize SSL certificate
+        #            errorstr = ("@ACC182");
+        #            break;
+        #
+        #        case "-23"                   :
+        #            //Host address not specified
+        #            errorstr = ("@ACC183");
+        #            break;
+        #
+        #        case "-24"                   :
+        #            //Invalid transaction type
+        #            errorstr = ("@ACC184");
+        #            break;
+        #
+        #        case "-25"                   :
+        #            //Failed to create a socket
+        #            errorstr = ("@ACC185");
+        #            break;
+        #
+        #        case "-26"                   :
+        #            //Faled to initialize socket layer
+        #            errorstr = ("@ACC186");
+        #            break;
+        #
+        #        case "-27"                   :
+        #            //Parameter list format error: invalid [] name length clause
+        #            errorstr = ("@ACC187");
+        #            break;
+        #
+        #        case "-28"                   :
+        #            //Parameter list format error: name
+        #            errorstr = ("@ACC188");
+        #            break;
+        #
+        #        case "-29"                   :
+        #            //Failed to initialize SSL connection
+        #            errorstr = ("@ACC189");
+        #            break;
+        #
+        #        case "-30"                   :
+        #            //Invalid timeout value
+        #            errorstr = ("@ACC190");
+        #            break;
+        #
+        #        case "-31"                   :
+        #            //The certificate chain did not validate, no local certificate found
+        #            errorstr = ("@ACC191");
+        #            break;
+        #
+        #        case "-32"                   :
+        #            //The certificate chain did not validate, common name did not match URL
+        #            errorstr = ("@ACC192");
+        #            break;
+        #
+        #        case "-99"                   :
+        #            //Out of memory
+        #            errorstr = ("@ACC193");
+        #            break;
+        #
+        #        default        :
+        #            //General error
+        #            errorstr =(msg + " " + "@ACC98");
+        #            break;
+        #
+        #
+        #    }
+        #
+        #    return errorstr;
+        #}
+      ENDSOURCE
+      SOURCE #getIndustryCode
+        #str getIndustryCode(CreditCardIndustryHCS ccIndustry)
+        #{
+        #    TempStr ret;
+        #    ;
+        #
+        #    switch (ccIndustry)
+        #    {
+        #        case CreditCardIndustryHCS::Retail :
+        #            ret = "004";
+        #            break;
+        #        case CreditCardIndustryHCS::ElectronicCom  :
+        #            ret = "013";
+        #            break;
+        #        case CreditCardIndustryHCS::Direct  :
+        #            ret = "007";
+        #            break;
+        #        default    :
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #void new()
+        #{
+        #    ;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmAuthCode
+        #CreditCardAuthCode parmAuthCode(CreditCardAuthCode _authCode = authCode)
+        #{
+        #    ;
+        #    authCode = _authCode;
+        #
+        #    return authCode;
+        #}
+      ENDSOURCE
+      SOURCE #parmccAmount
+        #AmountMST parmccAmount(AmountMST _ccAmount = ccAmount)
+        #{
+        #    ;
+        #
+        #    ccAmount = _ccAmount;
+        #    return ccAmount;
+        #}
+      ENDSOURCE
+      SOURCE #parmccAmountStr
+        #str parmccAmountStr(AmountMST _ccAmount = ccAmount)
+        #{
+        #    ;
+        #    //<-- If the number is a negative and the trans type is
+        #    //<-- is a credit.  Change
+        #    ccAmount = _ccAmount;
+        #    if (_ccAmount < 0)
+        #    {
+        #        ccAmount = -(ccAmount);
+        #    }
+        #
+        #
+        #    ccAmountStr = num2str(ccAmount,9,2,1,0);
+        #    return ccAmountStr;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCId
+        #CreditCardId parmCCId(CreditCardId _creditCardId = creditcardId)
+        #{
+        #    ;
+        #    creditCardId = _creditCardId;
+        #    return creditCardId;
+        #}
+      ENDSOURCE
+      SOURCE #parmccTrans
+        #CreditCardTrans parmccTrans(CreditCardTrans _ccTrans = ccTrans)
+        #{
+        #    ;
+        #    ccTrans = _ccTrans;
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmccType
+        #CreditCardType parmccType(CreditCardType _type = type)
+        #{
+        #    ;
+        #    type = _type;
+        #    return type;
+        #}
+      ENDSOURCE
+      SOURCE #parmccVoucher
+        #Voucher parmccVoucher(Voucher _voucher = voucher)
+        #{
+        #    ;
+        #    voucher = _voucher;
+        #    return voucher;
+        #}
+      ENDSOURCE
+      SOURCE #parmCID
+        #CreditCardCID parmCID(CreditCardCID _cid = cid)
+        #{
+        #    ;
+        #    cid = _cid;
+        #    return cid;
+        #}
+      ENDSOURCE
+      SOURCE #parmCVD
+        #CreditCardCVDValues parmCVD(CreditCardCVDValues _cvd = cvd)
+        #{
+        #    ;
+        #    cvd = _cvd;
+        #    return cvd;
+        #}
+      ENDSOURCE
+      SOURCE #parmEmtrySource
+        #CreditCardEntrySource parmEmtrySource(CreditCardEntrySource _entrySource = entrySource)
+        #{
+        #    ;
+        #    entrySource = _entrySource;
+        #
+        #    return entrySource;
+        #}
+      ENDSOURCE
+      SOURCE #parmOrigId
+        #CreditCardPNRef parmOrigId(CreditCardPNRef _origID = origId)
+        #{
+        #    ;
+        #    origId = _origId;
+        #
+        #    if (strLen(origId) == 1)
+        #        origId = '';
+        #
+        #    return origId;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmProcessAmt
+        #public Amount parmProcessAmt(Amount     _processAmt = processAmt)
+        #{
+        #    ;
+        #    processAmt = _processAmt;
+        #    return processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #parmQuotationId
+        #str parmQuotationId(smmQuotationId _smmQuotationId = smmQuotationId)
+        #{
+        #    ;
+        #    smmQuotationId = _smmQuotationId;
+        #
+        #    return smmQuotationId;
+        #}
+      ENDSOURCE
+      SOURCE #parmReferenceId
+        #CreditCardReferenceId parmReferenceId(CreditCardReferenceId _referenceId = referenceId)
+        #{
+        #    ;
+        #    referenceId = _referenceId;
+        #    return referenceId;
+        #}
+      ENDSOURCE
+      SOURCE #parmResult
+        #str parmResult(str _result = result)
+        #{
+        #    ;
+        #    result = _result;
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesId
+        #str parmSalesId(SalesId _salesId = salesId)
+        #{
+        #    ;
+        #    salesId = _salesId;
+        #
+        #    return salesId;
+        #}
+      ENDSOURCE
+      SOURCE #parmSwipe
+        #CreditCardSwipe parmSwipe(CreditCardSwipe _swipe = strReplace(swipe,'^',num2char(31)))
+        #{
+        #    ;
+        #    swipe = _swipe;
+        #    return swipe;
+        #}
+      ENDSOURCE
+      SOURCE #parmTerminalTable
+        #CreditCardTerminalTable parmTerminalTable(CreditCardTerminalTable _ccTerminal = ccTerminal)
+        #{
+        #    ;
+        #    ccTerminal = _ccTerminal;
+        #    return ccTerminal;
+        #}
+      ENDSOURCE
+      SOURCE #parmTrxType
+        #CreditCardTrxTypeId parmTrxType(CreditCardTrxTypeId _trxType = trxType)
+        #{
+        #    ;
+        #    trxType = _trxType;
+        #
+        #    return trxType;
+        #}
+      ENDSOURCE
+      SOURCE #parmYearType
+        #CreditCardDateType parmYearType(CreditCardDateType _dateType = ccDateType)
+        #{
+        #    ;
+        #    ccDateType = _dateType;
+        #
+        #    return ccDateType;
+        #}
+      ENDSOURCE
+      SOURCE #parmZipCode
+        #str parmZipCode(AddressZipCodeId _zipCode = zipCode)
+        #{
+        #    ;
+        #    zipCode = _zipCode;
+        #
+        #    return zipCode;
+        #}
+      ENDSOURCE
+      SOURCE #processAdflex
+        #str processAdflex()
+        #{
+        #    ;
+        #    response = CreditCardAdFlexXMLbuilder::construct(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processADN
+        #str processADN()
+        #{
+        #    CreditCardADNBuilder    ccADNBuilder = new CreditCardADNBuilder();
+        #    ;
+        #    response = ccADNBuilder.build(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processADNProfile
+        #str processADNProfile()
+        #{
+        #    CreditCardADNCIMBuilder    ccADNBuilder = new CreditCardADNCIMBuilder();
+        #    str                        msg;
+        #    ;
+        #    msg = ccADNBuilder.buildTransaction(this.parmccTrans());
+        #
+        #    return msg;
+        #}
+      ENDSOURCE
+      SOURCE #processCommidea
+        #str processCommidea()
+        #{
+        #    CreditCardCommideaXMLBuilder    ccCommideaBuilder
+        #        = new CreditCardCommideaXMLBuilder();
+        #    ;
+        #    response = CreditCardCommideaXMLBuilder::construct(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processCybersource
+        #str processCybersource()
+        #{
+        #    CreditCardCybersourceXMLBuilder    ccCybersourceBuilder
+        #        = new CreditCardCybersourceXMLBuilder();
+        #    ;
+        #    response = CreditCardCybersourceXMLBuilder::construct(this.parmccTrans(),this);
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processDPS
+        #str processDPS()
+        #{
+        #    ;
+        #    response = CreditCardDPSXMLBuilder::construct(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processElavon
+        #str processElavon()
+        #{
+        #    CreditCardElavonBuilder    ccElavonBuilder = new CreditCardElavonBuilder();
+        #    ;
+        #    response = ccElavonBuilder.build(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processFirstData
+        #str processFirstData()
+        #{
+        #    ;
+        #    response = CreditCardFirstData::processFirstData(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processHeartland
+        #str processHeartland()
+        #{
+        #    ;
+        #    response = CreditCardHeartlandXMLBuilder::construct(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processMoneris
+        #CreditCardTrans processMoneris()
+        #{
+        #    CreditCardMoneris       ccMoneris = new CreditCardMoneris();
+        #    CreditCardTrans         locCCTrans;
+        #    ;
+        #    locCCTrans = CreditCardMoneris::construct(this.parmccTrans());
+        #
+        #    return locCCTrans;
+        #}
+      ENDSOURCE
+      SOURCE #processOpenEdge
+        #str processOpenEdge()
+        #{
+        #    CreditCardOpenEdgeBuilder    ccOpenEdgeBuilder = new CreditCardOpenEdgeBuilder();
+        #    ;
+        #    response = ccOpenEdgeBuilder.build(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processOrbital
+        #str processOrbital()
+        #{
+        #    ;
+        #    response = CreditCardOrbitalXMLBuilder::construct(this.parmccTrans());
+        #
+        #    return Response;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #processPaymentech
+        #str processPaymentech()
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    COM                     cc;
+        #    COMVariant              var;
+        #    COMVariant              in;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    array                   input       = New array(types::String);
+        #    int                     strLength;
+        #    int                     i;
+        #    array                   output      = New array(types::String);
+        #    str                     peek;
+        #    int                     numpeek;
+        #    Object                  send         = New Object();
+        #    str                     ParmList;
+        #
+        #    str                     errorMsg;
+        #    int                     errorCode;
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantPaymentech
+        #        where ccMerchantPaymentech.TerminalId ==  CreditCardParameters::findParameter().TerminalId;
+        #
+        #    //--> Retrieve Terminal information
+        #    this.parmTerminalTable(CreditCardTerminalTable::find());
+        #
+        #    //<--Check for all required fields
+        #    this.checkMerchantPaymentech();
+        #
+        #    //<--Instatiate COM Object
+        #    cc = New COM('Paymentech.IPOSTransaction');
+        #    var = New COMVariant(COMVariantInOut::In,COMVariantType::VT_SAFEARRAY);
+        #    in = New COMVariant(COMVariantInOut::Out_retVal,COMVariantType::VT_SAFEARRAY);
+        #
+        #    cc.TerminalID(ccTrans.TerminalId);
+        #    cc.MerchantID(ccMerchantPaymentech.MerchantId);
+        #
+        #    cc.TransactionType('1');
+        #    cc.Method('DefaultMethod');
+        #    cc.Username(ccMerchantPaymentech.UserId);
+        #    cc.Password(ccMerchantPaymentech.Pwd);
+        #
+        #
+        #    if (!this.parmccTrans().BatchNumber || this.parmccTrans().BatchLastTrans)
+        #    {
+        #        cc.FirstInBatch('0');
+        #    }
+        #    else
+        #    {
+        #        cc.FirstInBatch('0');
+        #    }
+        #
+        #    //--> A and B Information
+        #    ParmList = this.buildParmListPaymentech();
+        #
+        #    //--> C Thru K
+        #    ParmList += this.buildParmExtraPaymentech();
+        #
+        #    //-->  Begin Converting to Hex
+        #    strLength = strLen(ParmList);
+        #
+        #    for (i=1;i<=strLength;i++)
+        #    {
+        #        peek = subStr(ParmList,i,1);
+        #        numpeek = char2num((subStr(ParmList,i,1)),1);
+        #        output.value(i,int2str(numpeek));
+        #    }
+        #
+        #    var.safeArray(output,COMVariantType::VT_VARIANT);
+        #
+        #    //------------------------------------------------
+        #    //  Try/Catch information to Paymentech
+        #    //------------------------------------------------
+        #
+        #    try
+        #    {
+        #
+        #        send = cc.process(var);
+        #
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        retry;
+        #
+        #    }
+        #
+        #    in = send.data();
+        #
+        #    if (send.errorString() != '')
+        #    {
+        #        errorMsg = send.errorString();
+        #        errorCode = send.errorCode();
+        #        //gatewayError = send.GatewayError();
+        #        //httpError = send.HTTPError();
+        #    }
+        #    else
+        #    {
+        #        input = in.safeArray();
+        #
+        #        for (i=1;i<=input.lastIndex();i++)
+        #        {
+        #            errorMsg += num2char(input.value(i));
+        #        }
+        #    }
+        #
+        #    return errorMsg;
+        #}
+      ENDSOURCE
+      SOURCE #processPayPal
+        #str processPayPal()
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #
+        #    CreditCardTable         ccTable;
+        #    COM                     cc;
+        #    str                     ParmList;
+        #    str                     ExpDate;
+        #    str                     month;
+        #    str                     ccYear;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    str                     tmpParmListCC;
+        #    str                     tmpParmListDate;
+        #    str                     tmpZip;
+        #    CreditCardParameters    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantVerisign
+        #        where ccMerchantVerisign.TerminalId == ccTrans.TerminalId;
+        #
+        #    if (ccParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Specified)
+        #    {
+        #        if (!ccParameters.ProcessCurrencyCode)
+        #        {
+        #            throw error(strFmt("@ACC1835",ccTrans.TerminalId));
+        #        }
+        #
+        #        if (ccParameters.ProcessCurrencyCode != CompanyInfo::standardCurrency())
+        #        {
+        #            if (ccTrans.CurrencyCode != ccParameters.ProcessCurrencyCode)
+        #            {
+        #                throw error(strFmt("@ACC1836",
+        #                    ccTrans.TerminalId,
+        #                    ccParameters.ProcessCurrencyCode,
+        #                    ccTrans.CurrencyCode));
+        #            }
+        #
+        #            this.parmProcessAmt(ccTrans.AmountCur);
+        #        }
+        #        else
+        #        {
+        #            this.parmProcessAmt(ccTrans.AmountMST);
+        #        }
+        #
+        #    }
+        #
+        #
+        #    if (ccTrans.CreditCardType != CreditCardType::PayPal)
+        #    {
+        #        if (ccMerchantVerisign.InterfaceType == CreditCardPayPalInterfaceType::SDK)
+        #        {
+        #            //<--Check for all required fields
+        #            this.checkMerchantPayPal();
+        #            //<--Instatiate COM Object
+        #            //cc = New COM('PFProCOMControl.PFProCOMControl.1');
+        #            cc = New COM('PayPal.Payments.Communication.PayflowNETAPI');
+        #
+        #            //<--Create Context line
+        #            //ccLong = cc.createContext(  ccMerchantVerisign.HostAddress,
+        #            cc.setParameters(  ccMerchantVerisign.HostAddress,
+        #                                        ccMerchantVerisign.HostPort,
+        #                                        ccMerchantVerisign.Timeout ? 30 : ccMerchantVerisign.Timeout,
+        #                                        ccMerchantVerisign.ProxyAddress,
+        #                                        ccMerchantVerisign.ProxyPort,
+        #                                        ccMerchantVerisign.ProxyLogin,
+        #                                        ccMerchantVerisign.ProxyPwd,
+        #                                        '',
+        #                                        '',
+        #                                        '',
+        #                                        '',
+        #                                        true);
+        #
+        #            if (!this.parmReferenceId())
+        #            {
+        #                this.parmReferenceId(cc.GenerateRequestId());
+        #            }
+        #
+        #            //<--Retrieve Basic ParmList
+        #            ParmList = this.BuildParmListPayPal();
+        #
+        #            ParmList += 'TRXTYPE=' + this.parmTrxType() + '&';
+        #            ParmList += 'TENDER=C&';
+        #
+        #            //<--Retrieve CC Information
+        #            select ccTable where ccTable.CreditCardId == creditCardId;
+        #
+        #            if (!ccTable)
+        #            {
+        #                //--> If this is a Capture, Credit or Void, we have to
+        #                //--> Retreive the data to continue
+        #                if ( (this.parmTrxType() == 'C' ||
+        #                    this.parmTrxType() == 'D' ||
+        #                    this.parmTrxType() == 'V') &&
+        #                    this.parmccTrans())
+        #                {
+        #                    if (!this.parmAuthCode()) //<-- If this is a voice auth, the credit card is not encrypted
+        #                    {
+        #                        if (this.parmTrxType() == 'C' && !this.parmOrigId())
+        #                        {
+        #                            tmpParmListCC += this.parmccTrans().CreditCardNumSecure;
+        #                        }
+        #                        else
+        #                        {
+        #                            tmpParmListCC += this.retrieveValue(this.parmccTrans().CreditCardNumSecure);
+        #                        }
+        #                    }
+        #                    else
+        #                    {
+        #                        tmpParmListCC += this.parmccTrans().CreditCardNumSecure;
+        #                    }
+        #
+        #
+        #                    //--> Create date
+        #                    month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #                    if (strlen(month)==1)
+        #                    {
+        #                        month = '0' + month;
+        #                    }
+        #
+        #                    ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #                    if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                    {
+        #                        ccYear = substr(ccYear,3,2);
+        #                    }
+        #
+        #                    ExpDate =  month + ccYear;
+        #                    tmpParmListDate += ExpDate;
+        #                }
+        #                else if (this.parmccTrans().OneTimeTrans == NoYes::Yes)
+        #                {
+        #                    //--> Manual Entry
+        #                    if (!this.parmccTrans().CreditCardNumSecure)
+        #                        throw error("@ACC707");
+        #
+        #                    tmpParmListCC +=  this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #
+        #                    //--> Create date
+        #                    month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #                    if (strlen(month)==1)
+        #                    {
+        #                        month = '0' + month;
+        #                    }
+        #
+        #                    ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #                    if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                    {
+        #                        ccYear = substr(ccYear,3,2);
+        #                    }
+        #
+        #                    ExpDate =  month + ccYear;
+        #                    tmpParmListDate += ExpDate;
+        #
+        #                }
+        #                else
+        #                {
+        #                    throw error(strFmt("@ACC141",creditCardId));
+        #                }
+        #            }
+        #            else
+        #            {
+        #                tmpParmListCC += CreditCardTable::retrieveValue(ccTable);
+        #
+        #                //--> Create date
+        #                month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTable.ExpirationDate));
+        #                if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ExpDate =  month + ccYear;
+        #                tmpParmListDate += ExpDate;
+        #            }
+        #
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList += 'ACCT=' + tmpParmListCC;
+        #            ExpDate =  '&EXPDATE=' + tmpParmListDate;
+        #            ParmList += ExpDate + '&AMT=';
+        #
+        #
+        #            ParmList += strltrim(num2str(this.parmProcessAmt(),9,2,1,0));
+        #
+        #            //<--AVS?
+        #            if (this.parmPostalAddress().ZipCode)
+        #            {
+        #                tmpZip = strReplace(this.parmPostalAddress().Street,' ','');
+        #                ParmList += '&STREET=' + tmpZip;
+        #                ParmList += '&ZIP=' + this.parmPostalAddress().ZipCode;
+        #            }
+        #
+        #            //--> Voice Authorization
+        #            if (this.parmAuthcode() != '')
+        #                ParmList += '&AUTHCODE=' + this.parmAuthcode();
+        #
+        #            //--> CVD
+        #            if (CreditCardParameters::findParameter().CVD == NoYes::Yes && this.parmCID())
+        #                Parmlist += '&CVV2=' + this.parmCID();
+        #
+        #            //Process Transaction
+        #            //Response = cc.SubmitTransaction(ccLong, ParmList, strLen(ParmList));
+        #            response = cc.SubmitTransaction(ParmList,this.parmReferenceId());
+        #        }
+        #        else if (ccMerchantVerisign.InterfaceType == CreditCardPayPalInterfaceType::HTTPS)
+        #        {
+        #            //<--Check for all required fields
+        #            this.checkMerchantPayPal();
+        #            response = this.processPayPalHTTPS();
+        #        }
+        #        else
+        #        {
+        #            response = CreditCardBraintreeXMLBuilder::processBraintree(ccTrans);
+        #        }
+        #    }
+        #
+        #    return Response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #processPayPalHTTPS
+        #str processPayPalHTTPS()
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     ExpDate;
+        #    str                     month;
+        #    str                     ccYear;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    str                     tmpParmListCC;
+        #    str                     tmpParmListDate;
+        #    str                     tmpZip;
+        #    HttpRequest                         request;
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantVerisign
+        #        where ccMerchantVerisign.TerminalId == ccTrans.TerminalId;
+        #    //<--Check for all required fields
+        #    this.checkMerchantPayPal();
+        #
+        #    if (!this.parmReferenceId())
+        #    {
+        #        this.parmReferenceId(guid2str(newGuid()));
+        #    }
+        #
+        #    //<--Retrieve Basic ParmList
+        #    ParmList = this.BuildParmListPayPal();
+        #
+        #    ParmList += 'TRXTYPE=' + this.parmTrxType() + '&';
+        #    ParmList += 'TENDER=C&';
+        #
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( (this.parmTrxType() == 'C' ||
+        #            this.parmTrxType() == 'D' ||
+        #            this.parmTrxType() == 'V') &&
+        #            this.parmccTrans())
+        #        {
+        #            if (!this.parmAuthCode()) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (this.parmTrxType() == 'C' && !this.parmOrigId())
+        #                {
+        #                    tmpParmListCC += this.parmccTrans().CreditCardNumSecure;
+        #                }
+        #                else
+        #                {
+        #                    tmpParmListCC += this.retrieveValue(this.parmccTrans().CreditCardNumSecure);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                tmpParmListCC += this.parmccTrans().CreditCardNumSecure;
+        #            }
+        #
+        #
+        #            //--> Create date
+        #            month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #            if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ExpDate =  month + ccYear;
+        #            tmpParmListDate += ExpDate;
+        #        }
+        #        else if (this.parmccTrans().OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!this.parmccTrans().CreditCardNumSecure)
+        #                throw error("@ACC707");
+        #
+        #            tmpParmListCC +=  this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt);
+        #
+        #            //--> Create date
+        #            month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #            if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ExpDate =  month + ccYear;
+        #            tmpParmListDate += ExpDate;
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #        tmpParmListCC += CreditCardTable::retrieveValue(ccTable);
+        #
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,2);
+        #        }
+        #
+        #        ExpDate =  month + ccYear;
+        #        tmpParmListDate += ExpDate;
+        #    }
+        #
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,2);
+        #    }
+        #
+        #    ParmList += 'ACCT=' + tmpParmListCC;
+        #    ExpDate =  '&EXPDATE=' + tmpParmListDate;
+        #    ParmList += ExpDate + '&AMT=';
+        #
+        #
+        #    ParmList += strltrim(num2str(this.parmccAmount(),9,2,1,0));
+        #
+        #    //<--AVS?
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        tmpZip = strReplace(this.parmPostalAddress().Street,' ','');
+        #        ParmList += '&STREET=' + tmpZip;
+        #        ParmList += '&ZIP=' + this.parmPostalAddress().ZipCode;
+        #    }
+        #    else
+        #    {
+        #        if (ccTRans.AvsAddr && creditCardParameters::findParameter().AVSZipOnly == NoYes::No)
+        #        {
+        #            ParmList += '&STREET=';
+        #            tmpZip = strReplace(this.parmPostalAddress().Street,' ', '');
+        #            ParmList += tmpZip;
+        #        }
+        #
+        #        ParmList += '&ZIP=' + this.parmPostalAddress().ZipCode;
+        #
+        #    }
+        #
+        #
+        #    //--> Voice Authorization
+        #    if (this.parmAuthcode() != '')
+        #        ParmList += '&AUTHCODE=' + this.parmAuthcode();
+        #
+        #
+        #    //--> CVD
+        #    if (CreditCardParameters::findParameter().CVD == NoYes::Yes && this.parmCID())
+        #        Parmlist += '&CVV2=' + this.parmCID();
+        #
+        #    request = new HTTPRequest();
+        #    request.open('POST',ccMerchantVerisign.HostAddress);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.setRequestHeader('Content-Type','namevalue');
+        #    request.setRequestHeader('X-VPS-REQUEST-ID',this.parmReferenceId());
+        #    request.setRequestHeader('X-VPS-CLIENTTIMEOUT',int2str(ccMerchantVerisign.Timeout));
+        #    request.setRequestHeader('X-VPS-VITINTEGRATION-PRODUCT','RedMaple');
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #    return Response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #processPayPalX
+        #str processPayPalX()
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    str                     ParmList;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    HttpRequest                         request;
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantPayPalX
+        #        where ccMerchantPayPalX.TerminalId == ccTrans.TerminalId;
+        #    //<--Check for all required fields
+        #
+        #    if (!this.parmReferenceId())
+        #    {
+        #        this.parmReferenceId(guid2str(newGuid()));
+        #    }
+        #
+        #    //<--Retrieve Basic ParmList
+        #    ParmList = this.BuildParmListPayPalX();
+        #
+        #    ParmList += 'METHOD=DoAuthorization&';
+        #    ParmList += 'AUTHORIZATIONID=' + this.parmOrigId();
+        #    ParmList += '&AMT=';
+        #
+        #    ParmList += strltrim(this.parmCCAmountstr());
+        #
+        #    ParmList += '&COMPLETETYPE=NotComplete';
+        #    ParmList += '&INVNUM=' + this.parmccTrans().CustomerRef;
+        #
+        #
+        #    request = new HTTPRequest();
+        #    request.open('POST',ccMerchantPayPalX.HostAddress);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.setRequestHeader('Content-Type','namevalue');
+        #
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #    return Response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #processRealEx
+        #str processRealEx()
+        #{
+        #    ;
+        #    response = CreditCardRealExXMLBuilder::construct(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processTSYS
+        #str processTSYS()
+        #{
+        #    CreditCardTSYSTransITBuilder    ccTSYSBuilder = new CreditCardTSYSTransITBuilder();
+        #    ;
+        #    response = ccTSYSBuilder.build(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processUDCC
+        #str processUDCC()
+        #{
+        #    CreditCardUDCCBuilder    ccUDCCBuilder = new CreditCardUDCCBuilder();
+        #    ;
+        #    response = ccUDCCBuilder.build(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processWorldPay
+        #str processWorldPay()
+        #{
+        #    ;
+        #    response = CreditCardSecureNetBuilder::processSecureNet(this.parmccTrans());
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue(CreditCardNumEncrypt ccNum)
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccNum,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(this.parmccTrans().OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #retSystemIndicator
+        #str 1 retSystemIndicator()
+        #{
+        #    TempStr                 c;
+        #    ;
+        #    switch (this.parmTerminalTable().SystemIndicator)
+        #    {
+        #        case CreditCardSystemIndicator::HCS  :
+        #            c = 'L';
+        #            break;
+        #        case CreditCardSystemIndicator::del_TCS    :
+        #            c = 'K';
+        #            break;
+        #
+        #    }
+        #
+        #    return c;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #returnAVSMessage
+        #str returnAVSMessage(str 1 msg)
+        #{
+        #    TempStr     ret;
+        #    ;
+        #    switch (msg)
+        #    {
+        #        case '0':
+        #            ret = "@ACC1066";
+        #            break;
+        #        case '1':
+        #            ret = "@ACC1067";
+        #            break;
+        #        case '2':
+        #            ret = "@ACC1068";
+        #            break;
+        #        case '3':
+        #            ret = "@ACC1069";
+        #            break;
+        #        case '4':
+        #            ret = "@ACC1070";
+        #            break;
+        #        case '6':
+        #            ret ="@ACC1071";
+        #            break;
+        #        case '7':
+        #            ret = "@ACC1070";
+        #            break;
+        #        case '8':
+        #            ret = "@ACC1069";
+        #            break;
+        #        case '9':
+        #            ret = "@ACC1070";
+        #            break;
+        #        case 'A':
+        #            ret = "@ACC1069";
+        #            break;
+        #        case 'B':
+        #            ret = "@ACC1072";
+        #            break;
+        #        case 'C':
+        #            ret = "@ACC1073";
+        #            break;
+        #        case 'D':
+        #            ret = "@ACC1074";
+        #            break;
+        #        default :
+        #           ret = "";
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #CreditCardStr run()
+        #{
+        #    CreditCardStr           locResponse;
+        #    ;
+        #    switch (CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId).Processor)
+        #    {
+        #        case CreditCardProcessor::PayPal  :
+        #            locResponse = this.processPayPal();
+        #            break;
+        #        case CreditCardProcessor::Paymentech    :
+        #            locResponse = this.processPaymentech();
+        #            break;
+        #        case CreditCardProcessor::Orbital   :
+        #            locResponse = this.processOrbital();
+        #            break;
+        #        case CreditCardProcessor::AuthorizeNet       :
+        #            if (this.parmccTrans().Profile == NoYes::No)
+        #            {
+        #                locResponse = this.processADN();
+        #            }
+        #            else
+        #            {
+        #                locResponse = this.processADNProfile();
+        #            }
+        #            break;
+        #        case CreditCardProcessor::Cybersource   :
+        #            locResponse = this.processCybersource();
+        #            break;
+        #        case CreditCardProcessor::Moneris       :
+        #            ccTrans = this.processMoneris();
+        #            this.parmccTrans(ccTrans);
+        #            break;
+        #        case CreditCardProcessor::Commidea  :
+        #            locResponse = this.processCommidea();
+        #            break;
+        #        case CreditCardProcessor::PayPalX   :
+        #            locResponse = this.processPayPalX();
+        #            break;
+        #        case CreditCardProcessor::FirstData :
+        #            locResponse = this.processFirstData();
+        #            break;
+        #        case CreditCardProcessor::Heartland :
+        #            locResponse = this.processHeartland();
+        #            break;
+        #        case CreditCardProcessor::DPS       :
+        #            locResponse = this.processDPS();
+        #            break;
+        #        case CreditCardProcessor::AdFlex    :
+        #            locResponse = this.processAdflex();
+        #            break;
+        #        case CreditCardProcessor::Elavon    :
+        #            locResponse = this.processElavon();
+        #            break;
+        #        case CreditCardProcessor::TSYS    :
+        #            locResponse = this.processTSYS();
+        #            break;
+        #        case CreditCardProcessor::UDCC    :
+        #            locResponse = this.processUDCC();
+        #            break;
+        #        case CreditCardProcessor::OpenEdge    :
+        #            locResponse = this.processOpenEdge();
+        #            break;
+        #        case CreditCardProcessor::WorldPay    :
+        #            locResponse = this.processWorldPay();
+        #            break;
+        #    }
+        #
+        #    return locResponse;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #setStrLength
+        #str setStrLength(TempStr                        originalStr,
+        #                 int                            length,
+        #                 CreditCardStringINdicator      ccIndicator)
+        #{
+        #    int         sLen;
+        #    TempStr     tmpParmList;
+        #    ;
+        #    if (length == strLen(originalStr))
+        #    {
+        #        return originalStr;
+        #    }
+        #
+        #    if (ccIndicator == CreditCardSTringIndicator::After)
+        #    {
+        #        for (sLen=0;sLen<=length;sLen++)
+        #        {
+        #            tmpParmList += " ";
+        #            sLen = strLen(tmpParmList);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        for (sLen=0;sLen<=length;sLen++)
+        #        {
+        #            tmpParmList = " " + tmpParmList;
+        #            sLen = strLen(tmpParmList);
+        #        }
+        #    }
+        #
+        #    return tmpParmList;
+        #}
+      ENDSOURCE
+      SOURCE #str2constr
+        #container str2constr(str _value, str 10 _sep = ',')
+        #{
+        #    int length = strlen(_value);
+        #    int i = 1;
+        #    int j = strscan(_value, _sep, 1, length);
+        #    container ret;
+        #    void add2Ret(str _current)
+        #    {
+        #        // v-artemt, 26 Jul 2004, PS#: 1741
+        #        /*if (match('<:d+>', _current))
+        #            ret += str2int(_current);
+        #        else*/
+        #            ret += _current;
+        #    }
+        #;
+        #    while (j)
+        #    {
+        #        add2Ret(substr(_value, i, j-i));
+        #        i = j+1;
+        #        j = strscan(_value, _sep, i, length);
+        #    }
+        #    add2Ret(substr(_value, i, length-i+1));
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #Tender
+        #str Tender()
+        #{
+        #    ;
+        #    return 'C';
+        #}
+      ENDSOURCE
+      SOURCE #toHex2
+        #TempStr toHex2(int v)
+        #{
+        #    TempStr hex  = '0123456789abcdef';
+        #    return subStr(hex, (v / 16)+1, 1) + subStr(hex, (v mod 16)+1, 1);
+        #}
+      ENDSOURCE
+      SOURCE #updateForDemo
+        #void updateForDemo(CreditCardTrans    _ccTrans)
+        #{
+        #    ;
+        #
+        #    result               =   "-999";
+        #    repMsg               =   'Test '+ date2str(SystemDateGet(),-1,-1,-1,-1,-1,-1,DateFlags::None);
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #checkReturn
+        #static boolean checkReturn( CreditCardTrans     ccTrans,
+        #                            TempStr             ret)
+        #{
+        #
+        #    CreditCardTerminalTable                 terminalTable;
+        #    CreditCardParameters                    ccParams;
+        #    boolean                                 approved = false;
+        #    ;
+        #    terminalTable       = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccParams            = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #
+        #    switch (terminalTable.Processor)
+        #    {
+        #        case    CreditCardProcessor::Cybersource    :
+        #            if (ccParams.CybersourceSoftApproval)
+        #            {
+        #                if (ccTrans.Result == '200' || ccTrans.Result == '230' || ccTrans.Result == '0')
+        #                {
+        #                    approved = true;
+        #                }
+        #                else
+        #                {
+        #                    approved = false;
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (ccTrans.Result == '0' || ccTrans.Result == '-999')
+        #                {
+        #                    approved = true;
+        #                }
+        #                else
+        #                {
+        #                    approved = false;
+        #                }
+        #            }
+        #
+        #            break;
+        #        default :
+        #            if (ccTrans.Result == '0' || ccTrans.Result == '-999')
+        #            {
+        #                approved = true;
+        #            }
+        #            break;
+        #
+        #    }
+        #
+        #    ccTrans = CreditCardResponseTable::checkResponseTable(ccTrans);
+        #
+        #    return approved;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #server static CreditCardTrans construct(CreditCardTrans  ccTrans,
+        #                                  CreditCardSwipe ccSwipe = '')
+        #{
+        #    CreditCardTrans     updateCCTrans;
+        #    ;
+        #
+        #    switch (ccTrans.TransType)
+        #    {
+        #        //<-- Sale
+        #        case CreditCardTrxType::S         :
+        #            //<-- Credit Card
+        #            if (ccTrans.CreditCardId)
+        #                updateCCTrans = CreditCardSale::construct(ccTrans, ccSwipe);
+        #            else
+        #                updateCCTrans = CreditCardSale::construct(ccTrans, ccSwipe);
+        #
+        #            break;
+        #        //<-- Credit
+        #        case CreditCardTrxType::C         :
+        #            updateCCTrans = CreditCardCredit::construct(ccTrans,ccSwipe);
+        #            break;
+        #        //<-- Authorization
+        #        case CreditCardTrxType::A         :
+        #            updateCCTrans = CreditCardAuth::construct(ccTrans,ccSwipe);
+        #            break;
+        #        //<-- Delayed Capture
+        #        case CreditCardTrxType::D         :
+        #            updateCCTrans = CreditCardCapture::construct(ccTrans, ccSwipe);
+        #            break;
+        #        //<-- Void
+        #        case CreditCardTrxType::V         :
+        #            updateCCTrans = CreditCardVoid::construct(ccTrans);
+        #            break;
+        #        default:
+        #            throw error(strFmt("@ACC59"));
+        #    }
+        #
+        #    return updateCCTrans;
+        #}
+      ENDSOURCE
+      SOURCE #processCreditCard
+        #[SysEntryPointAttribute]
+        #server static CreditCardTrans processCreditCard(CreditCardTrans   ccTrans,
+        #                                          CreditCardSwipe   ccSwipe = '')
+        #{
+        #    CreditCardTerminalTable     ccTerminal;
+        #    CreditCardTrans             updateCCTrans;
+        #    ;
+        #    //--> Batch or not?
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #
+        #    if (!ccSwipe)
+        #    {
+        #
+        #        switch (ccTerminal.BatchType)
+        #        {
+        #            case CreditCardBatchType::Sales  :
+        #                switch (ccTrans.TransType)
+        #                {
+        #                    case CreditCardTrxType::S   :
+        #                        CreditCardStoreBatch::construct(ccTrans);
+        #                        break;
+        #                    case CreditCardTrxType::D   :
+        #                        CreditCardStoreBatch::construct(ccTrans);
+        #                        break;
+        #                    default :
+        #                        updateCCTrans = CreditCardAdv::construct(ccTrans,ccSwipe);
+        #                        break;
+        #                }
+        #
+        #                break;
+        #            case CreditCardBatchType::All    :
+        #                CreditCardStoreBatch::construct(ccTrans);
+        #                break;
+        #            case CreditCardBatchType::TCS    :
+        #                switch (ccTrans.TransType)
+        #                {
+        #                    case CreditCardTrxType::C   :
+        #                        CreditCardStoreBatch::construct(ccTrans);
+        #                        break;
+        #                    case CreditCardTrxType::D   :
+        #                        CreditCardStoreBatch::construct(ccTrans);
+        #                        break;
+        #                    case CreditCardTrxType::V   :
+        #                        CreditCardStoreBatch::construct(ccTrans);
+        #                    default :
+        #
+        #                        updateCCTrans = CreditCardAdv::construct(ccTrans,ccSwipe);
+        #                        If ( ccTrans.TransType != CreditCardTrxType::A )
+        #                        {
+        #                            if (updateCCTrans.Result == '0')
+        #                            {
+        #                                CreditCardStoreBatch::construct(ccTrans);
+        #                            }
+        #                        }
+        #                        break;
+        #                }
+        #
+        #                break;
+        #            default :
+        #                updateCCTrans = CreditCardAdv::construct(ccTrans,ccSwipe);
+        #                break;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        if (ccTerminal.BatchType == CreditCardBatchType::TCS
+        #            && (ccTrans.TransType != CreditCardTrxType::S
+        #            && ccTrans.TransType != CreditCardTrxType::A ))
+        #        {
+        #            CreditCardStoreBatch::construct(ccTrans);
+        #        }
+        #        else if (ccTerminal.BatchType == CreditCardBatchType::TCS
+        #            && ccTrans.TransType == CreditCardTrxType::S)
+        #        {
+        #            updateCCTrans = CreditCardAdv::construct(ccTrans,ccSwipe);
+        #            if (updateCCTrans.Result == '0')
+        #            {
+        #               CreditCardStoreBatch::construct(ccTrans);
+        #            }
+        #
+        #        }
+        #        else
+        #        {
+        #            updateCCTrans = CreditCardAdv::construct(ccTrans,ccSwipe);
+        #        }
+        #    }
+        #
+        #    return updateCCTrans;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

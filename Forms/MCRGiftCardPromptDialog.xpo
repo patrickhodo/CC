@@ -1,0 +1,942 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #MCRGiftCardPromptDialog
+  PROPERTIES
+    Name                #MCRGiftCardPromptDialog
+    Origin              #{C63703B7-8837-4E4B-93D2-820155CCCC98}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    AmountCur                               availBalance;
+      #    AmountCur                               paymAmount;
+      #    MCRCreateFreeTextInvoiceGiftCard        freeTextInvoiceGC;
+      #    MCRCustPaymTable                        custPaymTable;
+      #    CustInvoiceTable                        custInvoiceTable;
+      #    AmountCur                               amountToAdd;
+      #    RetailGiftCardTable                     retailGiftCardTable;
+      #    CustAccount                             custAccount;
+      #    RetailGiftCardId                        retailGiftCardId;
+      #    boolean                                 mcrGiftCardPoliciesEnabled;
+      #}
+    ENDSOURCE
+    SOURCE #addToBalanceUpdateRemaining
+      #void addToBalanceUpdateRemaining()
+      #{
+      #    AmountCur   amountAdded;
+      #    // set these new values in the controls
+      #    amountAdded = MCRGiftCard::availableBalance(retailGiftCardTable.EntryId) + addAmount.realValue();
+      #
+      #    newBalance.realValue(amountAdded);
+      #}
+    ENDSOURCE
+    SOURCE #checkAllowPaymentByPolicies
+      #private boolean checkAllowPaymentByPolicies()
+      #{
+      #    boolean enabled = true;
+      #
+      #    if (!mcrGiftCardPoliciesEnabled)
+      #    {
+      #        return true;
+      #    }
+      #
+      #    if (!addAmount.realValue())
+      #    {
+      #        enabled = false;
+      #    }
+      #
+      #    if (enabled && retailGiftCardTable)
+      #    {
+      #        enabled = retailGiftCardTable.checkPolicy(RetailGiftCardOperation::AddTo, addAmount.realValue());
+      #    }
+      #
+      #    return enabled;
+      #}
+    ENDSOURCE
+    SOURCE #clearFormValues
+      #/// <summary>
+      #///     Clears the form values when a serial number is deemed invalid.
+      #/// </summary>
+      #void clearFormValues()
+      #{
+      #    giftCertAvailableBalance.realValue(0.0);
+      #    newBalance.realValue(0.0);
+      #    customerAccount.text("");
+      #    customerAddress.text("");
+      #    customerName.text("");
+      #}
+    ENDSOURCE
+    SOURCE #deleteCustInvoice
+      #void deleteCustInvoice()
+      #{
+      #    ttsbegin;
+      #    custInvoiceTable.delete();
+      #    custInvoiceTable.clear();
+      #    if (custPaymTable && custPaymTable.Status == MCRCustPaymStatus::NotSubmitted)
+      #    {
+      #        custPaymTable.delete();
+      #    }
+      #    ttscommit;
+      #}
+    ENDSOURCE
+    SOURCE #getGiftCertAvailableBalance
+      #public display AmountCur getGiftCertAvailableBalance()
+      #{
+      #    return availBalance;
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    Args                args;
+      #
+      #    args = this.args();
+      #    availBalance = 0;
+      #    paymAmount = 0;
+      #
+      #    super();
+      #
+      #    // If this form is being called from the work bench then
+      #    // retrieve the record using the passed in serial number.
+      #    if (args.record() && args.record().TableId == tableNum(RetailGiftCardTable))
+      #    {
+      #        retailGiftCardTable = args.record();
+      #        if (retailGiftCardTable.mcrGiftCardType != MCRGiftCardType::Physical)
+      #        {
+      #            throw error(strFmt("@MCR10663", element.name()));
+      #        }
+      #    }
+      #
+      #    mcrGiftCardPoliciesEnabled = RetailParameters::find().UseGiftCardPolicies;
+      #
+      #    GiftCardPolicy.visible(mcrGiftCardPoliciesEnabled);
+      #
+      #    if (args.record())
+      #    {
+      #        element.initFormValues(true);
+      #        element.initPolicyDescription();
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #initFormValues
+      #/// <summary>
+      #///     Initializes the form with values once the gift card serial number
+      #///     has been validated.
+      #/// </summary>
+      #/// <param name="called">
+      #///     A boolean value indicating if the gift card record is being passed in.
+      #/// </param>
+      #void initFormValues(boolean called = false)
+      #{
+      #    RetailGiftCardId    retailGiftCardIdLocal;
+      #    CustInvoiceAccount  invoiceAccount;
+      #
+      #    if (retailGiftCardTable)
+      #    {
+      #        invoiceAccount = MCRGiftCard::invoiceAccount(retailGiftCardTable.EntryId);
+      #        if (called == true)
+      #        {
+      #            // If the gift card record is being passed in then set the
+      #            // serial number to the masked value of the passed in value
+      #            // and disable the control.
+      #            retailGiftCardIdLocal = retailGiftCardTable.EntryId;
+      #            serialNum.text(MCRGiftCard::maskCardNum(retailGiftCardTable.EntryId));
+      #            serialNum.enabled(false);
+      #        }
+      #        else
+      #        {
+      #            serialNum.text(MCRGiftCard::maskCardNum(retailGiftCardTable.EntryId));
+      #        }
+      #        giftCertAvailableBalance.realValue(MCRGiftCard::availableBalance(retailGiftCardTable.EntryId));
+      #        newBalance.realValue(giftCertAvailableBalance.realValue());
+      #        currencyCode.text(retailGiftCardTable.CurrencyCode);
+      #        customerAccount.text(invoiceAccount);
+      #        element.setCustomerInformation(invoiceAccount);
+      #        element.initPolicyDescription();
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #initPolicyDescription
+      #/// <summary>
+      #/// Initializes the form with description of Gift card policy
+      #/// </summary>
+      #private void initPolicyDescription()
+      #{
+      #    if (mcrGiftCardPoliciesEnabled)
+      #    {
+      #        if (retailGiftCardTable.company() == curext())
+      #        {
+      #            GiftCardPolicy.text(retailGiftCardTable.policyDescription());
+      #        }
+      #        else
+      #        {
+      #            changeCompany(retailGiftCardTable.company())
+      #            {
+      #                GiftCardPolicy.text(retailGiftCardTable.policyDescription());
+      #            }
+      #        }
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #processPaymentsOnCancel
+      #void processPaymentsOnCancel()
+      #{
+      #    element.deleteCustInvoice();
+      #}
+    ENDSOURCE
+    SOURCE #processPaymentsonOK
+      #void processPaymentsonOK()
+      #{
+      #    MCRCustPaymTotals    custPaymTotals;
+      #    boolean              processPayments;
+      #    RetailGiftCardTransactions retailGiftCardTransactions;
+      #
+      #    //<GEERU>
+      #    RetailGiftCardPost_RU   retailGiftCardPost_RU;
+      #    boolean                 processGiftCardsAsPrepayments_RU = RetailParameters::find().ProcessGiftCardsAsPrepayments_RU;
+      #    DimensionDefault        customerDimension;
+      #    DimensionDefault        channelDimension;
+      #    MCRCustPaymTable        mcrCustPaymTable;
+      #    LedgerJournalTable      ledgerJournalTable;
+      #    //</GEERU>
+      #
+      #    try
+      #    {
+      #        ttsbegin;
+      #        custPaymTotals = MCRCustPaymTotals::construct(custInvoiceTable.TableId, custInvoiceTable.RecId);
+      #
+      #        if (custPaymTotals)
+      #        {
+      #            processPayments = custPaymTotals.processPayments(MCRProcessPaymAction::PostAll);
+      #        }
+      #
+      #        if (processPayments)
+      #        {
+      #            element.setCustomerInformation(custAccount);
+      #
+      #            // If the payments are in order , then add the amount to the gift card
+      #            // If there is an error in the payment record then delete the invoice lines
+      #            // that were created.
+      #            // if payments have been validated and posted
+      #            // update the gift card remaining amount and the original amount
+      #            changecompany(retailGiftCardTable.company())
+      #            {
+      #
+      #                retailGiftCardTransactions.selectForUpdate(true);
+      #                retailGiftCardTransactions.CardNumber = retailGiftCardTable.EntryId;
+      #                retailGiftCardTransactions.Operation = RetailGiftCardOperation::AddTo;
+      #                retailGiftCardTransactions.TransDate = DateTimeUtil::date(DateTimeUtil::applyTimeZoneOffset(DateTimeUtil::getSystemDateTime(), DateTimeUtil::getClientMachineTimeZone()));
+      #                retailGiftCardTransactions.TransTime = DateTimeUtil::time(DateTimeUtil::applyTimeZoneOffset(DateTimeUtil::getSystemDateTime(), DateTimeUtil::getClientMachineTimeZone()));
+      #                retailGiftCardTransactions.Amount = amountToAdd;
+      #                retailGiftCardTransactions.mcrInvoiceAccount = custAccount;
+      #                retailGiftCardTransactions.Channel = MCRCustPaymTable::findByRefRecIDRefTableID(custInvoiceTable.RecId, custInvoiceTable.TableId).Channel;
+      #                if (retailGiftCardTransactions.validateWrite())
+      #                {
+      #                    retailGiftCardTransactions.insert();
+      #                }
+      #                else
+      #                {
+      #                    throw error("@SYS104318");
+      #                }
+      #
+      #                //<GEERU>
+      #                if (!processGiftCardsAsPrepayments_RU)
+      #                {
+      #                //</GEERU>
+      #                    // post the free text
+      #                    freeTextInvoiceGC.postFreeTextInvoice();
+      #                //<GEERU>
+      #                }
+      #                //</GEERU>
+      #
+      #                //--> Credit Card Gift Card Begin
+      #                CreditCardStoredValueProcess::addGiftCard(retailGiftCardTable,retailGiftCardTransactions);
+      #                //<-- Credit Card Gift Card End
+      #            }
+      #
+      #            //<GEERU>
+      #            if (processGiftCardsAsPrepayments_RU)
+      #            {
+      #                customerDimension = CustTable::find(retailGiftCardTransactions.mcrInvoiceAccount).DefaultDimension;
+      #                channelDimension = RetailMCRChannelTable::findRecId(retailGiftCardTransactions.Channel).DefaultDimension;
+      #
+      #                retailGiftCardPost_RU = RetailGiftCardPost_RU::construct();
+      #
+      #                retailGiftCardPost_RU.createGiftCardJournalLines(
+      #                    retailGiftCardTransactions.CardNumber,
+      #                    retailGiftCardTransactions.mcrInvoiceAccount,
+      #                    retailGiftCardTransactions.TransDate,
+      #                    retailGiftCardTable.currencyCode,
+      #                    retailGiftCardTransactions.Amount,
+      #                    DimensionDefaultingService::serviceMergeDefaultDimensions(customerDimension, channelDimension)
+      #                );
+      #
+      #                retailGiftCardPost_RU.post();
+      #
+      #                if (custInvoiceTable.RecId)
+      #                {
+      #                    ledgerJournalTable = retailGiftCardPost_RU.giftCardJournal();
+      #
+      #                    // Update payment references and delete free text invoice
+      #                    update_recordSet mcrCustPaymTable
+      #                        setting RefTableId = ledgerJournalTable.TableId,
+      #                                RefRecId   = ledgerJournalTable.RecId
+      #                        where mcrCustPaymTable.RefTableId == custInvoiceTable.TableId
+      #                           && mcrCustPaymTable.RefRecId == custInvoiceTable.RecId;
+      #
+      #                    custInvoiceTable.delete();
+      #                }
+      #            }
+      #            //</GEERU>
+      #        }
+      #        else
+      #        {
+      #            throw error("@MCR10915");
+      #        }
+      #        ttsCommit;
+      #    }
+      #    catch(Exception::Error)
+      #    {
+      #        ttsAbort;
+      #
+      #        // need to delete the custinvoicetable record and the
+      #        // line that was created
+      #        custInvoiceTable.delete();
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #promptForPayments
+      #/// <summary>
+      #///     Displays the prompt for payment form with the appropriate values.
+      #/// </summary>
+      #void promptForPayments()
+      #{
+      #    Args                            custPaymTableArgs;
+      #    FormRun                         custPaymTableFormRun;
+      #    CustInvoiceLine                 custInvoiceLine;
+      #
+      #    // Check to ensure that there is a customer account
+      #    amountToAdd = addAmount.realValue();
+      #    if (custAccount == "")
+      #    {
+      #        if (customerAccount.valueStr() == "")
+      #        {
+      #            throw error("@MCR35027");
+      #        }
+      #        else
+      #        {
+      #            custAccount = customerAccount.valueStr();
+      #        }
+      #    }
+      #    if (amountToAdd == 0)
+      #    {
+      #        throw error("@MCR35028");
+      #    }
+      #
+      #    if (! this.checkAllowPaymentByPolicies())
+      #    {
+      #        return;
+      #    }
+      #
+      #    ttsBegin;
+      #    // Delete the existing CustInvoiceTable and payments if the custAccount is changed.
+      #    if (custInvoiceTable.RecId != 0 && custInvoiceTable.custTable_InvoiceAccount().AccountNum != custAccount)
+      #    {
+      #        element.deleteCustInvoice();
+      #    }
+      #
+      #    // Before creating the payment record, create the free text invoice if not existed yet
+      #    if (custInvoiceTable.RecId == 0)
+      #    {
+      #        freeTextInvoiceGC = MCRCreateFreeTextInvoiceGiftCard::construct(retailGiftCardTable.RecId, amountToAdd, custAccount);
+      #        freeTextInvoiceGC.createFreeTextInvoiceGiftCard();
+      #        custInvoiceTable = freeTextInvoiceGC.getCustInvoiceTableRecord();
+      #    }
+      #
+      #    // Update amount if changed
+      #    select forUpdate firstOnly AmountCur from custInvoiceLine
+      #        where custInvoiceLine.ParentRecId == custInvoiceTable.RecId;
+      #    if (custInvoiceLine.AmountCur != amountToAdd)
+      #    {
+      #        custInvoiceLine.AmountCur = amountToAdd;
+      #        custInvoiceLine.doUpdate();
+      #    }
+      #    ttsCommit;
+      #
+      #    custPaymTableArgs = new Args();
+      #    custPaymTableArgs.name(formStr(MCRCustPaymTable));
+      #    custPaymTableArgs.record(custInvoiceTable);
+      #    custPaymTableArgs.parm(customerAccount.valueStr());
+      #    custPaymTableFormRun = classfactory.formRunClass(custPaymTableArgs);
+      #    custPaymTableFormRun.run();
+      #    custPaymTableFormRun.wait();
+      #}
+    ENDSOURCE
+    SOURCE #setCustomerInformation
+      #void setCustomerInformation(AccountNum _custAccount)
+      #{
+      #    CustTable custTable;
+      #    custTable = CustTable::find(_custAccount);
+      #    customerName.text(custTable.name());
+      #    customerAddress.text(custTable.address());
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@MCR34105
+      Frame               #Dialog
+      WindowType          #Popup
+      HideToolbar         #Yes
+      BackgroundColor     #Window background
+      Style               #Dialog
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #CopyOfButtonGroup
+          Left                #Auto (right)
+          ElementPosition     #1073741822
+          HierarchyParent     #DialogCommit
+          Style               #DialogCommitContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Customer
+          ElementPosition     #1879048185
+          HierarchyParent     #GitCardGroup
+          FrameType           #None
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DialogCommit
+          ElementPosition     #1431655764
+          Style               #DialogCommit
+          AlignChild          #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DialogContent
+          ElementPosition     #715827882
+          Style               #DialogContent
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Footnote
+          Visible             #No
+          ElementPosition     #1610612734
+          HierarchyParent     #DialogCommit
+          FrameType           #Edged 3D Line
+          Style               #MarginlessContainer
+          TopMargin           #10
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GitCardGroup
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741822
+          HierarchyParent     #Group
+          FrameType           #None
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Group
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612734
+          HierarchyParent     #DialogContent
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PolicyGroup
+          Height              #Column height
+          ElementPosition     #1610612733
+          HierarchyParent     #Group
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #Payments
+          HelpText            #@MCR35030
+          ElementPosition     #2013265915
+          HierarchyParent     #GitCardGroup
+          Text                #@SYS58091
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #    element.promptForPayments();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #CancelButton
+          ElementPosition     #1610612733
+          HierarchyParent     #CopyOfButtonGroup
+          Command             #264
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #    element.processPaymentsOnCancel();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #OKButton
+          ElementPosition     #1073741822
+          HierarchyParent     #CopyOfButtonGroup
+          DefaultButton       #Yes
+          Command             #263
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    if (!MCRCustPaymTotals::construct(custInvoiceTable.TableId, custInvoiceTable.RecId))
+            #    {
+            #        checkFailed("@MCR10915");
+            #    }
+            #    else
+            #    {
+            #        super();
+            #        element.processPaymentsonOK();
+            #    }
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #AddAmount
+          AutoDeclaration     #Yes
+          HelpText            #@MCR35029
+          ElementPosition     #1342177275
+          HierarchyParent     #GitCardGroup
+          Label               #@MCR34101
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    boolean ret;
+            #
+            #    ret = super();
+            #    element.addToBalanceUpdateRemaining();
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #GiftCertAvailableBalance
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          HelpText            #@MCR34103
+          ElementPosition     #1073741820
+          HierarchyParent     #GitCardGroup
+          Label               #@SYS96103
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #NewBalance
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          ElementPosition     #1610612730
+          HierarchyParent     #GitCardGroup
+          Label               #@SYS79460
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #MainInstruction
+          ElementPosition     #1073741822
+          HierarchyParent     #DialogContent
+          Text                #@MCR34105
+          ForegroundColor     #Scroll bar
+          FontSize            #13
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CurrencyCode
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          ElementPosition     #805306365
+          HierarchyParent     #GitCardGroup
+          ExtendedDataType    
+            ARRAY 
+              #CurrencyCode
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustomerAccount
+          AutoDeclaration     #Yes
+          HelpText            #@MCR34118
+          ElementPosition     #858993458
+          HierarchyParent     #Customer
+          Label               #@SYS24704
+          ExtendedDataType    
+            ARRAY 
+              #AccountNum
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #lookup
+            #public void lookup()
+            #{
+            #    CustTable::lookupCustomer(this);
+            #    // Removed super
+            #}
+          ENDSOURCE
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    boolean ret;
+            #    super();
+            #    if (customerAccount.valueStr() != "")
+            #    {
+            #        custAccount = customerAccount.valueStr();
+            #        element.setCustomerInformation(custAccount);
+            #    }
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustomerAddress
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          ElementPosition     #1717986916
+          HierarchyParent     #Customer
+          ExtendedDataType    
+            ARRAY 
+              #Addressing
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustomerName
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          ElementPosition     #1288490187
+          HierarchyParent     #Customer
+          ExtendedDataType    
+            ARRAY 
+              #CustName
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #GiftCardPolicy
+          AutoDeclaration     #Yes
+          Visible             #No
+          AllowEdit           #No
+          ElementPosition     #1431655764
+          HierarchyParent     #PolicyGroup
+          MultiLine           #Yes
+          ExtendedDataType    
+            ARRAY 
+              #RetailGiftCardPolicies
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SerialNum
+          AutoDeclaration     #Yes
+          HelpText            #@MCR40287
+          ElementPosition     #536870910
+          HierarchyParent     #GitCardGroup
+          Label               #@RET4429
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #leave
+            #public boolean leave()
+            #{
+            #    boolean                     ret;
+            #
+            #    ret = super();
+            #
+            #    // Validates the entered decrypted serial number and retrieve the appropriate record.
+            #    // Initialize the form values and if the serial number is invalid throw an error and
+            #    // clear the form values.
+            #    element.delAutoCompleteString(this);
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    boolean             ret;
+            #    str                 giftCardCompany;
+            #    container           conCompanies;
+            #    str                 giftCardAddCompany;
+            #
+            #    ret = super();
+            #
+            #    retailGiftCardId = serialNum.text();
+            #
+            #    if (retailGiftCardId != "")
+            #    {
+            #        retailGiftCardTable = RetailGiftCardTable::find(retailGiftCardId);
+            #        if (retailGiftCardTable.RecId != 0)
+            #        {
+            #            serialNum.text(MCRGiftCard::maskCardNum(retailGiftCardId));
+            #            element.initFormValues();
+            #        }
+            #        else
+            #        {
+            #            // If cross company is setup add to gift card in the GiftCardCompany
+            #            giftCardCompany = RetailParameters::find().GiftCardCompany;
+            #            if (giftCardCompany != curext())
+            #            {
+            #                conCompanies = [giftCardCompany];
+            #                retailGiftCardTable = RetailGiftCardTable::findCrossCompany(retailGiftCardId, conCompanies);
+            #                giftCardAddCompany = conPeek(conCompanies, 1);
+            #                if (retailGiftCardTable)
+            #                {
+            #                    serialNum.text(MCRGiftCard::maskCardNum(retailGiftCardId));
+            #                    element.initFormValues();
+            #                }
+            #                else
+            #                {
+            #                    element.clearFormValues();
+            #                    throw error("@MCR34385");
+            #                }
+            #            }
+            #            else
+            #            {
+            #                element.clearFormValues();
+            #                throw error("@MCR34385");
+            #            }
+            #        }
+            #    }
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

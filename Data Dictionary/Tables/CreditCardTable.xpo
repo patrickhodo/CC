@@ -1,0 +1,1814 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardTable
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardTable
+      Label               #@ACC12
+      FormRef             #CreditCardTable
+      TitleField1         #CreditCardId
+      TitleField2         #Name
+      TableContents       #Base data
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      TableGroup          #Main
+      PrimaryIndex        #CCIdx
+      ClusterIndex        #CCIdx
+      ModifiedDateTime    #Yes
+      ModifiedBy          #Yes
+      CreatedDateTime     #Yes
+      CreatedBy           #Yes
+      DeveloperDocumentation  #@ACC1428
+      Origin              #{87634B1C-AFEE-4AB1-B622-B57B1112772D}
+      LegacyId            #20012
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #BusRelAccount
+        STRING
+        PROPERTIES
+          Name                #BusRelAccount
+          Table               #CreditCardTable
+          Origin              #{BC22C825-1851-4195-A50A-C0C60229063E}
+          LegacyId            #20017
+          ExtendedDataType    #smmBusRelAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CorporateCard
+        ENUM
+        PROPERTIES
+          Name                #CorporateCard
+          Label               #@SYS130181
+          HelpText            #@ACC1776
+          Table               #CreditCardTable
+          Origin              #{A3C46416-58E1-40B9-B64B-E24D794221F7}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #CPCValue
+        STRING
+        PROPERTIES
+          Name                #CPCValue
+          Label               #@SYS41043
+          HelpText            #@ACC1779
+          Table               #CreditCardTable
+          Origin              #{DC17FAC2-5D36-44D3-919C-7CC6D66CC8EA}
+          ExtendedDataType    #String30
+          StringSize          #30
+        ENDPROPERTIES
+        
+      FIELD #CreditCardId
+        STRING
+        PROPERTIES
+          Name                #CreditCardId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardTable
+          Origin              #{79379121-D191-4779-B934-0637F774C943}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardNum
+        STRING
+        PROPERTIES
+          Name                #CreditCardNum
+          Label               #@SYS112023
+          AllowEdit           #No
+          Table               #CreditCardTable
+          Origin              #{1F7C70CB-9699-49F6-AF93-DCAAC2F45E02}
+          LegacyId            #20002
+          ExtendedDataType    #CreditCardNumEncrypt
+          StringSize          #100
+        ENDPROPERTIES
+        
+      FIELD #CreditCardNumSecure
+        STRING
+        PROPERTIES
+          Name                #CreditCardNumSecure
+          Label               #@ACC227
+          Table               #CreditCardTable
+          Origin              #{F1996C6A-E534-4E6C-9A31-86ADB8685DA6}
+          LegacyId            #20018
+          ExtendedDataType    #CreditCardNum
+          StringSize          #22
+        ENDPROPERTIES
+        
+      FIELD #CreditCardType
+        ENUM
+        PROPERTIES
+          Name                #CreditCardType
+          AllowEdit           #No
+          Table               #CreditCardTable
+          Origin              #{341257D9-AD73-4503-A769-14611FC0B687}
+          LegacyId            #20005
+          EnumType            #CreditCardType
+        ENDPROPERTIES
+        
+      FIELD #CustAccount
+        STRING
+        PROPERTIES
+          Name                #CustAccount
+          Table               #CreditCardTable
+          Origin              #{DA8EC563-718C-43A0-A8E6-19050B3D2EFF}
+          LegacyId            #20003
+          ExtendedDataType    #CustAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #del_Address
+        STRING
+        PROPERTIES
+          Name                #del_Address
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #CreditCardTable
+          Origin              #{1C7A8091-5F99-43EF-BB90-E03217C67F30}
+          LegacyId            #20007
+          ExtendedDataType    #Addressing
+          StringSize          #250
+        ENDPROPERTIES
+        
+      FIELD #del_City
+        STRING
+        PROPERTIES
+          Name                #del_City
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #CreditCardTable
+          Origin              #{D22C5FD6-654E-4547-BD3B-F75D37AA919A}
+          LegacyId            #20016
+          ExtendedDataType    #AddressCity
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #Del_Country
+        STRING
+        PROPERTIES
+          Name                #Del_Country
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #CreditCardTable
+          Origin              #{55F76885-EA91-4123-B21C-D0C64B61F8AC}
+          LegacyId            #20010
+          ExtendedDataType    #AddressCountryRegionId
+        ENDPROPERTIES
+        
+      FIELD #del_County
+        STRING
+        PROPERTIES
+          Name                #del_County
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #CreditCardTable
+          Origin              #{F1FBA33D-2F65-4A75-819F-0058B506C375}
+          LegacyId            #20020
+          ExtendedDataType    #AddressCountyId
+        ENDPROPERTIES
+        
+      FIELD #del_State
+        STRING
+        PROPERTIES
+          Name                #del_State
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #CreditCardTable
+          Origin              #{6EF76DDF-C34F-4630-B0AE-1B6CEFDFC3B6}
+          LegacyId            #20009
+          ExtendedDataType    #AddressStateId
+        ENDPROPERTIES
+        
+      FIELD #del_Street
+        STRING
+        PROPERTIES
+          Name                #del_Street
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #CreditCardTable
+          Origin              #{42F0790A-F6B0-4CDE-9EE3-E6A3F1819DB6}
+          LegacyId            #20006
+          ExtendedDataType    #AddressStreet
+          StringSize          #250
+        ENDPROPERTIES
+        
+      FIELD #del_ZipCode
+        STRING
+        PROPERTIES
+          Name                #del_ZipCode
+          ConfigurationKey    #SysDeletedObjects60
+          Table               #CreditCardTable
+          Origin              #{43293E65-BA5B-4C34-8B70-697293DA4BA6}
+          LegacyId            #20008
+          ExtendedDataType    #AddressZipCodeId
+        ENDPROPERTIES
+        
+      FIELD #Email
+        STRING
+        PROPERTIES
+          Name                #Email
+          Table               #CreditCardTable
+          Origin              #{7C9E1787-A791-4A3C-9B69-D469B6D84979}
+          LegacyId            #20012
+          ExtendedDataType    #Email
+          StringSize          #80
+        ENDPROPERTIES
+        
+      FIELD #ExpirationDate
+        DATE
+        PROPERTIES
+          Name                #ExpirationDate
+          Table               #CreditCardTable
+          Origin              #{859DE50B-339E-4440-8751-92B204DF00EB}
+          LegacyId            #20013
+          ExtendedDataType    #CreditCardExpirationDate
+        ENDPROPERTIES
+        
+      FIELD #Inactive
+        ENUM
+        PROPERTIES
+          Name                #Inactive
+          Label               #@SYS77615
+          HelpText            #@ACC163
+          Table               #CreditCardTable
+          Origin              #{FED37B0D-8501-47BE-A588-BCC269B09F19}
+          LegacyId            #20019
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Location
+        INT64
+        PROPERTIES
+          Name                #Location
+          Table               #CreditCardTable
+          Origin              #{178F839E-032A-4B9A-9E11-6D64A4A6CBF8}
+          ExtendedDataType    #LogisticsLocationRecId
+        ENDPROPERTIES
+        
+      FIELD #LogisticsLocationId
+        STRING
+        PROPERTIES
+          Name                #LogisticsLocationId
+          Table               #CreditCardTable
+          Origin              #{173EEC13-4F8F-4075-947E-B1354EF3F22A}
+          ExtendedDataType    #LogisticsLocationId
+          StringSize          #30
+        ENDPROPERTIES
+        
+      FIELD #Name
+        STRING
+        PROPERTIES
+          Name                #Name
+          Table               #CreditCardTable
+          Origin              #{A785D54D-EEA5-46CB-A0BC-656CC39262BC}
+          LegacyId            #20004
+          ExtendedDataType    #Name
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #NameOnCard
+        STRING
+        PROPERTIES
+          Name                #NameOnCard
+          Label               #@ACC14
+          HelpText            #@ACC15
+          Table               #CreditCardTable
+          Origin              #{08E9B502-BFB9-4B66-A03C-A5F4AD961763}
+          LegacyId            #20015
+          ExtendedDataType    #Name
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #OneTimeRefRecId
+        INT64
+        PROPERTIES
+          Name                #OneTimeRefRecId
+          Table               #CreditCardTable
+          Origin              #{F137C484-70C0-4872-A868-3651F05058F0}
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #OneTimeRefTableId
+        INT
+        PROPERTIES
+          Name                #OneTimeRefTableId
+          Table               #CreditCardTable
+          Origin              #{55F42EAA-1233-40AA-BF8C-779B05ECC7CE}
+          ExtendedDataType    #RefTableId
+        ENDPROPERTIES
+        
+      FIELD #PaymentProfileId
+        STRING
+        PROPERTIES
+          Name                #PaymentProfileId
+          Label               #@SYS301616
+          Table               #CreditCardTable
+          Origin              #{37CB0DFE-412C-475E-BDD2-33D0DC21CE46}
+          LegacyId            #20028
+          ExtendedDataType    #CreditCardProfileId
+          StringSize          #40
+        ENDPROPERTIES
+        
+      FIELD #Phone
+        STRING
+        PROPERTIES
+          Name                #Phone
+          Table               #CreditCardTable
+          Origin              #{2890224B-15CC-4793-964B-6855976E07AC}
+          LegacyId            #20011
+          ExtendedDataType    #Phone
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #PrimaryCard
+        ENUM
+        PROPERTIES
+          Name                #PrimaryCard
+          Label               #@SYS80168
+          HelpText            #@ACC1369
+          Table               #CreditCardTable
+          Origin              #{446FA1B4-152B-49E6-888A-9E576785FA98}
+          LegacyId            #20027
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Profile
+        ENUM
+        PROPERTIES
+          Name                #Profile
+          Label               #@SYS40276
+          HelpText            #@ACC1320
+          Table               #CreditCardTable
+          Origin              #{9740AA55-FCB8-4FC4-AC48-2538F811575A}
+          LegacyId            #20025
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #ProfileId
+        STRING
+        PROPERTIES
+          Name                #ProfileId
+          Table               #CreditCardTable
+          Origin              #{C712D7E6-00AB-4BD8-9823-A1563F4A2823}
+          LegacyId            #20026
+          ExtendedDataType    #CreditCardProfileId
+          StringSize          #40
+        ENDPROPERTIES
+        
+      FIELD #ProfileTerminalId
+        STRING
+        PROPERTIES
+          Name                #ProfileTerminalId
+          AllowEditOnCreate   #No
+          Table               #CreditCardTable
+          Origin              #{CF28EB4B-F9E0-459F-982B-3087C67375D2}
+          LegacyId            #20014
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #SalesId
+        STRING
+        PROPERTIES
+          Name                #SalesId
+          Table               #CreditCardTable
+          Origin              #{1A344BCA-7722-4BC6-94AA-EC1AF8269249}
+          ExtendedDataType    #SalesId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #SoloIssueNum
+        STRING
+        PROPERTIES
+          Name                #SoloIssueNum
+          Table               #CreditCardTable
+          Origin              #{167ACDB7-3986-441D-87EF-9354EC8AF13B}
+          LegacyId            #20022
+          ExtendedDataType    #CreditCardSoloIssueNum
+          StringSize          #2
+        ENDPROPERTIES
+        
+      FIELD #SoloStartDate
+        DATE
+        PROPERTIES
+          Name                #SoloStartDate
+          Table               #CreditCardTable
+          Origin              #{13752EB4-5C8A-4A8B-9421-928D3FCA6222}
+          LegacyId            #20021
+          ExtendedDataType    #CreditCardSoloStartDate
+        ENDPROPERTIES
+        
+      FIELD #svActivated
+        ENUM
+        PROPERTIES
+          Name                #svActivated
+          Label               #@SYS50263
+          HelpText            #@ACC1740
+          Table               #CreditCardTable
+          Origin              #{668C5410-B348-4958-942D-C6F42698CA80}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #UsePostalAddress
+        ENUM
+        PROPERTIES
+          Name                #UsePostalAddress
+          Label               #@ACC1718
+          HelpText            #@ACC1717
+          Table               #CreditCardTable
+          Origin              #{398DC2D7-AE9B-4352-BA43-A9D9034DD30D}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+          #Name
+          #CreditCardType
+          #CreditCardNumSecure
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+          #Name
+          #CreditCardType
+          #CreditCardNumSecure
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Address
+        PROPERTIES
+          Name                #Address
+          Label               #@SYS22223
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UsePostalAddress
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Cardholder
+        PROPERTIES
+          Name                #Cardholder
+          Label               #@ACC28
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CustAccount
+          #BusRelAccount
+          #SalesId
+          #Phone
+          #Email
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #CVD
+        PROPERTIES
+          Name                #CVD
+          Label               #@ACC632
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Hidden
+        PROPERTIES
+          Name                #Hidden
+          Label               #@SYS54478
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Location
+          #LogisticsLocationId
+          #CPCValue
+          #OneTimeRefRecId
+          #OneTimeRefTableId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Information
+        PROPERTIES
+          Name                #Information
+          Label               #@SYS60385
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+          #Name
+          #CreditCardType
+          #Inactive
+          #PrimaryCard
+          #CorporateCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Payment
+        PROPERTIES
+          Name                #Payment
+          Label               #@SYS55132
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Profile
+        PROPERTIES
+          Name                #Profile
+          Label               #@SYS40276
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Profile
+          #ProfileId
+          #PaymentProfileId
+          #ProfileTerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #SecureInfo
+        PROPERTIES
+          Name                #SecureInfo
+          Label               #@ACC26
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardNum
+          #CreditCardNumSecure
+          #ExpirationDate
+          #NameOnCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Solo
+        PROPERTIES
+          Name                #Solo
+          Label               #@ACC1254
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SoloIssueNum
+          #SoloStartDate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #StoredValue
+        PROPERTIES
+          Name                #StoredValue
+          Label               #@ACC1710
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #svActivated
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #WEbSecure
+        PROPERTIES
+          Name                #WEbSecure
+          Label               #@ACC26
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardType
+          #CreditCardNum
+          #ExpirationDate
+          #NameOnCard
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #CCIdx
+      PROPERTIES
+        Name                #CCIdx
+        AllowDuplicates     #No
+        Origin              #{9AFD8924-9DED-4BF5-B0B2-ACB2A9BCC24B}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CreditCardId
+      ENDINDEXFIELDS
+      
+      #RecidIdx
+      PROPERTIES
+        Name                #RecidIdx
+        Origin              #{3C04D88B-21ED-4283-982E-E1C4F2AFC758}
+        LegacyId            #20002
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #RecId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #ProfileTerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTrans
+        PROPERTIES
+          Name                #CreditCardTrans
+          Table               #CreditCardTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CreditCardId
+            RelatedField        #CreditCardId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustTable
+        PROPERTIES
+          Name                #CustTable
+          Table               #CustTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #AccountNum
+            SourceEDT           #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Location_FK
+        PROPERTIES
+          Name                #Location_FK
+          Table               #LogisticsPostalAddress
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #Location
+            RelatedField        #RecId
+            SourceEDT           #LogisticsLocationRecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #OneTime
+        PROPERTIES
+          Name                #OneTime
+          Table               #Common
+          Validate            #No
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #OneTimeRefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #OneTimeRefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesTable
+        PROPERTIES
+          Name                #SalesTable
+          Table               #SalesTable
+          Validate            #No
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #CustAccount
+            SourceEDT           #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesTableId
+        PROPERTIES
+          Name                #SalesTableId
+          Table               #SalesTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          RelatedTableRole    #SalesId
+          Role                #SalesTable
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #SalesId
+            RelatedField        #SalesId
+            SourceEDT           #SalesId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #smmBusRelTable
+        PROPERTIES
+          Name                #smmBusRelTable
+          Table               #smmBusRelTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #BusRelAccount
+            RelatedField        #BusRelAccount
+            SourceEDT           #smmBusRelAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #CreditCardTrans
+      PROPERTIES
+        Table               #CreditCardTrans
+        DeleteAction        #Restricted
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #createProfile
+        #void createProfile()
+        #{
+        #    creditCardTerminalTable     terminalTable = CreditCardProcessGroups::resolveTerminalforToken(this);
+        #    ;
+        #    if (this.CreditCardType == CreditCardType::Stored
+        #        || this.CreditCardType == CreditCardType::PayPal)
+        #    {
+        #        return;
+        #    }
+        #
+        #    this.ProfileTerminalId = terminalTable.TerminalId;
+        #
+        #    switch (terminalTable.Processor)
+        #    {
+        #        case CreditCardProcessor::Cybersource   :
+        #            CreditCardCybersourceXMLBuilder139::createProfile(this);
+        #            break;
+        #        case CreditCardProcessor::AuthorizeNet  :
+        #            CreditCardADNCIMBuilder::createProfile(this);
+        #            break;
+        #        case CreditCardProcessor::Orbital       :
+        #            CreditCardOrbitalXMLBuilder50::createProfile(this);
+        #            break;
+        #        case CreditCardProcessor::Heartland     :
+        #            CreditCardHeartlandXMLBuilder::createProfile(this);
+        #            break;
+        #        case CreditCardProcessor::AdFlex        :
+        #            CreditCardAdflexXMLBuilder17::createProfile(this);
+        #            break;
+        #        case CreditCardProcessor::FirstData        :
+        #            CreditCardFirstData::createToken(this);
+        #            break;
+        #        case CreditCardProcessor::UDCC        :
+        #            CreditCardUDCCBuilder::createProfile(this);
+        #            break;
+        #        case CreditCardProcessor::OpenEdge        :
+        #            CreditCardopenEdgeBuilder::createProfile(this);
+        #            break;
+        #        case CreditCardProcessor::WorldPay      :
+        #            CreditCardSecureNetBuilder::createProfile(this);
+        #            break;
+        #        default :
+        #            throw error("@ACC1379");
+        #    }
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getPrimaryOneTimeId
+        #public Num getPrimaryOneTimeId()
+        #{
+        #    LedgerJournalTrans      ledgerJournalTrans;
+        #    SalesTable              salesTable;
+        #    ProjProposalJour        projProposalJour;
+        #    SMAServiceOrderTable    smaServiceOrderTable;
+        #    CustInvoiceTable        custInvoiceTable;
+        #    ProjFundingSource       projFundingSource;
+        #    Num                     num;
+        #    ;
+        #    if (this.SalesId)
+        #    {
+        #        salesTable = salesTable::find(salesTable.SalesId);
+        #        num = salesTable.salesId;
+        #    }
+        #    else
+        #    {
+        #        switch (this.OneTimeRefTableId)
+        #        {
+        #            case tableNum(projProposalJour) :
+        #                projProposalJour = projProposalJour::findRecid(this.OneTimeRefRecId);
+        #                num = projProposalJour.ProposalId;
+        #                break;
+        #            case tableNum(smaServiceOrderTable) :
+        #                select smaServiceOrderTable where smaServiceOrderTable.RecId == this.OneTimeRefRecId;
+        #                num = smaServiceOrderTable.ServiceOrderId;
+        #                break;
+        #            case tableNum(custInvoiceTable) :
+        #                custInvoiceTable = custInvoiceTable::findRecId(this.onetimerefrecId);
+        #                num = custInvoiceTable.InvoiceId;
+        #                break;
+        #            case tableNum(LedgerJournalTrans)   :
+        #                ledgerJournalTrans = LedgerJournalTrans::findRecId(this.OneTimeRefRecId,false);
+        #                num = LedgerJournalTrans.Voucher;
+        #                break;
+        #            case tableNum(SalesTable)   :
+        #                salesTable = salesTable::findRecId(this.OneTimeRefRecId);
+        #                num = salesTable.salesId;
+        #                break;
+        #            case tableNum(projFundingSource)   :
+        #                projFundingSource = projFundingSource::find(this.OneTimeRefRecId);
+        #                num = projFundingSource.ContractId;
+        #                break;
+        #        }
+        #    }
+        #
+        #    return num;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #initValue
+        #public void initValue()
+        #{
+        #    super();
+        #
+        #    this.CreditCardId = NumberSeq::newGetNum(CreditCardParameters::numRefCCId()).num();
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #insert
+        #public void insert()
+        #{
+        #    creditCardTerminalTable     terminalTable = CreditCardProcessGroups::resolveTerminalforToken(this);
+        #    System.Int64                ccNum;
+        #    System.Boolean              isNumber;
+        #    ;
+        #    if (this.Profile == NoYes::Yes)
+        #    {
+        #        super();
+        #    }
+        #    else
+        #    {
+        #        if (CreditCardParameters::findParameterWithTerminal(terminalTable.TerminalId).AutoProfile)
+        #        {
+        #            //--> This exist in case the card was encrypted but not saved.
+        #            isNumber = System.Int64::TryParse(this.CreditCardNum, byRef ccNum);
+        #            if (CreditCardPaymentProperty::clrBoolean2Boolean(isNumber) ==true )
+        #            {
+        #                this.validateCardType();
+        #
+        #                if (!CreditCardTable::validate(this.CreditCardNum))
+        #                    throw error("@ACC77");
+        #                else if (dateEndMth(this.ExpirationDate) < today())
+        #                    throw error("@ACC658");
+        #                else
+        #                {
+        #                    this.CreditCardNumSecure = '************' +
+        #                        subStr(this.CreditCardNum,strlen(this.CreditCardNum)-3,4);
+        #                }
+        #
+        #                this.CreditCardNum = CreditCardUtility::encrypt(this.CreditCardNum,CreditCardEncryptionTable::retrieveKey());
+        #            }
+        #
+        #            this.createProfile();
+        #
+        #            super();
+        #
+        #        }
+        #        else
+        #        {
+        #            if (this.CreditCardType != CreditCardType::PayPal)
+        #            {
+        #                this.validateCardType();
+        #
+        #                if (!CreditCardTable::validate(this.CreditCardNum))
+        #                    throw error("@ACC77");
+        #                else if (dateEndMth(this.ExpirationDate) < today())
+        #                    throw error("@ACC658");
+        #                else
+        #                {
+        #                    this.CreditCardNumSecure = '************' +
+        #                        subStr(this.CreditCardNum,strlen(this.CreditCardNum)-3,4);
+        #
+        #                    this.CreditCardNum = CreditCardUtility::encrypt(this.CreditCardNum,CreditCardEncryptionTable::retrieveKey());
+        #
+        #                    super();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (!this.Email)
+        #                {
+        #                    throw error("@ACC1356");
+        #                }
+        #
+        #                super();
+        #
+        #            }
+        #        }
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #modifiedField
+        #public void modifiedField(fieldId _fieldId)
+        #{
+        #    super(_fieldId);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #showAddress
+        #display Addressing showAddress()
+        #{
+        #    return LogisticsPostalAddress::findByLocation(this.Location).Address;
+        #}
+      ENDSOURCE
+      SOURCE #update
+        #public void update()
+        #{
+        #    if (this.Profile == NoYes::Yes)
+        #    {
+        #        super();
+        #
+        #        if (CreditCardParameters::findParameterWithTerminal(this.ProfileTerminalId).AutoProfile)
+        #        {
+        #            this.updateProfile();
+        #
+        #            super();
+        #        }
+        #    }
+        #    else
+        #    {
+        #        if (this.ProfileTerminalId)
+        #        {
+        #            if (CreditCardParameters::findParameterWithTerminal(this.ProfileTerminalId).AutoProfile)
+        #            {
+        #                this.createProfile();
+        #
+        #                super();
+        #            }
+        #            else
+        #            {
+        #                super();
+        #            }
+        #        }
+        #        else
+        #        {
+        #
+        #            super();
+        #        }
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #updateProfile
+        #void updateProfile()
+        #{
+        #    ;
+        #    switch (CreditCardTerminalTable::findTerminalWithId(this.ProfileTerminalId).Processor)
+        #    {
+        #        case CreditCardProcessor::AuthorizeNet  :
+        #            CreditCardADNCIMBuilder::updateProfile(this);
+        #            break;
+        #        case CreditCardProcessor::Orbital       :
+        #            CreditCardOrbitalXMLBuilder50::updateProfile(this);
+        #            break;
+        #        case CreditCardProcessor::Cybersource       :
+        #            CreditCardCybersourceXMLBuilder139::updateProfile(this);
+        #            break;
+        #        case CreditCardProcessor::UDCC       :
+        #            CreditCardUDCCBuilder::updateProfile(this);
+        #            break;
+        #        case CreditCardProcessor::PayPal    :
+        #            CreditCardBraintreeXMLBuilder::processCustomerVault(this);
+        #            break;
+        #        case CreditCardProcessor::WorldPay    :
+        #            CreditCardSecureNetBuilder::updatePaymentProfile(this);
+        #            break;
+        #        default :
+        #            warning("@ACC1379");
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #validateCardType
+        #void validateCardType()
+        #{
+        #    TempStr         num = this.CreditCardNum;
+        #    CreditCardType  ccTYpe;
+        #    ;
+        #    num = subStr(num,1,2);
+        #
+        #    switch (num)
+        #    {
+        #        case "34","37"   :
+        #            ccType = CreditCardTYpe::AmericanExpress;
+        #            break;
+        #        case '30','36','38' :
+        #            ccType = CreditCardType::Diners;
+        #            break;
+        #        case '60','64','65'       :
+        #            if (strLen(this.CreditCardNum) == 21)
+        #            {
+        #                ccTYpe = CreditCardType::Stored;
+        #            }
+        #            else
+        #            {
+        #                ccType = CreditCardType::Discover;
+        #            }
+        #            break;
+        #        case '51','52','53','54','55','22','23','24','25','26','27'   :
+        #            ccType = CreditCardType::MasterCard;
+        #            break;
+        #        case '40','41','42','43','44','45','46','47','48'    :
+        #            ccType = CreditCardType::Visa;
+        #            break;
+        #        case '56','61','62','63','66','67'    :
+        #            ccType = CreditCardType::Solo;
+        #            break;
+        #
+        #        default     :
+        #            return;
+        #
+        #
+        #    }
+        #
+        #    if (ccType != this.CreditCardType)
+        #    {
+        #        throw error(strFmt("@ACC1115",
+        #            num,
+        #            enum2str(ccType),
+        #            enum2str(this.CreditCardType)));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #public boolean validateWrite()
+        #{
+        #    boolean               ret;
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    ret = super();
+        #
+        #    if (this.PrimaryCard)
+        #    {
+        #        select ccTable
+        #            where (ccTable.CustAccount == this.CustAccount
+        #            || (ccTable.BusRelAccount == this.BusRelAccount
+        #            && ccTable.BusRelAccount != ''))
+        #            && ccTable.PrimaryCard
+        #            && ccTable.RecId != this.RecId;
+        #
+        #        if (ccTable)
+        #        {
+        #            //ret = checkFailed("@ACC1370");
+        #            throw error("@ACC1370");
+        #        }
+        #
+        #        if (this.CreditCardType == CreditCardType::PayPal)
+        #        {
+        #            //ret = checkFailed("@ACC1373");
+        #            throw error("@ACC1373");
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #CDCardType
+        #static TempStr CDCardType(CreditCardType ccType)
+        #{
+        #    TempStr     ret;
+        #    ;
+        #    switch (ccType)
+        #    {
+        #        case CreditCardType::AmericanExpress   :
+        #            ret = 'AX';
+        #            break;
+        #        case CreditCardType::Diners :
+        #            ret = 'DC';
+        #            break;
+        #        case CreditCardType::Discover :
+        #            ret = 'DS';
+        #            break;
+        #        case CreditCardType::JCB    :
+        #            ret = 'JC';
+        #            break;
+        #        case CreditCardType::MasterCard     :
+        #            ret = 'MC';
+        #            break;
+        #        case CreditCardType::Visa   :
+        #            ret = 'VI';
+        #            break;
+        #        case CreditCardType::Solo   :
+        #            ret = 'SW';
+        #            break;
+        #        default  :
+        #            throw error("@ACC1056");
+        #
+        #    }
+        #
+        #    return ret;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #convertBusRel2Cust
+        #static void convertBusRel2Cust(SmmBusRelTable   smmBusRelTable,
+        #                               CustTable        custTable)
+        #{
+        #    CreditCardTable     creditCardTable;
+        #    ;
+        #    ttsBegin;
+        #    while select forupdate creditCardTable
+        #        where creditCardTable.BusRelAccount == smmBusRelTable.BusRelAccount
+        #    {
+        #        creditCardTable.CustAccount = custTable.AccountNum;
+        #        creditCardTable.update();
+        #
+        #    }
+        #    ttsCommit;
+        #}
+      ENDSOURCE
+      SOURCE #createProfileFromTrans
+        #static void createProfileFromTrans(CreditCardTrans       ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    ;
+        #    ttsbegin;
+        #
+        #    ccTable.clear();
+        #    ccTable.initValue();
+        #    ccTable.CreditCardNum = ccTrans.ProfileId;
+        #    ccTable.CustAccount = ccTrans.CustAccount;
+        #    ccTable.ExpirationDate  = systemDateGet() + 365;
+        #    ccTable.Name        = ccTrans.NameOnCard;
+        #    ccTable.NameOnCard  = ccTrans.NameOnCard;
+        #    ccTable.Profile     = NoYes::Yes;
+        #    ccTable.ProfileId   = ccTrans.ProfileId;
+        #    ccTable.insert();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #CVDEligible
+        #static NoYes CVDEligible(CreditCardType  ccType)
+        #{
+        #    NoYes           ret = false;
+        #    ;
+        #    switch (ccType)
+        #    {
+        #        case CreditCardType::AmericanExpress     :
+        #            ret = true;
+        #            break;
+        #        case CreditCardType::Diners   :
+        #            ret =  True;
+        #            break;
+        #        case CreditCardType::MasterCard   :
+        #            ret =  True;
+        #            break;
+        #        case CreditCardType::Visa   :
+        #            ret =  True;
+        #            break;
+        #        default :
+        #            ret =  false;
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #static CreditCardTable find(CreditCardid    cardid)
+        #{
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    select firstonly ccTable where ccTable.CreditCardId == cardid;
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #findBusRel
+        #static CreditCardTable findBusRel(smmBusRelAccount     busRelAccount,
+        #                                  CreditCardid    cardid)
+        #{
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    select firstonly ccTable where ccTable.BusRelAccount == busRelAccount
+        #        && ccTable.CreditCardId == cardid;
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #findCust
+        #static CreditCardTable findCust(CustAccount     custAccount,
+        #                            CreditCardid    cardid)
+        #{
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    select firstonly ccTable where ccTable.CustAccount == custAccount
+        #        && ccTable.CreditCardId == cardid;
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #findPrimary
+        #static public CreditCardTable findPrimary(CustAccount   custAccount)
+        #{
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    select ccTable
+        #        where ccTable.CustAccount == custAccount
+        #        && ccTable.PrimaryCard == NoYes::Yes;
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #findRecId
+        #static CreditCardTable findRecId(CreditCardid    cardid,
+        #                                 RecId           recId,
+        #                                 boolean         _forupdate = false)
+        #{
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    ccTable.selectForUpdate(_forupdate);
+        #    select firstonly ccTable where ccTable.CreditCardId == cardid
+        #        && ccTable.RecId == recId;
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #findSecure
+        #static CreditCardTable findSecure(CreditCardNumEncrypt  ccNumEncrypt)
+        #{
+        #    CreditCardTable     ccTable;
+        #    ;
+        #    select firstonly ccTable where ccTable.CreditCardNum == ccNumEncrypt;
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #getCCSecure
+        #static CreditCardNum getCCSecure(CreditCardTable    ccTable)
+        #{
+        #    CreditCardNum       ccNum;
+        #    ;
+        #    ccNum = CreditCardTable::retrieveValue(ccTable);
+        #    ccNum = '************' +
+        #                subStr(ccNum,strlen(ccNum)-3,4);
+        #
+        #    return ccNum;
+        #}
+      ENDSOURCE
+      SOURCE #getCCType
+        #static CreditCardType getCCType(str num)
+        #{
+        #    CreditCardType          ccType;
+        #    ;
+        #    num = subStr(num,1,2);
+        #
+        #    switch (num)
+        #    {
+        #        case "34","37"   :
+        #            ccType = CreditCardTYpe::AmericanExpress;
+        #            break;
+        #        case '30','36','38' :
+        #            ccType = CreditCardType::Diners;
+        #            break;
+        #        case '60'       :
+        #            ccType = CreditCardType::Discover;
+        #            break;
+        #        case '51','52','53','54','55'   :
+        #            ccType = CreditCardType::MasterCard;
+        #            break;
+        #        case '40','41','42','43','44','45','46','47','48','49'    :
+        #            ccType = CreditCardType::Visa;
+        #            break;
+        #        default     :
+        #            throw error("@ACC584");
+        #
+        #
+        #    }
+        #
+        #    return ccType;
+        #}
+      ENDSOURCE
+      SOURCE #getPrimaryCustomer
+        #static public CustAccount getPrimaryCustomer(SalesTableCC    salesTableCC)
+        #{
+        #    CustAccount             custAccount;
+        #    SalesTable              salesTable;
+        #    ProjProposalJour        projProposalJour;
+        #    SMAServiceOrderTable    smaServiceOrderTable;
+        #    CustInvoiceTable        custInvoiceTable;
+        #    ;
+        #    if (salesTableCC.SalesId)
+        #    {
+        #        salesTable = salesTable::find(salesTableCC.SalesId);
+        #        custAccount = salesTable.InvoiceAccount;
+        #    }
+        #    else if (salesTableCC.ProjProposalId)
+        #    {
+        #        projProposalJour = projProposalJour::find(salesTableCC.ProjProposalId);
+        #        custAccount = projProposalJour.InvoiceAccount;
+        #    }
+        #    else if (salesTableCC.ServiceOrderId)
+        #    {
+        #        smaServiceOrderTable = smaServiceOrderTable::find(salesTableCC.ServiceOrderId);
+        #        custAccount = smaServiceOrderTable.CustAccount;
+        #    }
+        #    else if (salesTableCC.CustInvoiceRefRecId)
+        #    {
+        #        custInvoiceTable = custInvoiceTable::findRecId(salesTableCC.CustInvoiceRefRecId);
+        #        custAccount = custInvoiceTable.InvoiceAccount;
+        #    }
+        #
+        #    return custAccount;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getPrimaryRecord
+        #static public container getPrimaryRecord(SalesTableCC    salesTableCC)
+        #{
+        #    container               c;
+        #    SalesTable              salesTable;
+        #    ProjProposalJour        projProposalJour;
+        #    SMAServiceOrderTable    smaServiceOrderTable;
+        #    CustInvoiceTable        custInvoiceTable;
+        #    ;
+        #    if (salesTableCC.SalesId)
+        #    {
+        #        salesTable = salesTable::find(salesTable.SalesId);
+        #        c = [salesTable.TableId,salesTable.RecId];
+        #    }
+        #    else if (salesTableCC.ProjProposalId)
+        #    {
+        #        projProposalJour = projProposalJour::find(salesTableCC.ProjProposalId);
+        #        c = [projProposalJour.TableId,projProposalJour.RecId];
+        #    }
+        #    else if (salesTableCC.ServiceOrderId)
+        #    {
+        #        smaServiceOrderTable = smaServiceOrderTable::find(salesTableCC.ServiceOrderId);
+        #        c = [smaServiceOrderTable.TableId,smaServiceOrderTable.RecId];
+        #    }
+        #    else if (salesTableCC.CustInvoiceRefRecId)
+        #    {
+        #        custInvoiceTable = custInvoiceTable::findRecId(salesTableCC.CustInvoiceRefRecId);
+        #        c = [custInvoiceTable.TableId,CustInvoiceTable.RecId];
+        #    }
+        #
+        #    return c;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #isCorporateCard
+        #static boolean isCorporateCard(str num)
+        #{
+        #    NumericTarget                    intNum;
+        #    ;
+        #    //num = subStr(num,1,6);
+        #
+        #    intNum = str2num(num);
+        #    //--> Commercial Card BIN Ranges are just that, ranges.
+        #    //--> As a result, we must determine if they fall in a range.
+        #
+        #    if (intNum >= 5405000000000000 && intNum <= 5405999999999999)
+        #        return true;
+        #    if (intNum >= 5550000000000000 && intNum <= 5569999999999999)
+        #        return true;
+        #    if (intNum >= 4055010000000000 && intNum <= 4055049999999999)
+        #        return true;
+        #    if (intNum >= 4055500000000000 && intNum <= 4055549999999999)
+        #        return true;
+        #    if (intNum >= 4159280000000000 && intNum <= 4159289999999999)
+        #        return true;
+        #    if (intNum >= 4246040000000000 && intNum <= 4246059999999999)
+        #        return true;
+        #    if (intNum >= 4275330000000000 && intNum <= 4275339999999999)
+        #        return true;
+        #    if (intNum >= 4288000000000000 && intNum <= 4288999999999999)
+        #        return true;
+        #    if (intNum >= 4430850000000000 && intNum <= 4430859999999999)
+        #        return true;
+        #    if (intNum >= 4484000000000000 && intNum <= 4486999999999999)
+        #        return true;
+        #    if (intNum >= 4715000000000000 && intNum <= 4716999999999999)
+        #        return true;
+        #    if (intNum >= 4804000000000000 && intNum <= 4804999999999999)
+        #        return true;
+        #    if (intNum >= 4859000000000000 && intNum <= 4859999999999999)
+        #        return true;
+        #    if (intNum >= 4865000000000000 && intNum <= 4866999999999999)
+        #        return true;
+        #    if (intNum >= 4484600000000000 && intNum <= 4486119999999999)
+        #        return true;
+        #    if (intNum >= 4486130000000000 && intNum <= 4486999999999999)
+        #        return true;
+        #    if (intNum >= 4807000000000000 && intNum <= 4808499999999999)
+        #        return true;
+        #    if (intNum >= 5560000000000000 && intNum <= 5569999999999999)
+        #        return true;
+        #    if (intNum >= 5132850000000000 && intNum <= 5132859999999999)
+        #        return true;
+        #    if (intNum >= 5133510000000000 && intNum <= 5133999999999999)
+        #        return true;
+        #    if (intNum >= 5134130000000000 && intNum <= 5134139999999999)
+        #        return true;
+        #    if (intNum >= 5134510000000000 && intNum <= 5134999999999999)
+        #        return true;
+        #    if (intNum >= 5135160000000000 && intNum <= 5135169999999999)
+        #        return true;
+        #    if (intNum >= 5135370000000000 && intNum <= 5135689999999999)
+        #        return true;
+        #    if (intNum >= 5136010000000000 && intNum <= 5136129999999999)
+        #        return true;
+        #    if (intNum >= 5136140000000000 && intNum <= 5136149999999999)
+        #        return true;
+        #    if (intNum >= 5136160000000000 && intNum <= 5136179999999999)
+        #        return true;
+        #    if (intNum >= 5136490000000000 && intNum <= 5136499999999999)
+        #        return true;
+        #    if (intNum >= 5137000000000000 && intNum <= 5137999999999999)
+        #        return true;
+        #    if (intNum >= 5208060000000000 && intNum <= 5208079999999999)
+        #        return true;
+        #    if (intNum >= 5248080000000000 && intNum <= 5248099999999999)
+        #        return true;
+        #    if (intNum >= 5250160000000000 && intNum <= 5250179999999999)
+        #        return true;
+        #    if (intNum >= 5250600000000000 && intNum <= 5250639999999999)
+        #        return true;
+        #    if (intNum >= 5283160000000000 && intNum <= 5283169999999999)
+        #        return true;
+        #    if (intNum >= 5283600000000000 && intNum <= 5283639999999999)
+        #        return true;
+        #    if (intNum >= 5296020000000000 && intNum <= 5296039999999999)
+        #        return true;
+        #    if (intNum >= 5341010000000000 && intNum <= 5341019999999999)
+        #        return true;
+        #    if (intNum >= 5341050000000000 && intNum <= 5341059999999999)
+        #        return true;
+        #    if (intNum >= 5341090000000000 && intNum <= 5341099999999999)
+        #        return true;
+        #    if (intNum >= 5341110000000000 && intNum <= 5341119999999999)
+        #        return true;
+        #    if (intNum >= 5472060000000000 && intNum <= 5480189999999999)
+        #        return true;
+        #    if (intNum >= 5525000000000000 && intNum <= 5535999999999999)
+        #        return true;
+        #    if (intNum >= 5578520000000000 && intNum <= 5578539999999999)
+        #        return true;
+        #    if (intNum >= 5580000000000000 && intNum <= 5589999999999999)
+        #        return true;
+        #
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #lookupBusRelCreditCard
+        #client static void lookupBusRelCreditCard(FormStringControl   _ctrl,
+        #                                    smmBusRelAccount        _busRelAccount,
+        #                                    FormStringControl       nameControl = null,
+        #                                    CreditCardId            creditCardId = '')
+        #{
+        #    Args    args;
+        #    Object  formRun;
+        #    ;
+        #
+        #    args = new Args();
+        #    args.name(formstr(CreditCardLookup));
+        #    args.caller(_ctrl);
+        #    args.lookupValue(creditCardId);
+        #    formRun = classFactory.formRunClass(args);
+        #    formRun.busRelAccount(_busRelAccount);
+        #    formRun.callingNameControl(nameControl);
+        #    formRun.init();
+        #
+        #    _ctrl.performFormLookup(formRun);
+        #}
+      ENDSOURCE
+      SOURCE #lookupCustCreditCard
+        #client static void lookupCustCreditCard(FormStringControl   _ctrl,
+        #                                    CustAccount             _custAccount,
+        #                                    SalesTableCC            salesTableCC = null)
+        #{
+        #    Args        args;
+        #    Object      formRun;
+        #    SalesTable  salesTable = SalesTable::find(salesTableCC.SalesId);
+        #    ;
+        #
+        #    args = new Args();
+        #    args.name(formstr(CreditCardAdvLookup));
+        #    args.caller(_ctrl);
+        #    //RMCC_Bug_2_SalesOrderCCLookup, 3.29.2016, VOT >
+        #    args.record(salesTableCC);
+        #    //RMCC_Bug_2_SalesOrderCCLookup, 3.29.2016, VOT <
+        #    args.lookupValue(salesTableCC.creditCardId);
+        #    formRun = classFactory.formRunClass(args);
+        #    formRun.custAccount(_custAccount);
+        #    formRun.logisticsLocationRecId(salesTable.DeliveryPostalAddress);
+        #    //formRun.callingNameControl(nameControl);
+        #    formRun.init();
+        #
+        #    _ctrl.performFormLookup(formRun);
+        #}
+      ENDSOURCE
+      SOURCE #lookupCustCreditCardJournal
+        #client static void lookupCustCreditCardJournal(FormStringControl   _ctrl,
+        #                                    CustAccount             _custAccount,
+        #                                    LedgerjournalTrans      ledgerJournalTrans = null)
+        #{
+        #    Args        args;
+        #    Object      formRun;
+        #    LedgerJournalTransCC    ledgerJournalTransCC;
+        #    ;
+        #    select ledgerJournalTransCC
+        #        where ledgerJournalTransCC.Voucher == ledgerJournalTrans.Voucher
+        #        && ledgerJournalTransCC.LineNum == ledgerJournalTrans.LineNum;
+        #
+        #    args = new Args();
+        #    args.name(formstr(CreditCardAdvLookup));
+        #    args.caller(_ctrl);
+        #    args.record(LedgerJournalTrans);
+        #    args.lookupValue(LedgerJournalTransCC.CreditCardId);
+        #    formRun = classFactory.formRunClass(args);
+        #    formRun.custAccount(_custAccount);
+        #    //formRun.callingNameControl(nameControl);
+        #    formRun.init();
+        #
+        #    _ctrl.performFormLookup(formRun);
+        #}
+      ENDSOURCE
+      SOURCE #lookupCustCreditCardProj
+        #client static void lookupCustCreditCardProj(FormStringControl   _ctrl,
+        #                                    CustAccount             _custAccount,
+        #                                    SalesTableCC            salesTableCC = null)
+        #{
+        #    Args                args;
+        #    Object              formRun;
+        #    ProjProposalJour    proposalJour = ProjProposalJour::find(salesTableCC.ProjProposalId);
+        #    ;
+        #
+        #    args = new Args();
+        #    args.name(formstr(CreditCardAdvLookup));
+        #    args.caller(_ctrl);
+        #    args.record(salesTableCC);
+        #    args.lookupValue(salesTableCC.creditCardId);
+        #    formRun = classFactory.formRunClass(args);
+        #    formRun.custAccount(_custAccount);
+        #    formRun.logisticsLocationRecId(proposalJour.DeliveryPostalAddress);
+        #    //formRun.callingNameControl(nameControl);
+        #    formRun.init();
+        #
+        #    _ctrl.performFormLookup(formRun);
+        #}
+      ENDSOURCE
+      SOURCE #lookupCustCreditCardProjFund
+        #client static void lookupCustCreditCardProjFund(FormStringControl   _ctrl,
+        #                                    CustAccount             _custAccount,
+        #                                    ProjFundingSource      projFundingSource = null)
+        #{
+        #    Args                args;
+        #    Object              formRun;
+        #    ;
+        #
+        #    args = new Args();
+        #    args.name(formstr(CreditCardAdvLookup));
+        #    args.caller(_ctrl);
+        #    args.record(projFundingSource);
+        #    args.lookupValue(projFundingSource.creditCardId);
+        #    formRun = classFactory.formRunClass(args);
+        #    formRun.custAccount(_custAccount);
+        #    formRun.logisticsLocationRecId(projFundingSource.address());
+        #    //formRun.callingNameControl(nameControl);
+        #    formRun.init();
+        #
+        #    _ctrl.performFormLookup(formRun);
+        #}
+      ENDSOURCE
+      SOURCE #lookupCustCreditCardProjTable
+        #client static void lookupCustCreditCardProjTable(FormStringControl   _ctrl,
+        #                                    CustAccount             _custAccount,
+        #                                    ProjTable      projTable = null)
+        #{
+        #    Args                args;
+        #    Object              formRun;
+        #    ;
+        #
+        #    args = new Args();
+        #    args.name(formstr(CreditCardAdvLookup));
+        #    args.caller(_ctrl);
+        #    args.record(ProjTable);
+        #    args.lookupValue(projTable.creditCardId);
+        #    formRun = classFactory.formRunClass(args);
+        #    formRun.custAccount(_custAccount);
+        #    formRun.logisticsLocationRecId(projTable.DeliveryLocation);
+        #    //formRun.callingNameControl(nameControl);
+        #    formRun.init();
+        #
+        #    _ctrl.performFormLookup(formRun);
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #static TempStr retrieveValue(CreditCardTable ccTable, TransDate     transDate =systemDateGet())
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccTable.CreditCardNum,CreditCardEncryptionTable::retrieveKey(transDate));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValueNum
+        #static TempStr retrieveValueNum(CreditCardNumEncrypt ccNum,  TransDate     transDate =systemDateGet())
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccNum,CreditCardEncryptionTable::retrieveKey(transDate));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #validate
+        #static boolean validate(CreditCardNumEncrypt ccNum)
+        #{
+        #    int         i;
+        #    int         iEven;
+        #    int         iOdd;
+        #    int         iTotal;
+        #    int         len;
+        #    str         strOneChar;
+        #    int         iTemp;
+        #    int         iStart;
+        #    int         lastDigit;
+        #    ;
+        #    len = strlen(ccNum);
+        #
+        #    switch (len)
+        #    {
+        #        case 16 :
+        #            lastDigit = str2int(subStr(ccNum,16,1));
+        #            istart = 16;
+        #            break;
+        #        case 15 :   //<-- AMEX
+        #            lastDigit = str2int(subStr(ccNum,15,1));
+        #            istart = 15;
+        #            break;
+        #        case 14 :   //<-- Diners Club
+        #            lastDigit = str2int(subStr(ccNum,14,1));
+        #            istart = 14;
+        #            break;
+        #        case    13  :
+        #            lastDigit = str2int(subStr(ccNum,13,1));
+        #            istart = 13;
+        #            break;
+        #        case 18,19 :   //<-- Switch/Solo
+        #            lastDigit = str2int(subStr(ccNum,len,1));
+        #            istart = len;
+        #            break;
+        #        case 21 :   //-- Stored value/GiveX
+        #            lastDigit = str2int(subStr(ccNum,len,1));
+        #            istart = len;
+        #            break;
+        #        default :
+        #            throw error("@ACC1117");
+        #    }
+        #
+        #    i = istart;
+        #
+        #    //->> Even ordinal
+        #    while (i > 0)
+        #    {
+        #        strOneChar  = subStr(ccNum,i,1);
+        #        iEven += str2int(strOneChar);
+        #        i -= 2;
+        #    }
+        #
+        #    //--> Odd orindal
+        #        switch (len)
+        #    {
+        #        case 16 :
+        #            i = 15;
+        #            break;
+        #        case 15 :
+        #            i = 14;
+        #            break;
+        #        case 14 :
+        #            i = 13;
+        #            break;
+        #        case 18 :
+        #            i = 17;
+        #            break;
+        #        case 19 :
+        #            i = 18;
+        #            break;
+        #        case 13:
+        #            i = 12;
+        #            break;
+        #        case 21:
+        #            i = 20;
+        #            break;
+        #
+        #    }
+        #
+        #    while (i>0)
+        #    {
+        #        strOneChar  = subStr(ccNum,i,1);
+        #        iTemp = str2int(strOneChar) *2;
+        #        if (iTemp > 9)
+        #        {
+        #            iOdd += (iTemp /10) + (iTemp-10);
+        #        }
+        #        else
+        #        {
+        #            iOdd += iTemp;
+        #        }
+        #        i -= 2;
+        #    }
+        #
+        #    iTotal = iEven + iOdd;
+        #
+        #    iTemp = iTotal mod 10;
+        #
+        #    if (iTemp == 0)
+        #    {
+        #        return true;
+        #    }
+        #    else
+        #    {
+        #        return false;
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

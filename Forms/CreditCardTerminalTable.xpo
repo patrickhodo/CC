@@ -1,0 +1,2973 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardTerminalTable
+  PROPERTIES
+    Name                #CreditCardTerminalTable
+    Origin              #{56526569-F59E-4CAB-8959-6ABCEEC0705E}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #}
+    ENDSOURCE
+    SOURCE #enableProcessor
+      #void enableProcessor()
+      #{
+      #    ;
+      #    switch (CreditCardTerminalTable.Processor)
+      #    {
+      #        case    CreditCardProcessor::Orbital    :
+      #            Orbital.enabled(true);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::Paymentech :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(true);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::PayPal   :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(true);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::AuthorizeNet        :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(true);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::Cybersource    :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(true);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::RealEx    :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(true);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::Moneris    :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(true);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::Commidea    :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(true);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::PayPalX   :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(true);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::FirstData   :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(true);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            if (CreditCardMerchantFirstData.Plaform == CreditCardFirstDataPlaform::Linkpoint)
+      #            {
+      #                Linkpoint.visible(true);
+      #                RapidConnect.visible(false);
+      #            }
+      #            else
+      #            {
+      #                Linkpoint.visible(false);
+      #                RapidConnect.visible(true);
+      #            }
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::Heartland   :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(true);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::AdFlex   :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(true);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::Elavon   :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(true);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::TSYS   :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(true);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::UDCC    :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(true);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::OpenEdge    :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(true);
+      #            WorldPay.enabled(false);
+      #            break;
+      #        case    CreditCardProcessor::WorldPay    :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #            ADN.enabled(false);
+      #            Cybersource.enabled(false);
+      #            RealEx.enabled(false);
+      #            Moneris.enabled(false);
+      #            Commidea.enabled(false);
+      #            PayPalX.enabled(false);
+      #            firstData.enabled(false);
+      #            Heartland.enabled(false);
+      #            Adflex.enabled(false);
+      #            Elavon.enabled(false);
+      #            TSYS.enabled(false);
+      #            UDCC.enabled(false);
+      #            OpenEdge.enabled(false);
+      #            WorldPay.enabled(true);
+      #            break;
+      #        default     :
+      #            Orbital.enabled(false);
+      #            Paymentech.enabled(false);
+      #            PayPal.enabled(false);
+      #    }
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD SystemIndicator
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    creditCardTerminalTable_ds.active();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    element.enableProcessor();
+          #
+          #    switch (creditCardTerminalTable.SystemIndicator)
+          #    {
+          #        case CreditCardSystemIndicator::HCS :
+          #            creditCardTerminalTable_ds.object(fieldNum(CreditCardTerminalTable, IndustryHCS)).enabled(true);
+          #            //creditCardTerminalTable_ds.object(fieldNum(CreditCardTerminalTable, IndustryTCS)).enabled(false);
+          #
+          #            break;
+          #        case CreditCardSystemIndicator::del_TCS :
+          #            creditCardTerminalTable_ds.object(fieldNum(CreditCardTerminalTable, IndustryHCS)).enabled(false);
+          #            //creditCardTerminalTable_ds.object(fieldNum(CreditCardTerminalTable, IndustryTCS)).enabled(true);
+          #
+          #            break;
+          #    }
+          #
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantPaymentech
+          Table               #CreditCardMerchantPaymentech
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantVerisign
+          Table               #CreditCardMerchantVerisign
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantADN
+          Table               #CreditCardMerchantADN
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantOrbital
+          Table               #CreditCardMerchantOrbital
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantCybersource
+          Table               #CreditCardMerchantCybersource
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantRealEx
+          Table               #CreditCardMerchantRealEx
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantMoneris
+          Table               #CreditCardMerchantMoneris
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantCommidea
+          Table               #CreditCardMerchantCommidea
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantPayPalX
+          Table               #CreditCardMerchantPayPalX
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantFirstData
+          Table               #CreditCardMerchantFirstData
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD Plaform
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.enableProcessor();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantHeartland
+          Table               #CreditCardMerchantHeartland
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantDPS
+          Table               #CreditCardMerchantDPS
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantAdflex
+          Table               #CreditCardMerchantAdflex
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantElavon
+          Table               #CreditCardMerchantElavon
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantTSYS
+          Table               #CreditCardMerchantTSYS
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantGiveX
+          Table               #CreditCardMerchantGiveX
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantUDCC
+          Table               #CreditCardMerchantUDCC
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantOpenEdge
+          Table               #CreditCardMerchantOpenEdge
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantWorldPay
+          Table               #CreditCardMerchantWorldPay
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardMerchantBraintree
+          Table               #CreditCardMerchantBraintree
+          JoinSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+    CreditCardMerchantPaymentech CreditCardTerminalTable
+    CreditCardMerchantVerisign CreditCardTerminalTable
+    CreditCardMerchantADN CreditCardTerminalTable
+    CreditCardMerchantOrbital CreditCardTerminalTable
+    CreditCardMerchantCybersource CreditCardTerminalTable
+    CreditCardMerchantRealEx CreditCardTerminalTable
+    CreditCardMerchantMoneris CreditCardTerminalTable
+    CreditCardMerchantCommidea CreditCardTerminalTable
+    CreditCardMerchantPayPalX CreditCardTerminalTable
+    CreditCardMerchantFirstData CreditCardTerminalTable
+    CreditCardMerchantHeartland CreditCardTerminalTable
+    CreditCardMerchantDPS CreditCardTerminalTable
+    CreditCardMerchantAdflex CreditCardTerminalTable
+    CreditCardMerchantElavon CreditCardTerminalTable
+    CreditCardMerchantTSYS CreditCardTerminalTable
+    CreditCardMerchantGiveX CreditCardTerminalTable
+    CreditCardMerchantUDCC CreditCardTerminalTable
+    CreditCardMerchantOpenEdge CreditCardTerminalTable
+    CreditCardMerchantWorldPay CreditCardTerminalTable
+    CreditCardMerchantBraintree CreditCardTerminalTable
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@SYS39270
+      TitleDatasource     #CreditCardTerminalTable
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+      Style               #TableOfContents
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          ElementPosition     #536870911
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroup
+          ElementPosition     #715827882
+          HierarchyParent     #TSYSGroup
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #NewDeleteGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab
+          DataSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #GroupOverview
+          DataSource          #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #AdFlexGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Adflex
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #AdFlexTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Adflex
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #ADNTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #ADN
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CommideaGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Commidea
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CommideaTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Commidea
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CopyOfNetwork8
+          ElementPosition     #1073741823
+          HierarchyParent     #OpenEdgeGroup
+          DataSource          #CreditCardMerchantOpenEdge
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CybersourceTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Cybersource
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DPSGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #DPS
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DPSTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #DPS
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #ElavonGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Elavon
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #ElavonTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Elavon
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #FirstDataGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #FirstData
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #FirstDataTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #FirstData
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GeneralTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #General
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GiveXGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #GiveX
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GiveXMerchant
+          ElementPosition     #1073741822
+          HierarchyParent     #GiveXGroup
+          DataSource          #CreditCardMerchantGiveX
+          DataGroup           #Merchant
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GiveXTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #GiveX
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupADN
+          ElementPosition     #1610612733
+          HierarchyParent     #ADN
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupCybersource
+          ElementPosition     #1610612733
+          HierarchyParent     #Cybersource
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupGeneral
+          ElementPosition     #1610612733
+          HierarchyParent     #General
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupOrbital
+          ElementPosition     #1610612733
+          HierarchyParent     #Orbital
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupOverview
+          ElementPosition     #1610612733
+          HierarchyParent     #Overview
+          Style               #TOCTopicList
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupPaymentech
+          ElementPosition     #1610612733
+          HierarchyParent     #Paymentech
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupPayPal
+          ElementPosition     #1610612733
+          HierarchyParent     #PayPal
+          Style               #TOCTopicSimple
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #HeartlandGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Heartland
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #HeartlandTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Heartland
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #HostedPay
+          ElementPosition     #1840700268
+          HierarchyParent     #FirstDataGroup
+          DataSource          #CreditCardMerchantFirstData
+          DataGroup           #HostedPay
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #HostedPay1
+          ElementPosition     #1717986916
+          HierarchyParent     #WorldPayGroup
+          DataSource          #CreditCardMerchantWorldPay
+          DataGroup           #HostedPay
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Industry
+          ElementPosition     #1533916890
+          HierarchyParent     #GroupOrbital
+          DataSource          #CreditCardMerchantOrbital
+          DataGroup           #Industry
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Industry1
+          ElementPosition     #1717986916
+          HierarchyParent     #GroupCybersource
+          DataSource          #CreditCardMerchantCybersource
+          DataGroup           #Industry
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Industry2
+          ElementPosition     #1717986916
+          HierarchyParent     #RealExGroup
+          DataSource          #CreditCardMerchantRealEx
+          DataGroup           #Industry
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Industry3
+          ElementPosition     #1717986916
+          HierarchyParent     #HeartlandGroup
+          DataSource          #CreditCardMerchantHeartland
+          DataGroup           #Industry
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Industry4
+          ElementPosition     #1789569705
+          HierarchyParent     #TSYSGroup
+          DataSource          #CreditCardMerchantTSYS
+          DataGroup           #Industry
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Industry5
+          ElementPosition     #715827882
+          HierarchyParent     #OpenEdgeGroup
+          DataSource          #CreditCardMerchantOpenEdge
+          DataGroup           #Industry
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #IndustryHCS
+          ElementPosition     #1227133512
+          HierarchyParent     #GroupGeneral
+          DataSource          #CreditCardTerminalTable
+          DataGroup           #IndustryHCS
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface
+          ElementPosition     #1288490187
+          HierarchyParent     #GroupCybersource
+          DataSource          #CreditCardMerchantCybersource
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface1
+          ElementPosition     #1288490187
+          HierarchyParent     #RealExGroup
+          DataSource          #CreditCardMerchantRealEx
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface2
+          ElementPosition     #536870910
+          HierarchyParent     #GroupPayPal
+          DataSource          #CreditCardMerchantVerisign
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface3
+          ElementPosition     #1073741822
+          HierarchyParent     #CommideaGroup
+          DataSource          #CreditCardMerchantCommidea
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface4
+          ElementPosition     #920350134
+          HierarchyParent     #FirstDataGroup
+          DataSource          #CreditCardMerchantFirstData
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface5
+          ElementPosition     #1073741822
+          HierarchyParent     #AdFlexGroup
+          DataSource          #CreditCardMerchantAdflex
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface6
+          ElementPosition     #1431655764
+          HierarchyParent     #TSYSGroup
+          DataSource          #CreditCardMerchantTSYS
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface7
+          ElementPosition     #1610612733
+          HierarchyParent     #GiveXGroup
+          DataSource          #CreditCardMerchantGiveX
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface8
+          ElementPosition     #858993458
+          HierarchyParent     #WorldPayGroup
+          DataSource          #CreditCardMerchantWorldPay
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Interface9
+          ElementPosition     #1879048185
+          HierarchyParent     #GroupPayPal
+          DataSource          #CreditCardMerchantBraintree
+          DataGroup           #Interface
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Linkpoint
+          AutoDeclaration     #Yes
+          ElementPosition     #1227133512
+          HierarchyParent     #FirstDataGroup
+          DataSource          #CreditCardMerchantFirstData
+          DataGroup           #Linkpoint
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Localization
+          ElementPosition     #1840700268
+          HierarchyParent     #GroupOrbital
+          DataSource          #CreditCardMerchantOrbital
+          DataGroup           #Localization
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login
+          ElementPosition     #1073741822
+          HierarchyParent     #GroupPaymentech
+          DataSource          #CreditCardMerchantPaymentech
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login1
+          ElementPosition     #1073741822
+          HierarchyParent     #GroupADN
+          DataSource          #CreditCardMerchantADN
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login2
+          ElementPosition     #613566756
+          HierarchyParent     #GroupOrbital
+          DataSource          #CreditCardMerchantOrbital
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login3
+          ElementPosition     #1073741822
+          HierarchyParent     #MonerisGroup
+          DataSource          #CreditCardMerchantMoneris
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login4
+          ElementPosition     #1073741822
+          HierarchyParent     #PayPalXGroup
+          DataSource          #CreditCardMerchantPayPalX
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login5
+          ElementPosition     #858993458
+          HierarchyParent     #HeartlandGroup
+          DataSource          #CreditCardMerchantHeartland
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login6
+          ElementPosition     #1073741822
+          HierarchyParent     #DPSGroup
+          DataSource          #CreditCardMerchantDPS
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login7
+          ElementPosition     #1610612733
+          HierarchyParent     #ElavonGroup
+          DataSource          #CreditCardMerchantElavon
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Login8
+          ElementPosition     #1610612733
+          HierarchyParent     #UDCCGroup
+          DataSource          #CreditCardMerchantUDCC
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Merchant
+          ElementPosition     #858993458
+          HierarchyParent     #GroupCybersource
+          DataSource          #CreditCardMerchantCybersource
+          DataGroup           #Merchant
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Merchant1
+          ElementPosition     #858993458
+          HierarchyParent     #RealExGroup
+          DataSource          #CreditCardMerchantRealEx
+          DataGroup           #Merchant
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Merchant2
+          ElementPosition     #1610612733
+          HierarchyParent     #CommideaGroup
+          DataSource          #CreditCardMerchantCommidea
+          DataGroup           #Merchant
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Merchant3
+          ElementPosition     #1610612733
+          HierarchyParent     #AdFlexGroup
+          DataSource          #CreditCardMerchantAdflex
+          DataGroup           #Merchant
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Merchant4
+          ElementPosition     #1073741823
+          HierarchyParent     #TSYSGroup
+          DataSource          #CreditCardMerchantTSYS
+          DataGroup           #Merchant
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Merchant5
+          ElementPosition     #1431655764
+          HierarchyParent     #OpenEdgeGroup
+          DataSource          #CreditCardMerchantOpenEdge
+          DataGroup           #Merchant
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Merchant6
+          ElementPosition     #1610612730
+          HierarchyParent     #GroupPayPal
+          DataSource          #CreditCardMerchantBraintree
+          DataGroup           #Merchant
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #MonerisGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Moneris
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #MonerisTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Moneris
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network
+          ElementPosition     #1610612733
+          HierarchyParent     #GroupPaymentech
+          DataSource          #CreditCardMerchantPaymentech
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network1
+          ElementPosition     #1610612733
+          HierarchyParent     #GroupADN
+          DataSource          #CreditCardMerchantADN
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network2
+          ElementPosition     #920350134
+          HierarchyParent     #GroupOrbital
+          DataSource          #CreditCardMerchantOrbital
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network3
+          ElementPosition     #1610612733
+          HierarchyParent     #MonerisGroup
+          DataSource          #CreditCardMerchantMoneris
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network4
+          ElementPosition     #1610612733
+          HierarchyParent     #PayPalXGroup
+          DataSource          #CreditCardMerchantPayPalX
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network5
+          ElementPosition     #1288490187
+          HierarchyParent     #HeartlandGroup
+          DataSource          #CreditCardMerchantHeartland
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network6
+          ElementPosition     #1610612733
+          HierarchyParent     #DPSGroup
+          DataSource          #CreditCardMerchantDPS
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network7
+          ElementPosition     #1073741822
+          HierarchyParent     #ElavonGroup
+          DataSource          #CreditCardMerchantElavon
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Network8
+          ElementPosition     #1073741822
+          HierarchyParent     #UDCCGroup
+          DataSource          #CreditCardMerchantUDCC
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #OpenEdgeGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #OpenEdge
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #OpenEdgeTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #OpenEdge
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #OrbitalTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Orbital
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #OverviewTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Overview
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PaymentechTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Paymentech
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PayPalLogin
+          ElementPosition     #805306365
+          HierarchyParent     #GroupPayPal
+          DataSource          #CreditCardMerchantVerisign
+          DataGroup           #Login
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PayPalNetwork
+          ElementPosition     #1073741820
+          HierarchyParent     #GroupPayPal
+          DataSource          #CreditCardMerchantVerisign
+          DataGroup           #Network
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PayPalProxy
+          ElementPosition     #1342177275
+          HierarchyParent     #GroupPayPal
+          DataSource          #CreditCardMerchantVerisign
+          DataGroup           #Proxy
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PayPalTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #PayPal
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PayPalXGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #PayPalX
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PayPayXTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #PayPalX
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PINCapable
+          ElementPosition     #1533916890
+          HierarchyParent     #GroupGeneral
+          DataSource          #CreditCardTerminalTable
+          DataGroup           #PINCapable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #RapidConnect
+          AutoDeclaration     #Yes
+          ElementPosition     #1533916890
+          HierarchyParent     #FirstDataGroup
+          DataSource          #CreditCardMerchantFirstData
+          DataGroup           #RapidConnect
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #RCButtons
+          Visible             #No
+          ElementPosition     #613566756
+          HierarchyParent     #FirstDataGroup
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #RealExGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #RealEx
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #RealExTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #RealEx
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #SecureNet
+          ElementPosition     #1288490187
+          HierarchyParent     #WorldPayGroup
+          DataSource          #CreditCardMerchantWorldPay
+          DataGroup           #SecureNet
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #StoredValue
+          ElementPosition     #1789569705
+          HierarchyParent     #OpenEdgeGroup
+          DataSource          #CreditCardMerchantOpenEdge
+          DataGroup           #StoredValue
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #System
+          ElementPosition     #920350134
+          HierarchyParent     #GroupGeneral
+          DataSource          #CreditCardTerminalTable
+          DataGroup           #System
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Terminal
+          ElementPosition     #613566756
+          HierarchyParent     #GroupGeneral
+          DataSource          #CreditCardTerminalTable
+          DataGroup           #Terminal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Transaction
+          ElementPosition     #1840700268
+          HierarchyParent     #GroupGeneral
+          DataSource          #CreditCardTerminalTable
+          DataGroup           #Transaction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #TSYSGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #TSYS
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #TSYSTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #TSYS
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #UDCCGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #UDCC
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #UDCCTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #UDCC
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #UseConnection
+          ElementPosition     #1227133512
+          HierarchyParent     #GroupOrbital
+          DataSource          #CreditCardMerchantOrbital
+          DataGroup           #UseConnection
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #WorldPayGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #WorldPay
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #WorldPayTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #WorldPay
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #Tab
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741823
+          Style               #VerticalTabs
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Adflex
+          AutoDeclaration     #Yes
+          ElementPosition     #2058005156
+          HierarchyParent     #Tab
+          Caption             #@ACC1696
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #ADN
+          AutoDeclaration     #Yes
+          ElementPosition     #805306362
+          HierarchyParent     #Tab
+          Caption             #@ACC1118
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Commidea
+          AutoDeclaration     #Yes
+          ElementPosition     #1342177270
+          HierarchyParent     #Tab
+          Caption             #@ACC1343
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Cybersource
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741816
+          HierarchyParent     #Tab
+          Caption             #@ACC1249
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #DPS
+          ElementPosition     #1968526667
+          HierarchyParent     #Tab
+          Caption             #@ACC1669
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Elavon
+          AutoDeclaration     #Yes
+          ElementPosition     #2102744401
+          HierarchyParent     #Tab
+          Caption             #@ACC1708
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #FirstData
+          AutoDeclaration     #Yes
+          ElementPosition     #1744830451
+          HierarchyParent     #Tab
+          Caption             #@ACC1668
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #General
+          ElementPosition     #402653181
+          HierarchyParent     #Tab
+          Caption             #@SYS19924
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #GiveX
+          ElementPosition     #2132570563
+          HierarchyParent     #Tab
+          Caption             #@ACC1792
+          DataSource          #CreditCardMerchantGiveX
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Heartland
+          AutoDeclaration     #Yes
+          ElementPosition     #1879048178
+          HierarchyParent     #Tab
+          Caption             #@ACC1667
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Moneris
+          AutoDeclaration     #Yes
+          ElementPosition     #1207959543
+          HierarchyParent     #Tab
+          Caption             #@ACC1285
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #OpenEdge
+          AutoDeclaration     #Yes
+          ElementPosition     #2142512617
+          HierarchyParent     #Tab
+          Caption             #@ACC1846
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Orbital
+          AutoDeclaration     #Yes
+          ConfigurationKey    #Orbital
+          ElementPosition     #671088635
+          HierarchyParent     #Tab
+          Caption             #@ACC864
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Overview
+          ElementPosition     #268435454
+          HierarchyParent     #Tab
+          Caption             #@SYS9039
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Paymentech
+          AutoDeclaration     #Yes
+          ElementPosition     #536870908
+          HierarchyParent     #Tab
+          Caption             #@ACC589
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #PayPal
+          AutoDeclaration     #Yes
+          ElementPosition     #939524089
+          HierarchyParent     #Tab
+          Caption             #@ACC1111
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #PayPalX
+          AutoDeclaration     #Yes
+          ElementPosition     #1610612724
+          HierarchyParent     #Tab
+          Caption             #@ACC1351
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #RealEx
+          AutoDeclaration     #Yes
+          ElementPosition     #1476394997
+          HierarchyParent     #Tab
+          Caption             #@ACC1271
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #TSYS
+          AutoDeclaration     #Yes
+          ElementPosition     #2117657482
+          HierarchyParent     #Tab
+          Caption             #@ACC1334
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #UDCC
+          AutoDeclaration     #Yes
+          ElementPosition     #2137541590
+          HierarchyParent     #Tab
+          Caption             #@ACC1843
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #WorldPay
+          AutoDeclaration     #Yes
+          ElementPosition     #2144998131
+          HierarchyParent     #Tab
+          Caption             #@ACC1897
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #Activate
+          Visible             #No
+          HelpText            #@ACC1894
+          ElementPosition     #1431655764
+          HierarchyParent     #RCButtons
+          Text                #@SYS112606
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    //CreditCardFirstData::processSRS(CreditCardTerminalTable.TerminalId);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #SettleBatch
+          HelpText            #@ACC1047
+          ElementPosition     #1610612733
+          HierarchyParent     #ButtonGroup
+          Text                #@ACC1764
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    CreditCardTSYSTransITBuilder::settleBatch(CreditCardMerchantTSYS.TerminalId);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #TransKey
+          HelpText            #@ACC1728
+          ElementPosition     #1073741822
+          HierarchyParent     #ButtonGroup
+          Text                #@ACC1727
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    ;
+            #    CreditCardTSYSTransITBuilder::getTransactionKey(CreditCardTerminalTable.TerminalId);
+            #
+            #    super();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #CreditCardTerminalTable_StoredValue
+          ElementPosition     #1789569705
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          DataSource          #CreditCardTerminalTable
+          DataField           #StoredValue
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTerminalTable_CreditCardProcessor
+          ElementPosition     #1431655764
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTerminalTable
+          DataField           #Processor
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DeleteButton
+          ElementPosition     #1073741823
+          HierarchyParent     #NewDeleteGroup
+          Text                #@sys14425
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          Primary             #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #NewButton
+          ElementPosition     #715827882
+          HierarchyParent     #NewDeleteGroup
+          ButtonDisplay       #Text & Image left
+          NormalImage         #11045
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          Command             #260
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardOrderHoldTable
+          ElementPosition     #1789569705
+          HierarchyParent     #NewDeleteGroup
+          MenuItemName        #CreditCardOrderHoldTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardResponseTable
+          ElementPosition     #1431655764
+          HierarchyParent     #NewDeleteGroup
+          MenuItemName        #CreditCardResponseTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticGeneralTitle
+          ElementPosition     #1431655764
+          HierarchyParent     #GeneralTitle
+          Text                #@ACC1586
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticOrbitalTitle
+          ElementPosition     #1431655764
+          HierarchyParent     #OrbitalTitle
+          Text                #@ACC1587
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextAdflex
+          ElementPosition     #1431655764
+          HierarchyParent     #AdFlexTitle
+          Text                #@ACC1701
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextADN
+          ElementPosition     #1431655764
+          HierarchyParent     #ADNTitle
+          Text                #@ACC1590
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextCommidea
+          ElementPosition     #1431655764
+          HierarchyParent     #CommideaTitle
+          Text                #@ACC1593
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextCybersource
+          ElementPosition     #1431655764
+          HierarchyParent     #CybersourceTitle
+          Text                #@ACC1589
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextDPS
+          ElementPosition     #1431655764
+          HierarchyParent     #DPSTitle
+          Text                #@ACC1674
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextElavon
+          ElementPosition     #1431655764
+          HierarchyParent     #ElavonTitle
+          Text                #@ACC1709
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextFirstData
+          ElementPosition     #1431655764
+          HierarchyParent     #FirstDataTitle
+          Text                #@ACC1672
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextGiveX
+          ElementPosition     #1431655764
+          HierarchyParent     #GiveXTitle
+          Text                #@ACC1791
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextHeartland
+          ElementPosition     #1431655764
+          HierarchyParent     #HeartlandTitle
+          Text                #@ACC1673
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextMoneris
+          ElementPosition     #1431655764
+          HierarchyParent     #MonerisTitle
+          Text                #@ACC1592
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextOpenEdge
+          ElementPosition     #1431655764
+          HierarchyParent     #OpenEdgeTitle
+          Text                #@ACC1847
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextOverview
+          ElementPosition     #1431655764
+          HierarchyParent     #OverviewTitle
+          Text                #@ACC1585
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextPaymentech
+          ElementPosition     #1431655764
+          HierarchyParent     #PaymentechTitle
+          Text                #@ACC1589
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextPayPal
+          ElementPosition     #1431655764
+          HierarchyParent     #PayPalTitle
+          Text                #@ACC1588
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextPayPalX
+          ElementPosition     #1431655764
+          HierarchyParent     #PayPayXTitle
+          Text                #@ACC1595
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextRealEx
+          ElementPosition     #1431655764
+          HierarchyParent     #RealExTitle
+          Text                #@ACC1591
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextTSYS
+          ElementPosition     #1431655764
+          HierarchyParent     #TSYSTitle
+          Text                #@ACC1726
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextUDCC
+          ElementPosition     #1431655764
+          HierarchyParent     #UDCCTitle
+          Text                #@ACC1844
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextWorldPay
+          ElementPosition     #1431655764
+          HierarchyParent     #WorldPayTitle
+          Text                #@ACC1900
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTerminalTable_Description
+          ElementPosition     #1073741823
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTerminalTable
+          DataField           #Description
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTerminalTable_TerminalId
+          ElementPosition     #715827882
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTerminalTable
+          DataField           #TerminalId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Merchant5_PartnerPwd
+          ElementPosition     #1610612733
+          HierarchyParent     #GiveXMerchant
+          DataSource          #CreditCardMerchantGiveX
+          DataField           #PartnerPwd
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Merchant5_UserId
+          ElementPosition     #1073741822
+          HierarchyParent     #GiveXMerchant
+          DataSource          #CreditCardMerchantGiveX
+          DataField           #UserId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

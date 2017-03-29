@@ -1,0 +1,79 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardSettlement
+    PROPERTIES
+      Name                #CreditCardSettlement
+      Extends             #RunBaseReport
+      Origin              #{938C460E-0037-4218-989E-27A0CFF84DB8}
+      LegacyId            #20017
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #abstract class CreditCardSettlement extends RunBaseReport
+        #{
+        #    DialogField         dialogFromDate;
+        #    DialogField         dialogToDate;
+        #    DialogField         dialogTrxType;
+        #
+        #    TransDate           fromDate;
+        #    TransDate           toDate;
+        #    CreditCardTrxType   trxType;
+        #}
+      ENDSOURCE
+      SOURCE #getFromDialog
+        #public boolean getFromDialog()
+        #{
+        #    ;
+        #    fromDate  = dialogFromDate.value();
+        #    toDate    = dialogToDate.value();
+        #
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static CreditCardSettlement construct(CreditCardReconciliationType type)
+        #{
+        #    CreditCardSettlement        creditCardSettlement;
+        #    ;
+        #    switch (type)
+        #    {
+        #        case CreditCardReconciliationType::ByDate   :
+        #            //creditCardSettlement =  new CreditCardSettlement_ByDate();
+        #            break;
+        #        case CreditCardReconciliationType::CreditCardType   :
+        #            //creditCardSettlement =  new CreditCardSettlement_ByType();
+        #            break;
+        #        default :
+        #            //creditCardSettlement = new CreditCardSettlement_ByDate();
+        #            break;
+        #    }
+        #
+        #    return creditCardSettlement;
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args args)
+        #{
+        #    CreditCardSettlement creditCardSettlement;
+        #    ;
+        #
+        #    creditCardSettlement = creditCardSettlement::construct(args.parmEnum());
+        #
+        #    if (creditCardSettlement.prompt())
+        #    {
+        #        creditCardSettlement.run();
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

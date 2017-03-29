@@ -1,0 +1,252 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantElavon
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantElavon
+      Label               #@ACC1706
+      FormRef             #creditcardterminalTable
+      TitleField1         #AccounttId
+      TitleField2         #TerminalId
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdx
+      ClusterIndex        #TerminalIdx
+      DeveloperDocumentation  #@ACC1707
+      Origin              #{21A082A2-E390-4F90-A66B-0D7CF0881EFE}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AccounttId
+        STRING
+        PROPERTIES
+          Name                #AccounttId
+          Label               #@SYS111844
+          Table               #CreditCardMerchantElavon
+          Origin              #{6717AC41-82B4-4569-9E15-14437892B1A0}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #HostAddress
+        STRING
+        PROPERTIES
+          Name                #HostAddress
+          Label               #@ACC44
+          HelpText            #@ACC1037
+          Table               #CreditCardMerchantElavon
+          Origin              #{424071C3-7ACF-4206-A1B0-E10D40C43A2F}
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #Industry
+        ENUM
+        PROPERTIES
+          Name                #Industry
+          Table               #CreditCardMerchantElavon
+          Origin              #{B98CF8EC-F340-4509-B054-1DA8CA342FC1}
+          EnumType            #CreditCardIndustryHCS
+        ENDPROPERTIES
+        
+      FIELD #PIN
+        STRING
+        PROPERTIES
+          Name                #PIN
+          Label               #@SYS344656
+          Table               #CreditCardMerchantElavon
+          Origin              #{91DBAF5C-9763-4921-98C5-981DFDFC4858}
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #Port
+        INT
+        PROPERTIES
+          Name                #Port
+          Table               #CreditCardMerchantElavon
+          Origin              #{9C24F377-6AAF-45D2-8CFE-35CD0ED6A484}
+          ExtendedDataType    #CreditCardTCPPort
+        ENDPROPERTIES
+        
+      FIELD #Pwd
+        STRING
+        PROPERTIES
+          Name                #Pwd
+          Table               #CreditCardMerchantElavon
+          Origin              #{92BA0491-D67E-4AE4-9F29-23DE02413EFD}
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantElavon
+          Origin              #{CF1EBCC5-CBA5-4A46-BEB1-A1E43CA620AD}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #UserId
+        STRING
+        PROPERTIES
+          Name                #UserId
+          Table               #CreditCardMerchantElavon
+          Origin              #{8DAFBCD1-5F4D-4564-BC86-47EF2BA10921}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccounttId
+          #Pwd
+          #HostAddress
+          #Port
+          #UserId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Industry
+        PROPERTIES
+          Name                #Industry
+          Label               #@ACC634
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Industry
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Login
+        PROPERTIES
+          Name                #Login
+          Label               #@SYS57712
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UserId
+          #Pwd
+          #PIN
+          #AccounttId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Network
+        PROPERTIES
+          Name                #Network
+          Label               #@SYS30485
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #HostAddress
+          #Port
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdx
+      PROPERTIES
+        Name                #TerminalIdx
+        AllowDuplicates     #No
+        Origin              #{2DF47242-1A10-4AFE-8529-E6D39BC25F71}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminals
+        PROPERTIES
+          Name                #CreditCardTerminals
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #createRetailRec
+        #public static void createRetailRec(CreditCardMerchantElavon    elavon)
+        #{
+        #    CreditCardRetailTerminalTable       terminalTable;
+        #    ;
+        #    terminalTable.clear();
+        #    terminalTable.TerminalId =  elavon.TerminalId;
+        #    terminalTable.HostAddress = elavon.HostAddress;
+        #    terminalTable.LoginId   =   elavon.UserId;
+        #    terminalTable.Pwd       =   elavon.Pwd;
+        #    terminalTable.Processor =   CreditCardProcessor::Elavon;
+        #    terminalTable.MerchantId =  elavon.AccounttId;
+        #    terminalTable.write();
+        #
+        #}
+      ENDSOURCE
+      SOURCE #updateRetailRec
+        #public static void updateRetailRec(CreditCardMerchantElavon    elavon,
+        #                            CreditCardRetailTerminalTable      terminalTable)
+        #{
+        #    ;
+        #    ttsBegin;
+        #    terminalTable.selectForUpdate(true);
+        #    terminalTable.TerminalId =  elavon.TerminalId;
+        #    terminalTable.HostAddress = elavon.HostAddress;
+        #    terminalTable.LoginId   =   elavon.UserId;
+        #    terminalTable.Pwd       =   elavon.Pwd;
+        #    terminalTable.Processor =   CreditCardProcessor::Elavon;
+        #    terminalTable.MerchantId =  elavon.AccounttId;
+        #    terminalTable.write();
+        #    ttsCommit;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

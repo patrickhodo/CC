@@ -1,0 +1,145 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardCurrency
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardCurrency
+      Label               #@ACC852
+      TitleField1         #CurrencyCode
+      TitleField2         #OrbitalCurrency
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #CurrencyIdx
+      ClusterIndex        #CurrencyIdx
+      DeveloperDocumentation  #@ACC1742
+      Origin              #{4F78DA7E-7BD3-4B91-9CC8-CA6687B6E3BB}
+      LegacyId            #20004
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #CurrencyCode
+        STRING
+        PROPERTIES
+          Name                #CurrencyCode
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardCurrency
+          Origin              #{CAE4B579-2A02-489F-BDAD-753B55B547E0}
+          LegacyId            #20002
+          ExtendedDataType    #CurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #OrbitalCurrency
+        ENUM
+        PROPERTIES
+          Name                #OrbitalCurrency
+          Table               #CreditCardCurrency
+          Origin              #{2E498DF9-03BF-4BA8-8D14-0BEC71DB387C}
+          LegacyId            #20001
+          EnumType            #CreditCardOrbitalCurrency
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #OrbitalCurrency
+          #CurrencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #OrbitalCurrency
+          #CurrencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Currency
+        PROPERTIES
+          Name                #Currency
+          Label               #@SYS7572
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #OrbitalCurrency
+          #CurrencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS36186
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #OrbitalCurrency
+          #CurrencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #CurrencyIdx
+      PROPERTIES
+        Name                #CurrencyIdx
+        AllowDuplicates     #No
+        Origin              #{367A9044-59A1-4AF5-B83D-4CC6F103EAC2}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CurrencyCode
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CurrencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

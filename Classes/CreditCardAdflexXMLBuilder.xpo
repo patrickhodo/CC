@@ -1,0 +1,78 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardAdflexXMLBuilder
+    PROPERTIES
+      Name                #CreditCardAdflexXMLBuilder
+      Origin              #{D8CBCB0C-85B4-4FD4-B2FB-EC3FB60CB30C}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #checkMerchantAdflex
+        #boolean checkMerchantAdflex(CreditCardMerchantAdflex  ccMerchantAdflex)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantAdflex.PSPId)
+        #       throw error("@ACC1699");
+        #    else if (!ccMerchantAdflex.URL)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardAdflexXMLBuilder
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #analyzeResponse
+        #public static CreditCardTrans analyzeResponse(str msg, CreditCardTrans ccTrans)
+        #{
+        #    TempStr                         webServiceVersion = "1.7";
+        #    ;
+        #
+        #
+        #    switch (webServiceVersion)
+        #    {
+        #        case    "1.7" :
+        #            ccTrans = CreditCardAdflexXMLBuilder17::analyzeAdflexResponse(msg,ccTrans);
+        #            break;
+        #        default :
+        #            throw error("@ACC1700");
+        #    }
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static str construct(CreditCardTrans        ccTrans)
+        #{
+        #    TempStr                         webServiceVersion = "1.7";
+        #    TempStr                         parmList;
+        #    ;
+        #
+        #
+        #    switch (webServiceVersion)
+        #    {
+        #        case    "1.7" :
+        #            parmList = CreditCardAdflexXMLBuilder17::construct(ccTrans);
+        #            break;
+        #        default :
+        #            throw error("@ACC1700");
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

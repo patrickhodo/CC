@@ -1,0 +1,1638 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #MCRCustPaymTable
+  PROPERTIES
+    Name                #MCRCustPaymTable
+    Origin              #{53D4986B-84BE-4220-BF38-73D1F7779F86}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    // manages a list of payments
+      #    MCRCustPaymTotals           mcrCustPaymTotals;
+      #
+      #    boolean                     formAllowEdit;
+      #    SalesTable                  salesTable;
+      #
+      #    // save off the table ID.
+      #    TableID                     mcrContinuityCustHeaderID;
+      #
+      #    boolean                     payDown;
+      #
+      #    MCRSalesOrderTotals         mcrSalesOrderTotals;
+      #
+      #}
+    ENDSOURCE
+    SOURCE #canClose
+      #public boolean canClose()
+      #{
+      #    boolean ret = super();
+      #
+      #    if (ret)
+      #    {
+      #        if (this.args().record().TableId == tableNum(SalesTable))
+      #        {
+      #            salesTable = element.args().record();
+      #
+      #            if (payDown)
+      #            {
+      #                // If pay down need to write the cust trans open
+      #                // for the pay down - this is the only way to settle and
+      #                // cancel the payments - if paying down on an invoiced order
+      #                ret = mcrCustPaymTotals.processPayments(MCRProcessPaymAction::PostOnlyPrepays,
+      #                                                        false,
+      #                                                        true,
+      #                                                        0);
+      #
+      #                if (!ret)
+      #                {
+      #                    MCRCustPaymTable_ds.executeQuery();
+      #                }
+      #            }
+      #        }
+      #    }
+      #
+      #    return ret;
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    Args                args;
+      #
+      #    args = this.args();
+      #    super();
+      #
+      #    payDown = false;
+      #
+      #    // Construct a payment totals instance, which is used to perform operations
+      #    //  on a set of payments.
+      #    if (args.record())
+      #    {
+      #        // The payment totals instance will operate on
+      #        // payments associated with the record passed as an argument.
+      #        mcrCustPaymTotals = MCRCustPaymTotals::construct(args.record().TableID, args.record().RecId);
+      #
+      #        // if the return summary form was called from MCRReturnInquiry form,
+      #        // then set the formAllow edit to false.
+      #        if (args.parm() == 'InquiryOnly')
+      #        {
+      #            formAllowEdit = false;
+      #        }
+      #        else if (args.parm() == 'InstallmentPayDown')
+      #        {
+      #            formAllowEdit = true;
+      #            payDown = true;
+      #        }
+      #        else
+      #        {
+      #            formAllowEdit = mcrCustPaymTotals.allowEdit();
+      #        }
+      #
+      #        if (args.dataset() == tableNum(SalesTable))
+      #        {
+      #            salesTable = args.record();
+      #            MCRCustPaymInstallment.enabled(true);
+      #            mcrSalesOrderTotals = new MCRSalesOrderTotals(salesTable);
+      #        }
+      #        else if (element.args().record().TableId == tableNum(MCRContinuityCustHeader))
+      #        {
+      #            // Save off the table ID.
+      #            MCRContinuityCustHeaderID = tableNum(MCRContinuityCustHeader);
+      #        }
+      #    }
+      #
+      #    AddBtn.enabled(formAllowEdit);
+      #    EditBtn.enabled(formAllowEdit);
+      #
+      #    // this form requires a payment totals object object to function properly
+      #    if (!mcrCustPaymTotals)
+      #    {
+      #        throw error(strfmt("@MCR10663", element.name()) + "  " + "@MCR10664");
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #run
+      #/// <summary>
+      #///     Displays this form.
+      #/// </summary>
+      #public void run()
+      #{
+      #    super();
+      #
+      #    // If the sales total has changed, then payment amounts may need to be
+      #    //  updated.  Update the payment records prior to executing the query.
+      #    if (MCRCustPaymTable)
+      #    {
+      #        MCRCustPaymTable.recalculateAmounts();
+      #    }
+      #
+      #    // calculate and update "totals" fields
+      #    element.updateTotalsControls();
+      #
+      #    // calculate and update customer credit limit fields
+      #    element.updateCreditLimitControls();
+      #
+      #}
+    ENDSOURCE
+    SOURCE #updateCreditLimitControls
+      #/// <summary>
+      #///     Calculates and displays the customer credit limit.
+      #/// </summary>
+      #public void updateCreditLimitControls()
+      #{
+      #    CustTable custTable = CustTable::find(mcrCustPaymTotals.getInvoiceAccount());
+      #
+      #    if (custTable
+      #        && (custTable.creditMax
+      #        || custTable.mandatoryCreditLimit))
+      #    {
+      #        CustCreditLimit_NoLimit.visible(false);
+      #
+      #        CustCreditLimit.visible(true);
+      #        CustCreditLimitCurrency.visible(true);
+      #
+      #        CustCreditLimit.realValue(custTable.CreditMax);
+      #
+      #        // credit limits are stored in the company default currency
+      #        CustCreditLimitCurrency.text(Ledger::accountingCurrency(CompanyInfo::find().RecId));
+      #    }
+      #    else    // no limit
+      #    {
+      #        CustCreditLimit_NoLimit.visible(true);
+      #
+      #        CustCreditLimit.visible(false);
+      #        CustCreditLimitCurrency.visible(false);
+      #
+      #        CustCreditLimit_NoLimit.text("@MCR11201");
+      #    }
+      #}
+      #
+    ENDSOURCE
+    SOURCE #updatePaymTypeControls
+      #/// <summary>
+      #///     Updates properties of form controls based upon the payment type of the
+      #///     active payment.
+      #/// </summary>
+      #public void updatePaymTypeControls()
+      #{
+      #    element.lock();
+      #    // hide/disable controls
+      #    CreditCardGroup.visible(false);
+      #    CheckGroup.visible(false);
+      #    GiftCardGroup.visible(false);
+      #    OnAccountGroup.visible(false);
+      #    NSFCancel.enabled(false);
+      #
+      #    // show/enable controls for the payment type
+      #    switch (mcrCustPaymTable.CustPaymType)
+      #    {
+      #        case MCRCustPaymType::CreditCard:
+      #
+      #            CreditCardGroup.visible(true);
+      #
+      #            break;
+      #
+      #        case MCRCustPaymType::Check:
+      #
+      #            CheckGroup.visible(true);
+      #
+      #            if (mcrCustPaymTable.PostedAmount != 0 && mcrCustPaymTable.Amount != 0)
+      #            {
+      #                NSFCancel.enabled(true);
+      #            }
+      #
+      #            break;
+      #
+      #        // The gift cert group to be visible for gift cards as well.
+      #        case MCRCustPaymType::GiftCard:
+      #
+      #            GiftCardGroup.visible(true);
+      #
+      #            break;
+      #
+      #
+      #        case MCRCustPaymType::OnAccount:
+      #
+      #            OnAccountGroup.visible(true);
+      #            break;
+      #    }
+      #
+      #    // "skip" percentage amount field if not editable
+      #    PaymGrid_PercentAmount.skip(
+      #        !mcrCustPaymTable_ds.object(PaymGrid_PercentAmount.dataField()).allowEdit()
+      #        && formAllowEdit);
+      #
+      #    // For continuity orders, multiple payments are not allowed
+      #    // So if the payment screen is being invoked from continuity, disallow
+      #    // addition of multiple payments if a payment already exists.
+      #    if (mcrContinuityCustHeaderID)
+      #    {
+      #        if (MCRCustPaymTable::findByRefRecIDRefTableID(this.args().record().RecId,
+      #                                                        this.args().record().TableId, false))
+      #        {
+      #            // Record exists
+      #            mcrCustPaymTable_ds.allowCreate(false);
+      #        }
+      #    }
+      #
+      #    element.redraw();
+      #    element.unLock();
+      #}
+      #
+    ENDSOURCE
+    SOURCE #updateTotalsControls
+      #/// <summary>
+      #///     Calculates and displays totals (sales total, payment total, balance,
+      #///     and currency).
+      #/// </summary>
+      #public void updateTotalsControls()
+      #{
+      #    AmountCur  currentOrderSalesTotal = mcrCustPaymTotals.getTotalSalesAmount();
+      #    MCRInstallmentPlanSalesTable mcrInstallmentPlanSalesTable;
+      #
+      #    if (salesTable
+      #        && MCRInstallmentPlanSalesTable::installmentEnabled())
+      #    {
+      #        mcrInstallmentPlanSalesTable = MCRInstallmentPlanSalesTable::findSalesId(salesTable.SalesId);
+      #        SalesTotal_InstBilling.realValue(mcrSalesOrderTotals.getInstallmentEligibleTotal());
+      #        SalesTotal_PayNow.realValue(currentOrderSalesTotal - SalesTotal_InstBilling.realValue());
+      #        PaymentTotal.realValue(mcrCustPaymTotals.getTotalPaymAmount(false)
+      #                                            + mcrInstallmentPlanSalesTable.sumTotalAmount(salesTable));
+      #    }
+      #    else
+      #    {
+      #        PaymentTotal.realValue(mcrCustPaymTotals.getTotalPaymAmount(false));
+      #    }
+      #
+      #    SalesTotal.realValue(currentOrderSalesTotal);
+      #    Balance.realValue(SalesTotal.realValue() - PaymentTotal.realValue());
+      #
+      #    Currency.text(mcrCustPaymTotals.getCurrency());
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #MCRCustPaymTable
+          Table               #MCRCustPaymTable
+          CounterField        #LineNum
+          AllowCreate         #No
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD PercentAmount
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #/// <summary>
+                #///     Recalculates all payment amounts and totals after a payment's
+                #///     percentage amount is modified.
+                #/// </summary>
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    // one or more payments were updated -- refresh datasource
+                #    mcrCustPaymTable_ds.research(true);
+                #
+                #    element.updateTotalsControls();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD Amount
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #/// <summary>
+                #///     Recalculates all payment amounts and totals.
+                #/// </summary>
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    // one or more payments were updated -- refresh datasource
+                #    mcrCustPaymTable_ds.research(true);
+                #
+                #    element.updateTotalsControls();
+                #}
+                #
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD Status
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CheckNumber
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #/// <summary>
+                #///     Calls logic to recalculate amounts.
+                #/// </summary>
+                #/// <remarks>
+                #///     If the amount was entered and no check number
+                #///     was entered, validate write method in recalculateAmounts
+                #///     would fail.  So submitPayments would never get set,
+                #///     so the check payment would not get posted when
+                #///     this form closed.
+                #/// </remarks>
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    //element.recalculateAmounts();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD LineNum
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CustPaymType
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD IsPrepay
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #/// <summary>
+                #///     Refreshes the datasource.
+                #/// </summary>
+                #/// <remarks>
+                #///     This field is displayed in multiple controls, and the datasource must be
+                #///     refreshed to update all controls.
+                #/// </remarks>
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    mcrCustPaymTable_ds.refresh();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CustAccount
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD PaymSchedID
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CurrencyCode
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CheckAuthorized
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD OnAccountAuthorized
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD PostedAmount
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD isPlanRefund
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CardTypeId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          REFERENCEFIELD Channel
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDREFERENCEFIELD
+          
+          DATAFIELD NumAuthRetry
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          REFERENCEFIELD OrigRefundRecID
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDREFERENCEFIELD
+          
+          DATAFIELD PaymInfoRecId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD PaymInfoTableId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD TenderTypeId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #selectionChanged
+          #public void selectionChanged()
+          #{
+          #    CreditCardAuthTrans ccaTrans;
+          #
+          #    super();
+          #
+          #    ccaTrans = CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId);
+          #    CreditCard.enabled(ccaTrans.RecId > 0);
+          #}
+        ENDSOURCE
+        SOURCE #init
+          #public void init()
+          #{
+          #    super();
+          #
+          #    MCRCustPaymTable_ds.cacheAddMethod(tableMethodStr(MCRCustPaymTable, editCreditCard), false);
+          #    MCRCustPaymTable_ds.cacheAddMethod(tableMethodStr(MCRCustPaymTable, displayName), false);
+          #}
+        ENDSOURCE
+        SOURCE #create
+          #public void create(boolean _append = false)
+          #{
+          #    // Set the currency code on the mcrCustPaymTable
+          #    mcrCustPaymTable.CurrencyCode = mcrCustPaymTotals.getCurrency();
+          #
+          #    super(_append);
+          #}
+        ENDSOURCE
+        SOURCE #delete
+          #public void delete()
+          #{
+          #    //--> Credit Card begin
+          #    SalesTableCC            salesTableCC;
+          #    //<-- Credit Card End
+          #
+          #    //--> Credit Card begin
+          #
+          #    select salesTableCC
+          #        where salesTableCC.RecId == MCRCustPaymTable.PaymInfoRecId
+          #        && salesTableCC.Processed == NoYes::No;
+          #
+          #    if (salesTableCC)
+          #    {
+          #        ttsBegin;
+          #        salesTableCC.selectForUpdate(true);
+          #        salesTableCC.delete();
+          #        ttsCommit;
+          #    }
+          #    //<-- Credit Card End
+          #
+          #    super();
+          #
+          #    if (MCRCustPaymTable)
+          #    {
+          #        MCRCustPaymTable.recalculateAmounts();
+          #        MCRCustPaymTable_ds.research(true);
+          #    }
+          #
+          #    element.updatePaymTypeControls();
+          #    element.updateTotalsControls();
+          #
+          #
+          #}
+        ENDSOURCE
+        SOURCE #validateDelete
+          #public boolean validateDelete()
+          #{
+          #    boolean             ret;
+          #    CreditCardAuthTrans creditCardAuthTrans;
+          #    SalesId             salesId;
+          #    boolean             voidSucceeded;
+          #    DialogButton        dialogResult;
+          #
+          #    if (!formAllowEdit)
+          #    {
+          #        ret = false;
+          #        error("@MCR30299");
+          #    }
+          #    else
+          #    {
+          #        ret = mcrCustPaymTable.isCancelPaymAllowed(true);
+          #
+          #        //If the payment record has already been authorized,
+          #        //the payment needs to be voided before being deleted.
+          #        if (ret
+          #            && mcrCustPaymTable.CustPaymType == MCRCustPaymType::CreditCard
+          #            && mcrCustPaymTable.Status == MCRCustPaymStatus::Authorized)
+          #        {
+          #            salesId = mcrCustPaymTable.salesTable().SalesId;
+          #            if (MCRCustPaymTable.PaymInfoTableId != tableNum(SalesTableCC))
+          #            {
+          #                CreditCardAuthTrans::updateExpiredApproval(salesId);
+          #
+          #                select creditCardAuthTrans
+          #                    where creditCardAuthTrans.MCRPaymRecId == mcrCustPaymTable.RecId
+          #                    && creditCardAuthTrans.ApprovalType == CreditCardOperation::Authorize
+          #                    && !creditCardAuthTrans.ApprovalExpired
+          #                    && !creditCardAuthTrans.ApprovalVoid
+          #                    && creditCardAuthTrans.ProcessorStatus == CreditCardProcessorStatus::Approved;
+          #
+          #                voidSucceeded = CreditCardProcess::doVoidAuth(creditCardAuthTrans, false);
+          #                if (!voidSucceeded)
+          #                {
+          #                    dialogResult = Box::yesNo("@MCR4410739", //The voiding of the credit card payment failed.  Do you still want to delete the payment?
+          #                        DialogButton::Yes,
+          #                        "@MCR4410740");
+          #                    if (dialogResult == DialogButton::No)
+          #                    {
+          #                        ret = false;
+          #                    }
+          #                }
+          #            }
+          #        }
+          #    }
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+        SOURCE #active
+          #/// <summary>
+          #///     Allows or disallows editing of fields based upon the state of the
+          #///     active record.
+          #/// </summary>
+          #/// <returns>
+          #///     The integer passed back from the super.
+          #/// </returns>
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    // allow/disallow editing of fields for the current record
+          #    mcrCustPaymTable.setAllowEditInDataSource();
+          #
+          #    // update properties of controls based upon the payment type
+          #    element.updatePaymTypeControls();
+          #
+          #    MCRCustPaymTable_ds.allowDelete(formAllowEdit
+          #                                    && (mcrCustPaymTable.PostedAmount ? false : true));
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+        SOURCE #executeQuery
+          #/// <summary>
+          #///     Re-selects the previously active record after re-executing the query.
+          #/// </summary>
+          #public void executeQuery()
+          #{
+          #    boolean allowEdit;
+          #    Args args;
+          #    // save currently selected record
+          #    MCRCustPaymTable mcrCustPaymTable_Active;
+          #    Common  record;
+          #
+          #    args = element.args();
+          #    record = element.args().record();
+          #    // Set the current record to the cust payment record based on the
+          #    // active sales order record.
+          #    if (record && record.TableId == tableNum(SalesTable))
+          #    {
+          #        mcrCustPaymTable_Active = MCRCustPaymTable::findByRefRecIDRefTableID(record.RecId, record.TableId, false);
+          #    }
+          #
+          #    super();
+          #
+          #    // re-select the previously selected record
+          #    mcrCustPaymTable_ds.findRecord(mcrCustPaymTable_Active);
+          #
+          #    // Reconstruct the cust paym totals to ensure that the totals are being
+          #    // pulled in from the active sales order record
+          #    mcrCustPaymTotals = MCRCustPaymTotals::construct(args.record().TableID, args.record().RecId);
+          #
+          #
+          #    // allow/disallow editing of payments
+          #    allowEdit = mcrCustPaymTotals.allowEdit();
+          #    if (args.parm() != 'InstallmentPayDown')
+          #    {
+          #        mcrCustPaymTable_ds.allowEdit(allowEdit && formAllowEdit);
+          #        mcrCustPaymTable_ds.allowCreate(allowEdit && formAllowEdit);
+          #    }
+          #
+          #    // update totals
+          #    element.updateTotalsControls();
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Width               #Column width
+      Height              #Column height
+      Caption             #@SYS10719
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          ElementPosition     #715827880
+          HierarchyParent     #TopGroup
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPaneOrder
+          ElementPosition     #715827882
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+          DataSource          #MCRCustPaymTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTabOrder
+          ElementPosition     #1073741822
+          HierarchyParent     #ActionPaneOrder
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroupOrder
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTabOrder
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #PaymGrid
+          Width               #Column width
+          Height              #Column height
+          Skip                #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #TopGroup
+          MultiSelect         #No
+          VisibleRows         #8
+          DataSource          #MCRCustPaymTable
+          DataGroup           #Main
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CheckGroup
+          AutoDeclaration     #Yes
+          Visible             #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741823
+          HierarchyParent     #PaymentType
+          Caption             #@MCR12176
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CreditCardGroup
+          AutoDeclaration     #Yes
+          Visible             #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #715827882
+          HierarchyParent     #PaymentType
+          Caption             #@MCR20754
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GiftCardGroup
+          AutoDeclaration     #Yes
+          Visible             #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #PaymentType
+          Caption             #@MCR10988
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #InstallmentEligible
+          AutoDeclaration     #Yes
+          ElementPosition     #1879048188
+          HierarchyParent     #Totals
+          FrameType           #Bold caption
+          Caption             #@MCR30647
+          HideIfEmpty         #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #OnAccountGroup
+          AutoDeclaration     #Yes
+          Visible             #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1789569705
+          HierarchyParent     #PaymentType
+          Caption             #@SYS50040
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Payment
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741822
+          HierarchyParent     #PostingPage
+          Caption             #@SYS828
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PaymentType
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          HierarchyParent     #PostingPage
+          FrameType           #None
+          HideIfEmpty         #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #TopGroup
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #TabPageOverview
+          FrameType           #None
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Totals
+          ElementPosition     #1610612734
+          HierarchyParent     #TopGroup
+          Caption             #@SYS8311
+          HideIfEmpty         #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #CreditCard
+          AutoDeclaration     #Yes
+          HelpText            #@SYS116961
+          ConfigurationKey    #MCRInstallmentBilling
+          ElementPosition     #1908874352
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS101746
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #DetailsTab
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          Style               #FastTabs
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #PostingPage
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          HierarchyParent     #DetailsTab
+          Caption             #@SYS60610
+          Columns             #3
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #pageActivated
+            #public void pageActivated()
+            #{
+            #
+            #    element.updatePaymTypeControls();
+            #    super();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #TabPageOverview
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741822
+          HierarchyParent     #DetailsTab
+          Caption             #@SYS34991
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #AddBtn
+          AutoDeclaration     #Yes
+          HelpText            #@MCR40427
+          ElementPosition     #477218588
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS2318
+          ButtonDisplay       #Image only
+          NormalImage         #11421
+          ImageLocation       #EmbeddedResource
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #/// <summary>
+            #///     Displays the customer payments form, to allow the user to
+            #///     add a payment for the calling record.
+            #/// </summary>
+            #void clicked()
+            #{
+            #    args paymentArgs;
+            #
+            #    FormRun paymentFormRun;
+            #
+            #    paymentArgs = new Args();
+            #    // Pass calling record to the payment creation form
+            #    paymentArgs.record(element.args().record());
+            #
+            #    paymentFormRun = new MenuFunction(menuItemDisplayStr(MCRCustPaym), MenuItemType::Display).create(paymentArgs);
+            #
+            #    paymentFormRun.run();
+            #    paymentFormRun.wait();
+            #
+            #    MCRCustPaymTable_ds.research(true);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #MCRCustPaymInstallment
+          AutoDeclaration     #Yes
+          Enabled             #No
+          HelpText            #@MCR4410168
+          ConfigurationKey    #MCRInstallmentBilling
+          ElementPosition     #1431655764
+          HierarchyParent     #ButtonGroupOrder
+          Text                #@MCR31245
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    args paymentArgs;
+            #
+            #    FormRun paymentFormRun;
+            #
+            #    paymentArgs = new Args();
+            #    // Pass calling args to the installment form
+            #    paymentArgs.record(element.args().record());
+            #    paymentArgs.parm(element.args().parm());
+            #
+            #    paymentFormRun = new MenuFunction(menuItemDisplayStr(MCRCustPaymInstallment), MenuItemType::Display).create(paymentArgs);
+            #    paymentFormRun.run();
+            #    paymentFormRun.wait();
+            #
+            #    MCRCustPaymTable.recalculateAmounts();
+            #
+            #    // calculate and update "totals" fields
+            #    element.updateTotalsControls();
+            #
+            #    MCRCustPaymTable_ds.research(true);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #NSFCancel
+          AutoDeclaration     #Yes
+          HelpText            #@MCR24746
+          ElementPosition     #1193046470
+          HierarchyParent     #ButtonGroup
+          Text                #@MCR25409
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #public void clicked()
+            #{
+            #    MCRCustPaymTable::cancelPaym(mcrCustPaymTable.RecId);
+            #
+            #    // recalculate amounts as percentages of sales total
+            #    MCRCustPaymTable.recalculateAmounts();
+            #
+            #    // refresh data
+            #    mcrCustPaymTable_ds.executeQuery();
+            #}
+            #
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #Status
+          Skip                #Yes
+          ElementPosition     #1431655764
+          HierarchyParent     #Payment
+          DataSource          #MCRCustPaymTable
+          DataField           #Status
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DelBtn
+          AutoDeclaration     #Yes
+          ElementPosition     #954437176
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS21354
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          NeedsRecord         #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardAuthTrans
+          ElementPosition     #1610612733
+          HierarchyParent     #CreditCard
+          Text                #@SYS317472
+          DataSource          #MCRCustPaymTable
+          MenuItemName        #CreditCardAuthTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardPreauthorize
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #CreditCard
+          ShowShortCut        #No
+          Primary             #Yes
+          DataSource          #MCRCustPaymTable
+          MenuItemType        #Action
+          MenuItemName        #CreditCardPreauthorize
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DetailButton
+          ElementPosition     #1670265058
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS80118
+          NeedsRecord         #Yes
+          MenuItemName        #MCRCustPaymDetail
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EditBtn
+          AutoDeclaration     #Yes
+          ElementPosition     #715827882
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS2475
+          ButtonDisplay       #Image only
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          MultiSelect         #No
+          AutoRefreshData     #Yes
+          NeedsRecord         #Yes
+          DataSource          #MCRCustPaymTable
+          MenuItemName        #MCRCustPaym
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #Balance
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          ElementPosition     #1342177275
+          HierarchyParent     #Totals
+          DisplayLength       #12
+          Label               #@SYS53076
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #CustCreditLimit
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          HelpText            #@MCR11199
+          ElementPosition     #1288490187
+          HierarchyParent     #OnAccountGroup
+          DisplayLength       #12
+          Label               #@SYS1532
+          ExtendedDataType    
+            ARRAY 
+              #AmountMST
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #GiftCard_M_DisplayAvailableBalance
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          HelpText            #@MCR11166
+          ElementPosition     #1968526675
+          HierarchyParent     #GiftCardGroup
+          Label               #@MCR11164
+          DataSource          #MCRCustPaymTable
+          DataMethod          #displayGiftCardAvailableBalance
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #MCRCustPaymTable_PostedAmount
+          ElementPosition     #1968526675
+          HierarchyParent     #Payment
+          DataSource          #MCRCustPaymTable
+          DataField           #PostedAmount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #PaymentTotal
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          ElementPosition     #1073741820
+          HierarchyParent     #Totals
+          DisplayLength       #12
+          Label               #@SYS24946
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #PaymGrid_PercentAmount
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741823
+          HierarchyParent     #PaymGrid
+          DataSource          #MCRCustPaymTable
+          DataField           #PercentAmount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #SalesTotal
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          ElementPosition     #536870910
+          HierarchyParent     #Totals
+          DisplayLength       #12
+          Label               #@MCR10906
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #SalesTotal_InstBilling
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #InstallmentEligible
+          DisplayLength       #12
+          Label               #@MCR30877
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #SalesTotal_PayNow
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          ElementPosition     #1610612733
+          HierarchyParent     #InstallmentEligible
+          DisplayLength       #12
+          Label               #@MCR30876
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CheckNumber
+          AutoDeclaration     #Yes
+          ElementPosition     #1431655764
+          HierarchyParent     #CheckGroup
+          DataSource          #MCRCustPaymTable
+          DataField           #CheckNumber
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCard_M_editCreditCard
+          AllowEdit           #No
+          ElementPosition     #1610612734
+          HierarchyParent     #CreditCardGroup
+          DataSource          #MCRCustPaymTable
+          DataMethod          #editCreditCard
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #lookup
+            #public void lookup()
+            #{
+            #    CreditCardCust::lookupCreditCard(this, MCRCustPaymTable.CustAccount, MCRCustPaymTable.PaymInfoRecId);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Currency
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          HelpText            #@SYS66023
+          ElementPosition     #1610612730
+          HierarchyParent     #Totals
+          ExtendedDataType    
+            ARRAY 
+              #CurrencyCode
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustCreditLimit_NoLimit
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          HelpText            #@MCR11199
+          ElementPosition     #858993458
+          HierarchyParent     #OnAccountGroup
+          Label               #@SYS1532
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustCreditLimitCurrency
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          HelpText            #@MCR11200
+          ElementPosition     #1717986916
+          HierarchyParent     #OnAccountGroup
+          ExtendedDataType    
+            ARRAY 
+              #CurrencyCode
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #DetailedStatus
+          ElementPosition     #1789569705
+          HierarchyParent     #Payment
+          DataSource          #MCRCustPaymTable
+          DataMethod          #displayDetailedStatus
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #GiftCard_M_DisplayGiftCardNumMasked
+          HelpText            #@SYS13864
+          ElementPosition     #1431655764
+          HierarchyParent     #GiftCardGroup
+          DataSource          #MCRCustPaymTable
+          DataMethod          #getGiftCardNumberMasked
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #MCRCustPaymTable_CardTypeId
+          ElementPosition     #1073741822
+          HierarchyParent     #CreditCardGroup
+          DataSource          #MCRCustPaymTable
+          DataField           #CardTypeId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

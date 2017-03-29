@@ -1,0 +1,1850 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardCommideaXMLBuilder
+    PROPERTIES
+      Name                #CreditCardCommideaXMLBuilder
+      Origin              #{3517791B-888B-4D9D-9F17-2F4D72785223}
+      LegacyId            #20064
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeCommideaResponse
+        #CreditCardTrans analyzeCommideaResponse(str             msg,
+        #                                        CreditCardTrans ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2,childNodeLst3,childNodeLst4;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3,elementChild4,elementChild5;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2,childCnt3,childCnt4;
+        #    int                             i,j,k,l;
+        #    str                             tmpStr;
+        #    str                             node,nodeResponse;
+        #
+        #    ;
+        #    msg = SysGSSearchStart::removeHTMLEncode(msg);
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #    ttsBegin;
+        #    ccTrans.selectForUpdate(true);
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        //--> Second node should be the soap envelope body
+        #        if (cnt == 1)
+        #        {
+        #            //--> store in comment
+        #            ccTrans.Comment1 = tmpStr;
+        #        }
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                childNodeLst2 = elementChild2.childNodes();
+        #                j = childNodeLst2.length();
+        #                for (childCnt2 = 0; childCnt2 < j;childCnt2++)
+        #                {
+        #                    elementChild3 = childNodeLst2.item(childCnt2);
+        #                    node = elementChild3.nodeName();
+        #                    switch (node)
+        #                    {
+        #                        case 'MsgData'  :
+        #                            childNodeLst3 = elementChild3.childNodes();
+        #                            k = childNodeLst3.length();
+        #                            for (childCnt3 = 0;childCnt3 < k;childCnt3++)
+        #                            {
+        #                                elementChild4 = childNodeLst3.item(childCnt3);
+        #                                nodeResponse = elementChild4.nodeName();
+        #                                switch (nodeResponse)
+        #                                {
+        #                                    case 'transactionresponse','ERROR'  :
+        #                                        childNodeLst4 = elementChild4.childNodes();
+        #                                        l = childNodeLst4.length();
+        #                                        for (childCnt4=0;childCnt4 < l;childCnt4++)
+        #                                        {
+        #                                            elementChild5 = childNodeLst4.item(childCnt4);
+        #                                            node = elementChild5.nodeName();
+        #                                            switch (node)
+        #                                            {
+        #                                                case 'merchantreference'    :
+        #                                                    break;
+        #                                                case    'processingdb'      :
+        #                                                    ccTrans.comment2 = elementchild5.innerText();
+        #                                                    break;
+        #                                                case 'transactionid'        :
+        #                                                    ccTrans.RetrevalRefNum = elementChild5.innerText();
+        #                                                    break;
+        #                                                case 'errormsg'             :
+        #                                                    ccTrans.result = elementchild5.innerText();
+        #                                                    ccTrans.RepMsg = elementchild5.innerText();
+        #                                                    break;
+        #                                                case 'tid'                  :
+        #                                                    break;
+        #                                                case 'authcode'             :
+        #                                                    ccTrans.pnRef = elementChild5.innerText();
+        #                                                    ccTrans.authCode = elementchild5.innerText();
+        #                                                    break;
+        #                                                case 'authmessage'          :
+        #                                                    ccTrans.comment1 = elementChild5.innerText();
+        #                                                    ccTrans.RepMsg = elementChild5.innerText();
+        #                                                    break;
+        #                                                case 'pcavsresult'          :
+        #                                                    break;
+        #                                                case 'ad1avsresult'         :
+        #                                                    ccTrans.AvsAddr = elementChild5.innerText();
+        #                                                    break;
+        #                                                case 'cvcresult'            :
+        #                                                    break;
+        #                                                case 'arc'                  :
+        #                                                    ccTrans.result = elementChild5.innerText();
+        #                                                    if (ccTrans.result == '00')
+        #                                                    {
+        #                                                        ccTrans.result = '0';
+        #                                                    }
+        #                                                    break;
+        #                                                case 'CODE'                 :
+        #                                                    ccTrans.result = elementChild5.innerText();
+        #                                                    break;
+        #                                                case 'MSGTXT'                :
+        #                                                    ccTrans.RepMsg = elementChild5.innerText();
+        #                                                    break;
+        #                                                case 'TOKENID'              :
+        #                                                    ccTrans.ProfileId= elementChild5.innerText();
+        #                                            }
+        #
+        #                                        }
+        #
+        #                                }
+        #                            }
+        #                            break;
+        #
+        #                        default:
+        #
+        #                            break;
+        #
+        #                    }
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    ccTrans.update();
+        #    ttsCommit;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #xml build(CreditCardTrans   ccTrans)
+        #{
+        #    xml                     xml;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            xml= this.buildNewAuth(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.OrigID)
+        #            {
+        #                xml = this.buildFollowOnCredit(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                xml = this.buildNewReturn(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D     :
+        #            xml = this.buildConfirmation(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            xml = this.buildSale(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            xml = this.buildRejection(ccTrans);
+        #            break;
+        #
+        #
+        #    }
+        #
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #xml buildCapture(CreditCardTrans     ccTrans)
+        #{
+        #    str                             parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    int                             location;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    XMLElement                      xmlMessage;
+        #    XML                             bodyXML;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #    parmAll = parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    xmlMessage = xmlDocument.createElement('Message');
+        #
+        #    //--> Client Header
+        #    xmlMessage = this.buildClientHeader(ccMerchantCommidea,xmlMessage);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #
+        #    //--> Create the message body.  Then house it in the XML of the MsgData
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('transactionrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('merchantreference');
+        #    element.innerText(ccTrans.CustomerRef);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('accountid');
+        #    element.innerText(ccMerchantCommidea.AccountId);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('txntype');
+        #    element.innerText('01'); //--> Purchase
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('transactioncurrencycode');
+        #    element.innerText(this.returnCurrencyCode(ccTrans.CurrencyCode));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('terminalcountrycode');
+        #    element.innerText(this.returnCountryCode(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('apacsterminalcapabilities');
+        #    element.innerText('4290'); //--> MOTO
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('capturemethod');
+        #    element.innerText('11');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('processingidentifier');
+        #    element.innerText('3');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('pan');
+        #    element.innerText(this.returnAccount(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        element = xmlDocument.createElement('csc');
+        #        element.innerText(ccTrans.CID);
+        #        xmlBody.appendChild(element);
+        #    }
+        #
+        #    element = xmlDocument.createElement('avspostcode');
+        #    element.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('issuenumber');
+        #    element.innerText(ccTrans.SoloIssueNum);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('expirydate');
+        #    element.innerText(this.returnExpDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('startdate');
+        #    element.innerText(this.returnStartDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('txnvalue');
+        #    element.innerText(num2str(ccTrans.AmountCur,9,2,1,0));
+        #    xmlBody.appendChild(element);
+        #
+        #    if (ccTrans.WorkerProcessor)
+        #    {
+        #        element = xmlDocument.createElement('employeeid');
+        #        element.innerText(HcmWorker::find(ccTrans.WorkerProcessor).DirPerson().Name);
+        #        xmlBody.appendChild(element);
+        #    }
+        #
+        #    bodyXML = xmlBody.xml();
+        #    //--> Message data
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #    xmlMessage.appendChild(xmlGen);
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('!!');
+        #
+        #
+        #    //xmlGen.appendChild(xmlBody);
+        #    xmlMessage.appendChild(xmlGen);
+        #    //bodyXML = xmlMessage.xml();
+        #    request.appendChild(xmlMessage);
+        #
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    location = strFind(parmAll,'!!',1,strLen(parmAll));
+        #    parmHeader = subStr(parmAll,1,location-1);
+        #    parmAll = strReplace(parmAll,'!!','<![CDATA[<?xml version="1.0"?>' + bodyXML + ']]>');
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildClientHeader
+        #XMLElement buildClientHeader(CreditCardMerchantCommidea  ccMerchantCommidea,
+        #                            XMLElement          Transaction)
+        #{
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      clientHeader;
+        #    ;
+        #    //--> Client header information
+        #    xmlGen = xmlDocument.createElement('ClientHeader');
+        #
+        #    clientHeader = xmlDocument.createElement('SystemID');
+        #    clientHeader.innerText(ccMerchantCommidea.SystemId);
+        #    xmlGen.appendChild(clientHeader);
+        #
+        #    clientHeader = xmlDocument.createElement('SystemGUID');
+        #    clientHeader.innerText(substr(guid2str(ccMerchantCommidea.SystemGUID),2,36));
+        #    xmlGen.appendChild(clientHeader);
+        #
+        #    clientHeader = xmlDocument.createElement('Passcode');
+        #    clientHeader.innerText(ccMerchantCommidea.Passcode);
+        #    xmlGen.appendChild(clientHeader);
+        #
+        #    clientHeader = xmlDocument.createElement('ProcessingDB');
+        #    clientHeader.innerText(this.parmCreditCardTrans().Comment2);
+        #    xmlGen.appendChild(clientHeader);
+        #
+        #    clientHeader = xmlDocument.createElement('SendAttempt');
+        #    clientHeader.innerText('0');
+        #    xmlGen.appendChild(clientHeader);
+        #
+        #    transaction.appendChild(xmlGen);
+        #
+        #    return transaction;
+        #}
+      ENDSOURCE
+      SOURCE #buildConfirmation
+        #xml buildConfirmation(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    int                             location;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    XMLElement                      xmlMessage;
+        #    XML                             bodyXML;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #    parmAll = parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    xmlMessage = xmlDocument.createElement('Message');
+        #
+        #    //--> Client Header
+        #    xmlMessage = this.buildClientHeader(ccMerchantCommidea,xmlMessage);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('CNF');
+        #
+        #    //--> Create the message body.  Then house it in the XML of the MsgData
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('confirmationrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('transactionid');
+        #    element.innerText(ccTrans.RetrevalRefNum);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('authcode');
+        #    element.innerText(ccTrans.OrigID);
+        #    xmlBody.appendChild(element);
+        #
+        #
+        #    bodyXML = xmlBody.xml();
+        #    //--> Message data
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('CNF');
+        #    xmlMessage.appendChild(xmlGen);
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('!!');
+        #
+        #
+        #    //xmlGen.appendChild(xmlBody);
+        #    xmlMessage.appendChild(xmlGen);
+        #    //bodyXML = xmlMessage.xml();
+        #    request.appendChild(xmlMessage);
+        #
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    location = strFind(parmAll,'!!',1,strLen(parmAll));
+        #    parmHeader = subStr(parmAll,1,location-1);
+        #    parmAll = strReplace(parmAll,'!!','<![CDATA[<?xml version="1.0"?>' + bodyXML + ']]>');
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelope
+        #str buildEnvelope(CreditCardMerchantCommidea  ccMerchantCommidea)
+        #{
+        #    TempStr                         tmpstr;
+        #    ;
+        #
+        #    tmpStr = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"';
+        #    tmpStr += ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"';
+        #    tmpStr += ' xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelopeHeader
+        #str buildEnvelopeHeader(CreditCardMerchantCommidea  ccMerchantCommidea)
+        #{
+        #    TempStr                         tmpstr;
+        #    ;
+        #    //--> No header needed
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildFollowOnCredit
+        #xml buildFollowOnCredit(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccMerchantCommidea);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    //--> Client Header
+        #    request = this.buildClientHeader(ccMerchantCommidea,request);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #
+        #    //--> Message data
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('rejectionrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('transactionid');
+        #    element.innerText(ccTrans.AuthCode);
+        #    xmlBody.appendChild(element);
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('capturemethod');
+        #    element.innerText('11');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('pan');
+        #    element.innerText(this.returnAccount(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        element = xmlDocument.createElement('csc');
+        #        element.innerText(ccTrans.CID);
+        #        xmlBody.appendChild(element);
+        #    }
+        #
+        #    element = xmlDocument.createElement('avspostcode');
+        #    element.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlBody.appendChild(element);
+        #
+        #    xmlGen.appendChild(xmlBody);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuth
+        #xml buildNewAuth(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    int                             location;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    XMLElement                      xmlMessage;
+        #    XML                             bodyXML;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #    parmAll = parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    xmlMessage = xmlDocument.createElement('Message');
+        #
+        #    //--> Client Header
+        #    xmlMessage = this.buildClientHeader(ccMerchantCommidea,xmlMessage);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #
+        #    //--> Create the message body.  Then house it in the XML of the MsgData
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('transactionrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('merchantreference');
+        #    element.innerText(ccTrans.CustomerRef);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('accountid');
+        #    element.innerText(ccMerchantCommidea.AccountId);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('txntype');
+        #    element.innerText('01'); //--> Purchase
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('transactioncurrencycode');
+        #    element.innerText(this.returnCurrencyCode(ccTrans.CurrencyCode));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('terminalcountrycode');
+        #    element.innerText(this.returnCountryCode(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('apacsterminalcapabilities');
+        #    element.innerText('4290'); //--> MOTO
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('capturemethod');
+        #    element.innerText('11');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('processingidentifier');
+        #    element.innerText('2');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('pan');
+        #    element.innerText(this.returnAccount(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        element = xmlDocument.createElement('csc');
+        #        element.innerText(ccTrans.CID);
+        #        xmlBody.appendChild(element);
+        #    }
+        #
+        #    element = xmlDocument.createElement('avspostcode');
+        #    element.innerText(this.replacePostCode(this.parmPostalAddress().ZipCode));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('issuenumber');
+        #    element.innerText(ccTrans.SoloIssueNum);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('expirydate');
+        #    element.innerText(this.returnExpDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('startdate');
+        #    element.innerText(this.returnStartDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('txnvalue');
+        #    element.innerText(num2str(ccTrans.AmountCur,9,2,1,0));
+        #    xmlBody.appendChild(element);
+        #
+        #    bodyXML = xmlBody.xml();
+        #    //--> Message data
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #    xmlMessage.appendChild(xmlGen);
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('!!');
+        #
+        #
+        #    //xmlGen.appendChild(xmlBody);
+        #    xmlMessage.appendChild(xmlGen);
+        #    //bodyXML = xmlMessage.xml();
+        #    request.appendChild(xmlMessage);
+        #
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    location = strFind(parmAll,'!!',1,strLen(parmAll));
+        #    parmHeader = subStr(parmAll,1,location-1);
+        #    parmAll = strReplace(parmAll,'!!','<![CDATA[<?xml version="1.0"?>' + bodyXML + ']]>');
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewReturn
+        #xml buildNewReturn(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    int                             location;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    XMLElement                      xmlMessage;
+        #    XML                             bodyXML;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #    parmAll = parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    xmlMessage = xmlDocument.createElement('Message');
+        #
+        #    //--> Client Header
+        #    xmlMessage = this.buildClientHeader(ccMerchantCommidea,xmlMessage);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #
+        #    //--> Create the message body.  Then house it in the XML of the MsgData
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('transactionrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('merchantreference');
+        #    element.innerText(ccTrans.CustomerRef);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('accountid');
+        #    element.innerText(ccMerchantCommidea.AccountId);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('txntype');
+        #    element.innerText('02'); //--> Purchase
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('transactioncurrencycode');
+        #    element.innerText(this.returnCurrencyCode(ccTrans.CurrencyCode));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('terminalcountrycode');
+        #    element.innerText(this.returnCountryCode(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('apacsterminalcapabilities');
+        #    element.innerText('4290'); //--> MOTO
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('capturemethod');
+        #    element.innerText('11');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('processingidentifier');
+        #    element.innerText('3');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('pan');
+        #    element.innerText(this.returnAccount(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        element = xmlDocument.createElement('csc');
+        #        element.innerText(ccTrans.CID);
+        #        xmlBody.appendChild(element);
+        #    }
+        #
+        #    element = xmlDocument.createElement('avspostcode');
+        #    element.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('issuenumber');
+        #    element.innerText(ccTrans.SoloIssueNum);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('expirydate');
+        #    element.innerText(this.returnExpDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('startdate');
+        #    element.innerText(this.returnStartDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('txnvalue');
+        #    element.innerText(num2str(ccTrans.AmountCur,9,2,1,0));
+        #    xmlBody.appendChild(element);
+        #
+        #    if (ccTrans.WorkerProcessor)
+        #    {
+        #        element = xmlDocument.createElement('employeeid');
+        #        element.innerText(HcmWorker::find(ccTrans.WorkerProcessor).DirPerson().Name);
+        #        xmlBody.appendChild(element);
+        #    }
+        #
+        #    bodyXML = xmlBody.xml();
+        #    //--> Message data
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #    xmlMessage.appendChild(xmlGen);
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('!!');
+        #
+        #
+        #    //xmlGen.appendChild(xmlBody);
+        #    xmlMessage.appendChild(xmlGen);
+        #    //bodyXML = xmlMessage.xml();
+        #    request.appendChild(xmlMessage);
+        #
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    location = strFind(parmAll,'!!',1,strLen(parmAll));
+        #    parmHeader = subStr(parmAll,1,location-1);
+        #    parmAll = strReplace(parmAll,'!!','<![CDATA[<?xml version="1.0"?>' + bodyXML + ']]>');
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildRejection
+        #xml buildRejection(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    int                             location;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    XMLElement                      xmlMessage;
+        #    XML                             bodyXML;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #    parmAll = parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    xmlMessage = xmlDocument.createElement('Message');
+        #
+        #    //--> Client Header
+        #    xmlMessage = this.buildClientHeader(ccMerchantCommidea,xmlMessage);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('RJT');
+        #
+        #    //--> Create the message body.  Then house it in the XML of the MsgData
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('confirmationrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('transactionid');
+        #    element.innerText(ccTrans.RetrevalRefNum);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('authcode');
+        #    element.innerText(ccTrans.OrigID);
+        #    xmlBody.appendChild(element);
+        #
+        #
+        #    bodyXML = xmlBody.xml();
+        #    //--> Message data
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('CNF');
+        #    xmlMessage.appendChild(xmlGen);
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('!!');
+        #
+        #    xmlMessage.appendChild(xmlGen);
+        #    request.appendChild(xmlMessage);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    location = strFind(parmAll,'!!',1,strLen(parmAll));
+        #    parmHeader = subStr(parmAll,1,location-1);
+        #    parmAll = strReplace(parmAll,'!!','<![CDATA[<?xml version="1.0"?>' + bodyXML + ']]>');
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildSale
+        #xml buildSale(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    int                             location;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    XMLElement                      xmlMessage;
+        #    XML                             bodyXML;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #    parmAll = parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    xmlMessage = xmlDocument.createElement('Message');
+        #
+        #    //--> Client Header
+        #    xmlMessage = this.buildClientHeader(ccMerchantCommidea,xmlMessage);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #
+        #    //--> Create the message body.  Then house it in the XML of the MsgData
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('transactionrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('merchantreference');
+        #    element.innerText(ccTrans.CustomerRef);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('accountid');
+        #    element.innerText(ccMerchantCommidea.AccountId);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('txntype');
+        #    element.innerText('01'); //--> Purchase
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('transactioncurrencycode');
+        #    element.innerText(this.returnCurrencyCode(ccTrans.CurrencyCode));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('terminalcountrycode');
+        #    element.innerText(this.returnCountryCode(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('apacsterminalcapabilities');
+        #    element.innerText('4290'); //--> MOTO
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('capturemethod');
+        #    element.innerText('11');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('processingidentifier');
+        #    element.innerText('1');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('pan');
+        #    element.innerText(this.returnAccount(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        element = xmlDocument.createElement('csc');
+        #        element.innerText(ccTrans.CID);
+        #        xmlBody.appendChild(element);
+        #    }
+        #
+        #    element = xmlDocument.createElement('avspostcode');
+        #    element.innerText(this.replacePostCode(this.parmPostalAddress().ZipCode));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('issuenumber');
+        #    element.innerText(ccTrans.SoloIssueNum);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('expirydate');
+        #    element.innerText(this.returnExpDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('startdate');
+        #    element.innerText(this.returnStartDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('txnvalue');
+        #    element.innerText(num2str(ccTrans.AmountCur,9,2,1,0));
+        #    xmlBody.appendChild(element);
+        #
+        #
+        #    bodyXML = xmlBody.xml();
+        #    //--> Message data
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #    xmlMessage.appendChild(xmlGen);
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('!!');
+        #
+        #
+        #    //xmlGen.appendChild(xmlBody);
+        #    xmlMessage.appendChild(xmlGen);
+        #    //bodyXML = xmlMessage.xml();
+        #    request.appendChild(xmlMessage);
+        #
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    location = strFind(parmAll,'!!',1,strLen(parmAll));
+        #    parmHeader = subStr(parmAll,1,location-1);
+        #    parmAll = strReplace(parmAll,'!!','<![CDATA[<?xml version="1.0"?>' + bodyXML + ']]>');
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildToken
+        #xml buildToken(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    int                             location;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    XMLElement                      xmlMessage;
+        #    XML                             bodyXML;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #    parmAll = parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    xmlMessage = xmlDocument.createElement('Message');
+        #
+        #    //--> Client Header
+        #    xmlMessage = this.buildClientHeader(ccMerchantCommidea,xmlMessage);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TKI');
+        #
+        #    //--> Create the message body.  Then house it in the XML of the MsgData
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('tokenregistrationrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('merchantreference');
+        #    element.innerText(ccTrans.CustomerRef);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('pan');
+        #    element.innerText(this.returnAccount(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('issuenumber');
+        #    element.innerText(ccTrans.SoloIssueNum);
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('expirydate');
+        #    element.innerText(this.returnExpDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('startdate');
+        #    element.innerText(this.returnStartDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('purchase');
+        #    element.innerText('true');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('refund');
+        #    element.innerText('true');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('cashback');
+        #    element.innerText('false');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('expirydate');
+        #    element.innerText(this.returnExpDate(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #
+        #    bodyXML = xmlBody.xml();
+        #    //--> Message data
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TKI');
+        #    xmlMessage.appendChild(xmlGen);
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('!!');
+        #
+        #
+        #    //xmlGen.appendChild(xmlBody);
+        #    xmlMessage.appendChild(xmlGen);
+        #    //bodyXML = xmlMessage.xml();
+        #    request.appendChild(xmlMessage);
+        #
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    location = strFind(parmAll,'!!',1,strLen(parmAll));
+        #    parmHeader = subStr(parmAll,1,location-1);
+        #    parmAll = strReplace(parmAll,'!!','<![CDATA[<?xml version="1.0"?>' + bodyXML + ']]>');
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #xml buildVoid(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmHeader,parmRequest,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantCommidea      ccMerchantCommidea;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlBody;
+        #    XMLElement                      element;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope(ccMerchantCommidea);
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader(ccMerchantCommidea);
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soap:Body>';
+        #    request = xmlDocument.createElement('ProcessMsg');
+        #    request.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    //parmList = request.xml();
+        #
+        #    //--> Client Header
+        #    request = this.buildClientHeader(ccMerchantCommidea,request);
+        #
+        #    //--> Message type
+        #    xmlGen = xmlDocument.createElement('MsgType');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #
+        #    //--> Message data
+        #    xmlGen = xmlDocument.createElement('MsgData');
+        #    xmlGen.setAttribute('xmlns','https://www.commidea.webservices.com');
+        #    xmlGen.innerText('TXN');
+        #
+        #    //--> Transaction request
+        #    xmlBody = xmlDocument.createElement('rejectionrequest');
+        #    xmlBody.setAttribute('xmlns','TXN');
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('transactionid');
+        #    element.innerText(ccTrans.AuthCode);
+        #    xmlBody.appendChild(element);
+        #
+        #    //--> Transaction elements
+        #    element = xmlDocument.createElement('capturemethod');
+        #    element.innerText('11');
+        #    xmlBody.appendChild(element);
+        #
+        #    element = xmlDocument.createElement('pan');
+        #    element.innerText(this.returnAccount(ccTrans));
+        #    xmlBody.appendChild(element);
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        element = xmlDocument.createElement('csc');
+        #        element.innerText(ccTrans.CID);
+        #        xmlBody.appendChild(element);
+        #    }
+        #
+        #    element = xmlDocument.createElement('avspostcode');
+        #    element.innerText(this.parmPostalAddress().ZipCode);
+        #    xmlBody.appendChild(element);
+        #
+        #    xmlGen.appendChild(xmlBody);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmRequest = request.xml();
+        #    parmAll += parmRequest;
+        #
+        #    //--> End Body
+        #    parmAll += '</soap:Body>';
+        #    parmAll += '</soap:Envelope>';
+        #
+        #    //parmList = xmlDocument.xml();
+        #    xmlDocument.loadXml(parmAll);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantCommidea
+        #boolean checkMerchantCommidea(CreditCardMerchantCommidea  ccMerchantCommidea)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantCommidea.SystemGUID)
+        #       throw error("@ACC1346");
+        #    else if (!ccMerchantCommidea.URL)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardCommideaXMLBuilder
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardMerchantCommidea      c;
+        #    SalesPrice                      salesPrice;
+        #    SalesQty                        salesQty;
+        #    ItemName                        itemName;
+        #    TaxAmount                       taxAmount;
+        #    SalesUnit                       salesUnit;
+        #    Percent                         taxRate;
+        #    LineAmount                      lineAmount;
+        #    CreditCardTrans                 locCCTrans;
+        #    LogisticsPostalAddress          postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardTrans
+        #CreditCardTrans parmCreditCardTrans(CreditCardTrans _ccTrans = locCCTrans)
+        #{
+        #    ;
+        #    locCCTrans = _ccTrans;
+        #    return locCCTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantCCommidea
+        #CreditCardMerchantCommidea parmMerchantCCommidea(CreditCardMerchantCommidea _c = c)
+        #{
+        #    ;
+        #    c = _c;
+        #    return c;
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantCommidea
+        #CreditCardMerchantCommidea parmMerchantCommidea(CreditCardMerchantCommidea _c = c)
+        #{
+        #    ;
+        #    c = _c;
+        #    return c;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #replacePostCode
+        #str replacePostCode(TempStr zipCode)
+        #{
+        #    TempStr         postCode =  zipCode;
+        #    ;
+        #    postCode = strReplace(postCode,'A','');
+        #    postCode = strReplace(postCode,'B','');
+        #    postCode = strReplace(postCode,'C','');
+        #    postCode = strReplace(postCode,'D','');
+        #    postCode = strReplace(postCode,'E','');
+        #    postCode = strReplace(postCode,'F','');
+        #    postCode = strReplace(postCode,'G','');
+        #    postCode = strReplace(postCode,'H','');
+        #    postCode = strReplace(postCode,'I','');
+        #    postCode = strReplace(postCode,'J','');
+        #    postCode = strReplace(postCode,'K','');
+        #    postCode = strReplace(postCode,'L','');
+        #    postCode = strReplace(postCode,'M','');
+        #    postCode = strReplace(postCode,'N','');
+        #    postCode = strReplace(postCode,'O','');
+        #    postCode = strReplace(postCode,'P','');
+        #    postCode = strReplace(postCode,'Q','');
+        #    postCode = strReplace(postCode,'R','');
+        #    postCode = strReplace(postCode,'S','');
+        #    postCode = strReplace(postCode,'T','');
+        #    postCode = strReplace(postCode,'U','');
+        #    postCode = strReplace(postCode,'V','');
+        #    postCode = strReplace(postCode,'W','');
+        #    postCode = strReplace(postCode,'X','');
+        #    postCode = strReplace(postCode,'Y','');
+        #    postCode = strReplace(postCode,'Z','');
+        #    postCode = strReplace(postCode,' ','');
+        #
+        #    return postCode;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccTrans.CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(ccTrans);
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumSecure)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(ccTrans);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnCountryCode
+        #TempStr returnCountryCode(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr             parm;
+        #    ;
+        #    switch (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        case 'USD','US'  :
+        #            parm = '840';
+        #            break;
+        #        case 'GB','UK'  :
+        #            parm = '826';
+        #            break;
+        #        case 'DE'  :
+        #            parm = '276';
+        #            break;
+        #        case 'GR'  :
+        #            parm = '300';
+        #            break;
+        #        case 'FR'  :
+        #            parm = '250';
+        #            break;
+        #        case 'BE'  :
+        #            parm = '56';
+        #            break;
+        #        case 'DK'  :
+        #            parm = '208';
+        #            break;
+        #        case 'FI'  :
+        #            parm = '246';
+        #            break;
+        #        case 'CA'  :
+        #            parm = '124';
+        #            break;
+        #        case 'CH'  :
+        #            parm = '756';
+        #            break;
+        #        case 'IE'  :
+        #            parm = '372';
+        #            break;
+        #        case 'NO'  :
+        #            parm = '578';
+        #            break;
+        #        case 'SE'  :
+        #            parm = '752';
+        #            break;
+        #        case 'AU'  :
+        #            parm = '36';
+        #            break;
+        #        case 'JP'  :
+        #            parm = '392';
+        #            break;
+        #        default :
+        #            throw error("@ACC1348");
+        #
+        #
+        #    }
+        #
+        #    return parm;
+        #}
+      ENDSOURCE
+      SOURCE #returnCurrencyCode
+        #TempStr returnCurrencyCode(CurrencyCode     currencyCode)
+        #{
+        #    TempStr             parm;
+        #    ;
+        #    switch (currencyCode)
+        #    {
+        #        case 'USD'  :
+        #            parm = '840';
+        #            break;
+        #        case 'GBP'  :
+        #            parm = '826';
+        #            break;
+        #        case 'EUR'  :
+        #            parm = '978';
+        #            break;
+        #        case 'DKK'  :
+        #            parm = '208';
+        #            break;
+        #        case 'CAD'  :
+        #            parm = '124';
+        #            break;
+        #        case 'CHF'  :
+        #            parm = '756';
+        #            break;
+        #        case 'IEP'  :
+        #            parm = '372';
+        #            break;
+        #        case 'NOK'  :
+        #            parm = '578';
+        #            break;
+        #        case 'SEK'  :
+        #            parm = '752';
+        #            break;
+        #        case 'AUD'  :
+        #            parm = '36';
+        #            break;
+        #        case 'JPY'  :
+        #            parm = '392';
+        #            break;
+        #        default :
+        #            throw error("@ACC1347");
+        #
+        #
+        #    }
+        #
+        #    return parm;
+        #}
+      ENDSOURCE
+      SOURCE #returnExpDate
+        #TempStr returnExpDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  ccYear + month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  ccYear + month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartDate
+        #TempStr returnStartDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.SoloStartDate));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.SoloStartDate));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.SoloStartDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static str construct(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCommidea          ccMerchantCommidea;
+        #    CreditCardTrans                     confirmCCTrans;
+        #
+        #    //--> Specific variables
+        #    HttpRequest                         request;
+        #    CreditCardCommideaXMLBuilder        xmlBuilder = new CreditCardCommideaXMLBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #
+        #    TempStr                             response;
+        #    TempStr                             parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTrans.Location));
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId == ccTrans.TerminalId;
+        #
+        #    xmlBuilder.parmMerchantCommidea(ccMerchantCommidea);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCommidea(ccMerchantCommidea);
+        #    xmlBuilder.parmCreditCardTrans(ccTrans);
+        #
+        #    request = new HTTPRequest();
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build(ccTrans);
+        #
+        #    request.open('POST',ccMerchantCommidea.URL);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.setRequestHeader('Content-Type','text/xml; charset=utf-8');
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    //--> Commidea requires a confirmation for certain transactions
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case    CreditCardTrxType::D,CreditCardTrxType::S,CreditCardTrxType::C  :
+        #            ccTrans = xmlBuilder.analyzeCommideaResponse(response,ccTrans);
+        #            if (ccTrans.Result == '0')
+        #            {
+        #                parmList = xmlBuilder.buildConfirmation(ccTrans);
+        #                request.open('POST',ccMerchantCommidea.URL);
+        #                request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #                request.setRequestHeader('Content-Type','text/xml; charset=utf-8');
+        #                request.send(ParmList);
+        #                response = request.responseText();
+        #                //--> Since we have to confirm transactions, we leave
+        #                //--> the result blank ao the response is not analyzied twice.
+        #
+        #                confirmCCTrans = xmlBuilder.analyzeCommideaResponse(response,ccTrans);
+        #                if (confirmCCTrans.Result == '0')
+        #                {
+        #                    if (ccTrans.PNRef == '')
+        #                    {
+        #                        ccTrans.PNRef = ccTrans.RetrevalRefNum;
+        #                    }
+        #                    xmlBuilder.parmCreditCardTrans(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    xmlBuilder.parmCreditCardTrans(confirmCCTrans);
+        #                }
+        #            }
+        #            break;
+        #
+        #        default:
+        #            ccTrans = xmlBuilder.analyzeCommideaResponse(response,ccTrans);
+        #            break;
+        #
+        #    }
+        #
+        #    xmlBuilder.parmCreditCardTrans(ccTrans);
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #createProfileFromAuth
+        #static void createProfileFromAuth(CreditCardTrans       ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantCommidea          ccMerchantCommidea;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #
+        #    //--> Specific variables
+        #    HttpRequest                         request;
+        #    CreditCardCommideaXMLBuilder        xmlBuilder = new CreditCardCommideaXMLBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #
+        #    TempStr                             response;
+        #    TempStr                             parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    ttsbegin;
+        #    ccTrans.selectForUpdate(true);
+        #    //--> Retrieve Parameters
+        #    select ccMerchantCommidea
+        #        where ccMerchantCommidea.TerminalId ==  ccTrans.TerminalId;
+        #
+        #    if (!ccMerchantCommidea)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantCommidea(ccMerchantCommidea);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantCommidea(ccMerchantCommidea);
+        #
+        #    request = new HTTPRequest();
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildToken(ccTrans);
+        #
+        #    request.open('POST',ccMerchantCommidea.URL);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    ccTrans = xmlBuilder.analyzeCommideaResponse(response,ccTrans);
+        #
+        #    if (ccTrans.Result == '0')
+        #    {
+        #        CreditCardTable::createProfileFromTrans(ccTrans);
+        #        info(strFmt("@ACC1335",ccTrans.ProfileId));
+        #    }
+        #    else
+        #    {
+        #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+        #    }
+        #
+        #    ccTrans.update();
+        #    ttscommit;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

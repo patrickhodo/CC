@@ -1,0 +1,203 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #AxdCreditCardTrans
+    PROPERTIES
+      Name                #AxdCreditCardTrans
+      Extends             #AxdBase
+      RunOn               #Server
+      Origin              #{08BE5D3F-EFAE-42A9-B350-753F4202B1C7}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class AxdCreditCardTrans extends AxdBase
+        #{
+        #    #define.CreditCardTrans_1_DataSourceName('CreditCardTrans_1')
+        #}
+        #
+      ENDSOURCE
+      SOURCE #deleteList
+        #public AifResult deleteList(AifEntityKeyList            _aifEntityKeyList,
+        #                            AifEndpointActionPolicyInfo _actionPolicyInfo,
+        #                            AifConstraintListCollection _constraintListCollection)
+        #{
+        #    throw error(strfmt("@SYS94920"));
+        #}
+        #
+      ENDSOURCE
+      SOURCE #expandDimensions
+        #public boolean expandDimensions()
+        #{
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #expandSurrogateForeignKeys
+        #public boolean expandSurrogateForeignKeys()
+        #{
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findEntityKeyList
+        #public AifEntityKeyList findEntityKeyList(AifQueryCriteria            _queryCriteria,
+        #                                          AifEndpointActionPolicyInfo _actionPolicyInfo)
+        #{
+        #    throw error(strfmt("@SYS94920"));
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getActionList
+        #public AifActionInfoList getActionList()
+        #{
+        #    AifActionInfoList   Actions = new AifActionInfoList();
+        #    AifActionInfo       aifActionInfo;
+        #    ;
+        #    aifActionInfo = new AifActionInfo();
+        #    aifActionInfo.parmActionId(strfmt('%1%2', methodstr(AxdBase, findList), this.getName()));
+        #    aifActionInfo.parmActionType(AifActionType::QueryDocuments);
+        #    aifActionInfo.parmExternalName(aifActionInfo.parmActionId());
+        #    aifActionInfo.parmMethodName(methodstr(AxdBase, findList));
+        #    aifActionInfo.parmLabel("@ACC1756");
+        #    aifActionInfo.parmDescription("@ACC1757");
+        #    aifActionInfo.parmDisplayMenuItemName(menuitemdisplaystr(AifDocConfiguration));
+        #
+        #    actions.add(aifActionInfo);
+        #
+        #    aifActionInfo = new AifActionInfo();
+        #    aifActionInfo.parmActionId(strfmt('%1%2', methodstr(AxdBase, readList), this.getName()));
+        #    aifActionInfo.parmActionType(AifActionType::SendDocumentList);
+        #    aifActionInfo.parmExternalName(aifActionInfo.parmActionId());
+        #    aifActionInfo.parmMethodName(methodstr(AxdBase, readList));
+        #    aifActionInfo.parmLabel("@ACC1758");
+        #    aifActionInfo.parmDescription("@ACC1759");
+        #    aifActionInfo.parmDisplayMenuItemName(menuitemdisplaystr(AifDocConfiguration));
+        #
+        #    actions.add(aifActionInfo);
+        #
+        #    aifActionInfo = new AifActionInfo();
+        #    aifActionInfo.parmActionId(strfmt('%1%2', methodstr(AxdBase, createList), this.getName()));
+        #    aifActionInfo.parmActionType(AifActionType::ReceiveDocumentList);
+        #    aifActionInfo.parmExternalName(aifActionInfo.parmActionId());
+        #    aifActionInfo.parmMethodName(methodstr(AxdBase, createList));
+        #    aifActionInfo.parmLabel("@ACC1760");
+        #    aifActionInfo.parmDescription("@ACC1761");
+        #    aifActionInfo.parmDisplayMenuItemName(menuitemdisplaystr(AifDocConfiguration));
+        #
+        #    actions.add(aifActionInfo);
+        #
+        #    return actions;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getConstraintList
+        #public void getConstraintList(Common _curRec, AifConstraintList _constraintList)
+        #{
+        #    AifConstraint  aifConstraint = new AifConstraint();
+        #    CreditCardTrans    CreditCardTrans;
+        #    ;
+        #    if (!(_curRec is CreditCardTrans))
+        #    {
+        #         throw error(strfmt("@SYS23396",funcname()));
+        #    }
+        #    CreditCardTrans = _curRec ;
+        #    aifConstraint.parmType(AIFConstraintType::Customer);
+        #    aifConstraint.parmId(CreditCardTrans.TransID);
+        #    _constraintList.addConstraint(aifConstraint) ;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getLabel
+        #public LabelString getLabel()
+        #{
+        #    return "@ACC99";
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getQueryName
+        #public QueryName getQueryName()
+        #{
+        #    return querystr(CreditCardTrans);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #prepareForSaveExtended
+        #public boolean prepareForSaveExtended(
+        #    AxdStack                    _axBcStack,
+        #    str                         _dataSourceName,
+        #    AxdRecordProcessingContext  _recordProcessingContext,
+        #    AxInternalBase              _childRecord)
+        #{
+        #    AxCreditCardTrans axbc_CreditCardTrans_1;
+        #
+        #switch (_dataSourceName)
+        #    {
+        #        // ----------------------------------------------------------------------
+        #        // Process CreditCardTrans_1 records
+        #        // ----------------------------------------------------------------------
+        #        case #CreditCardTrans_1_DataSourceName:
+        #
+        #            axbc_CreditCardTrans_1 = _axBcStack.top();
+        #
+        #            switch (_recordProcessingContext)
+        #            {
+        #                // Ensure CreditCardTrans_1 record is saved
+        #                case AxdRecordProcessingContext::AfterAllChildRecordsProcessed:
+        #                    if (!axbc_CreditCardTrans_1.isProcessed())
+        #                    {
+        #                        return true;
+        #                    }
+        #
+        #                    return false;
+        #            }
+        #
+        #            return false;
+        #
+        #        // ----------------------------------------------------------------------
+        #        // Unsupported data sources
+        #        // ----------------------------------------------------------------------
+        #        default:
+        #            error(strfmt("@SYS88979",classId2Name(classidget(_axBcStack.top()))));
+        #            return false;
+        #    }
+        #
+        #    return false;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #prepareForUpdateExtended
+        #public boolean prepareForUpdateExtended(
+        #    AxdStack                    _axBcStack,
+        #    str                         _dataSourceName,
+        #    AxdRecordProcessingContext  _recordProcessingContext,
+        #    AxInternalBase              _childRecord)
+        #{
+        #    return this.prepareForSaveExtended(
+        #        _axBcStack,
+        #        _dataSourceName,
+        #        _recordProcessingContext,
+        #        _childRecord);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #updateList
+        #public AifResult updateList(AifEntityKeyList            _entityKeyList,
+        #                               AifDocumentXML              _xml,
+        #                               AifEndpointActionPolicyInfo _actionPolicyInfo,
+        #                               AifConstraintListCollection _constraintListcollection)
+        #{
+        #    throw error(strfmt("@SYS94920"));
+        #}
+        #
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

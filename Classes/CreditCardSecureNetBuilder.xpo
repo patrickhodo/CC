@@ -1,0 +1,1821 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardSecureNetBuilder
+    PROPERTIES
+      Name                #CreditCardSecureNetBuilder
+      Origin              #{45E7209D-69E6-45B9-9C4E-B7D4B8D17259}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeWorldPayResponseForProfile
+        #CreditCardTable analyzeWorldPayResponseForProfile(CreditCardStr                 msg,
+        #                                CreditCardTable         ccTable)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList;
+        #    XmlNode                         elementParent;
+        #    Counter                         cnt,conLength,con;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    container                       responseCon,nodeCon;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #    boolean                         accepted;
+        #    ;
+        #
+        #
+        #    try
+        #    {
+        #        if (strContains(msg,'{"vaultCustomer":{'))
+        #        {
+        #            node = subStr(msg,18,strLen(msg)-17);
+        #            responseCon = str2con(node,',');
+        #            conLength = conLen(responseCon);
+        #
+        #            for (con=1;con<conLength;con++)
+        #            {
+        #                nodeCon = str2con(conPeek(responseCon,con),":");
+        #                response.insert(strReplace(conPeek(nodeCon,1),'"',''),conPeek(nodeCon,2));
+        #            }
+        #        }
+        #        else
+        #        {
+        #            if (strContains(msg,'{"vaultPaymentMethod":{'))
+        #            {
+        #                node = subStr(msg,23,strLen(msg)-22);
+        #                responseCon = str2con(node,',');
+        #                conLength = conLen(responseCon);
+        #
+        #                for (con=1;con<conLength;con++)
+        #                {
+        #                    nodeCon = str2con(conPeek(responseCon,con),":");
+        #                    response.insert(strReplace(conPeek(nodeCon,1),'"',''),conPeek(nodeCon,2));
+        #                }
+        #            }
+        #            else
+        #            {
+        #                throw error(msg);
+        #            }
+        #        }
+        #
+        #        //--> Map Lookups
+        #        if (response.exists('success'))
+        #        {
+        #            if (response.lookup('success') == 'false')
+        #            {
+        #                throw error(strFmt('%1 %2',response.lookup('responseCode'),response.lookup('message')));
+        #            }
+        #        }
+        #
+        #        if (response.exists('CustomerId'))
+        #        {
+        #            if (response.lookup('CustomerId') != '')
+        #            {
+        #                ttsbegin;
+        #                ccTable.selectForUpdate(true);
+        #                ccTable.ProfileId = ccTable.CustAccount;
+        #                ccTable.Profile = NoYes::Yes;
+        #
+        #                ttscommit;
+        #            }
+        #        }
+        #
+        #        if (response.exists('paymentId'))
+        #        {
+        #            ttsbegin;
+        #            ccTable.selectForUpdate(true);
+        #            ccTable.PaymentProfileId = strReplace(response.lookup('paymentId'),'"','');
+        #            ccTable.Profile = NoYes::Yes;
+        #            ttsCommit;
+        #        }
+        #
+        #
+        #    }
+        #    catch
+        #    {
+        #        tmpStr = AifUtil::getClrErrorMessage();
+        #    }
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #xml build()
+        #{
+        #    xml                     xml;
+        #    CreditCardTrans         origCCTrans;
+        #    ;
+        #    switch (this.parmccTrans().TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            if (this.parmCCTrans().Profile == NoYes::Yes)
+        #            {
+        #                xml = this.buildNewAuthToken();
+        #            }
+        #            else
+        #            {
+        #                xml= this.buildNewAuth();
+        #            }
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (this.parmCCTrans().RetrevalRefNum)
+        #            {
+        #                xml = this.buildReturn();
+        #            }
+        #            else
+        #            {
+        #                if (this.parmCCTrans().Profile == NoYes::Yes)
+        #                {
+        #                     xml = this.buildCreditToken();
+        #                }
+        #                else
+        #                {
+        #                     xml = this.buildCredit();
+        #                }
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D    :
+        #            xml = this.buildCapture();
+        #
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (this.parmCCTrans().Profile == NoYes::Yes)
+        #            {
+        #                 xml = this.buildNewSaleToken();
+        #            }
+        #            else
+        #            {
+        #                 xml = this.buildNewSale();
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            select TransDate from origCCTrans
+        #                where origCCTrans.PNRef == this.parmCCTrans().OrigID;
+        #
+        #            if (DayofMth(origCCTRans.TransDate) == DayofMth(systemDateGet())
+        #                && mthofYr(origCCTrans.TransDate) == mthofyr(systemDateGet()))
+        #            {
+        #                xml = this.buildVoid();
+        #
+        #            }
+        #            else
+        #            {
+        #                xml = this.buildReturn();
+        #            }
+        #            break;
+        #    }
+        #
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #xml buildCapture()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Amount
+        #    parmAll += 'amount:' + strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)) + ',';
+        #
+        #    //--> TransactionId
+        #    parmAll += 'transactionId:\"' + this.parmCCTrans().origId + #endOfLine  + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCardProfile
+        #str buildCardProfile(CreditCardTable        ccTable)
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardStr                   verificationStr,verificationStr2;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #    this.parmCreditCardTable(ccTable);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    parmAll += 'customerId: \"' + ccTable.CustAccount + #endOfLine  + #cr;
+        #
+        #
+        #
+        #    //--> Card
+        #    parmAll += 'card:' + #beginOfSection  + #cr;
+        #    parmAll += 'number: \"' + CreditCardTable::retrieveValue(ccTable) + #endOfLine  + #cr;
+        #    parmAll += 'expirationDate: \"'+ this.returnMonthCC(ccTable) + '/' + this.returnYearCC(ccTable) + #endOfLine + #cr;
+        #    //--> Address (inside Card)
+        #    parmAll += 'address: ' + #beginOfSection  + #cr;
+        #    parmAll += 'line1: \"' +this.parmPostalAddress().StreetNumber + ' ' + this.parmPostalAddress().Street + #endOfLine  + #cr;
+        #    parmAll += 'city: \"' +this.parmPostalAddress().City + #endOfLine  + #cr;
+        #    parmAll += 'state: \"' + this.parmPostalAddress().State + #endOfLine  + #cr;
+        #    parmAll += 'zip: \"' + this.parmPostalAddress().ZipCode +'\"' + #cr;
+        #    parmAll += #endOfSection  + #cr;
+        #    parmAll += ','  + #cr;
+        #
+        #    if (ccTable.NameOnCard)
+        #    {
+        #        parmAll += 'firstName: \"' + this.parmFirstName(ccTable.NameOnCard) + #endOfLine  + #cr;
+        #        parmAll += 'lastName: \"' + this.parmLastName(ccTable.NameOnCard) + #endOfLine  + #cr;
+        #    }
+        #
+        #    //--> End of Card
+        #    parmAll += #endOfSection;
+        #    parmAll += ','  + #cr;
+        #    parmAll += 'addToVault:\"' + 'True' + #endOfLine  + #cr;
+        #
+        #    if (ccTable.Phone)
+        #    {
+        #        parmAll += 'phoneNumber: \"' + this.parmLastName(ccTable.Phone) + #endOfLine  + #cr;
+        #    }
+        #
+        #    parmAll += 'accountDuplicateCheckIndicator: 0,' + #cr;
+        #    parmAll += 'primary: true,' + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildCredit
+        #xml buildCredit()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Amount
+        #    parmAll += 'amount:' + strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)) + ',';
+        #
+        #    //--> Card
+        #    parmAll += 'card:' + #beginOfSection  + #cr;
+        #    parmAll += 'number: \"' + this.returnAccount() + #endOfLine  + #cr;
+        #    parmAll += 'expirationDate: \"'+ this.returnMonth() + '/' + this.returnYear() + #endOfLine + #cr;
+        #
+        #    //--> Add to Vault
+        #    parmAll += 'addToVault:false,';
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCreditToken
+        #xml buildCreditToken()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    CreditCardStr                   custAccount = ccTrans.ProfileId ? ccTrans.ProfileId : ccTrans.CustAccount;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Amount
+        #    parmAll += 'amount:' + strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)) + ',';
+        #
+        #    //--> Paymetn Vault Token
+        #    parmAll += 'paymentVaultToken:' + #beginOfSection  + #cr;
+        #    parmAll += 'customerId: \"' + custAccount + #endOfLine  + #cr;
+        #    parmAll += 'paymentMethodId: \"' + CreditCardTable::find(ccTrans.CreditCardId).PaymentProfileId + #endOfLine  + #cr;
+        #    parmAll += 'publicKey: \"'+ this.parmMerchantWorldPay().TransactionKey + #endOfLine + #cr;
+        #
+        #    //--> End of Payment Value Token
+        #    parmAll += #endOfSection;
+        #    parmAll += ','  + #cr;
+        #
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelope
+        #str buildEnvelope()
+        #{
+        #    TempStr                         tmpstr;
+        #    ;
+        #    tmpstr =    '<Request xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        #    tmpstr +=   'Version="3" ClientTimeout="30" xmlns="http://securetransport.dw/rcservice/xml">';
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelopeHeader
+        #str buildEnvelopeHeader()
+        #{
+        #    TempStr                         tmpstr;
+        #    ;
+        #
+        #    tmpStr = '<SOAP-ENV:Header/>';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuth
+        #xml buildNewAuth()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Amount
+        #    parmAll += 'amount:' + strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)) + ',';
+        #
+        #    //--> Card
+        #    parmAll += 'card:' + #beginOfSection  + #cr;
+        #    parmAll += 'number: \"' + this.returnAccount() + #endOfLine  + #cr;
+        #    parmAll += 'cvv: \"' + this.parmCCTrans().CID + #endOfLine  + #cr;
+        #    parmAll += 'expirationDate: \"'+ this.returnMonth() + '/' + this.returnYear() + #endOfLine + #cr;
+        #
+        #    //--> Address (inside Card)
+        #    parmAll += 'address: ' + #beginOfSection  + #cr;
+        #    parmAll += 'line1: \"' + this.parmPostalAddress().StreetNumber + ' ' + this.parmPostalAddress().Street + #endOfLine  + #cr;
+        #    parmAll += 'city: \"' +this.parmPostalAddress().City + #endOfLine  + #cr;
+        #    parmAll += 'state: \"' + this.parmPostalAddress().State + #endOfLine  + #cr;
+        #    parmAll += 'zip: \"' + this.parmPostalAddress().ZipCode +'\"' + #cr;
+        #    parmAll += #endOfSection  + #cr;
+        #
+        #    //--> End of Card
+        #    parmAll += #endOfSection;
+        #    parmAll += ','  + #cr;
+        #
+        #    //--> ExtendedInformation
+        #    parmAll += 'extendedInformation: ' + #cr;
+        #    parmAll += #beginOfSection;
+        #    //parmAll += 'typeOfGoods: \"' + 'PHYSICAL' +'\",' + #cr;
+        #    //parmAll += #endOfSection + #endOfLine + #cr;
+        #    //parmAll += #beginOfSection;
+        #    parmAll += 'mailOrTelephoneOrderData: ' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'type:\"SINGLE_PURCHASE' +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #    parmAll += ',' + #cr;
+        #    //parmAll += ',' + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuthToken
+        #xml buildNewAuthToken()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    CreditCardStr                   custAccount = ccTrans.ProfileId ? ccTrans.ProfileId : ccTrans.CustAccount;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Amount
+        #    parmAll += 'amount:' + strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)) + ',';
+        #
+        #    //--> Paymetn Vault Token
+        #    parmAll += 'paymentVaultToken:' + #beginOfSection  + #cr;
+        #    parmAll += 'customerId: \"' + custAccount + #endOfLine  + #cr;
+        #    parmAll += 'paymentMethodId: \"' + CreditCardTable::find(ccTrans.CreditCardId).PaymentProfileId + #endOfLine  + #cr;
+        #    //parmAll += 'publicKey: \"'+ this.parmMerchantWorldPay().TransactionKey + #endOfLine + #cr;
+        #    parmAll += 'paymentType: "CREDIT_CARD"' + #cr;
+        #
+        #    //--> End of Payment Value Token
+        #    parmAll += #endOfSection;
+        #    parmAll += ','  + #cr;
+        #
+        #    //--> Add to Vault
+        #    parmAll += 'addToVault:false,';
+        #
+        #    //--> ExtendedInformation
+        #    parmAll += 'extendedInformation: ' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'typeOfGoods: \"' + 'PHYSICAL' +'\"' + #cr;
+        #    parmAll += #endOfSection;
+        #    parmAll += ',' + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewSale
+        #xml buildNewSale()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Amount
+        #    parmAll += 'amount:' + strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)) + ',';
+        #
+        #    //--> Card
+        #    parmAll += 'card:' + #beginOfSection  + #cr;
+        #    parmAll += 'number: \"' + this.returnAccount() + #endOfLine  + #cr;
+        #    parmAll += 'cvv: \"' + this.parmCCTrans().CID + #endOfLine  + #cr;
+        #    parmAll += 'expirationDate: \"'+ this.returnMonth() + '/' + this.returnYear() + #endOfLine + #cr;
+        #
+        #    //--> Address (inside Card)
+        #    parmAll += 'address: ' + #beginOfSection  + #cr;
+        #    parmAll += 'line1: \"' + this.parmPostalAddress().StreetNumber + ' ' + this.parmPostalAddress().Street + #endOfLine  + #cr;
+        #    parmAll += 'city: \"' +this.parmPostalAddress().City + #endOfLine  + #cr;
+        #    parmAll += 'state: \"' + this.parmPostalAddress().State + #endOfLine  + #cr;
+        #    parmAll += 'zip: \"' + this.parmPostalAddress().ZipCode +'\"' + #cr;
+        #    parmAll += #endOfSection  + #cr;
+        #
+        #    //--> End of Card
+        #    parmAll += #endOfSection;
+        #    parmAll += ','  + #cr;
+        #
+        #    //--> ExtendedInformation
+        #    parmAll += 'extendedInformation: ' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'mailOrTelephoneOrderData: ' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'type:\"SINGLE_PURCHASE' +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #    parmAll += ',' + #cr;
+        #    //parmAll += ',' + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewSaleToken
+        #xml buildNewSaleToken()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    CreditCardStr                   custAccount = ccTrans.ProfileId ? ccTrans.ProfileId : ccTrans.CustAccount;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Amount
+        #    parmAll += 'amount:' + strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)) + ',';
+        #
+        #    //--> Payment Vault Token
+        #    parmAll += 'paymentVaultToken:' + #beginOfSection  + #cr;
+        #    parmAll += 'customerId: \"' + custAccount + #endOfLine  + #cr;
+        #    parmAll += 'paymentMethodId: \"' + CreditCardTable::find(ccTrans.CreditCardId).PaymentProfileId + #endOfLine  + #cr;
+        #    //parmAll += 'publicKey: \"'+ this.parmMerchantWorldPay().TransactionKey + #endOfLine + #cr;
+        #
+        #    //--> End of Payment Value Token
+        #    parmAll += #endOfSection;
+        #    parmAll += ','  + #cr;
+        #
+        #    //--> Add to Vault
+        #    parmAll += 'addToVault:false,';
+        #
+        #    //--> ExtendedInformation
+        #    parmAll += 'extendedInformation: ' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'typeOfGoods: \"' + 'PHYSICAL' +'\"' + #cr;
+        #    parmAll += #endOfSection;
+        #    parmAll += ',' + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfile
+        #str buildProfile(CreditCardTable        ccTable)
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Name
+        #    if (ccTable.NameOnCard)
+        #    {
+        #        parmAll += 'firstName: \"' + this.parmFirstName(ccTable.NameOnCard) + #endOfLine  + #cr;
+        #        parmAll += 'lastName: \"' + this.parmLastName(ccTable.NameOnCard) + #endOfLine  + #cr;
+        #    }
+        #
+        #    if (ccTable.Phone)
+        #    {
+        #        parmAll += 'phoneNumber: \"' + this.parmLastName(ccTable.Phone) + #endOfLine  + #cr;
+        #    }
+        #
+        #    if (ccTable.Email)
+        #    {
+        #        parmAll += 'emailAddress: \"' + this.parmLastName(ccTable.Email) + #endOfLine  + #cr;
+        #        parmAll += 'sendEmailReceipts: true,';
+        #    }
+        #
+        #    //--> Customer id
+        #    parmAll += 'customerId: \"' + ccTable.CustAccount + #endOfLine  + #cr;
+        #
+        #    //--> Address
+        #    parmAll += 'address: ' + #beginOfSection  + #cr;
+        #    parmAll += 'line1: \"' +this.parmPostalAddress().StreetNumber + ' ' + this.parmPostalAddress().Street + #endOfLine  + #cr;
+        #    parmAll += 'city: \"' +this.parmPostalAddress().City + #endOfLine  + #cr;
+        #    parmAll += 'state: \"' + this.parmPostalAddress().State + #endOfLine  + #cr;
+        #    parmAll += 'zip: \"' + this.parmPostalAddress().ZipCode +'\"' + #cr;
+        #    parmAll += #endOfSection  + #cr;
+        #    parmAll += ','  + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildRequest
+        #str buildRequest()
+        #{
+        #    TempStr                         tmpstr;
+        #    ;
+        #    tmpstr =    '<Request xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        #    tmpstr +=   'Version="3" ClientTimeout="30" xmlns="http://securetransport.dw/rcservice/xml">';
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildReturn
+        #xml buildReturn()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> Amount
+        #    parmAll += 'amount:' + strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)) + ',';
+        #
+        #    //--> TransactionId
+        #    parmAll += 'transactionId:\"' + this.parmCCTrans().origId + #endOfLine  + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication:' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildUpdateCardProfile
+        #str buildUpdateCardProfile(CreditCardTable        ccTable)
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardStr                   verificationStr,verificationStr2;
+        #    CreditCardStr                   custAccount = ccTable.ProfileId ? ccTable.ProfileId : ccTable.CustAccount;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #    this.parmCreditCardTable(ccTable);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    parmAll += 'customerId: \"' + custAccount + #endOfLine  + #cr;
+        #    parmAll += 'paymentMethodId: \"' + ccTable.PaymentProfileId + #endOfLine  + #cr;
+        #
+        #    //--> Card
+        #    parmAll += 'card:' + #beginOfSection  + #cr;
+        #    parmAll += 'number: \"' + #endOfLine  + #cr;
+        #    parmAll += 'expirationDate: \"' + #endOfLine + #cr;
+        #    //--> Address (inside Card)
+        #    parmAll += 'address: ' + #beginOfSection  + #cr;
+        #    parmAll += 'line1: \"' +this.parmPostalAddress().StreetNumber + ' ' + this.parmPostalAddress().Street + #endOfLine  + #cr;
+        #    parmAll += 'city: \"' +this.parmPostalAddress().City + #endOfLine  + #cr;
+        #    parmAll += 'state: \"' + this.parmPostalAddress().State + #endOfLine  + #cr;
+        #    parmAll += 'zip: \"' + this.parmPostalAddress().ZipCode +'\"' + #cr;
+        #    parmAll += #endOfSection  + #cr;
+        #
+        #    //--> End of Card
+        #    parmAll += #endOfSection;
+        #    parmAll += ','  + #cr;
+        #
+        #    if (ccTable.Phone)
+        #    {
+        #        parmAll += 'phoneNumber: \"' + this.parmLastName(ccTable.Phone) + #endOfLine  + #cr;
+        #    }
+        #
+        #    parmAll += 'accountDuplicateCheckIndicator: 0,' + #cr;
+        #    parmAll += 'primary: true,' + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #xml buildVoid()
+        #{
+        #    #define.endOfLine('\",')
+        #    #define.beginofSection('{')
+        #    #define.endOfSection('}')
+        #    #define.cr('\n')
+        #    CreditCardStr                   parmAll;
+        #    CreditCardMerchantWorldPay      ccWorldPay;
+        #    CreditCardParameters            ccParameters;
+        #    TempStr                         verificationStr,verificationStr2;
+        #    ;
+        #
+        #    //--> Set Terminal type
+        #    ccWorldPay = this.parmMerchantWorldPay();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccWorldPay.TerminalId);
+        #
+        #    //--> Begin JSON
+        #    parmAll = #beginOfSection + #cr;
+        #
+        #    //--> TransactionId
+        #    parmAll += 'transactionId:\"' + this.parmCCTrans().origId + #endOfLine  + #cr;
+        #
+        #    //--> Developer information
+        #    parmAll += 'developerApplication :' + #cr;
+        #    parmAll += #beginOfSection;
+        #    parmAll += 'developerId: ' + CreditCardMerchantWorldPay::getDeveloperId() + ',' + #cr;
+        #    parmAll += 'Version: \"' + CreditCardMerchantWorldPay::getDeveloperVersion() +'\"' + #cr;
+        #    parmAll += #endOfSection + #cr;
+        #
+        #    //--> End of JSON
+        #    parmAll += #endOfSection;
+        #
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardSecureNetBuilder
+        #{
+        #    TempStr                     transactionText;
+        #    Amount                      processAmt;
+        #    CreditCardMerchantWorldPay  merchantWorldPay;
+        #    LogisticsPostalAddress      postalAddress;
+        #    CreditCardTrans             ccTrans;
+        #    CreditCardTable             profileCCTable;
+        #}
+      ENDSOURCE
+      SOURCE #getAction
+        #str getAction()
+        #{
+        #    TempStr                         parmList;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            parmList = 'api/Payments/Authorize';
+        #
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (this.parmCCTrans().RetrevalRefNum)
+        #            {
+        #               parmList = 'api/Payments/Refund';
+        #            }
+        #            else
+        #            {
+        #               parmList = 'api/Payments/Credit';
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D    :
+        #            parmList = 'api/Payments/Capture';
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            parmList = 'api/Payments/Charge';
+        #
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            parmList = 'api/Payments/Void';
+        #            break;
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCTrans
+        #CreditCardTrans parmCCTrans(CreditCardTrans _ccTrans = ccTrans)
+        #{
+        #    ;
+        #    ccTrans = _ccTrans;
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardTable
+        #CreditCardTable parmCreditCardTable(CreditCardTable _profileCCTable = profileCCTable)
+        #{
+        #    ;
+        #    profileCCTable = _profileCCTable;
+        #    return profileCCTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #firstName parmFirstName(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmLastName
+        #firstName parmLastName(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    str         reduction;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker+1);
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantWorldPay
+        #CreditCardMerchantWorldPay parmMerchantWorldPay(CreditCardMerchantWorldPay _merchantWorldPay = merchantWorldPay)
+        #{
+        #    ;
+        #    merchantWorldPay = _merchantWorldPay;
+        #    return merchantWorldPay;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmProcessAmt
+        #public Amount parmProcessAmt(Amount     _processAmt = processAmt)
+        #{
+        #    ;
+        #    processAmt = _processAmt;
+        #    return processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransactionText
+        #str parmTransactionText(str _transactionText = transactionText)
+        #{
+        #    ;
+        #    transactionText = _transactionText;
+        #    return transactionText;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue()
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(this.parmCCTrans().CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount()
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue();
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue();
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumSecure)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue();
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnCardType
+        #str returnCardType()
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    CreditCardType          ccType;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        ccType =  this.parmCCTrans().CreditCardType;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        ccType =  ccTable.CreditCardType;
+        #    }
+        #
+        #    switch (ccType)
+        #    {
+        #        case CreditCardType::AmericanExpress    :
+        #            ParmList = 'American Express';
+        #            break;
+        #        case CreditCardType::Visa    :
+        #            ParmList = 'Visa';
+        #            break;
+        #        case CreditCardType::MasterCard    :
+        #            ParmList = 'Mastercard';
+        #            break;
+        #        case CreditCardType::Discover    :
+        #            ParmList = 'Discover';
+        #            break;
+        #        case CreditCardType::Diners    :
+        #            ParmList = 'Diners Club';
+        #            break;
+        #        case CreditCardType::JCB    :
+        #            ParmList = 'JCB';
+        #            break;
+        #        case CreditCardType::Stored    :
+        #            ParmList = 'Gift Card';
+        #            break;
+        #        case CreditCardType::PayPal    :
+        #            ParmList = 'PayPal';
+        #            break;
+        #
+        #
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnDayFromDate
+        #str returnDayFromDate(date        dateTrans)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 day;
+        #    ;
+        #    day =  int2str(DayofMth(dateTrans));
+        #    if (strlen(day)==1)
+        #    {
+        #        day = '0' + day;
+        #    }
+        #
+        #    ParmList =  day;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonth
+        #str returnMonth()
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(this.parmCCTrans().OneTimeDateExp));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthCC
+        #str returnMonthCC(CreditCardTable         ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthFromDate
+        #str returnMonthFromDate(date        dateTrans)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    month =  int2str(Mthofyr(dateTrans));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear
+        #str returnYear()
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(this.parmCCTrans().OneTimeDateExp));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYearCC
+        #str returnYearCC(CreditCardTable         ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #
+        #    ParmList =  ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeResponse
+        #static CreditCardTrans analyzeResponse(CreditCardStr                 msg,
+        #                                CreditCardTrans                _ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList;
+        #    XmlNode                         elementParent;
+        #    Counter                         cnt,conLength,con;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    container                       responseCon,nodeCon;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #    System.Web.Script.Serialization.JavaScriptSerializer    jsonSerialization;
+        #    CLRObject                       dict;
+        #    ;
+        #
+        #
+        #    try
+        #    {
+        #        if (strContains(msg,'{"transaction":{'))
+        #        {
+        #            node = subStr(msg,17,strLen(msg)-16);
+        #            responseCon = str2con(node,',');
+        #            conLength = conLen(responseCon);
+        #
+        #            for (con=1;con<conLength;con++)
+        #            {
+        #                nodeCon = str2con(conPeek(responseCon,con),":");
+        #                response.insert(strReplace(conPeek(nodeCon,1),'"',''),conPeek(nodeCon,2));
+        #            }
+        #        }
+        #
+        #        ttsbegin;
+        #        _ccTrans.selectForUpdate(true);
+        #
+        #        if (response.exists('success'))
+        #        {
+        #            if (response.lookup('success') == 'false')
+        #            {
+        #                _ccTrans.Result = response.lookup('responseCode');
+        #                _ccTrans.RepMsg = response.lookup('message');
+        #            }
+        #            else
+        #            {
+        #                _ccTrans.Result = '0';
+        #                _ccTrans.RepMsg = response.lookup('message');
+        #            }
+        #        }
+        #        else
+        #        {
+        #            _ccTrans.Result = "Error";
+        #            _ccTrans.RepMsg = msg;
+        #        }
+        #
+        #
+        #        if (response.exists('transactionId'))
+        #        {
+        #            _ccTrans.PNRef = response.lookup('transactionId');
+        #        }
+        #
+        #        if (response.exists('authorizationCode'))
+        #        {
+        #            _ccTrans.AuthCode = response.lookup('authorizationCode');
+        #        }
+        #
+        #        if (response.exists('orderId'))
+        #        {
+        #            _ccTrans.RetrevalRefNum = response.lookup('orderId');
+        #        }
+        #
+        #        if (response.exists('avsCode'))
+        #        {
+        #            _ccTrans.AvsAddr = response.lookup('avsCode');
+        #        }
+        #
+        #        if (response.exists('cardCodeCode'))
+        #        {
+        #            _ccTrans.CVDResponse = response.lookup('cardCodeCode');
+        #        }
+        #
+        #        _ccTrans.write();
+        #        ttscommit;
+        #    }
+        #    catch
+        #    {
+        #        tmpStr = AifUtil::getClrErrorMessage();
+        #    }
+        #
+        #
+        #    return _ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #createPaymentProfile
+        #static CreditCardTable createPaymentProfile(CreditCardTable      ccTable)
+        #{
+        #    CreditCardMerchantWorldPay          ccMerchantWorldPay;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     locCCTable;
+        #    CreditCardSecureNetBuilder          xmlBuilder = new CreditCardSecureNetBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    System.Net.WebHeaderCollection      headerCollection;
+        #    CreditCardStr                       base64Text;
+        #    ClrObject                           clearBytes;
+        #    URL                                 url;
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    CreditCardStr                       requestId;
+        #    ;
+        #    clrPermission.assert();
+        #    select ccMerchantWorldPay
+        #        where ccMerchantWorldPay.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccMerchantWorldPay)
+        #    {
+        #        throw error(strFmt("@ACC1845",ccTable.ProfileTerminalId));
+        #    }
+        #
+        #    xmlBuilder.parmMerchantWorldPay(ccMerchantWorldPay);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #
+        #    xmlBuilder.parmCreditCardTable(ccTable);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> Build  Recurring profile
+        #        parmList  += xmlBuilder.buildCardProfile(ccTable);
+        #
+        #        url = ccMerchantWorldPay.URL;
+        #        if (subStr(url,strlen(url),1) == '/')
+        #        {
+        #            url += 'api/Customers/'+ ccTable.CustAccount + '/PaymentMethod';
+        #        }
+        #        else
+        #        {
+        #            url += '/api/Customers/'+ ccTable.CustAccount + '/PaymentMethod';
+        #        }
+        #
+        #        try
+        #        {
+        #            clearBytes = System.Text.Encoding::get_UTF8().GetBytes(ccMerchantWorldPay.SecurenetID + ':' + ccMerchantWorldPay.Key);
+        #
+        #            base64Text = System.Convert::ToBase64String( clearBytes);
+        #            headerCollection = new System.Net.WebHeaderCollection();
+        #            headerCollection.Add('Authorization','Basic ' + base64Text);
+        #            requestId = strReplace(guid2str(newGuid()),'{','');
+        #            requestId = strReplace(requestId,'}','');
+        #            headerCollection.Add('SecureNet-Request-Id', requestId);
+        #            headerCollection.Add('Origin','test.com');
+        #
+        #            WebRequest = System.Net.WebRequest::Create(url);
+        #
+        #            WebRequest.set_Method('POST');
+        #            webRequest.set_Headers(headerCollection);
+        #            WebRequest.set_ContentLength(strlen(parmList));
+        #            webRequest.set_ContentType('application/json');
+        #
+        #            stream = webRequest.GetRequestStream();
+        #            streamWriter = new System.IO.StreamWriter(stream);
+        #            streamWriter.Write(parmList);
+        #            streamWriter.Close();
+        #
+        #            webResponse = webRequest.GetResponse();
+        #
+        #            stream = webResponse.GetResponseStream();
+        #            streamReader = new System.IO.StreamReader(stream);
+        #
+        #            response = streamReader.ReadToEnd();
+        #
+        #            streamReader.Close();
+        #        }
+        #        catch
+        #        {
+        #            response = AifUtil::getClrErrorMessage();
+        #        }
+        #
+        #        CodeAccessPermission::revertAssert();
+        #
+        #        locCCTable = xmlBuilder.analyzeWorldPayResponseForProfile(response,ccTable);
+        #    }
+        #
+        #    return locCCTable;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #static void createProfile(CreditCardTable      ccTable)
+        #{
+        #    CreditCardMerchantWorldPay          ccWorldPay = CreditCardMerchantWorldPay::find(ccTable.ProfileTerminalId);
+        #    CreditCardParameters                ccParameters = CreditCardParameters::findParameterWithTerminal(ccTable.ProfileTerminalId);
+        #    CreditCardSecureNetBuilder          xmlBuilder = new CreditCardSecureNetBuilder();
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     locCCTable;
+        #
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    System.Net.WebHeaderCollection      headerCollection;
+        #    CreditCardStr                       base64Text;
+        #    ClrObject                           clearBytes;
+        #    URL                                 url;
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    CreditCardStr                       requestId;
+        #    NoYes                               customerProfile;
+        #    ;
+        #    clrPermission.assert();
+        #    select ccWorldPay
+        #        where ccWorldPay.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccWorldPay)
+        #    {
+        #        throw error(strFmt("@ACC1845",ccTable.ProfileTerminalId));
+        #    }
+        #
+        #    xmlBuilder.parmMerchantWorldPay(ccWorldPay);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #    select locCCTable where locCCTable.CustAccount == ccTable.CustAccount
+        #        && locCCTable.Profile == NoYes::Yes
+        #        && locCCTable.ProfileTerminalId == ccTable.ProfileTerminalId
+        #        && locCCTable.RecId != ccTable.RecId;
+        #
+        #    xmlBuilder.parmCreditCardTable(locCCTable);
+        #
+        #    if (!locCCTable)
+        #    {
+        #        //--> Build  Recurring profile
+        #        customerProfile = true;
+        #        if (CustTable::find(ccTable.CustAccount).address())
+        #        {
+        #            xmlBuilder.parmPostalAddress(CustTable::find(ccTable.CustAccount).postalAddress());
+        #        }
+        #        parmList  += xmlBuilder.buildProfile(ccTable);
+        #
+        #        url = ccWorldPay.URL;
+        #        if (subStr(url,strlen(url),1) == '/')
+        #        {
+        #            url += 'api/Customers';
+        #        }
+        #        else
+        #        {
+        #            url += '/api/Customers';
+        #        }
+        #
+        #        try
+        #        {
+        #            clearBytes = System.Text.Encoding::get_UTF8().GetBytes(ccWorldPay.SecurenetID + ':' + ccWorldPay.Key);
+        #
+        #            base64Text = System.Convert::ToBase64String( clearBytes);
+        #            headerCollection = new System.Net.WebHeaderCollection();
+        #            headerCollection.Add('Authorization','Basic ' + base64Text);
+        #            requestId = strReplace(guid2str(newGuid()),'{','');
+        #            requestId = strReplace(requestId,'}','');
+        #            headerCollection.Add('SecureNet-Request-Id', requestId);
+        #            headerCollection.Add('Origin','test.com');
+        #
+        #            WebRequest = System.Net.WebRequest::Create(url);
+        #
+        #            WebRequest.set_Method('POST');
+        #            webRequest.set_Headers(headerCollection);
+        #            WebRequest.set_ContentLength(strlen(parmList));
+        #            webRequest.set_ContentType('application/json');
+        #
+        #            stream = webRequest.GetRequestStream();
+        #            streamWriter = new System.IO.StreamWriter(stream);
+        #            streamWriter.Write(parmList);
+        #            streamWriter.Close();
+        #
+        #            webResponse = webRequest.GetResponse();
+        #
+        #            stream = webResponse.GetResponseStream();
+        #            streamReader = new System.IO.StreamReader(stream);
+        #
+        #            response = streamReader.ReadToEnd();
+        #
+        #            streamReader.Close();
+        #        }
+        #        catch
+        #        {
+        #            response = AifUtil::getClrErrorMessage();
+        #            throw error(response);
+        #        }
+        #
+        #        CodeAccessPermission::revertAssert();
+        #
+        #        locCCTable = xmlBuilder.analyzeWorldPayResponseForProfile(response,ccTable);
+        #
+        #        xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #        locCCTable = CreditCardSecureNetBuilder::createPaymentProfile(locCCTable);
+        #    }
+        #    else
+        #    {
+        #        ccTable.ProfileId = locCCTable.ProfileId;
+        #        locCCTable = CreditCardSecureNetBuilder::createPaymentProfile(ccTable);
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #processSecureNet
+        #server static str processSecureNet(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardMerchantWorldPay                  ccWorldPay = CreditCardMerchantWorldPay::find(ccTrans.TerminalId);
+        #    CreditCardParameters                        ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #    CreditCardSecureNetBuilder                  xmlBuilder = new CreditCardSecureNetBuilder();
+        #    //-->
+        #    CreditCardStr                               response;
+        #    CreditCardStr                               parmList;
+        #    TempStr                                     requestId;
+        #
+        #    System.Net.WebRequest                       webRequest;
+        #    System.Net.HttpWebResponse                  webResponse;
+        #    System.IO.Stream                            stream;
+        #
+        #    //--> Global Gateway header encryption fiels
+        #    ClrObject                                   clearBytes;
+        #    CreditCardStr                               base64Text;
+        #    URL                                         url;
+        #
+        #    System.IO.StreamWriter                      streamWriter = null;
+        #    System.IO.StreamReader                      streamReader = null;
+        #    System.Net.WebHeaderCollection              headerCollection;
+        #    InteropPermission                           clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccWorldPay
+        #        where ccWorldPay.TerminalId == ccTrans.TerminalId;
+        #
+        #    if (ccParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Specified)
+        #    {
+        #        if (!ccParameters.ProcessCurrencyCode)
+        #        {
+        #            throw error(strFmt("@ACC1835",ccTrans.TerminalId));
+        #        }
+        #
+        #        if (ccParameters.ProcessCurrencyCode != CompanyInfo::standardCurrency())
+        #        {
+        #            if (ccTrans.CurrencyCode != ccParameters.ProcessCurrencyCode)
+        #            {
+        #                throw error(strFmt("@ACC1836",
+        #                    ccTrans.TerminalId,
+        #                    ccParameters.ProcessCurrencyCode,
+        #                    ccTrans.CurrencyCode));
+        #            }
+        #
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountCur);
+        #        }
+        #        else
+        #        {
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #    }
+        #
+        #    //<--Check for all required fields
+        #    //xmlBuilder.checkMerchantFirstData(ccFirstData);
+        #    xmlBuilder.parmMerchantWorldPay(ccWorldPay);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTrans.Location));
+        #    xmlBuilder.parmCCTrans(ccTrans);
+        #
+        #    //--> Check for customer reference, if 0 or blank, insert RefRecId
+        #    if (ccTrans.CustomerRef == '0' || ccTrans.CustomerRef == '')
+        #    {
+        #        ccTrans.CustomerRef = int642str(ccTrans.RecId);
+        #    }
+        #
+        #    try
+        #    {
+        #        //--> This builds the XML
+        #        ParmList += xmlBuilder.build();
+        #
+        #        clearBytes = System.Text.Encoding::get_UTF8().GetBytes(ccWorldPay.SecurenetID + ':' + ccWorldPay.Key);
+        #
+        #        base64Text = System.Convert::ToBase64String( clearBytes);
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('Authorization','Basic ' + base64Text);
+        #        requestId = strReplace(guid2str(newGuid()),'{','');
+        #        requestId = strReplace(requestId,'}','');
+        #        headerCollection.Add('SecureNet-Request-Id', requestId);
+        #        headerCollection.Add('Origin','test.com');
+        #
+        #        url = ccWorldPay.URL;
+        #        if (!strFind(url,'/',strLen(url),1))
+        #        {
+        #            url += '/';
+        #        }
+        #        url += xmlBuilder.getAction();
+        #
+        #        WebRequest = System.Net.WebRequest::Create(url);
+        #
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('application/json');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #updatePaymentProfile
+        #static CreditCardTable updatePaymentProfile(CreditCardTable      ccTable)
+        #{
+        #    CreditCardMerchantWorldPay          ccMerchantWorldPay;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     locCCTable;
+        #    CreditCardSecureNetBuilder          xmlBuilder = new CreditCardSecureNetBuilder();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    System.Net.WebHeaderCollection      headerCollection;
+        #    CreditCardStr                       base64Text;
+        #    ClrObject                           clearBytes;
+        #    URL                                 url;
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    CreditCardStr                       requestId;
+        #    CreditCardStr                       custAccount = ccTable.ProfileId ? ccTable.ProfileId : ccTable.CustAccount;
+        #    ;
+        #    clrPermission.assert();
+        #    select ccMerchantWorldPay
+        #        where ccMerchantWorldPay.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccMerchantWorldPay)
+        #    {
+        #        throw error(strFmt("@ACC1845",ccTable.ProfileTerminalId));
+        #    }
+        #
+        #    xmlBuilder.parmMerchantWorldPay(ccMerchantWorldPay);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #
+        #    xmlBuilder.parmCreditCardTable(ccTable);
+        #
+        #    //--> Build  Recurring profile
+        #    parmList  += xmlBuilder.buildUpdateCardProfile(ccTable);
+        #
+        #    url = ccMerchantWorldPay.URL;
+        #    if (subStr(url,strlen(url),1) == '/')
+        #    {
+        #        url += 'api/Customers/'+ custAccount + '/PaymentMethod/' + ccTable.PaymentProfileId;
+        #    }
+        #    else
+        #    {
+        #        url += '/api/Customers/'+ custAccount + '/PaymentMethod/' + ccTable.PaymentProfileId;
+        #    }
+        #
+        #    try
+        #    {
+        #        clearBytes = System.Text.Encoding::get_UTF8().GetBytes(ccMerchantWorldPay.SecurenetID + ':' + ccMerchantWorldPay.Key);
+        #
+        #        base64Text = System.Convert::ToBase64String( clearBytes);
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('Authorization','Basic ' + base64Text);
+        #        requestId = strReplace(guid2str(newGuid()),'{','');
+        #        requestId = strReplace(requestId,'}','');
+        #        headerCollection.Add('SecureNet-Request-Id', requestId);
+        #        headerCollection.Add('Origin','test.com');
+        #
+        #        WebRequest = System.Net.WebRequest::Create(url);
+        #
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('application/json');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    locCCTable = xmlBuilder.analyzeWorldPayResponseForProfile(response,ccTable);
+        #
+        #
+        #    return locCCTable;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

@@ -1,0 +1,1495 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SMAServiceFunctionLine_Transfer
+    PROPERTIES
+      Name                #SMAServiceFunctionLine_Transfer
+      Extends             #SMAServiceFunctionLine
+      RunOn               #Server
+      Origin              #{2D1F167B-0000-1000-7F47-7F28FD94E92B}
+      LegacyId            #5755
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #checkJournalType
+        #private boolean checkJournalType(SMATransactionType _transType)
+        #{
+        #    boolean ret = false;
+        #    ;
+        #
+        #    this.prefixSet("@SYS13894");        //Checking
+        #
+        #    switch(_transType)
+        #    {
+        #        case SMATransactionType::Hour, SMATransactionType::Fee:
+        #            ret = this.checkProjJournal(_transType);
+        #            break;
+        #
+        #        case SMATransactionType::Expense:
+        #            ret = this.checkPostLedgerJournal(NoYes::No);
+        #            break;
+        #
+        #        case SMATransactionType::Item:
+        #            ret = this.checkPostInventJournal(JournalCheckPostType::Check);
+        #            break;
+        #
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #checkPostInventJournal
+        #public boolean checkPostInventJournal(JournalCheckPostType _journalCheckPostType)
+        #{
+        #    JournalCheckPost        journalCheckPost;
+        #    boolean                 ret = true;
+        #
+        #    journalCheckPost = InventJournalCheckPost::newJournalCheckPost(_journalCheckPostType, inventJournalTable);
+        #
+        #    journalCheckPost.parmAutoBlock(true);
+        #    journalCheckPost.run();
+        #    ret = journalCheckPost.parmCheckJournalResult();
+        #
+        #    // service order line of type item are transferred to Invent journal anyway eventhough errors are found
+        #    if(_journalCheckPostType != JournalCheckPostType::Check)
+        #    {
+        #        ret = true;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #checkPostLedgerJournal
+        #public boolean checkPostLedgerJournal(NoYes _post)
+        #{
+        #    LedgerJournalEngine     ledgerJournalEngine;
+        #    LedgerJournalCheckPost  ledgerJournalCheckPost;
+        #    boolean                 ret = false;
+        #
+        #    ledgerJournalEngine = LedgerJournalEngine::construct(LedgerJournalType::Cost);
+        #    ledgerJournalEngine.newJournalActive(ledgerJournalTable);
+        #
+        #    ledgerJournalCheckPost = LedgerJournalCheckPost::newLedgerJournalTable(ledgerJournalTable,_post);
+        #    ledgerJournalCheckPost.parmLedgerJournalEngine(ledgerJournalEngine);
+        #
+        #    try
+        #    {
+        #        ledgerJournalCheckPost.run();
+        #        ret = true;
+        #    }
+        #
+        #    catch (Exception::Error)
+        #    {
+        #        ret = checkFailed("@SYS24802");
+        #    }
+        #
+        #    ret = ret && !ledgerJournalEngine.getPostingResults_Client().errorInJournal();
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #checkProjJournal
+        #public boolean checkProjJournal(SMATransactionType _transactionType)
+        #{
+        #    ProjJournalCheckPost    projJournalCheckPost;
+        #    JournalTableData        journalTableData;
+        #
+        #    boolean                 ret = false;
+        #    ;
+        #
+        #    switch(_transactionType)
+        #    {
+        #        case SMATransactionType::Hour :
+        #            projJournalCheckPost = ProjJournalCheckPost::newJournalCheckPost(true, false, JournalCheckPostType::Check, tableNum(ProjJournalTable), this.parmJournalId_Hour());
+        #            break;
+        #
+        #        case SMATransactionType::Fee :
+        #            projJournalCheckPost = ProjJournalCheckPost::newJournalCheckPost(true, false, JournalCheckPostType::Check, tableNum(ProjJournalTable), this.parmJournalId_Fee());
+        #            break;
+        #    }
+        #
+        #    if (projJournalCheckPost)
+        #    {
+        #        projJournalCheckPost.run();
+        #        journalTableData = JournalTableData::newTable(projJournalTable);
+        #
+        #        // test to see if journal contains errors
+        #        ret = journalTableData.journalErrorTransList().count() == 0;
+        #        ret = ret && projJournalCheckPost.parmCheckJournalResult();
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #public class SmaServiceFunctionLine_Transfer extends SMAServiceFunctionLine
+        #{
+        #    //tabel buffers
+        #    SMAParameters           serviceParameter;
+        #    SMAServiceOrderTable    serviceOrderTable;
+        #    SMAServiceOrderLine     serviceOrderLine;
+        #    SMAServiceOrderLine     line;
+        #
+        #    //variables
+        #    ProjJournalId           journalId_Hour;
+        #    ProjJournalId           journalId_Fee;
+        #    LedgerJournalId         journalId_Expense;
+        #    InventJournalId         journalId_ItemConsum;
+        #
+        #    JournalId               journalId;
+        #    JournalDescription      journalName;
+        #    str                     journalType;
+        #    str                     journalAction;
+        #
+        #    ProjJournalTable        projJournalTable;
+        #    ProjJournalName         projJournalName;
+        #
+        #    LedgerJournalTable      ledgerJournalTable;
+        #    LedgerJournalName       ledgerJournalName;
+        #
+        #    InventJournalTable      inventJournalTable;
+        #    InventJournalName       inventJournalName;
+        #
+        #    JournalVoucherNum       journalVoucherNum;
+        #    Voucher                 ledgerVoucherCost;
+        #    TransDate               oldTransDate;
+        #    boolean                 postJournals;
+        #
+        #    List                    listItemConsum;
+        #    ListIterator            listIterator;
+        #
+        #    boolean                 summeryJournal;
+        #
+        #    ProjId                  projId;
+        #    // <GIN>
+        #    PSAProjTrans            projTrans;
+        #    // </GIN>
+        #}
+      ENDSOURCE
+      SOURCE #clearJournalIds
+        #public void clearJournalIds()
+        #{
+        #    ;
+        #    this.parmJournalId_Expense('');
+        #    this.parmJournalId_Fee('');
+        #    this.parmJournalId_Hour('');
+        #    this.parmJournalId_ItemConsum('');
+        #}
+      ENDSOURCE
+      SOURCE #createJournalLine
+        #protected void createJournalLine(SMAServiceOrderLine _serviceLine)
+        #{
+        #    boolean ret = false;
+        #    ;
+        #
+        #    this.parmServiceOrderLine(queryRun.get(tableNum(SMAServiceOrderLine)));
+        #    switch (serviceOrderLine.TransactionType)
+        #    {
+        #        case SMATransactionType::Hour       :
+        #            ret = this.createProjJournalLine_Hour();
+        #            break;
+        #
+        #        case SMATransactionType::Expense    :
+        #            ret = this.createProjJournalLine_Expense();
+        #            break;
+        #
+        #        case SMATransactionType::Fee        :
+        #            ret = this.createProjJournalLine_Fee();
+        #            break;
+        #
+        #        case SMATransactionType::Item       :
+        #            ret = this.createProjJournalLine_ItemConsum();
+        #            break;
+        #    }
+        #
+        #    if(!ret)
+        #    {
+        #        // Cancellation - journal line has not been created.
+        #        throw error("@SYS72601");
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createJournals
+        #protected void createJournals(SMATransactionType  _type)
+        #{
+        #    ;
+        #
+        #    this.writeMessage("@SYS79010", true);
+        #
+        #    if (_type)
+        #    {
+        #
+        #        switch(_type)
+        #        {
+        #            case SMATransactionType::Hour :
+        #                projJournalName = ProjJournalName::find(serviceParameter.ProjJournalHour);
+        #
+        #                projJournalTable.clear();
+        #                projJournalTable.initValue();
+        #                projJournalTable.initFromProjJournalName(projJournalName);
+        #                projJournalTable.Description    = projJournalName.Description;
+        #                projJournalTable.StatusNameId   = projJournalName.StatusNameId;
+        #                projJournalTable.JournalType    = ProjJournalType::Hour;
+        #                projJournalTable.BlockUserId    = curUserId();
+        #                projJournalTable.insert();
+        #
+        #                this.parmJournalId_Hour(projJournalTable.JournalId);
+        #                this.parmSummeryJournal(projJournalTable.DetailSummary == DetailSummary::Summary);
+        #                break;
+        #
+        #            case SMATransactionType::Expense :
+        #                ledgerJournalName = LedgerJournalName::find(serviceParameter.ProjJournalExpense);
+        #
+        #                ledgerJournalTable.clear();
+        #                ledgerJournalTable.initValue();
+        #                ledgerJournalTable.JournalNum  = JournalTableData::newTable(ledgerJournalTable).nextJournalId();
+        #                ledgerJournalTable.initFromLedgerJournalName(ledgerJournalName.JournalName);
+        #                ledgerJournalTable.Name        = ledgerJournalName.Name;
+        #                ledgerJournalTable.JournalType = LedgerJournalType::Cost;
+        #
+        #                journalVoucherNum              = new JournalVoucherNum(JournalTableData::newTable(ledgerJournalTable));
+        #
+        #                if (ledgerJournalTable.validateWrite())
+        #                {
+        #                    ledgerJournalTable.insert();
+        #                }
+        #
+        #                this.parmJournalId_Expense(ledgerJournalTable.JournalNum);
+        #                break;
+        #
+        #            case SMATransactionType::Fee :
+        #                projJournalName = ProjJournalName::find(serviceParameter.ProjJournalFee);
+        #
+        #                projJournalTable.clear();
+        #                projJournalTable.initValue();
+        #                projJournalTable.initFromProjJournalName(projJournalName);
+        #                projJournalTable.Description    = projJournalName.Description;
+        #                projJournalTable.StatusNameId   = projJournalName.StatusNameId;
+        #                projJournalTable.JournalType    = ProjJournalType::Revenue;
+        #                projJournalTable.BlockUserId    = curUserId();
+        #                projJournalTable.insert();
+        #
+        #                this.parmJournalId_Fee(projJournalTable.JournalId);
+        #                this.parmSummeryJournal(projJournalTable.DetailSummary == DetailSummary::Summary);
+        #                break;
+        #
+        #            case SMATransactionType::Item :
+        #
+        #                listItemConsum = new List(Types::Int64);
+        #
+        #                inventJournalName = InventJournalName::find(serviceParameter.ProjJournalMaterial);
+        #
+        #                inventJournalTable.clear();
+        #                inventJournalTable.initValue();
+        #                inventJournalTable.initFromInventJournalName(inventJournalName);
+        #                inventJournalTable.Description    = inventJournalName.Description;
+        #                inventJournalTable.JournalType    = InventJournalType::project;
+        #                inventJournalTable.BlockUserId    = curUserId();
+        #                inventJournalTable.insert();
+        #
+        #                this.parmJournalId_ItemConsum(inventJournalTable.JournalId);
+        #                break;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createProjJournalLine_Expense
+        #protected boolean createProjJournalLine_Expense()
+        #{
+        #    boolean                     ret                                = false;
+        #    LedgerJournalTrans          ledgerJournalTransExpense          = null;
+        #    LedgerJournalTrans_Project  ledgerJournalTransExpenseProject   = null;
+        #    LedgerJournalEngine_ProjectCost     ledgerJournalEngine;
+        #    // <GIN>
+        #    LedgerJournalTransTaxExtensionIN            ledgerJournalTransExpenseTaxExtensionIN         = null;
+        #    ProjTable                                   projTable;
+        #    // </GIN>
+        #
+        #    // Create Expense journal.
+        #    this.writeMessage("@SYS97923", true);
+        #
+        #    if (! this.parmJournalId_Expense())
+        #    {
+        #        this.createJournals(SMATransactionType::Expense);
+        #    }
+        #
+        #    ledgerJournalTransExpense.clear();
+        #    // We set the currency cod before initValue() so that correct exchange rate is set.
+        #    ledgerJournalTransExpense.CurrencyCode        = serviceOrderLine.CurrencyIdCost;
+        #    ledgerJournalTransExpense.initValue();
+        #
+        #    if (ledgerJournalName.NewVoucher != NewVoucher::OneVoucher || !ledgerVoucherCost)
+        #    {
+        #        ledgerVoucherCost                         = journalVoucherNum.getNew(false);
+        #    }
+        #    ledgerJournalTransExpense.Voucher             = ledgerVoucherCost;
+        #    ledgerJournalTransExpense.JournalNum          = this.parmJournalId_Expense();
+        #    ledgerJournalTransExpense.parmAccount(this.projId(), LedgerJournalACType::Project);
+        #    ledgerJournalTransExpense.Invoice             = serviceOrderLine.InvoiceId;
+        #    ledgerJournalTransExpense.TransactionType     = LedgerTransType::Project;
+        #    ledgerJournalTransExpense.TransDate           = serviceOrderLine.DateExecution;
+        #    ledgerJournalTransExpense.SettleVoucher       = SettlementType::None;
+        #    ledgerJournalTransExpense.AcknowledgementDate = ledgerJournalTransExpense.TransDate;
+        #    ledgerJournalTransExpense.Txt                 = serviceOrderLine.ProjTransTxt ? serviceOrderLine.ProjTransTxt : serviceOrderLine.Description;
+        #    ledgerJournalTransExpense.AmountCurDebit      = CurrencyExchangeHelper::round(serviceOrderLine.Qty * serviceOrderLine.ProjCostPrice, serviceOrderLine.CurrencyIdCost);
+        #    ledgerJournalTransExpense.AmountCurCredit     = 0.0;
+        #    ledgerJournalTransExpense.OffsetLedgerDimension = serviceOrderLine.LedgerDimension;
+        #    ledgerJournalTransExpense.OffsetAccountType   = serviceOrderLine.OffsetAccountTypeExpense;
+        #
+        #
+        #    // Set up Expwnse Sales / Item tax group
+        #    ledgerJournalTransExpense.TaxGroup          = serviceOrderLine.TaxGroupExpense;
+        #    ledgerJournalTransExpense.TaxItemGroup      = serviceOrderLine.TaxItemGroupExpense;
+        #
+        #    // <GIN>
+        #    if (TaxParameters::checkTaxParameters_IN() || TaxWithholdParameters_IN::checkTaxParameters())
+        #    {
+        #        projTable                                                           = ProjTable::find(this.ProjId());
+        #        ledgerJournalTransExpense.CompanyLocation_IN                        = serviceOrderLine.CompanyLocation_IN;
+        #        ledgerJournalTransExpense.ExciseRecordType_IN                       = serviceOrderLine.ExciseRecordType_IN;
+        #        ledgerJournalTransExpense.ExciseTariffCodes_IN                      = serviceOrderLine.ExciseTariffCodes_IN;
+        #        ledgerJournalTransExpense.ExciseType_IN                             = serviceOrderLine.ExciseType_IN;
+        #        ledgerJournalTransExpense.ServiceCodeTable_IN                       = serviceOrderLine.ServiceCodeTable_IN;
+        #
+        #        ledgerJournalTransExpenseTaxExtensionIN                             = ledgerJournalTransExpense.ledgerJournalTransTaxExtensionIN();
+        #        ledgerJournalTransExpenseTaxExtensionIN.TaxInventVATCommodityCodeId = serviceOrderLine.TaxInventVATCommodityCodeId_IN;
+        #        ledgerJournalTransExpenseTaxExtensionIN.TaxInformation_IN           = SMAServiceOrderLineTaxExtension_IN::findBySMAServiceOrderLine(serviceOrderLine.RecId).TaxInformation;
+        #        if (!ledgerJournalTransExpenseTaxExtensionIN.TaxInformation_IN)
+        #        {
+        #            ledgerJournalTransExpenseTaxExtensionIN.TaxInformation_IN           = ProjTableTaxExtensionIN::findByProjTable(projTable.RecId).TaxInformation;
+        #        }
+        #        ledgerJournalTransExpense.SalesTaxFormTypes_IN                      = serviceOrderLine.SalesTaxFormTypes_IN;
+        #        ledgerJournalTransExpense.CustomsTariffCodeTable_IN                 = serviceOrderLine.CustomsTariffCodeTable_IN;
+        #
+        #        ledgerJournalTransExpense.AssessableValue_IN                        = serviceOrderLine.AssessableValue_IN;
+        #        ledgerJournalTransExpense.MaximumRetailPrice_IN                     = serviceOrderLine.MaximumRetailPrice_IN;
+        #
+        #        if (TaxWithholdParameters_IN::checkTaxParameters())
+        #        {
+        #            ledgerJournalTransExpense.tcsGroup_IN                           = serviceOrderLine.tcsGroup_IN;
+        #            ledgerJournalTransExpense.tdsGroup_IN                           = serviceOrderLine.tdsGroup_IN;
+        #        }
+        #
+        #        ledgerJournalTransExpenseTaxExtensionIN.ServiceEventGroup           = SMAAgreementTable::find(serviceOrderTable.AgreementId).ServiceEventGroup_IN;
+        #        ledgerJournalTransExpense.packledgerJournalTransTaxExtensionIN(ledgerJournalTransExpenseTaxExtensionIN);
+        #    }
+        #    // </GIN>
+        #
+        #    if (!ledgerJournalTransExpense.parmOffsetLedgerDimension())
+        #    {
+        #        // Missing setup of an offset account for the expense.
+        #        throw error("@SYS92416");
+        #    }
+        #
+        #    // if offset account is vendor
+        #    if (ledgerJournalTransExpense.OffsetAccountType == LedgerJournalACType::Vend)
+        #    {
+        #        ledgerJournalTransExpense.Approved = true;
+        #        ledgerJournalTransExpense.Approver = HcmWorker::userId2Worker(curUserId());
+        #    }
+        #
+        #    // Do the insert of the base LedgerJournalTrans table first as we need the RecId to
+        #    // save the project specific LedgerJournalTrans_Project table.
+        #    if (ledgerJournalTransExpense.validateWrite())
+        #    {
+        #        ledgerJournalTransExpense.insert();
+        #    }
+        #
+        #    // Now build the LedgerJournalTrans_Project record.
+        #    LedgerJournalTransExpenseProject.ProjTransDate   = serviceOrderLine.DateExecution;
+        #    ledgerJournalTransExpenseProject.RefRecId        = ledgerJournalTransExpense.RecId;
+        #    ledgerJournalTransExpenseProject.ProjId          = this.projId();
+        #    ledgerJournalTransExpenseProject.CategoryId      = serviceOrderLine.ProjCategoryId;
+        #    ledgerJournalTransExpenseProject.ActivityNumber  = serviceOrderLine.ActivityNumber;
+        #    ledgerJournalTransExpenseProject.TransId         = serviceOrderLine.ProjTransId;
+        #    ledgerJournalTransExpenseProject.Qty             = serviceOrderLine.Qty;
+        #    ledgerJournalTransExpenseProject.SalesCurrencyId = serviceOrderLine.ProjCurrencyCode;
+        #    ledgerJournalTransExpenseProject.SalesPrice      = serviceOrderLine.ProjSalesPrice;
+        #    ledgerJournalTransExpenseProject.CostPrice       = serviceOrderLine.ProjCostPrice;
+        #
+        #    ledgerJournalTransExpenseProject.Worker = serviceOrderLine.Worker;
+        #
+        #    if (serviceOrderLine.ProjLinePropertyId)
+        #    {
+        #        ledgerJournalTransExpenseProject.LinePropertyId = serviceOrderLine.ProjLinePropertyId;
+        #    }
+        #
+        #    // Recalculate Cash Disc according to Offset Acount set up
+        #    ledgerJournalEngine = LedgerJournalEngine::construct(LedgerJournalType::Cost);
+        #    ledgerJournalEngine.newJournalActive(ledgerJournalTable);
+        #    ledgerJournalEngine.initDefaultDimension(ledgerJournalTransExpense);
+        #    // <GIN>
+        #    // Commented the code as it is not standard functionality
+        #    // ledgerJournalEngine.offsetAccountModified(ledgerJournalTransExpense, ledgerJournalTransExpenseProject);
+        #    // ledgerJournalEngine.initFromOffsetAccount(ledgerJournalTransExpense, ledgerJournalTransExpenseProject);
+        #
+        #    // ledgerJournalEngine.offsetAcctModified(ledgerJournalTransExpense, ledgerJournalTransExpenseProject);
+        #    // </GIN>
+        #    ledgerJournalEngine.cashDiscCodeModified(ledgerJournalTransExpense);
+        #
+        #    ledgerJournalTransExpense.DefaultDimension = serviceOrderLine.DefaultDimension;
+        #
+        #    if (ledgerJournalTransExpense.validateWrite())
+        #    {
+        #        ledgerJournalTransExpense.update();
+        #    }
+        #
+        #    // Set up Project Sales / item tax group
+        #    ledgerJournalTransExpenseProject.TaxGroupSales = serviceOrderLine.ProjTaxGroup;
+        #    ledgerJournalTransExpenseProject.TaxItemGroupSales = serviceOrderLine.ProjTaxItemGroup;
+        #
+        #    // This record will not validate OK if the LEdgerJournalTrans did not insert correctly
+        #    // as we use the recid as a key field on this record.
+        #    if (ledgerJournalTransExpenseProject.validateWrite())
+        #    {
+        #        ledgerJournalTransExpenseProject.insert();
+        #        this.updateServiceOrderLine();
+        #        // <GIN>
+        #        if (TaxParameters::checkTaxParameters_IN() || TaxWithholdParameters_IN::checkTaxParameters())
+        #        {
+        #            ledgerJournalTransExpenseTaxExtensionIN     = LedgerJournalTransTaxExtensionIN::findByLedgerJournalTrans(ledgerJournalTransExpense.RecId);
+        #            ledgerJournalTransExpense.packledgerJournalTransTaxExtensionIN(ledgerJournalTransExpenseTaxExtensionIN);
+        #
+        #            ttsbegin;
+        #            ledgerJournalTransExpenseTaxExtensionIN.selectForUpdate(true);
+        #            ledgerJournalTransExpenseTaxExtensionIN.update();
+        #            ttscommit;
+        #        }
+        #        // </GIN>
+        #        ret = true;
+        #    }
+        #    return ret;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createProjJournalLine_Fee
+        #protected boolean createProjJournalLine_Fee()
+        #{
+        #    boolean                 ret = false;
+        #    ProjJournalTrans        projJournalTransFee = null;
+        #    // <GIN>
+        #    ProjJournalTransTaxExtensionIN  projJournalTransFeeTaxExtensionIN = null;
+        #    // </GIN>
+        #
+        #    JournalTableData        journalTableData;
+        #    ProjJournalTransData    journalTransData;
+        #    ProjTable               projTable;
+        #
+        #    // Create fee journal.
+        #    this.writeMessage("@SYS79008", true);
+        #
+        #    if (! this.parmJournalId_Fee())
+        #    {
+        #        this.createJournals(SMATransactionType::Fee);
+        #    }
+        #
+        #    projJournalTransFee.clear();
+        #    projJournalTransFee.initValue();
+        #
+        #    projJournalTransFee.JournalId       = this.parmJournalId_Fee();
+        #    projJournalTransFee.TransId         = serviceOrderLine.ProjTransId;
+        #    projJournalTransFee.ProjTransDate   = serviceOrderLine.DateExecution;
+        #    projJournalTransFee.Worker          = serviceOrderLine.Worker;
+        #
+        #    journalTableData = JournalTableData::newTable(this.parmProjJournalTable());
+        #    journalTransData = new ProjJournalTransData(projJournalTransFee, journalTableData);
+        #
+        #    projJournalTransFee.setTransDate();
+        #    projJournalTransFee.setPeriodDate();
+        #
+        #    projJournalTransFee.initFromProjJournalTable(this.parmProjJournalTable());
+        #
+        #    projJournalTransFee.ProjId          = this.projId();
+        #    projTable                           = ProjTable::find(this.projId());
+        #
+        #    projJournalTransFee.initFromProjTable(projTable);
+        #
+        #    projJournalTransFee.ActivityNumber  = serviceOrderLine.ActivityNumber;
+        #    projJournalTransFee.CategoryId      = serviceOrderLine.ProjCategoryId;
+        #
+        #    if (serviceOrderLine.ProjLinePropertyId)
+        #    {
+        #        projJournalTransFee.LinePropertyId  = serviceOrderLine.ProjLinePropertyId;
+        #    }
+        #
+        #    // set up Item tax group
+        #    if(serviceOrderLine.ProjTaxItemGroup)
+        #    {
+        #        projJournalTransFee.TaxItemGroupId  = serviceOrderLine.ProjTaxItemGroup;
+        #    }
+        #    else
+        #    {
+        #        projJournalTransFee.TaxItemGroupId  = ProjCategory::find(projJournalTransFee.CategoryId).TaxItemGroupId;
+        #    }
+        #
+        #    // Set up Sales tax group
+        #    if(serviceOrderLine.ProjTaxGroup)
+        #    {
+        #        projJournalTransFee.TaxGroupId      = serviceOrderLine.ProjTaxGroup;
+        #    }
+        #    else
+        #    {
+        #        projJournalTransFee.TaxGroupId      = projTable.TaxGroupId;
+        #    }
+        #
+        #    projJournalTransFee.CurrencyId          = serviceOrderLine.ProjCurrencyCode;
+        #    projJournalTransFee.SalesPrice          = serviceOrderLine.ProjSalesPrice;
+        #    projJournalTransFee.CostPrice           = serviceOrderLine.ProjCostPrice;
+        #    projJournalTransFee.Qty                 = serviceOrderLine.Qty;
+        #
+        #    projJournalTransFee.Txt                 = serviceOrderLine.ProjTransTxt ? serviceOrderLine.ProjTransTxt : serviceOrderLine.Description;
+        #    projJournalTransFee.ActivityNumber      = serviceOrderLine.ActivityNumber;
+        #
+        #    projJournalTransFee.DefaultDimension    = projJournalTransFee.copyDimension(serviceOrderLine.DefaultDimension);
+        #
+        #    // <GIN>
+        #    if (TaxParameters::checkTaxParameters_IN())
+        #    {
+        #        projJournalTransFeeTaxExtensionIN                               = projJournalTransFee.projJournalTransTaxExtensionIN();
+        #        projJournalTransFeeTaxExtensionIN.CompanyLocation               = serviceOrderLine.CompanyLocation_IN;
+        #        projJournalTransFeeTaxExtensionIN.ServiceCodeTable              = serviceOrderLine.ServiceCodeTable_IN;
+        #        projJournalTransFeeTaxExtensionIN.TaxInventVATCommodityCodeId   = serviceOrderLine.TaxInventVATCommodityCodeId_IN;
+        #        projJournalTransFeeTaxExtensionIN.SalesTaxFormTypes             = serviceOrderLine.SalesTaxFormTypes_IN;
+        #
+        #        projJournalTransFeeTaxExtensionIN.AssessableValue               = serviceOrderLine.AssessableValue_IN;
+        #        projJournalTransFeeTaxExtensionIN.MaximumRetailPrice            = serviceOrderLine.MaximumRetailPrice_IN;
+        #        projJournalTransFeeTaxExtensionIN.TaxInformation                = SMAServiceOrderLineTaxExtension_IN::findBySMAServiceOrderLine(serviceOrderLine.RecId).TaxInformation;
+        #        if (!projJournalTransFeeTaxExtensionIN.TaxInformation && projJournalTransFee.ProjId)
+        #        {
+        #            projJournalTransFeeTaxExtensionIN.TaxInformation           = ProjTableTaxExtensionIN::findByProjTable(projTable.RecId).TaxInformation;
+        #        }
+        #
+        #        if (TaxWithholdParameters_IN::checkTaxParameters())
+        #        {
+        #            projJournalTransFeeTaxExtensionIN.tcsGroup                  = serviceOrderLine.tcsGroup_IN;
+        #            projJournalTransFeeTaxExtensionIN.tdsGroup                  = serviceOrderLine.tdsGroup_IN;
+        #        }
+        #        projJournalTransFeeTaxExtensionIN.ServiceEventGroup             = SMAAgreementTable::find(serviceOrderTable.AgreementId).ServiceEventGroup_IN;
+        #        projJournalTransFee.packProjJournalTrans_IN(projJournalTransFeeTaxExtensionIN);
+        #    }
+        #    // </GIN>
+        #
+        #    if (journalTransData.findVoucher())
+        #    {
+        #        projJournalTransFee.Voucher        = journalTransData.findVoucher();
+        #    }
+        #    else
+        #    {
+        #        if (journalTableData.journalVoucherNum() && journalTableData.journalTable().VoucherDraw == JournalVoucherDraw::Entering)
+        #        {
+        #            journalTransData.initVoucher('', false, false);
+        #        }
+        #    }
+        #
+        #    if (projJournalTransFee.validateWrite())
+        #    {
+        #        projJournalTransFee.insert();
+        #        this.updateServiceOrderLine();
+        #        ret = true;
+        #    }
+        #
+        #    return ret;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createProjJournalLine_Hour
+        #protected boolean createProjJournalLine_Hour()
+        #{
+        #    boolean                 ret = false;
+        #    ProjJournalTrans        projJournalTransHour = null;
+        #    // <GIN>
+        #    ProjJournalTransTaxExtensionIN  projJournalTransHourTaxExtensionIN = null;
+        #    // </GIN>
+        #
+        #    JournalTableData        journalTableData;
+        #    ProjJournalTransData    journalTransData;
+        #    ProjTable               projTable;
+        #
+        #     //    Create hour journal.
+        #    setPrefix("@SYS79010");
+        #
+        #    if (! this.parmJournalId_Hour())
+        #    {
+        #        this.createJournals(SMATransactionType::Hour);
+        #    }
+        #
+        #    projJournalTransHour.clear();
+        #    projJournalTransHour.initValue();
+        #
+        #    projJournalTransHour.JournalId          = this.parmJournalId_Hour();
+        #    projJournalTransHour.TransId            = serviceOrderLine.ProjTransId;
+        #    projJournalTransHour.ProjTransDate      = serviceOrderLine.DateExecution;
+        #    projJournalTransHour.Worker             = serviceOrderLine.Worker;
+        #
+        #    journalTableData = JournalTableData::newTable(this.parmProjJournalTable());
+        #    journalTransData = new ProjJournalTransData(projJournalTransHour, journalTableData);
+        #
+        #    projJournalTransHour.setTransDate();
+        #    projJournalTransHour.setPeriodDate();
+        #
+        #    projJournalTransHour.initFromProjJournalTable(this.parmProjJournalTable());
+        #
+        #    projJournalTransHour.ProjId             = this.projId();
+        #    projTable                               = ProjTable::find(projJournalTransHour.ProjId);
+        #
+        #    projJournalTransHour.initFromProjTable(projTable);
+        #
+        #    projJournalTransHour.ActivityNumber     = serviceOrderLine.ActivityNumber;
+        #    projJournalTransHour.CategoryId         = serviceOrderLine.ProjCategoryId;
+        #
+        #    if (serviceOrderLine.ProjLinePropertyId)
+        #    {
+        #        projJournalTransHour.LinePropertyId = serviceOrderLine.ProjLinePropertyId;
+        #    }
+        #
+        #    projJournalTransHour.Qty                = serviceOrderLine.Qty;
+        #    projJournalTransHour.Txt                = serviceOrderLine.ProjTransTxt ? serviceOrderLine.ProjTransTxt : serviceOrderLine.Description;
+        #
+        #    // Set up Iteg tax group
+        #    if(serviceOrderLine.ProjTaxItemGroup)
+        #    {
+        #        projJournalTransHour.TaxItemGroupId  = serviceOrderLine.ProjTaxItemGroup;
+        #    }
+        #    else
+        #    {
+        #        projJournalTransHour.TaxItemGroupId  = ProjCategory::find(projJournalTransHour.CategoryId).TaxItemGroupId;
+        #    }
+        #
+        #    // Set up Sales tax group
+        #    if(serviceOrderLine.ProjTaxGroup)
+        #    {
+        #        projJournalTransHour.TaxGroupId      = serviceOrderLine.ProjTaxGroup;
+        #    }
+        #    else
+        #    {
+        #        projJournalTransHour.TaxGroupId      = projTable.TaxGroupId;
+        #    }
+        #
+        #    projJournalTransHour.CurrencyId         = serviceOrderLine.ProjCurrencyCode;
+        #    projJournalTransHour.CostPrice          = serviceOrderLine.ProjCostPrice;
+        #    projJournalTransHour.SalesPrice         = serviceOrderLine.ProjSalesPrice;
+        #
+        #    projJournalTransHour.DefaultDimension   = serviceOrderLine.DefaultDimension;
+        #    projJournalTransHour.FromTime           = serviceOrderLine.TimeSheetStartTime;
+        #    projJournalTransHour.ToTime             = serviceOrderLine.TimeSheetEndTime;
+        #
+        #    // <GIN>
+        #    if (TaxParameters::checkTaxParameters_IN())
+        #    {
+        #        projJournalTransHourTaxExtensionIN                              = projJournalTransHour.projJournalTransTaxExtensionIN();
+        #        projJournalTransHourTaxExtensionIN.CompanyLocation              = serviceOrderLine.CompanyLocation_IN;
+        #        projJournalTransHourTaxExtensionIN.ServiceCodeTable             = serviceOrderLine.ServiceCodeTable_IN;
+        #        projJournalTransHourTaxExtensionIN.TaxInventVATCommodityCodeId  = serviceOrderLine.TaxInventVATCommodityCodeId_IN;
+        #        projJournalTransHourTaxExtensionIN.SalesTaxFormTypes            = serviceOrderLine.SalesTaxFormTypes_IN;
+        #
+        #        projJournalTransHourTaxExtensionIN.AssessableValue              = serviceOrderLine.AssessableValue_IN;
+        #        projJournalTransHourTaxExtensionIN.MaximumRetailPrice           = serviceOrderLine.MaximumRetailPrice_IN;
+        #        projJournalTransHourTaxExtensionIN.TaxInformation               = SMAServiceOrderLineTaxExtension_IN::findBySMAServiceOrderLine(serviceOrderLine.RecId).TaxInformation;
+        #        if (!projJournalTransHourTaxExtensionIN.TaxInformation && projJournalTransHour.ProjId)
+        #        {
+        #            projJournalTransHourTaxExtensionIN.TaxInformation           = ProjTableTaxExtensionIN::findByProjTable(projTable.RecId).TaxInformation;
+        #        }
+        #
+        #        if (TaxWithholdParameters_IN::checkTaxParameters())
+        #        {
+        #            projJournalTransHourTaxExtensionIN.tdsGroup                  = serviceOrderLine.tdsGroup_IN;
+        #            projJournalTransHourTaxExtensionIN.tcsGroup                  = serviceOrderLine.tcsGroup_IN;
+        #        }
+        #
+        #        projJournalTransHourTaxExtensionIN.ServiceEventGroup = SMAAgreementTable::find(serviceOrderTable.AgreementId).ServiceEventGroup_IN;
+        #        projJournalTransHour.packProjJournalTrans_IN(projJournalTransHourTaxExtensionIN);
+        #    }
+        #    // </GIN>
+        #
+        #    if (journalTransData.findVoucher())
+        #    {
+        #        projJournalTransHour.Voucher        = journalTransData.findVoucher();
+        #    }
+        #    else
+        #    {
+        #        if (journalTableData.journalVoucherNum() && journalTableData.journalTable().VoucherDraw == JournalVoucherDraw::Entering)
+        #        {
+        #            journalTransData.initVoucher('', false, false);
+        #        }
+        #    }
+        #
+        #    if (projJournalTransHour.validateWrite())
+        #    {
+        #        projJournalTransHour.insert();
+        #        this.updateServiceOrderLine();
+        #        ret = true;
+        #    }
+        #
+        #    return ret;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createProjJournalLine_ItemConsum
+        #protected boolean createProjJournalLine_ItemConsum()
+        #{
+        #    // Item Consumption
+        #    boolean                 ret = false;
+        #    InventJournalTrans      inventJournalTransItem = null;
+        #    // <GIN>
+        #    InventJournalTransTaxExtensionIN    inventJournalTransItemTaxExtensionIN = null;
+        #    TaxInventVATCommodityCode_IN        taxInventVATCommodityCode_IN;
+        #    //</GIN>
+        #    ;
+        #
+        #    // Create Item consumption journal
+        #    setPrefix("@SYS97922");
+        #
+        #    inventJournalTransItem.clear();
+        #    inventJournalTransItem.initValue();
+        #
+        #    if (! this.parmJournalId_ItemConsum())
+        #    {
+        #        this.createJournals(SMATransactionType::Item);
+        #    }
+        #
+        #    inventJournalTransItem.ProjTransId          = serviceOrderLine.ProjTransId;
+        #
+        #    inventJournalTransItem.JournalId            = this.parmJournalId_ItemConsum();
+        #    inventJournalTransItem.JournalType          = InventJournalType::project;
+        #
+        #    inventJournalTransItem.ProjId               = serviceOrderLine.ProjId;
+        #    inventJournalTransItem.ActivityNumber       = serviceOrderLine.ActivityNumber;
+        #    inventJournalTransItem.ProjCategoryId       = serviceOrderLine.ProjCategoryId;
+        #    inventJournalTransItem.ProjLinePropertyId   = serviceOrderLine.ProjLinePropertyId;
+        #
+        #    inventJournalTransItem.Qty                  = serviceOrderLine.Qty;
+        #    inventJournalTransItem.ProjUnitID           = serviceOrderLine.Unit;
+        #
+        #    inventJournalTransItem.Worker               = serviceOrderLine.Worker;
+        #    inventJournalTransItem.DefaultDimension     = serviceOrderLine.DefaultDimension;
+        #
+        #    inventJournalTransItem.ItemId               = serviceOrderLine.ItemId;
+        #    inventJournalTransItem.InventDimId          = serviceOrderLine.InventDimId;
+        #
+        #    inventJournalTransItem.ProjTaxGroupId       = serviceOrderLine.ProjTaxGroup;
+        #    inventJournalTransItem.ProjTaxItemGroupId   = serviceOrderLine.ProjTaxItemGroup;
+        #
+        #    // <GIN>
+        #    if (TaxParameters::checkTaxParameters_IN())
+        #    {
+        #        inventJournalTransItem.WarehouseLocation_IN                         = serviceOrderLine.WarehouseLocation_IN;
+        #        inventJournalTransItem.ExciseRecordType_IN                          = serviceOrderLine.ExciseRecordType_IN;
+        #        inventJournalTransItem.ExciseTariffCodes_IN                         = serviceOrderLine.ExciseTariffCodes_IN;
+        #        inventJournalTransItem.ExciseType_IN                                = serviceOrderLine.ExciseType_IN;
+        #
+        #        inventJournalTransItemTaxExtensionIN                                = inventJournalTransItem.inventJournalTransTaxExtensionIN();
+        #        inventJournalTransItemTaxExtensionIN.ServiceCodeTable               = serviceOrderLine.ServiceCodeTable_IN;
+        #        inventJournalTransItemTaxExtensionIN.TaxInformation_IN              = SMAServiceOrderLineTaxExtension_IN::findBySMAServiceOrderLine(serviceOrderLine.RecId).TaxInformation;
+        #
+        #        select firstonly RecId from taxInventVATCommodityCode_IN
+        #                    where taxInventVATCommodityCode_IN.ItemId           ==  serviceOrderLine.ItemId
+        #                    &&     taxInventVATCommodityCode_IN.CommodityCode   ==  serviceOrderLine.TaxInventVATCommodityCodeId_IN;
+        #
+        #        inventJournalTransItemTaxExtensionIN.TaxInventVATCommodityCode      = taxInventVATCommodityCode_IN.RecId;
+        #        inventJournalTransItemTaxExtensionIN.SalesTaxFormTypes              = serviceOrderLine.SalesTaxFormTypes_IN;
+        #        inventJournalTransItemTaxExtensionIN.CustomsTariffCodeTable         = serviceOrderLine.CustomsTariffCodeTable_IN;
+        #
+        #        inventJournalTransItemTaxExtensionIN.AssessableValue                = serviceOrderLine.AssessableValue_IN;
+        #        inventJournalTransItemTaxExtensionIN.MaximumRetailPrice             = serviceOrderLine.MaximumRetailPrice_IN;
+        #
+        #        if (TaxWithholdParameters_IN::checkTaxParameters())
+        #        {
+        #            inventJournalTransItemTaxExtensionIN.tdsGroup                   = serviceOrderLine.tdsGroup_IN;
+        #            inventJournalTransItemTaxExtensionIN.tcsGroup                   = serviceOrderLine.tcsGroup_IN;
+        #        }
+        #
+        #        inventJournalTransItemTaxExtensionIN.ServiceEventGroup              = SMAAgreementTable::find(serviceOrderTable.AgreementId).ServiceEventGroup_IN;
+        #        inventJournalTransItem.packInventJournalTrans_IN(inventJournalTransItemTaxExtensionIN);
+        #    }
+        #    // </GIN>
+        #
+        #    inventJournalTransItem.TransDate    = serviceOrderLine.DateExecution;
+        #
+        #
+        #    inventJournalTransItem.ProjSalesCurrencyId  = serviceOrderLine.ProjCurrencyCode;
+        #
+        #    inventJournalTransItem.ProjSalesPrice       = serviceOrderLine.ProjSalesPrice;
+        #    inventJournalTransItem.CostPrice            = serviceOrderLine.ProjCostPrice;
+        #
+        #    inventJournalTransItem.CostAmount           = inventJournalTransItem.calcCostAmount();
+        #
+        #    if (inventJournalTransItem.validateWrite())
+        #    {
+        #        inventJournalTransItem.insert();
+        #
+        #        this.updateServiceOrderLine();
+        #
+        #        listItemConsum.addEnd(serviceOrderLine.RecId);
+        #
+        #        ret = true;
+        #    }
+        #
+        #    return ret;
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #dialog
+        #/// <summary>
+        #/// Returns a class that contains the methods that are described by the <c>RunBaseDialogable</c>
+        #/// interface.
+        #/// </summary>
+        #/// <returns>
+        #/// A class that contains the methods that are described by the <c>RunBaseDialogable</c> interface.
+        #/// </returns>
+        #/// <remarks>
+        #/// A dialog can be either built by using the <c>Dialog</c> class or by using a class that is created
+        #/// in the Application Object Tree (AOT).
+        #/// </remarks>
+        #protected Object dialog()
+        #{;
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #getFromDialog
+        #public boolean getFromDialog()
+        #{;
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #getNextServiceOrderLine
+        #protected void getNextServiceOrderLine()
+        #{;
+        #    line = null;
+        #
+        #    if(queryRun.next())
+        #    {
+        #        line = queryRun.get(tableNum(SMAServiceOrderLine));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getStagesAllowed
+        #public str getStagesAllowed()
+        #{
+        #    #define.separator("\,")
+        #
+        #    SMAStageTable   stageTable;
+        #    str             tmpStageStr = '';
+        #    ;
+        #    while select StageId, StageCanTransfer from stageTable order by StageId where stageTable.StageCanTransfer == NoYes::Yes
+        #    {
+        #        if (tmpStageStr)
+        #        {
+        #            tmpStageStr = tmpStageStr + #separator;
+        #        }
+        #
+        #        tmpStageStr = tmpStageStr + stageTable.StageId;
+        #    }
+        #
+        #    return tmpStageStr;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #public void new()
+        #{;
+        #    super();
+        #
+        #    // turn on/off posting of journals
+        #    postJournals = true;
+        #}
+      ENDSOURCE
+      SOURCE #parmJournalId_Expense
+        #public LedgerJournalId parmJournalId_Expense(LedgerJournalId _journalId_Expense = journalId_Expense)
+        #{
+        #    ;
+        #    journalId_Expense = _journalId_Expense;
+        #    return journalId_Expense;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmJournalId_Fee
+        #public ProjJournalId parmJournalId_Fee(ProjJournalId _journalId_Fee = journalId_Fee)
+        #{
+        #    ;
+        #    journalId_Fee = _journalId_Fee;
+        #    return journalId_Fee;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmJournalId_Hour
+        #public ProjJournalId parmJournalId_Hour(ProjJournalId _journalId_Hour = journalId_Hour)
+        #{
+        #    ;
+        #    journalId_Hour = _journalId_Hour;
+        #    return journalId_Hour;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmJournalId_ItemConsum
+        #public InventJournalId parmJournalId_ItemConsum(InventJournalId _journalId_ItemConsum = journalId_ItemConsum)
+        #{
+        #    ;
+        #    journalId_ItemConsum = _journalId_ItemConsum;
+        #    return journalId_ItemConsum;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProjJournalTable
+        #public ProjJournalTable parmProjJournalTable(ProjJournalTable _projJournalTable = projJournalTable)
+        #{
+        #    ;
+        #    projJournalTable = _projJournalTable;
+        #    return projJournalTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmServiceOrderLine
+        #public SMAServiceOrderLine parmServiceOrderLine(SMAServiceOrderLine _serviceOrderLine = serviceOrderLine)
+        #{
+        #    ;
+        #    serviceOrderLine = _serviceOrderLine;
+        #    return serviceOrderLine;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmServiceOrderTable
+        #public SMAServiceOrderTable parmServiceOrderTable()
+        #{
+        #    ;
+        #    return serviceOrderTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmSummeryJournal
+        #public boolean parmSummeryJournal(boolean _summeryJournal = summeryJournal)
+        #{
+        #    ;
+        #    summeryJournal = _summeryJournal;
+        #
+        #    return summeryJournal;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postingReady
+        #private boolean postingReady(JournalId  _journalId)
+        #{
+        #    boolean             ret = true;
+        #    ;
+        #
+        #    if (ProjJournalTable::find(_journalId).StatusNameId)
+        #    {
+        #        projJournalTable = ProjJournalTable::find(_journalId);
+        #        ret = ProjJournalStatusLine::find(projJournalTable.StatusNameId,projJournalTable.Status).PostingReady;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #postJournals
+        #protected void postJournals()
+        #{
+        #    boolean     ret = false;
+        #    ;
+        #
+        #    // Checking and posting journals
+        #    this.writeMessage("@SYS92441",true);
+        #
+        #    if (this.parmJournalId_Hour() && this.postingReady(this.parmJournalId_Hour()))
+        #    {
+        #        ret = this.postJournalTransType(SMATransactionType::Hour);
+        #    }
+        #
+        #    if (this.parmJournalId_Fee())
+        #    {
+        #        ret = this.postJournalTransType(SMATransactionType::Fee);
+        #    }
+        #
+        #    if (this.parmJournalId_Expense())
+        #    {
+        #        ret = this.postJournalTransType(SMATransactionType::Expense);
+        #    }
+        #
+        #    if (this.parmJournalId_ItemConsum())
+        #    {
+        #        ret = this.postJournalTransType(SMATransactionType::Item);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postJournalTransType
+        #protected boolean postJournalTransType(SMATransactionType _transType)
+        #{
+        #    boolean             ret         = false;
+        #    ProjJournalId       projJournalId;
+        #    ;
+        #
+        #    switch(_transType)
+        #    {
+        #        case SMATransactionType::Hour:
+        #            projJournalId = this.parmJournalId_Hour();
+        #            this.prefixJournalType("@SYS59154");  // Hour journal
+        #            this.prefixJournalName(ProjJournalTable::find(journalId).Description);
+        #            break;
+        #
+        #        case SMATransactionType::Expense:
+        #            projJournalId = this.parmJournalId_Expense();
+        #            this.prefixJournalType("@SYS24042");    // Ledger journal
+        #            this.prefixJournalName(LedgerJournalTable::find(journalId).Name);
+        #            ledgerJournalTable = LedgerJournalTable::find(projJournalId);
+        #            break;
+        #
+        #        case SMATransactionType::Item:
+        #            projJournalId = this.parmJournalId_ItemConsum();
+        #            this.prefixJournalType("@SYS81925");     // Item journal
+        #            this.prefixJournalName(InventJournalTable::name(journalId));
+        #            inventJournalTable = InventJournalTable::find(projJournalId);
+        #            break;
+        #
+        #        case SMATransactionType::Fee:
+        #            projJournalId = this.parmJournalId_Fee();
+        #            this.prefixJournalType("@SYS73715");    // Fee journal
+        #            this.prefixJournalName(ProjJournalTable::find(journalId).Description);
+        #            break;
+        #    }
+        #
+        #    if(projJournalId)
+        #    {
+        #        this.prefixJournalId(projJournalId);
+        #
+        #        ret = this.checkJournalType(_transType);
+        #
+        #        if (ret)
+        #        {
+        #            this.postJournalType(_transType, projJournalId);
+        #        }
+        #        else
+        #        {
+        #            if(_transType != SMATransactionType::Item)
+        #            {
+        #                throw error(strFmt("@SYS30708", projJournalId));
+        #            }
+        #            else
+        #            {
+        #                ret = checkFailed(strFmt("@SYS99888", projJournalId));
+        #            }
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        throw error("@SYS26538");
+        #    }
+        #
+        #    return ret;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postJournalType
+        #private boolean postJournalType(SMATransactionType _transType, ProjJournalId _projJournalId)
+        #{
+        #    boolean ret = false;
+        #    ;
+        #
+        #    this.prefixSet("@SYS5943");     // Posting
+        #    switch(_transType)
+        #    {
+        #        case SMATransactionType::Hour, SMATransactionType::Fee:
+        #            this.postProjJournal(_projJournalId);
+        #            break;
+        #
+        #        case SMATransactionType::Expense:
+        #            ret = this.checkPostLedgerJournal(NoYes::Yes);
+        #            break;
+        #
+        #        case SMATransactionType::Item:
+        #            this.checkPostInventJournal(JournalCheckPostType::Post);
+        #            break;
+        #
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #postProjJournal
+        #private boolean postProjJournal(JournalId _journalId)
+        #{
+        #    #OCCRetryCount
+        #    ProjJournalCheckPost projJournalCheckPost;
+        #    ;
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #
+        #        projJournalCheckPost = ProjJournalCheckPost::newJournalCheckPost(true,
+        #                                                                         true,
+        #                                                                         JournalCheckPostType::Post,
+        #                                                                         tableNum(ProjJournalTable),
+        #                                                                         _journalId);
+        #        projJournalCheckPost.run();
+        #
+        #        ttscommit;
+        #    }
+        #
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    catch (Exception::UpdateConflict)
+        #    {
+        #        if (appl.ttsLevel() == 0)
+        #        {
+        #            if (xSession::currentRetryCount() >= #RetryNum)
+        #            {
+        #                throw Exception::UpdateConflictNotRecovered;
+        #            }
+        #            else
+        #            {
+        #                retry;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            throw Exception::UpdateConflict;
+        #        }
+        #    }
+        #
+        #    return ProjJournalTable::find(this.parmJournalId_Hour()).Posted;
+        #}
+      ENDSOURCE
+      SOURCE #prefixJournalId
+        #private JournalId prefixJournalId(JournalId _journalId = journalId)
+        #{;
+        #    journalId = _journalId;
+        #
+        #    return journalId;
+        #}
+      ENDSOURCE
+      SOURCE #prefixJournalName
+        #private JournalDescription prefixJournalName(JournalDescription _journalName = journalName)
+        #{;
+        #    journalName = _journalName;
+        #
+        #    return journalName;
+        #}
+      ENDSOURCE
+      SOURCE #prefixJournalType
+        #private str prefixJournalType(str _journalType = journalType)
+        #{;
+        #    journalType = _journalType;
+        #
+        #    return journalType;
+        #}
+      ENDSOURCE
+      SOURCE #prefixSet
+        #public void prefixSet(str _journalAction)
+        #{;
+        #    this.writeMessage(strFmt('%1 - %2 : %3,%4',_journalAction,journalType,journalId,journalName), true);
+        #}
+      ENDSOURCE
+      SOURCE #projId
+        #public ProjId projId(ProjId _projId = projId)
+        #{
+        #    ;
+        #    projId = _projId;
+        #    return projId;
+        #}
+      ENDSOURCE
+      SOURCE #queryBuild
+        #public SysQueryRun queryBuild()
+        #{
+        #    QueryBuildDataSource    qbdsProjectTable;
+        #    QueryBuildDataSource    qbdsServiceOrder;
+        #    QueryBuildDataSource    qbdsServiceOrderLine;
+        #    SysQueryRun             localQueryRun;
+        #    ;
+        #
+        #    // Creating the query on the fly
+        #    serviceQuery = new Query();
+        #
+        #    if (!serviceQuery)
+        #    {
+        #        // Query run is not initiaized
+        #        throw error("@SYS87642");
+        #    }
+        #
+        #    qbdsProjectTable    = serviceQuery.addDataSource(tableNum(ProjTable));
+        #
+        #    qbdsServiceOrder    = qbdsProjectTable.addDataSource(tableNum(SMAServiceOrderTable));
+        #    qbdsServiceOrder.relations(true);
+        #
+        #    // Add datasources to serviceQuery dependant on caller parameters
+        #    qbdsServiceOrderLine = qbdsServiceOrder.addDataSource(tableNum(SMAServiceOrderLine));
+        #    qbdsServiceOrderLine.relations(true);
+        #
+        #    this.queryUpdateRange();
+        #    // order by transType, projId, serviceOrderId
+        #    qbdsServiceOrderLine.orderMode(OrderMode::OrderBy);
+        #    qbdsServiceOrderLine.addSortField(fieldNum(SMAServiceOrderLine,TransactionType));
+        #    qbdsServiceOrderLine.addSortField(fieldNum(SMAServiceOrderLine,ProjId));
+        #    qbdsServiceOrderLine.addSortField(fieldNum(SMAServiceOrderLine,ServiceOrderId));
+        #
+        #    queryRun = new SysQueryRun(serviceQuery);
+        #    localQueryRun = this.queryRun();
+        #    localQueryRun.promptShowSorting(false);
+        #
+        #    return queryRun;
+        #}
+      ENDSOURCE
+      SOURCE #reverseItemConsum
+        #void reverseItemConsum()
+        #{
+        #    SMAServiceOrderLine serviceLine;
+        #    ;
+        #
+        #    // delete the journal with errors
+        #    ttsbegin;
+        #    delete_from inventJournalTable where inventJournalTable.JournalId == this.parmJournalId_ItemConsum();
+        #    ttscommit;
+        #
+        #    // remove the journalname
+        #    this.parmJournalId_ItemConsum('');
+        #
+        #    // reset the list of recId's
+        #    listIterator = new ListIterator(listItemConsum);
+        #
+        #    ttsbegin;
+        #    while (listIterator.more())
+        #    {
+        #        serviceLine.selectForUpdate(true);
+        #
+        #        select firstonly serviceLine where serviceLine.RecId == listIterator.value();
+        #        serviceLine.ServiceOrderStatus = SMAServiceOrderStatus::Created;
+        #        serviceLine.update();
+        #
+        #        listIterator.next();
+        #    }
+        #    ttscommit;
+        #
+        #    checkFailed(strFmt("@SYS3458","@SYS7407"));
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #/// <summary>
+        #/// Contains the code that does the actual job of the class.
+        #/// </summary>
+        #public void run()
+        #{
+        #    QueryBuildDataSource    qbds;
+        #    container               serviceOrderIdList      = conNull();
+        #    Counter                 counter                 = 0;
+        #    ProjId                  serviceProjId           = '';
+        #    CreditCardParameters    ccParams;
+        #    ;
+        #
+        #    ttsbegin;
+        #
+        #    ledgerVoucherCost = '';
+        #
+        #    serviceParameter = SMAParameters::find();
+        #
+        #    qbds = queryRun.query().dataSourceTable(tableNum(SMAServiceOrderLine));
+        #    this.setTransactionTypes(qbds);
+        #
+        #    this.setQueryDatePeriod();
+        #
+        #    if (!queryRun.next())
+        #    {
+        #        // No lines found for post.
+        #        error("@SYS99244");
+        #    }
+        #    else
+        #    {
+        #        line = queryRun.get(tableNum(SMAServiceOrderLine));
+        #        while (line)
+        #        {
+        #            if(serviceProjId != '')
+        #            {
+        #                ttsbegin;
+        #                // go through all agreement lines for one agreement and create PreService order lines
+        #                while((line) && (serviceProjId == line.ProjId))
+        #                {
+        #                    if (queryRun.changed(tableNum(SMAServiceOrderTable)))
+        #                    {
+        #                        //add the ServiceOrderId to the list
+        #                        counter++;
+        #                        serviceOrderIdList = conIns(serviceOrderIdList,counter, serviceOrderTable.ServiceOrderId);
+        #                    }
+        #                    //
+        #                    this.createJournalLine(line);
+        #                    this.getNextServiceOrderLine();
+        #                }
+        #
+        #                // validate Itemjournal
+        #                if (this.parmJournalId_ItemConsum() && this.checkJournalType(SMATransactionType::Item) == false)
+        #                {
+        #                    this.reverseItemConsum();
+        #                }
+        #
+        #                // totals on journals
+        #                this.sumJournals();
+        #
+        #                // post journals
+        #                if (postJournals)
+        #                {
+        #                    this.postJournals();
+        #                    ledgerVoucherCost = '';
+        #                }
+        #
+        #                ttscommit;
+        #
+        #                // update service order progress
+        #                for (counter = 1; counter <= conLen(serviceOrderIdList); counter++)
+        #                {
+        #                    ttsbegin;
+        #                    serviceOrderTable = SMAServiceOrderTable::find(conPeek(serviceOrderIdList, counter), true);
+        #                    serviceOrderTable.updateProgress();
+        #                    serviceOrderTable.update(true,this.isInBatch());
+        #                    ttscommit;
+        #                }
+        #            }
+        #
+        #            if (line)
+        #            {
+        #                // get next projId
+        #                serviceOrderTable   = queryRun.get(tableNum(SMAServiceOrderTable));
+        #                serviceProjId       = serviceOrderTable.ProjId;
+        #                counter = 0;
+        #                serviceOrderIdList  = conNull();
+        #                this.projId(serviceProjId);
+        #                this.clearJournalIds();
+        #            }
+        #        }
+        #    }
+        #
+        #    //--> Advanced Credit Card
+        #    select ccParams where ccParams.Payment == ProjTable::find(serviceOrderTable.ProjId).projInvoice().Payment;
+        #
+        #    if (ccParams)
+        #    {
+        #        if (!CreditCardPosting::runServiceOrderInvoice(this)
+        #            && ccParams.ServiceCaptureType == CreditCardServiceCaptureType::Posting)
+        #        {
+        #            throw error("@ACC1831");
+        #        }
+        #    }
+        #
+        #    //<-- Advanced Credit Card
+        #
+        #    ttscommit;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #setBasicRanges
+        #/// <summary>
+        #///    Creates basic locked ranges for the query.
+        #/// </summary>
+        #protected void setBasicRanges()
+        #{
+        #    QueryBuildDataSource    qbds_ServiceOrder;
+        #    QueryBuildDataSource    qbds_ServiceOrderLine;
+        #
+        #    QueryBuildRange         qbr_Progress;
+        #    QueryBuildRange         qbr_Status;
+        #    QueryBuildRange         qbr_SignOff;
+        #    QueryBuildRange         qbr_TransactionType;
+        #    ;
+        #    super();
+        #
+        #    qbds_ServiceOrder       = serviceQuery.dataSourceTable(tableNum(SMAServiceOrderTable));
+        #    qbds_ServiceOrderLine   = serviceQuery.dataSourceTable(tableNum(SMAServiceOrderLine));
+        #
+        #    // Add range Progress with value In Progress
+        #    qbr_Progress = qbds_ServiceOrder.addRange(fieldNum(SMAServiceOrderTable, Progress));
+        #    qbr_Progress.value(queryValue(SMAServiceOrderProgress::InProcess));
+        #    qbr_Progress.status(RangeStatus::Locked);
+        #
+        #    // Add range Status with value 'Created'
+        #    qbr_Status = qbds_ServiceOrderLine.addRange(fieldNum(SMAServiceOrderLine, ServiceOrderStatus));
+        #    qbr_Status.value(queryValue(SMAServiceOrderStatus::Created));
+        #    qbr_Status.status(RangeStatus::Locked);
+        #
+        #    // Add range SignOff with value 'Yes'
+        #    qbr_SignOff = qbds_ServiceOrderLine.addRange(fieldNum(SMAServiceOrderLine, SignOff));
+        #    qbr_SignOff.value(queryValue(NoYes::Yes));
+        #    qbr_SignOff.status(RangeStatus::Locked);
+        #
+        #    qbr_TransactionType = qbds_ServiceOrderLine.addRange(fieldNum(SMAServiceOrderLine, TransactionType));
+        #    qbr_TransactionType.status(RangeStatus::Hidden);
+        #}
+      ENDSOURCE
+      SOURCE #sumJournals
+        #private void sumJournals()
+        #{
+        #    ProjJournalTable    tmpProjJournalTable;
+        #    InventJournalTable  tmpInventJournalTable;
+        #    ;
+        #
+        #    if (this.parmJournalId_Hour())
+        #    {
+        #        ttsbegin;
+        #        tmpProjJournalTable = ProjJournalTable::find(this.parmJournalId_Hour(),true);
+        #        ProjJournalTable::initTotal(tmpProjJournalTable);
+        #        tmpProjJournalTable.BlockUserId = '';
+        #        tmpProjJournalTable.update();
+        #        ttscommit;
+        #    }
+        #
+        #    if (this.parmJournalId_Fee())
+        #    {
+        #        ttsbegin;
+        #        tmpProjJournalTable = ProjJournalTable::find(this.parmJournalId_Fee(),true);
+        #        ProjJournalTable::initTotal(tmpProjJournalTable);
+        #        tmpProjJournalTable.BlockUserId = '';
+        #        tmpProjJournalTable.update();
+        #        ttscommit;
+        #    }
+        #
+        #    if (this.parmJournalId_ItemConsum())
+        #    {
+        #        ttsbegin;
+        #        tmpInventJournalTable = InventJournalTable::find(this.parmJournalId_ItemConsum(), true);
+        #        InventJournalTable::initTotal(tmpInventJournalTable);
+        #        tmpInventJournalTable.update();
+        #        ttscommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateServiceOrderLine
+        #private void updateServiceOrderLine()
+        #{
+        #    SMAServiceOrderLine     tmpServiceOrderLine;
+        #    ;
+        #
+        #    ttsbegin;
+        #    tmpServiceOrderLine                    = SMAServiceOrderLine::find(this.parmServiceOrderLine().ServiceOrderId,this.parmServiceOrderLine().ServiceOrderLineNum,true);
+        #    tmpServiceOrderLine.ServiceOrderStatus = SMAServiceOrderStatus::Posted;
+        #    tmpServiceOrderLine.update();
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #writeMessage
+        #protected void writeMessage(str _strMsg, boolean _setPrefix = false)
+        #{;
+        #    if(showInfolog)
+        #    {
+        #        if(_setPrefix)
+        #        {
+        #            setPrefix(_strMsg);
+        #        }
+        #        else
+        #        {
+        #            info(_strMsg);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #description
+        #static public ClassDescription description()
+        #{;
+        #    return "@SYS90993";
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

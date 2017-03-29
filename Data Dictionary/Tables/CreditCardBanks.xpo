@@ -1,0 +1,221 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardBanks
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardBanks
+      Label               #@ACC986
+      TitleField1         #AccountId
+      TitleField2         #CreditCardType
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #NotInTTS
+      TableGroup          #Parameter
+      PrimaryIndex        #TypeIdx
+      ClusterIndex        #AccountIdIdx
+      DeveloperDocumentation  #@ACC1441
+      Origin              #{64431C8A-2600-446B-B7CF-E6ADAD1FC825}
+      LegacyId            #20001
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AccountId
+        STRING
+        PROPERTIES
+          Name                #AccountId
+          Table               #CreditCardBanks
+          Origin              #{032F1397-B264-4151-BDCF-6E358544C883}
+          LegacyId            #20001
+          ExtendedDataType    #CompanyBankAccountId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardType
+        ENUM
+        PROPERTIES
+          Name                #CreditCardType
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardBanks
+          Origin              #{0806F409-C49B-4593-B260-9FDD2377EE9C}
+          LegacyId            #20002
+          EnumType            #CreditCardType
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardBanks
+          Origin              #{1F10F273-4518-465A-B3D0-F43ECB034E3E}
+          LegacyId            #20003
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccountId
+          #CreditCardType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccountId
+          #CreditCardType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Banks
+        PROPERTIES
+          Name                #Banks
+          Label               #@ACC987
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccountId
+          #CreditCardType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #AccountIdIdx
+      PROPERTIES
+        Name                #AccountIdIdx
+        Origin              #{123C75D8-069E-40C1-A32D-ED5136C83B2D}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #AccountId
+      ENDINDEXFIELDS
+      
+      #TypeIdx
+      PROPERTIES
+        Name                #TypeIdx
+        AllowDuplicates     #No
+        Origin              #{FBD9AF62-6F5B-442E-9A93-5514F40E56AA}
+        LegacyId            #20002
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CreditCardType
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #BankAccountTable
+        PROPERTIES
+          Name                #BankAccountTable
+          Table               #BankAccountTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #AccountId
+            RelatedField        #AccountID
+            SourceEDT           #CompanyBankAccountId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardParameters
+        PROPERTIES
+          Name                #CreditCardParameters
+          Table               #CreditCardParameters
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #find
+        #static CreditCardBanks find(CreditCardType              cardType,
+        #                            CreditCardTerminalId        ccTerminal)
+        #{
+        #    CreditCardBanks     ccBanks;
+        #    ;
+        #    select ccBanks
+        #        where ccBanks.CreditCardType == cardType
+        #        && ccBanks.TerminalId == ccTerminal;
+        #
+        #    return ccBanks;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

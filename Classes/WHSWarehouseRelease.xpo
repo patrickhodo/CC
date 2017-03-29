@@ -1,0 +1,1129 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #WHSWarehouseRelease
+    PROPERTIES
+      Name                #WHSWarehouseRelease
+      Origin              #{464FDF35-8979-43FB-8310-8D5073ECB21F}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class WhsWarehouseRelease
+        #{
+        #    WHSReleaseToWarehouseId releaseToWarehouseId;
+        #    WHSWaveTable            waveTable;
+        #    boolean                 showInfo;
+        #    boolean                 auto;
+        #    Set                     waveSet;
+        #}
+      ENDSOURCE
+      SOURCE #createCreditCardAuth
+        #private boolean createCreditCardAuth(WHSTmpReleaseToWarehouse    _releaseToWarehouse)
+        #{
+        #    //--> Red Maple Credit Cards begin
+        #    Amount                          processAmount;
+        #    salesTable                      salesTable = salesTable::find(_releasetoWarehouse.OrderNum);
+        #    SalesLine                       salesLine;
+        #    SalesTotals                     salesTotals = SalesTotals::construct(salesTable,SalesUpdate::DeliverNow);
+        #    container                       displayFields;
+        #    InventQty                       reservedOrOnOrderQty;
+        #    WHSTmpReleaseToWarehouse        releaseToWarehouse;
+        #    ;
+        #    salesTotals.calc();
+        #    displayFields = salesTotals.displayFields();
+        #
+        #    releaseToWarehouse.linkPhysicalTableInstance(_releaseToWarehouse);
+        #
+        #    while select inventTransId from releaseToWarehouse
+        #    {
+        #        while select salesLine
+        #            where salesLine.SalesId == salesTable.SalesId
+        #            && salesLine.InventTransId == releaseToWarehouse.InventTransId
+        #        {
+        #            processAmount += salesLine.calcLineAmount(_releaseToWarehouse.ReleasedQty);
+        #        }
+        #    }
+        #
+        #    if (processAmount > 0)
+        #    {
+        #        processAmount += conPeek(displayFields,TradeTotals::posMarkup());
+        #    }
+        #
+        #    reservedOrOnOrderQty = 0;
+        #
+        #    if (!CreditCardPosting::runReleaseToWarehouse(salesTable.SalesId,processAmount,salesTable.CurrencyCode))
+        #    {
+        #        ttsAbort;
+        #        throw error("@ACC1860");
+        #    }
+        #    else
+        #    {
+        #        return true;
+        #    }
+        #
+        #    //<-- Red Maple Credit Card End
+        #}
+      ENDSOURCE
+      SOURCE #createLoadLines
+        #/// <summary>
+        #/// Generates the <c>WHSLoadLine</c> records during a release to warehouse
+        #/// </summary>
+        #/// <param name="_releaseToWarehouse">
+        #/// The temporary <c>WHSTmpReleaseToWarehouse</c> table object
+        #/// </param>
+        #private void createLoadLines(WHSTmpReleaseToWarehouse _releaseToWarehouse)
+        #{
+        #    WHSTmpReleaseToWarehouse    releaseToWarehouse;
+        #    WHSLoadLine                 loadLine;
+        #    InventTransferLine          inventTransferLine;
+        #    SalesLine                   salesLine;
+        #    RefRecId                    toRecId;
+        #    RefRecId                    fromRecId;
+        #    RefRecId                    productRecId;
+        #    WHSReleasedQtyView          releasedQtyView;
+        #    TMSInventEnabled            tmsInventEnabled;
+        #    LogisticsPostalAddress      tmpAddress;
+        #    SalesTable                  salesTable;
+        #
+        #    ttsbegin;
+        #
+        #    releaseToWarehouse.linkPhysicalTableInstance(_releaseToWarehouse);
+        #
+        #    loadLine.ReleaseToWarehouseId = releaseToWarehouseId;
+        #
+        #    while select ReleasedQty, InventTransId, ReleaseToWarehouseId, InventDimId from releaseToWarehouse
+        #        join salesLine
+        #        where salesLine.InventTransId                   == releaseToWarehouse.InventTransId
+        #            && releaseToWarehouse.ReleaseToWarehouseId  == releaseToWarehouseId
+        #            && releaseToWarehouse.ReleasedQty           >  0
+        #        join SalesId from salesTable
+        #            where salesLine.SalesId                     == salesTable.SalesId
+        #        join RecId from tmpAddress
+        #            where tmpAddress.RecId                      == salesLine.DeliveryPostalAddress
+        #               || (tmpAddress.RecId                     == salesTable.DeliveryPostalAddress
+        #               && salesLine.DeliveryPostalAddress       == 0)
+        #        exists join tmsInventEnabled
+        #            where tmsInventEnabled.ItemId == salesLine.ItemId
+        #    {
+        #        // Make sure we aren't releasing more than we should.
+        #        select SumOfInventQty from releasedQtyView
+        #            where releasedQtyView.InventDimId       == releaseToWarehouse.InventDimId
+        #                && releasedQtyView.InventTransId    == releaseToWarehouse.InventTransId;
+        #
+        #        if (releasedQtyView.SumOfInventQty + releaseToWarehouse.ReleasedQty > salesLine.QtyOrdered)
+        #        {
+        #            throw error ("@WAX2877");
+        #        }
+        #
+        #        loadLine.initFromSalesLine(salesLine);
+        #        loadLine.InventDimId = releaseToWarehouse.InventDimId;
+        #        loadLine.uom = salesLine.SalesUnit;
+        #        fromRecId = UnitOfMeasure::unitOfMeasureIdBySymbol(InventTableModule::find(loadLine.ItemId, ModuleInventPurchSales::Invent).UnitId);
+        #        toRecId = UnitOfMeasure::unitOfMeasureIdBySymbol(loadLine.uom);
+        #        productRecId = InventTable::itemProduct(loadLine.ItemId);
+        #
+        #        loadLine.Qty    = UnitOfMeasureConverter::convert(releaseToWarehouse.ReleasedQty,
+        #                                                          fromRecId,
+        #                                                          toRecId,
+        #                                                          NoYes::No,
+        #                                                          productRecId,
+        #                                                          NoYes::No);
+        #        if (loadLine.validateWrite())
+        #        {
+        #            loadLine.insert();
+        #        }
+        #    }
+        #
+        #    while select ReleasedQty, InventTransId, ReleaseToWarehouseId, InventDimId from releaseToWarehouse
+        #        join inventTransferLine
+        #        where inventTransferLine.InventTransId          == releaseToWarehouse.InventTransId
+        #            && releaseToWarehouse.ReleaseToWarehouseId  == releaseToWarehouseId
+        #            && releaseToWarehouse.ReleasedQty           >  0
+        #        exists join tmsInventEnabled
+        #            where tmsInventEnabled.ItemId == inventTransferLine.ItemId
+        #    {
+        #        // Make sure we aren't releasing more than we should.
+        #        select SumOfInventQty from releasedQtyView
+        #            where releasedQtyView.InventDimId       == releaseToWarehouse.InventDimId
+        #                && releasedQtyView.InventTransId    == releaseToWarehouse.InventTransId;
+        #
+        #        if (releasedQtyView.SumOfInventQty + releaseToWarehouse.ReleasedQty > inventTransferLine.QtyTransfer)
+        #        {
+        #            throw error ("@WAX2877");
+        #        }
+        #
+        #        loadLine.initFromTransferLine(inventTransferLine);
+        #        loadLine.InventDimId    = releaseToWarehouse.InventDimId;
+        #        loadLine.uom            = inventTransferLine.UnitId;
+        #        loadLine.Qty            = InventTableModule::unitConvert(loadLine.ItemId, ModuleInventPurchSales::Invent, loadLine.uom, releaseToWarehouse.ReleasedQty);
+        #
+        #        if (loadLine.validateWrite())
+        #        {
+        #            loadLine.insert();
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #createShipments
+        #/// <summary>
+        #///    On release to warehouse, method called to create shipments
+        #/// </summary>
+        #/// <remarks>
+        #///    Changes made to this method should also be considered for the WHSLoadPostEngineBase.createShipment method.
+        #/// </remarks>
+        #/// <exception cref="Exception::Error">
+        #///   Throws error when sales order is missing a delivery address
+        #/// </exception>
+        #public void createShipments()
+        #{
+        #    WHSParameters           parameters = WHSParameters::find();
+        #    WHSLoadLine             loadLine;
+        #    WHSShipmentTable        shipmentTable;
+        #    TMSSalesTable           tmsSalesTable;
+        #    TMSInventTransferTable  tmsInventTransferTable;
+        #    SalesLine               salesLine;
+        #    boolean                 ret = true;
+        #    InventTransferLine      inventTransferLine;
+        #    InventLocation          inventLocation;
+        #    InventLocation          fromInventLocation;
+        #    InventDim               inventDim;
+        #    LogisticsPostalAddress  address;
+        #    int                     shipmentCount;
+        #    boolean                 consolidate;
+        #    SalesId                 previousSalesId;
+        #    SalesTable              salesTable;
+        #    LogisticsPostalAddress  tmpAddress;
+        #    InventTransferTable     transfer;
+        #    WHSShipmentTable        tmpShipment;
+        #    WHSLoadLine             shipLoadLine;
+        #    InventTransferTable     shipTransfer;
+        #
+        #    ttsbegin;
+        #    // BP Deviation Documented
+        #    tmpShipment.setTmp();
+        #
+        #    while select forupdate loadLine
+        #        order by salesLine.SalesId,
+        #                 salesLine.CustAccount,
+        #                 salesLine.DeliveryName,
+        #                 tmpAddress.Street,
+        #                 tmpAddress.City,
+        #                 tmpAddress.County,
+        #                 tmpAddress.State,
+        #                 tmpAddress.CountryRegionId
+        #        where loadLine.ReleaseToWarehouseId        == releaseToWarehouseId
+        #            && loadLine.ShipmentId                 == ''
+        #        join salesLine
+        #            where salesLine.InventTransId         == loadLine.InventTransId
+        #        join salesTable
+        #            where salesLine.SalesId                == salesTable.SalesId
+        #        join tmpAddress
+        #            where tmpAddress.RecId                 == salesLine.DeliveryPostalAddress
+        #                || (tmpAddress.RecId               == salesTable.DeliveryPostalAddress
+        #                && salesLine.DeliveryPostalAddress == 0)
+        #    {
+        #        inventDim = loadLine.inventDim();
+        #
+        #        // Variable to see whether the shipment should be consolidated or not
+        #        consolidate = InventLocation::find(inventDim.InventLocationId).ConsolidateShipAtRTW;
+        #
+        #        // Find any shipments for the current load that have matching consolidation criteria.
+        #        select firstonly forupdate RecId, ShipmentId from tmpShipment
+        #            where tmpShipment.AccountNum                == salesLine.CustAccount
+        #                && tmpShipment.DeliveryName             == salesLine.DeliveryName
+        #                && tmpShipment.DeliveryPostalAddress    == tmpAddress.RecId
+        #                && tmpShipment.InventLocationId         == inventDim.InventLocationId
+        #                && tmpShipment.ShipmentStatus           <  WHSShipmentStatus::Shipped
+        #                && (consolidate
+        #                || tmpShipment.OrderNum                 == salesLine.SalesId);
+        #
+        #        // If consolidation is on or this line is for the same order then we consolidate to the shipment with like values
+        #        if (tmpShipment.RecId)
+        #        {
+        #            shipmentTable = WHSShipmentTable::find(tmpShipment.ShipmentId, true);
+        #            shipmentTable.OrderNum      = shipmentTable.OrderNum != salesLine.SalesId ? '' : salesLine.SalesId;
+        #            shipmentTable.CustomerRef   = shipmentTable.CustomerRef != salesTable.CustomerRef ? '' : salesTable.CustomerRef;
+        #            shipmentTable.CustomerReq   = shipmentTable.CustomerReq != salesTable.PurchOrderFormNum ? '' : salesTable.PurchOrderFormNum;
+        #            shipmentTable.DlvTermId     = shipmentTable.DlvTermId   != salesTable.DlvTerm ? '' : salesTable.DlvTerm;
+        #            shipmentTable.update();
+        #
+        #            if (salesLine.SalesId != previousSalesId)
+        #            {
+        #                shipmentTable.createShipmentNotes(salesTable);
+        #            }
+        #        }
+        #        else // Create new shipment
+        #        {
+        #            tmsSalesTable = TMSSalesTable::find(salesLine.SalesId);
+        #
+        #            // Validate the shipment address
+        #            if (!tmpAddress.whsAddressFormatValidation())
+        #            {
+        #                throw error(strFmt("@WAX4824", salesTable.SalesId));
+        #            }
+        #
+        #            shipmentTable.clear();
+        #            shipmentTable.ShipmentId            = shipmentTable.getShipmentId();
+        #            shipmentTable.WorkTransType         = WHSWorkTransType::Sales;
+        #            shipmentTable.OrderNum              = salesLine.SalesId;
+        #            shipmentTable.AccountNum            = salesLine.CustAccount;
+        #            shipmentTable.DeliveryName          = salesLine.DeliveryName;
+        #            shipmentTable.DeliveryPostalAddress = tmpAddress.RecId;
+        #            shipmentTable.CountryRegionISOCode  = LogisticsAddressCountryRegion::find(tmpAddress.CountryRegionId).isOcode;
+        #            shipmentTable.Address               = LogisticsPostalAddress::formatAddress(tmpAddress.Street,
+        #                                                                                        tmpAddress.ZipCode,
+        #                                                                                        tmpAddress.City,
+        #                                                                                        tmpAddress.CountryRegionId,
+        #                                                                                        tmpAddress.State,
+        #                                                                                        tmpAddress.County);
+        #            shipmentTable.InventSiteId          = inventDim.InventSiteId;
+        #            shipmentTable.InventLocationId      = inventDim.InventLocationId;
+        #            shipmentTable.CarrierCode           = tmsSalesTable.CarrierCode;
+        #            shipmentTable.CarrierServiceCode    = tmsSalesTable.CarrierServiceCode;
+        #            shipmentTable.RouteCode             = tmsSalesTable.RouteConfigCode;
+        #            shipmentTable.ModeCode              = tmsSalesTable.ModeCode;
+        #            shipmentTable.CarrierGroupCode      = tmsSalesTable.CarrierGroupCode;
+        #            shipmentTable.BrokerCode            = tmsSalesTable.BrokerCode;
+        #            shipmentTable.DlvTermId             = salesTable.DlvTerm;
+        #            shipmentTable.LoadDirection         = WHSLoadDirection::Outbound;
+        #            shipmentTable.CustomerRef           = salesTable.CustomerRef;
+        #            shipmentTable.CustomerReq           = salesTable.PurchOrderFormNum;
+        #            shipmentTable.insert();
+        #            shipmentTable.createShipmentNotes(salesTable);
+        #            ++shipmentCount;
+        #
+        #            tmpShipment.data(shipmentTable);
+        #            tmpShipment.insert();
+        #        }
+        #
+        #        loadLine.ShipmentId                     = shipmentTable.ShipmentId;
+        #        loadLine.write();
+        #
+        #        // store previous sales id
+        #        previousSalesId = salesLine.SalesId;
+        #    }
+        #
+        #    // Transfer Orders
+        #    while select forupdate loadLine
+        #        order by inventTransferLine.TransferId
+        #        join inventTransferLine
+        #        where loadLine.ReleaseToWarehouseId == releaseToWarehouseId                 &&
+        #              loadLine.ShipmentId           == ''                                   &&
+        #              loadLine.InventTransId        == inventTransferLine.InventTransId
+        #            join transfer
+        #            where transfer.TransferId   == inventTransferLine.TransferId
+        #    {
+        #        // Variable to see whether the shipement should be consolidated or not
+        #        consolidate = InventLocation::find(transfer.InventLocationIdFrom).ConsolidateShipAtRTW;
+        #
+        #        // Find any shipments for the current load that have matching consolidation criteria.
+        #        select firstonly RecId, ShipmentId from tmpShipment
+        #            exists join shipLoadLine
+        #            where tmpShipment.ShipmentId                == shipLoadLine.ShipmentId
+        #               && shipLoadLine.InventTransType          == InventTransType::TransferOrderShip
+        #               && shipLoadLine.TransportRequest         == NoYes::No
+        #                exists join shipTransfer
+        #                where shipTransfer.TransferId               == shipLoadLine.OrderNum
+        #                    && shipTransfer.InventLocationIdFrom    == transfer.InventLocationIdFrom
+        #                    && shipTransfer.InventLocationIdTo      == transfer.InventLocationIdTo
+        #                    && (consolidate
+        #                    || shipTransfer.TransferId              == tmpShipment.OrderNum);
+        #
+        #        if (tmpShipment.RecId)
+        #        {
+        #            shipmentTable = WHSShipmentTable::find(tmpShipment.ShipmentId, true);
+        #            shipmentTable.OrderNum = shipmentTable.OrderNum != transfer.TransferId ? '' : transfer.TransferId;
+        #            shipmentTable.update();
+        #        }
+        #        else
+        #        {
+        #            fromInventLocation = InventLocation::find(transfer.InventLocationIdFrom);
+        #            inventLocation = InventLocation::find(transfer.InventLocationIdTo);
+        #
+        #            address = inventLocation.logisticsPostalAddress();
+        #            tmsInventTransferTable = TMSInventTransferTable::find(inventTransferLine.TransferId);
+        #
+        #            shipmentTable.clear();
+        #            shipmentTable.ShipmentId            = shipmentTable.getShipmentId();
+        #            shipmentTable.WorkTransType         = WHSWorkTransType::TransferIssue;
+        #            shipmentTable.OrderNum              = inventTransferLine.TransferId;
+        #            shipmentTable.DeliveryName          = LogisticsLocation::find(address.Location).Description;
+        #            shipmentTable.DeliveryPostalAddress = address.RecId;
+        #            shipmentTable.CountryRegionISOCode  = LogisticsAddressCountryRegion::find(address.CountryRegionId).isOcode;
+        #            shipmentTable.Address               = LogisticsPostalAddress::formatAddress(address.Street,
+        #                                                                                        address.ZipCode,
+        #                                                                                        address.City,
+        #                                                                                        address.CountryRegionId,
+        #                                                                                        address.State,
+        #                                                                                        address.County);
+        #            shipmentTable.InventSiteId          = fromInventLocation.InventSiteId;
+        #            shipmentTable.InventLocationId      = fromInventLocation.InventLocationId;
+        #            shipmentTable.CarrierCode           = tmsInventTransferTable.CarrierCode;
+        #            shipmentTable.CarrierServiceCode    = tmsInventTransferTable.CarrierServiceCode;
+        #            shipmentTable.ModeCode              = tmsInventTransferTable.ModeCode;
+        #            shipmentTable.CarrierGroupCode      = tmsInventTransferTable.CarrierGroupCode;
+        #            shipmentTable.DlvTermId             = transfer.DlvTermId;
+        #            shipmentTable.LoadDirection         = WHSLoadDirection::Outbound;
+        #            shipmentTable.insert();
+        #            shipmentTable.createShipmentNotes(transfer);
+        #            ++shipmentCount;
+        #
+        #            tmpShipment.data(shipmentTable);
+        #            tmpShipment.insert();
+        #        }
+        #
+        #        loadLine.ShipmentId                     = shipmentTable.ShipmentId;
+        #        loadLine.write();
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    if (showInfo)
+        #    {
+        #        info(strFmt("@WAX3433", shipmentCount));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createWave
+        #/// <summary>
+        #/// Creates wave for applicable loads during the process of release to warehouse.
+        #/// </summary>
+        #/// <returns>
+        #/// <c>WHSWaveId</c> for created wave
+        #/// </returns>
+        #/// <remarks>
+        #/// Wave is not created for loads containing exclusively transportation-only enabled items.
+        #/// </remarks>
+        #WHSWaveId createWave()
+        #{
+        #    WHSShipmentTable    shipmentTable;
+        #    WHSShipmentId       shipmentId;
+        #    WHSLoadLine         loadLine;
+        #
+        #    ttsbegin;
+        #
+        #    while select forupdate shipmentTable
+        #        exists join loadLine
+        #            where loadLine.ShipmentId        == shipmentTable.ShipmentId
+        #            && loadLine.ReleaseToWarehouseId == releaseToWarehouseId
+        #    {
+        #        if (shipmentId != shipmentTable.ShipmentId && shipmentTable.validForNewWaveLine())
+        #        {
+        #            shipmentId = shipmentTable.ShipmentId;
+        #
+        #            // Do not create wave if shipment contains only "TRAX-only" items.
+        #            if (!shipmentTable.isWaveAutoCreationAllowed())
+        #            {
+        #                continue;
+        #            }
+        #
+        #            waveTable = WHSWaveTable::assignOrCreateWave(shipmentTable, null, waveSet);
+        #
+        #            if (!waveTable)
+        #            {
+        #                continue;
+        #            }
+        #
+        #            WHSWaveLine::createFromWaveIdAndShipment(waveTable.WaveId, shipmentTable);
+        #
+        #            if (!waveSet.in(waveTable.WaveId))
+        #            {
+        #                waveSet.add(waveTable.WaveId);
+        #            }
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    // Execute waves that should be autoExecuted.
+        #    WHSWaveTable::autoExecuteWaves(waveSet, releaseToWarehouseId);
+        #
+        #    return waveTable.WaveId;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #protected void new()
+        #{
+        #    waveSet = new Set(Types::String);
+        #}
+      ENDSOURCE
+      SOURCE #parmAuto
+        #public boolean parmAuto(boolean _auto = auto)
+        #{
+        #    auto = _auto;
+        #
+        #    return auto;
+        #}
+      ENDSOURCE
+      SOURCE #parmReleaseToWarehouseId
+        #public WHSReleaseToWarehouseId parmReleaseToWarehouseId(WHSReleaseToWarehouseId _releaseToWarehouseId = releaseToWarehouseId)
+        #{
+        #    releaseToWarehouseId = _releaseToWarehouseId;
+        #
+        #    return releaseToWarehouseId;
+        #}
+      ENDSOURCE
+      SOURCE #parmShowInfo
+        #public boolean parmShowInfo(boolean _showInfo = showInfo)
+        #{
+        #    showInfo = _showInfo;
+        #
+        #    return showInfo;
+        #}
+      ENDSOURCE
+      SOURCE #buildReleaseQuery
+        #private static server WHSInventTransSumDimQuery buildReleaseQuery(SalesId _salesId)
+        #{
+        #    return new WHSInventTransSumDimQuery().forSalesId(_salesId)
+        #                                          .fromWHSEnabledWarehouse()
+        #                                          .onlyTMSItems();
+        #}
+      ENDSOURCE
+      SOURCE #cannotReleaseTransferMessage
+        #/// <summary>
+        #/// Retrieves the error message that should be displayed when a transfer order could not be released to warehouse.
+        #/// </summary>
+        #/// <param name="_transferTable">
+        #/// The transfer order record.
+        #/// </param>
+        #/// <returns>
+        #/// The error message that should be displayed when a transfer order could not be released to warehouse.
+        #/// </returns>
+        #public static str cannotReleaseTransferMessage(InventTransferTable _transferTable)
+        #{
+        #    return strFmt("@SYP4860551", _transferTable.TransferId);
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static WHSWarehouseRelease construct()
+        #{
+        #    return new WHSWarehouseRelease();
+        #}
+      ENDSOURCE
+      SOURCE #getReleasedNotPickedQty
+        #/// <summary>
+        #/// Retrieves the quantity that was released to warehouse but for which the pick work was not completed yet.
+        #/// </summary>
+        #/// <param name="_inventTransSumDim">
+        #/// The inventory originator, item and dimensions for which the quantity needs to be provided.
+        #/// </param>
+        #/// <returns>
+        #/// A quantity in the inventory unit.
+        #/// </returns>
+        #public static InventQty getReleasedNotPickedQty(WHSInventTransSumDim _inventTransSumDim)
+        #{
+        #    WHSReleasedQtyView releasedQtyView;
+        #
+        #    select firstonly SumOfInventQty, SumOfPickedQty from releasedQtyView
+        #        where releasedQtyView.InventDimId == _inventTransSumDim.InventDimId
+        #            && releasedQtyView.InventTransId == _inventTransSumDim.InventTransId;
+        #
+        #    return releasedQtyView.SumOfInventQty - releasedQtyView.SumOfPickedQty;
+        #}
+      ENDSOURCE
+      SOURCE #getReservedPhysicalQty
+        #/// <summary>
+        #/// Retrieves the quantity that was physically reserved.
+        #/// </summary>
+        #/// <param name="_inventTable">
+        #/// The item for which to provide the quantity.
+        #/// </param>
+        #/// <param name="_inventTransSumDim">
+        #/// The inventory originator, item and dimensions for which the quantity needs to be provided.
+        #/// </param>
+        #/// <returns>
+        #/// A quantity in the inventory unit.
+        #/// </returns>
+        #public static InventQty getReservedPhysicalQty(InventTable _inventTable, WHSInventTransSumDim _inventTransSumDim)
+        #{
+        #    InventDim inventDim = InventDim::find(_inventTransSumDim.inventDimId);
+        #    InventDimParm inventDimParm = WhsReservationHierarchyInventDimUtil::initInventDimParmAboveLocation(_inventTable);
+        #
+        #    return -InventTransIdSumSingleStatus::newTransOriginIdStatusDimension(
+        #                InventTransOrigin::findByInventTransId(_inventTransSumDim.InventTransId).RecId,
+        #                StatusReceipt::None,
+        #                StatusIssue::ReservPhysical,
+        #                inventDim,
+        #                inventDimParm).reservPhysical();
+        #}
+      ENDSOURCE
+      SOURCE #isOrderOnLoadAndNotOnShipment
+        #/// <summary>
+        #/// Determines if the order is on a load but not on a shipment.
+        #/// </summary>
+        #/// <param name="_orderNum">
+        #/// The order number.
+        #/// </param>
+        #/// <param name="_inventTransType">
+        #/// The inventTransType for the order.
+        #/// </param>
+        #/// <returns>
+        #/// true if the order is on a load but not on a shipment; 
+        #/// </returns>
+        #/// <remarks>
+        #/// The check can not be performed for transport requests.
+        #/// The check is needed to prevent flows from being mixed.
+        #/// </remarks>
+        #public static boolean isOrderOnLoadAndNotOnShipment(
+        #    WHSOrderNum         _orderNum,
+        #    InventTransType     _inventTransType)
+        #{
+        #    WHSLoadLine loadLine;
+        #
+        #    select firstonly RecId from loadLine
+        #        where loadLine.OrderNum         == _orderNum
+        #        &&    loadLine.InventTransType  == _inventTransType
+        #        &&    loadLine.TransportRequest == NoYes::No
+        #        &&    loadLine.LoadId       != ''
+        #        &&    loadLine.ShipmentId   == '';
+        #
+        #    return (loadLine.RecId  ? true : false);
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args _args)
+        #{
+        #    FormDataSource  formDataSource;
+        #
+        #    if (_args != null
+        #        && _args.record()
+        #        && _args.record().dataSource())
+        #    {
+        #        formDataSource = _args.record().dataSource();
+        #
+        #        switch (formDataSource.table())
+        #        {
+        #            case tableNum(SalesTable):
+        #                WHSWarehouseRelease::whsReleaseSalesToWarehouseClient(formDataSource);
+        #                break;
+        #
+        #            case tableNum(InventTransferTable):
+        #                WHSWarehouseRelease::whsReleaseTransferToWarehouseClient(formDataSource);
+        #                break;
+        #
+        #            default:
+        #                throw error("@SYS82774");
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #releaseToWarehouse
+        #/// <summary>
+        #/// Generates the load lines, shipment details, and wave information for the <c>WHSTmpReleaseToWarehouse</c> records
+        #/// </summary>
+        #/// <param name="_releaseToWarehouse">
+        #/// The temporary <c>WHSTmpReleaseToWarehouse</c> table object
+        #/// </param>
+        #/// <param name="_releaseToWarehouseId">
+        #/// The release to warehouse identifier
+        #/// </param>
+        #/// <param name="_simulate">
+        #/// A Boolean value to identify whether the release to warehouse process should be simulated
+        #/// </param>
+        #/// <param name="_showInfo">
+        #/// A Boolean value to indicate whether information should be displayed regarding the shipments that have been created
+        #/// </param>
+        #/// <param name="_auto">
+        #/// A Boolean value that indicates whether the created wave should be executed automatically
+        #/// </param>
+        #/// <returns>
+        #/// Returns the generated wave identifier
+        #/// </returns>
+        #public static WHSWaveId releaseToWarehouse(
+        #    WHSTmpReleaseToWarehouse    _releaseToWarehouse,
+        #    WHSReleaseToWarehouseId     _releaseToWarehouseId,
+        #    boolean                     _simulate = false,
+        #    boolean                     _showInfo = false,
+        #    boolean                     _auto     = false)
+        #{
+        #    WHSWarehouseRelease         warehouseRelease = WHSWarehouseRelease::construct();
+        #    WHSParameters               parameters = WHSParameters::find();
+        #    WHSWaveId                   waveId;
+        #    WHSTmpReleaseToWarehouse    releaseToWarehouse;
+        #    WHSTmpWorkLine              tmpWorkLine;
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #
+        #        if (_releaseToWarehouse.OrderNum && _releaseToWarehouse.Module == WHSModule::Sales)
+        #        {
+        #            if (!warehouseRelease.createCreditCardAuth(_releaseToWarehouse))
+        #            {
+        #                throw error(strFmt("@ACC1875",_releaseToWarehouse.OrderNum));
+        #            }
+        #        }
+        #
+        #        releaseToWarehouse.linkPhysicalTableInstance(_releaseToWarehouse);
+        #
+        #        warehouseRelease.parmReleaseToWarehouseId(_releaseToWarehouseId);
+        #        warehouseRelease.parmShowInfo(_showInfo);
+        #        warehouseRelease.parmAuto(_auto);
+        #
+        #        warehouseRelease.createLoadLines(releaseToWarehouse);
+        #
+        #        warehouseRelease.createShipments();
+        #
+        #        waveId = warehouseRelease.createWave();
+        #
+        #        ttscommit;
+        #    }
+        #    catch
+        #    {
+        #        // Delete TmpWorkLines that still exist for this releaseToWarehouseId
+        #        delete_from tmpWorkLine
+        #            where tmpWorkLine.ReleaseToWarehouseId == _releaseToWarehouseId;
+        #
+        #        if (_showInfo)
+        #        {
+        #            warning("@WAX1895");
+        #        }
+        #    }
+        #
+        #    return waveId;
+        #}
+      ENDSOURCE
+      SOURCE #reserve
+        #/// <summary>
+        #/// Reserves inventory before releasing to warehouse.
+        #/// </summary>
+        #/// <param name="_inventTransSumDim">
+        #/// The inventory originator, item and dimensions for which the quantity needs to be provided.
+        #/// </param>
+        #public static void reserve(WHSInventTransSumDim _inventTransSumDim)
+        #{
+        #    InventTrans         inventTrans;
+        #    InventTransOrigin   inventTransOrigin;
+        #    WHSReservation      whsReservation;
+        #
+        #    whsReservation = new WHSReservation();
+        #
+        #    // Loop over non-reserved inventTrans records and reserve them.
+        #    while select inventTrans
+        #        where inventTrans.InventDimId == _inventTransSumDim.inventDimId
+        #            && (inventTrans.StatusIssue == StatusIssue::OnOrder
+        #                || inventTrans.StatusIssue == StatusIssue::ReservOrdered)
+        #            && inventTrans.StatusReceipt == StatusReceipt::None
+        #        exists join inventTransOrigin
+        #            where inventTransOrigin.RecId == inventTrans.InventTransOrigin
+        #                &&  inventTransOrigin.InventTransId == _inventTransSumDim.InventTransId
+        #    {
+        #        // Pass in negative qty
+        #        whsReservation.reserveInventory(inventTrans, inventTrans.Qty);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #salesFormRelease
+        #public static server void salesFormRelease(SalesTable _salesTable)
+        #{
+        #    WHSReleaseToWarehouseId         releaseToWarehouseId;
+        #    boolean                         lineReleased = false;
+        #    WHSTmpReleaseToWarehouse        releaseToWarehouse;
+        #    WHSInventTransSumDim            inventTransSumDim;
+        #    WHSInventTransSumDimEnumerator  inventTransSumDimEnumerator;
+        #    InventQty                       reservedOrOnOrderQty, reservedPhysicalQty, releasedNotPickedQty;
+        #    InventTable                     inventTable;
+        #    //--> Red Maple Credit Cards begin
+        #    Amount                          processAmount;
+        #    SalesLine                       salesLine;
+        #    SalesTotals                     salesTotals = SalesTotals::construct(_salesTable,SalesUpdate::DeliverNow);
+        #    container                       displayFields;
+        #    WHSReleasedQtyView              releasedQtyView;
+        #    //<-- Red Maple Credit Cards End
+        #    ;
+        #    //--> Red Maple Credit Cards begin
+        #    salesTotals.calc();
+        #    displayFields = salesTotals.displayFields();
+        #    //<-- Red Maple Credit Cards End
+        #
+        #    releaseToWarehouseId = WHSTmpReleaseToWarehouse::getNextReleaseToWarehouseId();
+        #
+        #    if (!_salesTable.DeliveryPostalAddress
+        #        && !_salesTable.whsCheckSalesLineDeliveryPostalAddress())
+        #    {
+        #        throw error(strFmt("@WAX4810", _salesTable.SalesId));
+        #    }
+        #
+        #    if (WHSWarehouseRelease::isOrderOnLoadAndNotOnShipment(_salesTable.SalesId, InventTransType::Sales))
+        #    {
+        #        throw error("@WAX4240");
+        #    }
+        #
+        #    WHSFulfillmentRateValidator::checkFulfillmentRateForSalesFormRelease(_salesTable);
+        #
+        #    //--> Red Maple Credit Card Begin
+        #    while select salesLine
+        #        where salesLine.SalesId == _salesTable.SalesId
+        #    {
+        #        select SumOfInventQty from releasedQtyView
+        #            where releasedQtyView.InventDimId == salesLine.InventDimId
+        #            && releasedQtyView.InventTransId == salesLine.InventTransId;
+        #
+        #        reservedOrOnOrderQty = WHSInvent::getResPhyPickedDeliveredQty(salesLine.InventTransId,salesLine.InventDimId) - releasedQtyView.SumOfInventQty;
+        #
+        #        select sum(ReleasedQty) from releaseToWarehouse
+        #            where releaseToWarehouse.InventTransId  == salesLine.InventTransId &&
+        #                  releaseToWarehouse.InventDimId    == salesLine.InventDimId;
+        #
+        #        reservedOrOnOrderQty-= releaseToWarehouse.ReleasedQty;
+        #
+        #        if (reservedOrOnOrderQty > 0)
+        #        {
+        #            processAmount += salesLine.calcLineAmount(reservedOrOnOrderQty);
+        #        }
+        #
+        #        reservedOrOnOrderQty = 0;
+        #    }
+        #
+        #    if (processAmount > 0)
+        #    {
+        #        processAmount += conPeek(displayFields,TradeTotals::posMarkup());
+        #    }
+        #
+        #    reservedOrOnOrderQty = 0;
+        #
+        #    if (!CreditCardPosting::runReleaseToWarehouse(_salesTable.SalesId,processAmount,_salesTable.CurrencyCode))
+        #    {
+        #        ttsAbort;
+        #        throw error("@ACC1860");
+        #    }
+        #    //<-- Red Maple Credit Card End
+        #
+        #    inventTransSumDimEnumerator = WhsWarehouseRelease::buildReleaseQuery(_salesTable.SalesId).forNotWMSOrder(WMSOrderStatus::New, WMSOrderStatus::InExpedition).getEnumerator();
+        #
+        #    while (inventTransSumDimEnumerator.moveNext())
+        #    {
+        #        inventTransSumDim = inventTransSumDimEnumerator.inventTransSumDim();
+        #        reservedOrOnOrderQty = -inventTransSumDim.SumOfQty; // The inventTransSumDim view only selects reserved or on order transactions
+        #        releasedNotPickedQty = WHSWarehouseRelease::getReleasedNotPickedQty(inventTransSumDim);
+        #
+        #        if (reservedOrOnOrderQty > releasedNotPickedQty)
+        #        {
+        #            inventTable = InventTable::find(inventTransSumDim.ItemId);
+        #            reservedPhysicalQty = WHSWarehouseRelease::getReservedPhysicalQty(inventTable, inventTransSumDim);
+        #
+        #            if (reservedOrOnOrderQty > reservedPhysicalQty && inventTable.whsAllowPhysNeg())
+        #            {
+        #                WHSWarehouseRelease::reserve(inventTransSumDim);
+        #                reservedPhysicalQty = reservedOrOnOrderQty;
+        #            }
+        #
+        #            WHSTmpReleaseToWarehouse::createLineFromInventTransIdInventDimId(releaseToWarehouse,
+        #                                                                             releaseToWarehouseId,
+        #                                                                             inventTransSumDim.InventTransId,
+        #                                                                             inventTransSumDim.InventDimId,
+        #                                                                             WHSModule::Sales,
+        #                                                                             reservedPhysicalQty - releasedNotPickedQty,
+        #                                                                             true); // skip validation since invalid inventory transactions have already been filtered out in the query
+        #            lineReleased = true;
+        #        }
+        #    }
+        #
+        #    if (lineReleased)
+        #    {
+        #        WHSWarehouseRelease::releaseToWarehouse(releaseToWarehouse, releaseToWarehouseId, false, true);
+        #    }
+        #
+        #    if (WHSWarehouseRelease::wmsOrderExists(_salesTable))
+        #    {
+        #        warning("@WAX5826");
+        #    }
+        #    else if (!lineReleased)
+        #    {
+        #        info(strFmt("@WAX2057", _salesTable.SalesId));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #salesFormReleaseCallCIL
+        #/// <summary>
+        #///     Call release to warehouse in CIL to maximize efficiency.
+        #/// </summary>
+        #/// <param name="_packedList">
+        #///     Packed list containing <c>SalesTable</c> records to release to warehouse.
+        #/// </param>
+        #public static server void salesFormReleaseCallCIL(container _packedList)
+        #{
+        #    XppILExecutePermission  xppILExecutePermission;
+        #
+        #    // Transition to CIL
+        #    xppILExecutePermission = new XppILExecutePermission();
+        #    xppILExecutePermission.assert();
+        #    runClassMethodIL(classStr(WHSWarehouseRelease),
+        #                     staticMethodStr(WHSWarehouseRelease, salesFormReleaseRunCIL),
+        #                     _packedList);
+        #    CodeAccessPermission::revertAssert();
+        #}
+      ENDSOURCE
+      SOURCE #salesFormReleaseRunCIL
+        #/// <summary>
+        #///     Call release to warehouse process in CIL to improve efficiency.
+        #/// </summary>
+        #/// <param name="_packedList">
+        #///     Packed list containing <c>SalesTable</c> records to release to warehouse.
+        #/// </param>>
+        #/// <returns>
+        #///     Empty container.
+        #/// </returns>
+        #public static server container salesFormReleaseRunCIL(container _packedList)
+        #{
+        #    SalesTable      salesTable;
+        #    List            listSalesTable           = List::create(_packedList);
+        #    ListEnumerator  listEnumeratorSalesTable = listSalesTable.getEnumerator();
+        #
+        #    while (listEnumeratorSalesTable.moveNext())
+        #    {
+        #        salesTable = listEnumeratorSalesTable.current();
+        #
+        #        if (!salesTable.canReleaseToWarehouse())
+        #        {
+        #            continue;
+        #        }
+        #
+        #        WHSWarehouseRelease::salesFormRelease(salesTable);
+        #    }
+        #
+        #    return conNull();
+        #}
+      ENDSOURCE
+      SOURCE #transferOrderFormRelease
+        #/// <summary>
+        #/// Executes a release to warehouse from the transfer order screen
+        #/// </summary>
+        #/// <param name="_transferTable">
+        #/// The <c>InventTransferTable</c> record
+        #/// </param>
+        #public static server void transferOrderFormRelease(InventTransferTable _transferTable)
+        #{
+        #    WHSWarehouseReleaseProcessingResult processingResult = new WHSWarehouseReleaseProcessingResult();
+        #
+        #    WhsWarehouseRelease::transferOrderRelease(_transferTable, processingResult);
+        #
+        #    processingResult.displayOrderLevelMessages();
+        #
+        #    if (processingResult.hasOrderLevelErrors())
+        #    {
+        #        throw error(WhsWarehouseRelease::cannotReleaseTransferMessage(_transferTable));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #transferOrderRelease
+        #/// <summary>
+        #/// Releases the specified transfer order to warehouse.
+        #/// </summary>
+        #/// <param name="_transferTable">
+        #/// The <c>InventTransferTable</c> record.
+        #/// </param>
+        #/// <param name="_processingResult">
+        #/// The object that is used to store the errors, warnings and information messages that occured as part of the release to warehouse process.
+        #/// </param>
+        #public static server void transferOrderRelease(
+        #    InventTransferTable                 _transferTable,
+        #    WHSWarehouseReleaseProcessingResult _processingResult)
+        #{
+        #    WHSReleaseToWarehouseId         releaseToWarehouseId;
+        #    InventQty                       tmpQty;
+        #    boolean                         valid = true;
+        #    boolean                         lineReleased;
+        #    WHSTmpReleaseToWarehouse        releaseToWarehouse;
+        #    WHSReservation                  reservation;
+        #    InventTrans                     inventTrans;
+        #    InventTransOrigin               inventTransOrigin;
+        #    WHSInventTransSumDim            inventTransSumDim;
+        #    WHSReleasedQtyView              releasedQtyView;
+        #    WHSInventTransSumDimEnumerator  inventTransSumDimEnumerator;
+        #    WHSInventTransSumDimEnumerator  inventTransSumDimEnuWMSOrderNewInExpedition;
+        #
+        #    boolean                         wmsOutputOrderExists;
+        #
+        #    if (!_transferTable || !_processingResult)
+        #    {
+        #        throw error(Error::wrongUseOfFunction(funcName()));
+        #    }
+        #
+        #    releaseToWarehouseId = WHSTmpReleaseToWarehouse::getNextReleaseToWarehouseId();
+        #    valid = true;
+        #    lineReleased = false;
+        #    wmsOutputOrderExists = false;
+        #
+        #    if (WHSWarehouseRelease::isOrderOnLoadAndNotOnShipment(_transferTable.TransferId, InventTransType::TransferOrderShip))
+        #    {
+        #        _processingResult.addOrderLevelError("@WAX4240");
+        #        return;
+        #    }
+        #
+        #    inventTransSumDimEnumerator = new WHSInventTransSumDimQuery().forIssueOfTransferId(_transferTable.TransferId)
+        #                                                                 .fromWHSEnabledWarehouse()
+        #                                                                 .onlyTMSItems()
+        #                                                                 .forNotWMSOrder(WMSOrderStatus::New, WMSOrderStatus::InExpedition)
+        #                                                                 .getEnumerator();
+        #
+        #    while (inventTransSumDimEnumerator.moveNext())
+        #    {
+        #        inventTransSumDim = inventTransSumDimEnumerator.inventTransSumDim();
+        #        select firstonly SumOfInventQty from releasedQtyView
+        #            where releasedQtyView.InventDimId       == inventTransSumDim.InventDimId
+        #                && releasedQtyView.InventTransId    == inventTransSumDim.InventTransId;
+        #
+        #        // Skip over lines that have been fully released.
+        #        if (releasedQtyView.SumOfInventQty >= -inventTransSumDim.SumOfQty)
+        #        {
+        #            continue;
+        #        }
+        #
+        #        tmpQty = WHSInvent::getResPhyPickedDeliveredQty(inventTransSumDim.InventTransId, inventTransSumDim.InventDimId);
+        #
+        #        // Check to see if there is qty that isn't at least ReservedPhysical
+        #        if (tmpQty != -inventTransSumDim.SumOfQty)
+        #        {
+        #            if (InventTable::find(inventTransSumDim.ItemId).whsAllowPhysNeg())
+        #            {
+        #                reservation = new WHSReservation();
+        #
+        #                // Loop over non-reserved invent trans records for this sales line and call to reserve them.
+        #                while select inventTrans
+        #                    join RecId, InventTransId from inventTransOrigin
+        #                    where inventTransOrigin.RecId           == inventTrans.InventTransOrigin
+        #                        && inventTransOrigin.InventTransId  == inventTransSumDim.InventTransId
+        #                        && inventTrans.InventDimId          == inventTransSumDim.InventDimId
+        #                        && inventTrans.StatusIssue          >  StatusIssue::ReservPhysical
+        #                {
+        #                    // Pass in negative qty
+        #                    reservation.reserveInventory(inventTrans, inventTrans.Qty);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                valid = false;
+        #            }
+        #        }
+        #
+        #        WHSTmpReleaseToWarehouse::createLineFromInventTransIdInventDimId(releaseToWarehouse,
+        #                                                                         releaseToWarehouseId,
+        #                                                                         inventTransSumDim.InventTransId,
+        #                                                                         inventTransSumDim.InventDimId,
+        #                                                                         WHSModule::Transfer,
+        #                                                                         -inventTransSumDim.SumOfQty - releasedQtyView.SumOfInventQty,
+        #                                                                         true); // skip validation since invalid inventory transactions have already been filtered out in the query
+        #        lineReleased = true;
+        #    }
+        #
+        #    inventTransSumDimEnuWMSOrderNewInExpedition = new WHSInventTransSumDimQuery().forIssueOfTransferId(_transferTable.TransferId)
+        #                                                                 .fromWHSEnabledWarehouse()
+        #                                                                 .onlyTMSItems()
+        #                                                                 .forWMSOrder(WMSOrderStatus::New, WMSOrderStatus::InExpedition)
+        #                                                                 .getEnumerator();
+        #
+        #    if (inventTransSumDimEnuWMSOrderNewInExpedition.moveNext())
+        #    {
+        #        _processingResult.addOrderLevelWarning("@WAX5826");
+        #        wmsOutputOrderExists = true;
+        #    }
+        #    if (valid && lineReleased)
+        #    {
+        #        WHSWarehouseRelease::releaseToWarehouse(releaseToWarehouse, releaseToWarehouseId, false, true);
+        #    }
+        #    else if (!valid && !wmsOutputOrderExists)
+        #    {
+        #        _processingResult.addOrderLevelError(strFmt("@WAX2355", _transferTable.TransferId));
+        #    }
+        #    else if (!wmsOutputOrderExists)
+        #    {
+        #        _processingResult.addOrderLevelInfo(strFmt("@WAX2356", _transferTable.TransferId));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #whsReleaseSalesToWarehouseClient
+        #/// <summary>
+        #///     Releases sales orders to the warehouse in CIL in order to maximize efficiency.
+        #/// </summary>
+        #/// <param name="_salesTable_ds">
+        #///     Release to warehouse will be run for the sales orders selected in the provided form datasource.
+        #/// </param>
+        #public static client void whsReleaseSalesToWarehouseClient(FormDataSource _salesTable_ds)
+        #{
+        #    SalesTable  salesTable;
+        #    List        listSalesTable = new List(Types::Record);
+        #
+        #    for (salesTable = _salesTable_ds.getFirst(true) ? _salesTable_ds.getFirst(true) : _salesTable_ds.cursor();
+        #         salesTable;
+        #         salesTable = _salesTable_ds.getNext())
+        #    {
+        #        listSalesTable.addEnd(salesTable);
+        #    }
+        #
+        #    WHSWarehouseRelease::salesFormReleaseCallCIL(listSalesTable.pack());
+        #
+        #    if (listSalesTable.elements() > 1)
+        #    {
+        #        _salesTable_ds.research(true);
+        #    }
+        #    else
+        #    {
+        #        _salesTable_ds.reread();
+        #        _salesTable_ds.refresh();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #whsReleaseTransferToWarehouseClient
+        #/// <summary>
+        #///     Releases inventory transfer orders to the warehouse.
+        #/// </summary>
+        #/// <param name="_inventTransferTable_ds">
+        #///     Release to warehouse will be run for the inventory transfer orders selected in the provided form datasource.
+        #/// </param>
+        #public static client void whsReleaseTransferToWarehouseClient(FormDataSource _inventTransferTable_ds)
+        #{
+        #    InventTransferTable     inventTransferTable;
+        #    int                     numberOfRowsUpdated;
+        #
+        #    for (inventTransferTable = _inventTransferTable_ds.getFirst(true) ? _inventTransferTable_ds.getFirst(true) : _inventTransferTable_ds.cursor();
+        #         inventTransferTable;
+        #         inventTransferTable = _inventTransferTable_ds.getNext())
+        #    {
+        #        WHSWarehouseRelease::transferOrderFormRelease(inventTransferTable);
+        #        numberOfRowsUpdated++;
+        #    }
+        #
+        #    if (numberOfRowsUpdated > 1)
+        #    {
+        #        _inventTransferTable_ds.research(true);
+        #    }
+        #    else
+        #    {
+        #        _inventTransferTable_ds.reread();
+        #        _inventTransferTable_ds.refresh();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #wmsOrderExists
+        #/// <summary>
+        #/// Determines if there is a pending output order for the specified sales order.
+        #/// </summary>
+        #/// <param name="_salesTable">
+        #/// The sales order.
+        #/// </param>
+        #/// <returns>
+        #/// true if there is a pending output order; otherwise, false.
+        #/// </returns>
+        #private static boolean wmsOrderExists(SalesTable _salesTable)
+        #{
+        #    WHSInventTransSumDimEnumerator  inventTransSumDimWithWMSOrder;
+        #
+        #    inventTransSumDimWithWMSOrder = WhsWarehouseRelease::buildReleaseQuery(_salesTable.SalesId).forWMSOrder(WMSOrderStatus::New, WMSOrderStatus::InExpedition).getEnumerator();
+        #
+        #    return inventTransSumDimWithWMSOrder.moveNext();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

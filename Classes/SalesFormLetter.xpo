@@ -1,0 +1,3314 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SalesFormLetter
+    PROPERTIES
+      Name                #SalesFormLetter
+      Extends             #FormLetterServiceController
+      Origin              #{2D0F020C-0000-1000-D20B-C01A77B7F4EB}
+      LegacyId            #524
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #afterOperationBody
+        #/// <summary>
+        #/// Executes the main logic after an operation before cleanup.
+        #/// </summary>
+        #protected void afterOperationBody()
+        #{
+        #    super();
+        #
+        #    if (!skipRunShipCarrier)
+        #    {
+        #        this.runShipCarrier();
+        #    }
+        #
+        #    if (mrcPrintOnPack)
+        #    {
+        #        this.printPSDSDocuRef();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #checkAgreement_RU
+        #/// <summary>
+        #///     Validates the <c>AgreementHeaderExt_RU</c> field for processed sales orders.
+        #/// </summary>
+        #/// <returns>
+        #///     true if the <c>AgreementHeaderExt_RU</c> field is valid; otherwise, false.
+        #/// </returns>
+        #// <GEERU>
+        #protected boolean checkAgreement_RU()
+        #{
+        #    Query                query;
+        #    QueryBuildDataSource qbds;
+        #    QueryBuildDataSource dsRU;
+        #    QueryRun             qr;
+        #    boolean              ok              = true;
+        #    SalesParmUpdate      salesParmUpdate = this.salesParmUpdate();
+        #
+        #    if (salesParmUpdate.SumBy != AccountOrder::None)
+        #    {
+        #        query = new Query();
+        #
+        #        qbds = query.addDataSource(tableNum(SalesTable));
+        #
+        #        dsRU = SalesTable_RU::addToQuery(qbds);
+        #        dsRU.addGroupByField(fieldNum(SalesTable_RU, AgreementHeaderExt_RU));
+        #
+        #        qbds = qbds.addDataSource(tableNum(SalesParmSubTable));
+        #        qbds.addRange(fieldNum(SalesParmSubTable, ParmId)).value(salesParmUpdate.ParmId);
+        #        qbds.addLink(fieldNum(SalesTable, SalesId), fieldNum(SalesParmSubTable, OrigSalesId));
+        #        qbds.joinMode(JoinMode::ExistsJoin);
+        #
+        #        qr = new QueryRun(query);
+        #        if(qr.next() && qr.next())
+        #        {
+        #            ok = checkFailed("@GLS220540");
+        #        }
+        #    }
+        #
+        #    return ok;
+        #}
+        #// </GEERU>
+        #
+      ENDSOURCE
+      SOURCE #checkClientOutput
+        #/// <summary>
+        #/// Verifies whether destinations that are selected for printing from the <c>SalesFormLetter</c> class
+        #/// hierarchy are printers.
+        #/// </summary>
+        #/// <param name="_showError">
+        #/// A Boolean value that indicates whether error messages should be reported; optional.
+        #/// </param>
+        #/// <returns>
+        #/// true if the selected destination is a printer; otherwise, false.
+        #/// </returns>
+        #protected boolean checkClientOutput(boolean _showError = true)
+        #{
+        #    boolean ok = super(_showError);
+        #
+        #    if (this.printCODLabel())
+        #    {
+        #        if (FormLetter::isClientOutput(this.printerSettingsCODLabel()))
+        #        {
+        #            ok = _showError ? checkFailed("@SYS118769") : false;
+        #        }
+        #    }
+        #
+        #    if (this.printShippingLabel())
+        #    {
+        #        if (FormLetter::isClientOutput(this.printerSettingsShippingLabel()))
+        #        {
+        #            ok = _showError ? checkFailed("@SYS118771") : false;
+        #        }
+        #    }
+        #
+        #    if (this.printEntryCertificate_W())
+        #    {
+        #        if (FormLetter::isClientOutput(this.printerSettingsEntryCertificate_W()))
+        #        {
+        #            ok = _showError ? checkFailed("@SYS4004146") : false;
+        #        }
+        #    }
+        #
+        #    return ok;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #checkClientOutputPrintManagement
+        #/// <summary>
+        #///    Verifies whether selected destinations in print management are printers for printing
+        #///    original and copy reports.
+        #/// </summary>
+        #/// <param name="_showError">
+        #///    A boolean value that determines whether error messages should be reported; optional.
+        #/// </param>
+        #/// <returns>
+        #///    true if the selected destination is a printer; otherwise, false.
+        #/// </returns>
+        #protected boolean checkClientOutputPrintManagement(boolean _showError = true)
+        #{
+        #    boolean ok = super(_showError);
+        #
+        #    if (this.printCODLabel())
+        #    {
+        #        if (FormLetter::isClientOutput(this.printerSettingsCODLabel()))
+        #        {
+        #            ok = _showError ? checkFailed("@SYS118769") : false;
+        #            printerSetupError = true;
+        #        }
+        #    }
+        #
+        #    if (this.printShippingLabel())
+        #    {
+        #        if (FormLetter::isClientOutput(this.printerSettingsShippingLabel()))
+        #        {
+        #            ok = _showError ? checkFailed("@SYS118771") : false;
+        #            printerSetupError = true;
+        #        }
+        #    }
+        #
+        #    if (this.printEntryCertificate_W())
+        #    {
+        #        if (FormLetter::isClientOutput(this.printerSettingsEntryCertificate_W()))
+        #        {
+        #            ok = _showError ? checkFailed("@SYS4004146") : false;
+        #            printerSetupError = true;
+        #        }
+        #    }
+        #
+        #    return ok;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #checkDocumentData_PL
+        #// <GEEPL>
+        #protected boolean checkDocumentData_PL()
+        #{
+        #    return true;
+        #}
+        #// </GEEPL>
+      ENDSOURCE
+      SOURCE #checkDuplicateNum_W
+        #/// <summary>
+        #///     Determines whether invoice number has been previously used.
+        #/// </summary>
+        #/// <param name="_num">
+        #///      The invoice number of the unposted transaction.
+        #/// </param>
+        #/// <param name="_salesId">
+        #///      The sales ID of the unposted transaction.
+        #/// </param>
+        #/// <param name="_transDate">
+        #///     The transaction date.
+        #/// </param>
+        #/// <returns>
+        #///     false if the invoice number is used previously; otherwise, true.
+        #/// </returns>
+        #public boolean checkDuplicateNum_W(Num _num, SalesIdBase _salesId, TransDate _transDate)
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #checkExciseInventBatch_IN
+        #/// <summary>
+        #/// Checks the transaction line for invent batch.
+        #/// </summary>
+        #/// <returns>
+        #/// <c>False</c> if invent batch is not provided for the line, otherwise <c>true</c>.
+        #/// </returns>
+        #// <GIN>
+        #protected boolean checkExciseInventBatch_IN()
+        #{
+        #    boolean                     ret = true;
+        #    SalesParmLine               salesParmLineLoc;
+        #    SalesLine_IN                salesLine_IN;
+        #    InventDim                   inventDim;
+        #    ExciseRecordTypeTable_IN    exciseRecordType;
+        #
+        #    select firstOnly RecId from salesParmLineLoc
+        #        where salesParmLineLoc.ParmId == this.parmId()
+        #    exists join inventDim
+        #        where inventDim.inventDimId == salesParmLineLoc.InventDimId
+        #            && !inventDim.inventBatchId
+        #    exists join salesLine_IN
+        #        where salesLine_IN.SalesLine == salesParmLineLoc.SalesLineRecId
+        #            && salesLine_IN.ExciseTariffCodes_IN
+        #    exists join exciseRecordType
+        #        where exciseRecordType.ExciseRecordType == salesLine_IN.ExciseRecordType_IN
+        #            && exciseRecordType.ForceBatchValidation;
+        #
+        #    if (salesParmLineLoc.RecId)
+        #    {
+        #        ret = checkFailed(strFmt("@SYS53724","@SYS53635"));
+        #    }
+        #
+        #    return ret;
+        #}
+        #// </GIN>
+        #
+      ENDSOURCE
+      SOURCE #checkFormLetterId_IN
+        #/// <summary>
+        #/// Checks for <c>FormLetter</c>
+        #/// </summary>
+        #/// <returns>
+        #/// Returns true.
+        #/// </returns>
+        #
+        #// <GIN>
+        #public boolean  checkFormLetterId_IN()
+        #{
+        #    return true;
+        #}
+        #// </GIN>
+      ENDSOURCE
+      SOURCE #checkifWMSorder
+        #protected boolean  checkifWMSorder()
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #checkInterCompany
+        #protected boolean  checkInterCompany()
+        #{
+        #    SalesParmTable  salesParmTableLocal;
+        #    SalesTable      salesTableLocal;
+        #
+        #    Counter         recordCount         = 0;
+        #    boolean         interCompanyFound   = false;
+        #    boolean         ok                  = true;
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #
+        #    if (salesParmUpdate.SumBy == AccountOrder::Order)
+        #    {
+        #        while select RecId from salesParmTableLocal
+        #            where salesParmTableLocal.ParmId == salesParmUpdate.ParmId
+        #                join  InterCompanyOrder from salesTableLocal
+        #                where salesTableLocal.SalesId == salesParmTableLocal.SalesId
+        #        {
+        #            recordCount++;
+        #
+        #            if (salesTableLocal.InterCompanyOrder)
+        #            {
+        #                interCompanyFound = true;
+        #            }
+        #
+        #            if (interCompanyFound  &&  recordCount > 1)
+        #            {
+        #                ok = checkFailed(strFmt("@SYS75337", "@SYS57755"));
+        #                break;
+        #            }
+        #        }
+        #    }
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #checkLateSelection
+        #protected boolean  checkLateSelection()
+        #{
+        #    boolean  ok = true;
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    if (salesParmUpdate.LateSelection  &&  !salesParmUpdate.LateSelectionQuery)
+        #    {
+        #        ok = checkFailed(strFmt("@SYS72782"));
+        #    }
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #checkPrintout_RU
+        #protected boolean checkPrintout_RU()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #checkSalesLineChanged
+        #protected boolean  checkSalesLineChanged(SalesParmLine _salesParmLine, SalesLine _salesLine)
+        #{
+        #    boolean         ok = true;
+        #    SalesQty        remainBefore;
+        #    InventQty       remainBeforeInvent;
+        #    Qty             dummy;
+        #    // <GEERU>
+        #    InventDimParm   inventDimParm;
+        #    InventDim       inventDimCriteria;
+        #    if (countryRegion_RU)
+        #    {
+        #        if (SalesFormLetter::useInventOwnerIdRange_RU(this.splitInventOwnerId_RU(),
+        #                                                      this.documentStatus(),
+        #                                                      _salesLine))
+        #        {
+        #            inventDimCriteria.InventOwnerId_RU = _salesParmLine.InventOwnerId_RU;
+        #            inventDimParm.InventOwnerIdFlag_RU = NoYes::Yes;
+        #        }
+        #        salesQuantity.parmInventDimCriteria_RU(inventDimCriteria);
+        #        salesQuantity.parmInventDimParm_RU(inventDimParm);
+        #    }
+        #    // </GEERU>
+        #
+        #    [dummy, remainBefore      , dummy] = this.qtySales (_salesLine, naReal());
+        #    [dummy, remainBeforeInvent, dummy] = this.qtyInvent(_salesLine, naReal());
+        #
+        #    if (remainBefore       != _salesParmLine.RemainBefore ||
+        #        remainBeforeInvent != _salesParmLine.RemainBeforeInvent)
+        #    {
+        #
+        #        // Do not perform this check for ship alone items when running a pro-forma
+        #        if ( !_salesLine.inventTable().mcrInventTable().ShipAlone
+        #            && this.salesParmUpdate().Proforma)
+        #        {
+        #            ok = checkFailed(strfmt("@SYS78952", _salesParmLine.OrigSalesId));
+        #        }
+        #
+        #        ok = checkFailed(strFmt("@SYS78952", _salesParmLine.OrigSalesId));
+        #    }
+        #
+        #    // <GEEU>
+        #    if (IntrastatParameters::isLegalEntityInEEU() && this.mustCheckIntrastat())
+        #    {
+        #        ok = _salesLine.checkIntrastat() && ok;
+        #    }
+        #    // </GEEU>
+        #
+        #    // PBA begin
+        #    ok = ok && _salesLine.PBAItemLine::checkMandatory();
+        #    // PBA end
+        #
+        #    return ok;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkSalesLinesChanged
+        #protected boolean  checkSalesLinesChanged()
+        #{
+        #    SalesParmLine   salesParmLineLocal;
+        #    SalesLine       salesLineLocal;
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    boolean         ok = true;
+        #
+        #    while select forceplaceholders salesParmLineLocal
+        #        where salesParmLineLocal.ParmId        == salesParmUpdate.ParmId
+        #        outer join salesLineLocal
+        #            where salesLineLocal.InventTransId == salesParmLineLocal.InventTransId
+        #    {
+        #        salesParmLineLocal.revertPreviousVersionChanges(salesLineLocal);
+        #        if (!this.checkSalesLineChanged(salesParmLineLocal, salesLineLocal))
+        #            ok = false;
+        #    }
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #checkServiceTariffNumber
+        #/// <summary>
+        #/// Validates the service tariff number.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the service tariff number is valid; otherwise, false.
+        #/// </returns>
+        #// <GEEPL>
+        #protected boolean checkServiceTariffNumber()
+        #{
+        #    return true;
+        #}
+        #// </GEEPL>
+      ENDSOURCE
+      SOURCE #checkSumBy
+        #protected boolean checkSumBy()
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    SalesSummary  checkSalesSummary = SalesSummary::construct(salesParmUpdate.SumBy, salesParmUpdate.ParmId, salesParmUpdate.SumSalesId, this.documentStatus());
+        #
+        #    return checkSalesSummary.checkUpdateAllowed();
+        #}
+      ENDSOURCE
+      SOURCE #checkSumNum
+        #protected boolean  checkSumNum()
+        #{
+        #    boolean  ok = true;
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #
+        #    if (salesParmUpdate.SumBy == AccountOrder::Order)
+        #    {
+        #        if (!SalesParmLine::existSales(this.parmId(), salesParmUpdate.SumSalesId))
+        #            ok = checkFailed(strFmt("@SYS15067", salesParmUpdate.SumSalesId));
+        #    }
+        #
+        #    return ok;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #chooseLines
+        #public void  chooseLines(
+        #    boolean _append = false,
+        #    boolean _directDeliveryUpdate = false)
+        #{
+        #    FormLetterParmDataOutputContract    outputContract;
+        #    container                           outputContainer;
+        #
+        #    this.parmDirectDeliveryUpdate(_directDeliveryUpdate);
+        #    outputContainer = SalesFormletterParmData::chooseLinesServer(this.packDataContract(salesFormLetterContract),
+        #                                                                 _append,
+        #                                                                 this.parmId() ? true : false,
+        #                                                                 false,
+        #                                                                 false,
+        #                                                                 this.showQueryForm());
+        #    outputContract = this.unpackFormletterParmDataOutputContract(outputContainer);
+        #
+        #    this.getValuesFormletterParmData(outputContract);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #chooseLines_IN
+        #/// <summary>
+        #/// Creates <c>SalesParmTable</c> table records based on the chooseLines query.
+        #/// </summary>
+        #/// <param name="_customsExportOrderType">
+        #/// A CustomsExportOrderType_IN enum value which determines which type of orders to be queried by the chooseLines query.
+        #/// </param>
+        #/// <param name="_append">
+        #/// A Boolean value which determines whether existing records should be removed.
+        #/// </param>
+        #/// <param name="_directDeliveryUpdate">
+        #/// A Boolean value which determines whether order is directDeliveryUpdate.
+        #/// </param>
+        #public void  chooseLines_IN(
+        #    CustomsExportOrderType_IN _customsExportOrderType = CustomsExportOrderType_IN::SalesOrder,
+        #    boolean                   _append                 = false,
+        #    boolean                   _directDeliveryUpdate   = false)
+        #{
+        #    FormLetterParmDataOutputContract    outputContract;
+        #    container                           outputContainer;
+        #
+        #    this.parmDirectDeliveryUpdate(_directDeliveryUpdate);
+        #    outputContainer = SalesFormletterParmData::chooseLinesServer_IN(this.packDataContract(salesFormLetterContract),
+        #                                                                   _append,
+        #                                                                   _customsExportOrderType,
+        #                                                                   this.parmId() ? true : false);
+        #    outputContract = this.unpackFormletterParmDataOutputContract(outputContainer);
+        #
+        #    this.getValuesFormletterParmData(outputContract);
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #abstract class   SalesFormLetter
+        #extends FormLetterServiceController
+        #{
+        #    SalesFormLetterContract     salesFormLetterContract;
+        #    FormRun                     salesEditLines;
+        #
+        #    SalesQuantity               salesQuantity;
+        #
+        #    boolean                     ledgerVoucherIsSet;
+        #    LedgerVoucher               ledgerVoucher;
+        #
+        #    SalesParmTable              salesParmTable;
+        #
+        #    PdsCWInventQty              pdsCWUpdateNow;
+        #    PdsMRCPostingError          mrcPostingErr;
+        #    PdsMRCPrintMSDSOnPack       mrcPrintOnPack;
+        #    PdsMRCParameters            pdsMRCParameters;
+        #    TypeOfCreditmaxCheck        checkCreditMax;
+        #
+        #    container                   printerSettingsBillOfExchange;
+        #
+        #    boolean                     useShippingStat;
+        #    NoYes                       defaultGiroType;
+        #    boolean                     giroAllSame;
+        #
+        #    boolean                     lockSalesUpdate;
+        #    boolean                     enableUpdateNow;
+        #
+        #    Set                         postedTableRefIds;
+        #
+        #    boolean                     skipRunShipCarrier;
+        #    boolean                     editLinesChanged;
+        #
+        #    // Options that determine how miscellaneous
+        #    // charges should be printed on invoice.
+        #    MCRMiscChargePrintOption     mcrMiscChargePrintOption;
+        #
+        #    //  Performance improvemnt, save off if it there is a stale
+        #    //  authorization to make sure it doesn't execute unnecessarily.
+        #    map                         mcrStaleAuthMap;
+        #    #define.Valid('Valid')
+        #    #define.Stale('Stale')
+        #
+        #    // The packing box name will be put on the
+        #    // inventPickingListJour later in initJournal() (on the
+        #    // SalesFormLetter_PickingList class).
+        #    MCRPackingBoxName            MCRPackingBoxName;
+        #
+        #    // <GEERU>
+        #    boolean                     voucherEqualsNumber;
+        #    boolean                     countryRegion_RU;
+        #    Set                         postedJournalList;
+        #    // </GEERU>
+        #
+        #    // <GIN>
+        #    CustomsExportOrderTable_IN  customsExportOrderTable;
+        #    CustomsExportOrderLine_IN   customsExportOrderLine;
+        #    CustomsExportOrderType_IN   customsExportOrderType;
+        #    NoYesId                     taxesMarked;
+        #    // </GIN>
+        #
+        #    // <GCN>
+        #    Map                   taxProfileMap;
+        #    // </GCN>
+        #
+        #    // <GEERU><GIN><GCN><GEEU>
+        #    #ISOCountryRegionCodes
+        #    // </GEEU></GCN></GIN></GEERU>
+        #    //List of parameters common for SalesFormLetter_* classes that needs to be packed
+        #    //for the correct class transition between client and server.
+        #    //If you need some additional parameters on the client, add them to this list.
+        #    //All variables in the parmListCommonCS must also be added to the method resetParmListCommonCS.
+        #    //After any changes, both versions must be increased.
+        #    #define.ParentVersion(8)
+        #    #define.CurrentVersion(8)
+        #    #LOCALMACRO.ParmListCommonCS
+        #        reArrangeNow,
+        #        enableUpdateNow,
+        #        lockSalesUpdate,
+        #        editLinesChanged,
+        #        validateAll,
+        #        callerFormName,
+        #        checkCreditMax
+        #    #ENDMACRO
+        #
+        #    #define.PdsCurrentVersion(6)
+        #    #localMacro.PdsCurrentList
+        #        mrcPostingErr,
+        #        mrcPrintOnPack
+        #    #ENDMACRO
+        #
+        #    //List of parameters extracted from arguments for the transfer from main() to mainOnServer()
+        #    #LOCALMACRO.CachedArgsList
+        #        parmEnum,
+        #        callerFormName,
+        #        isProforma,
+        #        parmSkipPrompt,
+        #        className,
+        #        methodName,
+        #        mode,
+        #        callerMenuItem
+        #    #ENDMACRO
+        #}
+      ENDSOURCE
+      SOURCE #cleanupDialog
+        #/// <summary>
+        #/// Cleans up after a dialog box has been canceled.
+        #/// </summary>
+        #protected void  cleanupDialog()
+        #{
+        #    if (!currentBatch)
+        #    {
+        #        SalesParmUpdate::deleteWithoutUpdate(this.salesParmUpdate().ParmId);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createParmUpdateFromParmUpdateRecord
+        #public void createParmUpdateFromParmUpdateRecord(SalesParmUpdate _salesParmUpdate)
+        #{
+        #    SalesParmUpdate salesParmUpdate;
+        #    salesParmUpdate.data(_salesParmUpdate);
+        #    if (this.parmId())
+        #    {
+        #        salesParmUpdate.ParmId = this.parmId();
+        #    }
+        #    else
+        #    {
+        #        this.parmId(salesParmUpdate.ParmId);
+        #    }
+        #
+        #    if (! SalesParmUpdate::exist(salesParmUpdate.ParmId))
+        #    {
+        #        salesParmUpdate.insert();
+        #    }
+        #    this.salesParmUpdate(salesParmUpdate);
+        #}
+      ENDSOURCE
+      SOURCE #creditRemaining
+        #public boolean  creditRemaining(boolean  _creditRemaining = salesFormLetterContract.parmCreditRemaining())
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    salesParmUpdate.CreditRemaining = _creditRemaining;
+        #    this.salesParmUpdate(salesParmUpdate);
+        #    salesFormLetterContract.parmCreditRemaining(_creditRemaining);
+        #    return salesParmUpdate.CreditRemaining;
+        #}
+      ENDSOURCE
+      SOURCE #defaultGiroType
+        #public NoYes  defaultGiroType(NoYes  _defaultGiroType = salesFormLetterContract.parmDefaultGiroType())
+        #{
+        #    return salesFormLetterContract.parmDefaultGiroType(_defaultGiroType);
+        #}
+      ENDSOURCE
+      SOURCE #deleteGiroAndInitQuery
+        #/// <summary>
+        #/// Executes the <c>deleteGiro</c> and <c>initLinesQuery</c> methods on the server side to reduce the
+        #/// interaction between tiers.
+        #/// </summary>
+        #/// <remarks>
+        #/// The <c>SalesEditLines</c> form executes the <c>deleteGiro</c> and <c>initLinesQuery</c> methods
+        #/// when the <c>SalesParmUpdate.GiroType</c> field changes. To minimize calls between tiers, this
+        #/// action is moved to the server side by way of this proxy method.This method requests for the
+        #/// <c>deleteGiroAndInitQueryOnServer</c> static function to execute given methods by using a server
+        #/// instance of the <c>SalesFormLetter</c> class.
+        #/// </remarks>
+        #public void deleteGiroAndInitQuery()
+        #{
+        #    container outputContainer;
+        #
+        #    outputContainer = SalesFormletterParmData::deleteGiroServer(this.packDataContract(salesFormLetterContract));
+        #    this.getValuesFormletterParmData(this.unpackFormletterParmDataOutputContract(outputContainer));
+        #}
+      ENDSOURCE
+      SOURCE #dialog
+        #/// <summary>
+        #/// Microsoft internal use only.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>Object</c> class.
+        #/// </returns>
+        #/// <remarks>
+        #/// A dialog box can be either built by using the <c>Dialog</c> class or by using a class that is
+        #/// created in the Application Object Tree (AOT).
+        #/// </remarks>
+        #public Object dialog()
+        #{
+        #    if (this.parmCurrentBatch() && !SalesParmUpdate::exist(salesFormLetterContract.parmParmId()))
+        #    {
+        #        this.prePromptInit();
+        #    }
+        #
+        #    if (showDialog)
+        #    {
+        #        if (!salesEditLines)
+        #        {
+        #            salesEditLines = classfactory.formRunClass(FormLetterServiceController::newClientArgs(formStr(SalesEditLines), this));
+        #            salesEditLines.init();
+        #        }
+        #
+        #        return salesEditLines;
+        #    }
+        #
+        #    return null;
+        #}
+      ENDSOURCE
+      SOURCE #displayProgress
+        #protected void  displayProgress()
+        #{
+        #
+        #}
+      ENDSOURCE
+      SOURCE #editLinesChanged
+        #public boolean  editLinesChanged(boolean  _editLinesChanged = editLinesChanged)
+        #{
+        #    editLinesChanged = _editLinesChanged;
+        #    return editLinesChanged;
+        #}
+      ENDSOURCE
+      SOURCE #enableUpdateNowField
+        #public boolean enableUpdateNowField(boolean _enableUpdateNow = enableUpdateNow)
+        #{
+        #    enableUpdateNow = _enableUpdateNow;
+        #
+        #    return enableUpdateNow;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #fiscalDocType_PL
+        #/// <summary>
+        #/// Gets or sets the value of <c>PlFiscalDocType</c> on the contract.
+        #/// </summary>
+        #/// <param name="_fiscalDocType">
+        #/// New value for <c>PlFiscalDocType</c>.
+        #/// </param>
+        #/// <returns>
+        #/// The value of <c>PlFiscalDocType</c>
+        #/// </returns>
+        #// <GEEPL>
+        #public PlFiscalDocType fiscalDocType_PL(PlFiscalDocType _fiscalDocType = salesFormLetterContract.parmFiscalDocType_PL())
+        #{
+        #    return salesFormLetterContract.parmFiscalDocType_PL(_fiscalDocType);
+        #}
+        #// </GEEPL>
+      ENDSOURCE
+      SOURCE #getSalesFormLetterContract
+        #/// <summary>
+        #/// This method is used to return the current <c>SalesFormLetterContract</c> object.
+        #/// </summary>
+        #/// <returns>
+        #/// Return the current <c>SalesFormLetterContract</c> object.
+        #/// </returns>
+        #public SalesFormLetterContract getSalesFormLetterContract()
+        #{
+        #    return salesFormLetterContract;
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #getValuesFormletterParmData
+        #protected void getValuesFormletterParmData(FormLetterParmDataOutputContract _outputContract)
+        #{
+        #    QueryRun queryRun;
+        #    if (_outputContract.parmChooseLinesQueryPacked())
+        #    {
+        #        queryRun = new QueryRun(SysOperationHelper::base64Decode(_outputContract.parmChooseLinesQueryPacked()));
+        #    }
+        #
+        #    this.parmId(_outputContract.parmParmId());
+        #    this.parmDataSourceRecordsPacked(conNull());
+        #    if (queryRun)
+        #    {
+        #        this.parmQueryUsed(queryRun.query());
+        #    }
+        #
+        #    this.salesParmUpdate(_outputContract.parmParmUpdate() as SalesParmUpdate);
+        #}
+      ENDSOURCE
+      SOURCE #initBasedOnMenuItem
+        #/// <summary>
+        #/// Initializes the object that is based on the action command by which it was opened.
+        #/// </summary>
+        #/// <param name="_callerMenuItem">
+        #/// The command by which the object was opened.
+        #/// </param>
+        #public void initBasedOnMenuItem(menuItemNameAction _callerMenuItem)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #initLinesQuery
+        #public void  initLinesQuery()
+        #{
+        #    this.chooseLines();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #initLinesQuery_IN
+        #/// <summary>
+        #/// Initialize chooseLines query and add range to filter ExportOrder/SalesOrders.
+        #/// </summary>
+        #/// <param name="_customsExportOrderType">
+        #///  A CustomsExportOrderType_IN enum value which determines which type of orders to be queried by the chooseLines query.
+        #/// </param>
+        #// <GIN>
+        #public void initLinesQuery_IN(CustomsExportOrderType_IN _customsExportOrderType)
+        #{
+        #    this.chooseLines_IN(_customsExportOrderType);
+        #}
+        #// </GIN>
+      ENDSOURCE
+      SOURCE #initOfficials_RU
+        #public void initOfficials_RU(SalesParmTable _parmTable = null)
+        #{
+        #    SalesFormletterParmData     salesFormletterParmData;
+        #
+        #    if (this.objectOnServer())
+        #    {
+        #        salesFormletterParmData = SalesFormletterParmData::newReSelect(this.packDataContract(salesFormLetterContract));
+        #        salesFormletterParmData.initOfficials_RU(_parmTable);
+        #    }
+        #    else
+        #    {
+        #        SalesFormLetter::initOfficialsServer_RU(this.documentStatus(),
+        #                                                this.pack(),
+        #                                                _parmTable);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initParameters
+        #public void  initParameters(
+        #    SalesParmUpdate    _salesParmUpdate    = this.salesParmUpdate(),
+        #    Printout           _printout           = this.printout(),
+        #    NoYes              _printFormLetter    = this.printFormLetter(),
+        #    NoYes              _printCODLabel      = this.printCODLabel(),
+        #    NoYes              _printShippingLabel = this.printShippingLabel(),
+        #    NoYes              _usePrintManagement = this.usePrintManagement(),
+        #    NoYes              _mrcPostingErr      = mrcPostingErr,
+        #    NoYes              _mrcPrintOnPack     = mrcPrintOnPack,
+        #    // <GEEPL>
+        #    boolean            _parmCopyOnly       = false,
+        #    PlFiscalDocType    _fiscalDocType      = this.fiscalDocType_PL()
+        #    // </GEEPL>
+        #    // <GIN>
+        #    ,NoYes  _printExciseInvoice_IN = this.printExciseFormLetter_IN()
+        #    // </GIN>
+        #    )
+        #{
+        #
+        #    mrcPostingErr       = _mrcPostingErr;
+        #    mrcPrintOnPack      = _mrcPrintOnPack;
+        #    this.salesParmUpdate(_salesParmUpdate);
+        #
+        #    this.printout(_printout);
+        #    this.printFormLetter(_printFormLetter);
+        #    this.printCODLabel(_printCODLabel);
+        #    this.printShippingLabel(_printShippingLabel);
+        #    this.usePrintManagement(_usePrintManagement);
+        #    this.mrcPostingErr(mrcPostingErr);
+        #    this.mrcPrintOnPack(mrcPrintOnPack);
+        #    // <GIN>
+        #    if (TaxParameters::isExciseEnable_IN())
+        #    {
+        #        this.printExciseFormLetter_IN(_printExciseInvoice_IN);
+        #    }
+        #    // </GIN>
+        #
+        #    // <GEEPL>
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #    {
+        #        this.fiscalDocType_PL(_fiscalDocType);
+        #    }
+        #    // </GEEPL>
+        #
+        #    if (!_parmCopyOnly)
+        #    {
+        #        if (_printFormLetter)
+        #        {
+        #            this.initPrinterSettingsFormletter();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initParmCustomsExportOrderTable_IN
+        #/// <summary>
+        #/// Initialize the parameter of the customs export order table.
+        #/// </summary>
+        #/// <param name="_customsExportOrderTable">
+        #/// The instance of the <c>CustomsExportOrderTable_IN</c> class.
+        #/// </param>
+        #// <GIN>
+        #protected void  initParmCustomsExportOrderTable_IN(CustomsExportOrderTable_IN  _customsExportOrderTable)
+        #{
+        #    throw error(Error::missingOverload(funcName()));
+        #}
+        #// </GIN>
+      ENDSOURCE
+      SOURCE #initParmSalesTable
+        #public void  initParmSalesTable(SalesTable  _salesTable)
+        #{
+        #    this.salesTable(_salesTable);
+        #
+        #    if (! _salesTable)
+        #    {
+        #        this.multiForm(NoYes::Yes);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initParmUpdate
+        #protected void  initParmUpdate(boolean  _createNew = false)
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #
+        #    if (_createNew)
+        #    {
+        #        salesParmUpdate.clear();
+        #
+        #        salesParmUpdate.ParmId          = this.parmId();
+        #        salesParmUpdate.DocumentStatus  = this.documentStatus();
+        #    }
+        #    else
+        #    {
+        #        salesParmUpdate = SalesParmUpdate::find(this.parmId());
+        #    }
+        #    this.salesParmUpdate(salesParmUpdate);
+        #}
+      ENDSOURCE
+      SOURCE #initPrinterSettingsFormletter
+        #/// <summary>
+        #///    Initializes printer settings for posting a sales order with default values
+        #/// </summary>
+        #public void initPrinterSettingsFormletter()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #initShippingStat
+        #protected void  initShippingStat(Common  _common)
+        #{
+        #    throw error(Error::missingOverload(funcName()));
+        #}
+      ENDSOURCE
+      SOURCE #interCompanySelectFromJournal
+        #public boolean interCompanySelectFromJournal()
+        #{
+        #    boolean ret;
+        #
+        #    ret = super();
+        #
+        #    if (this.salesParmUpdate().SpecQty == SalesUpdate::PackingSlip)
+        #    {
+        #        ret = true;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #lateSelection
+        #public boolean lateSelection()
+        #{
+        #    return this.salesParmUpdate().LateSelection;
+        #}
+      ENDSOURCE
+      SOURCE #lateSelectionRemoveLines
+        #public boolean  lateSelectionRemoveLines()
+        #{
+        #    boolean  ok = true;
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #
+        #    if (salesParmUpdate.LateSelection  &&  salesParmUpdate.numberOfTables() > 0)
+        #    {
+        #        if (Box::yesNo("@SYS72909", DialogButton::Yes))
+        #        {
+        #            SalesParmTable::deleteWithoutUpdate(salesParmUpdate.ParmId);
+        #        }
+        #        else
+        #        {
+        #            salesParmUpdate.LateSelection = false;
+        #            ok = false;
+        #        }
+        #    }
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #lockSalesUpdateField
+        #public boolean lockSalesUpdateField(boolean _lockSalesUpdate = lockSalesUpdate)
+        #{
+        #    lockSalesUpdate = _lockSalesUpdate;
+        #    return lockSalesUpdate;
+        #}
+      ENDSOURCE
+      SOURCE #mcrMiscChargePrintOption
+        #/// <summary>
+        #/// Sets and returns the <c>MCRMiscChargePrintOption</c> enumeration.
+        #/// </summary>
+        #/// <param name="_miscChargePrintOption">
+        #/// The <c>MCRMiscChargePrintOption</c> enumeration to be set and returned; optional.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>MCRMiscChargePrintOption</c> enumeration.
+        #/// </returns>
+        #public mcrMiscChargePrintOption mcrMiscChargePrintOption(
+        #    mcrMiscChargePrintOption _miscChargePrintOption = mcrMiscChargePrintOption)
+        #{
+        #    // Accessor/mutator for enum variable mcrMiscChargePrintOption
+        #    mcrMiscChargePrintOption = _miscChargePrintOption;
+        #    return mcrMiscChargePrintOption;
+        #}
+      ENDSOURCE
+      SOURCE #mcrSetShipAloneQuantities
+        #/// <summary>
+        #///     Sets <c>SalesParmline</c> quantities appropriately for ship alone items.
+        #/// </summary>
+        #/// <param name="_salesParmLine">
+        #///     The <c>SalesParmline</c> record for which this method sets quantities.
+        #/// </param>
+        #/// <param name="_salesLineOrig">
+        #///     The <c>SalesLine</c> record used to set quantities on the <c>SalesParmline</c>.
+        #/// </param>
+        #/// <remarks>
+        #///     Do not do this for negative quantity lines.
+        #///     Be sure this is called AFTER the salesParmLine has been initialized from
+        #///     the sales line.
+        #/// </remarks>
+        #protected void mcrSetShipAloneQuantities(SalesParmLine _salesParmLine, SalesLine _salesLineOrig)
+        #{
+        #    Qty getRemainBeforeQty(ModuleInventPurchSales _module)
+        #    {
+        #        SalesParmLine localSalesParmLine;
+        #        Qty qty;
+        #
+        #        if (_module == ModuleInventPurchSales::Invent)
+        #        {
+        #            qty = conpeek(this.qtyInvent(_salesLineOrig),
+        #                SalesQuantity::mcrPositionRemainBefore());
+        #
+        #            return qty;
+        #        }
+        #        else if (_module == ModuleInventPurchSales::Sales)
+        #        {
+        #            qty = conpeek(this.qtySales(_salesLineOrig),
+        #                SalesQuantity::mcrPositionRemainBefore());
+        #
+        #            return qty;
+        #        }
+        #        else
+        #        {
+        #            throw error(strfmt("@SYS19306", funcname()));
+        #        }
+        #    }
+        #
+        #    Qty getUpdateNowQty(ModuleInventPurchSales _module)
+        #    {
+        #        SalesParmLine localSalesParmLine;
+        #        Qty qty;
+        #
+        #        if (_module == ModuleInventPurchSales::Invent)
+        #        {
+        #            qty = conpeek(this.qtyInvent(_salesLineOrig),
+        #                SalesQuantity::mcrPositionUpdateNow());
+        #
+        #            select sum(InventNow) from localSalesParmLine
+        #                where localSalesParmLine.ParmId == _salesParmLine.ParmId
+        #                    && localSalesParmLine.SalesLineRecId == _salesLineOrig.RecId
+        #                    // exclude current parm line
+        #                    && localSalesParmLine.RecId != _salesParmLine.RecId;
+        #
+        #            qty -= localSalesParmLine.InventNow;
+        #
+        #            qty =   min(
+        #                        min(qty,
+        #                            getRemainBeforeQty(ModuleInventPurchSales::Invent)),
+        #                            _salesLineOrig.inventTable().inventItemInventSetup().
+        #                            mcrQuantityEffectiveMultiple());
+        #        }
+        #        else if (_module == ModuleInventPurchSales::Sales)
+        #        {
+        #            qty = conpeek(this.qtySales(_salesLineOrig),
+        #                SalesQuantity::MCRPositionUpdateNow());
+        #
+        #            select sum(DeliverNow) from localSalesParmLine
+        #                where localSalesParmLine.ParmId == _salesParmLine.ParmId
+        #                    && localSalesParmLine.SalesLineRecId == _salesLineOrig.RecId
+        #                    // exclude current parm line
+        #                    && localSalesParmLine.RecId != _salesParmLine.RecId;
+        #
+        #            qty -= localSalesParmLine.DeliverNow;
+        #
+        #            qty =   min(
+        #                        min(qty,
+        #                            getRemainBeforeQty(ModuleInventPurchSales::Sales)),
+        #                            _salesLineOrig.inventTable().inventItemSalesSetup().
+        #                            mcrQuantityEffectiveMultiple());
+        #        }
+        #        else
+        #        {
+        #            throw error(strfmt("@SYS19306", funcname()));
+        #        }
+        #
+        #        return qty;
+        #    }
+        #
+        #
+        #    getUpdateNowQty(ModuleInventPurchSales::Sales);
+        #
+        #    getRemainBeforeQty(ModuleInventPurchSales::Sales);
+        #
+        #    getUpdateNowQty(ModuleInventPurchSales::Invent);
+        #
+        #    getRemainBeforeQty(ModuleInventPurchSales::Invent);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #mrcPostingErr
+        #/// <summary>
+        #/// Determines whether to post error regarding <c>SalesFormLetterContract</c>.
+        #/// </summary>
+        #/// <param name="_mrcPostingErr">
+        #/// A boolean that determines whether to post errors; optional.
+        #/// </param>
+        #/// <returns>
+        #/// true if errors should be posted; otherwise, false.
+        #/// </returns>
+        #public boolean  mrcPostingErr(boolean  _mrcPostingErr = salesFormLetterContract.parmMrcPostingErr())
+        #{
+        #    return salesFormLetterContract.parmMrcPostingErr(_mrcPostingErr);
+        #}
+      ENDSOURCE
+      SOURCE #mrcPrintOnPack
+        #/// <summary>
+        #/// Determines whether to print during sales order packing.
+        #/// </summary>
+        #/// <param name="_mrcPrintOnPack">
+        #/// A boolean that determines whether to print during packing; optional.
+        #/// </param>
+        #/// <returns>
+        #/// true if printing should occur during packing; otherwise, false.
+        #/// </returns>
+        #public boolean  mrcPrintOnPack(boolean  _mrcPrintOnPack = salesFormLetterContract.parmMrcPrintOnPack())
+        #{
+        #    return salesFormLetterContract.parmMrcPrintOnPack(_mrcPrintOnPack);
+        #}
+      ENDSOURCE
+      SOURCE #mustCheckIntrastat
+        #/// <summary>
+        #/// Indicates whether intrastate needs to be checked.
+        #/// </summary>
+        #/// <returns>
+        #/// true if intrastat related logic must be checked when sales line is changed; otherwise, false .
+        #/// </returns>
+        #protected boolean mustCheckIntrastat()
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #void  new(
+        #    identifierName _className='',
+        #    identifierName _methodName='',
+        #    SysOperationExecutionMode _executionMode = SysOperationExecutionMode::ReliableAsynchronous)
+        #{
+        #    super(_className,_methodName,_executionMode);
+        #    salesFormLetterContract = contract;
+        #
+        #    salesQuantity   = SalesQuantity::construct(this.documentStatus());
+        #
+        #    useShippingStat = false;
+        #    giroAllSame     = true;
+        #
+        #    reArrangeNow    = true;
+        #
+        #    postedTableRefIds = new Set(Types::String);
+        #
+        #    // Initialize the stale auth mapping
+        #    mcrStaleAuthMap = new map(Types::String, Types::String);
+        #    mrcPostingErr   = false;
+        #    mrcPrintOnPack  = false;
+        #    // <GEERU>
+        #    countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #    if (countryRegion_RU)
+        #    {
+        #        postedJournalList = new Set(Types::Record);
+        #    }
+        #    // </GEERU>
+        #}
+      ENDSOURCE
+      SOURCE #pack
+        #public container  pack()
+        #{
+        #    return [#CurrentVersion+#parentVersion,#ParmListCommonCS] + [super()];
+        #}
+      ENDSOURCE
+      SOURCE #parmAdvanceInvoiceSettlement_W
+        #// <GEEU
+        #public AdvanceInvoiceSettlement_SalesOrder_W parmAdvanceInvoiceSettlement_W(
+        #    AdvanceInvoiceSettlement_SalesOrder_W _advanceInvoiceSettlement = AdvanceInvoiceSettlement_W::newUnpack(tableNum(SalesTable), SysOperationHelper::base64Decode(salesFormLetterContract.parmAdvanceInvoiceSettlementPacked())))
+        #{
+        #    if (_advanceInvoiceSettlement != null)
+        #    {
+        #        return AdvanceInvoiceSettlement_W::newUnpack(tableNum(SalesTable), SysOperationHelper::base64Decode(salesFormLetterContract.parmAdvanceInvoiceSettlementPacked(SysOperationHelper::base64Encode(_advanceInvoiceSettlement.pack()))));
+        #    }
+        #    else
+        #    {
+        #        return null;
+        #    }
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #parmCheckCreditMax
+        #public TypeOfCreditmaxCheck parmCheckCreditMax(TypeOfCreditmaxCheck _checkCreditMax = checkCreditMax)
+        #{
+        #    checkCreditMax = _checkCreditMax;
+        #    return checkCreditMax;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCorrect_RU
+        #public Correct_RU parmCorrect_RU(Correct_RU _correct = salesFormLetterContract.parmCorrect_RU())
+        #{
+        #    return salesFormLetterContract.parmCorrect_RU(_correct);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCorrectedInvoiceDate_RU
+        #public CorrectedInvoiceDate_RU parmCorrectedInvoiceDate_RU(CorrectedInvoiceDate_RU _corrInvoiceDate = salesFormLetterContract.parmCorrectedInvoiceDate_RU())
+        #{
+        #    return salesFormLetterContract.parmCorrectedInvoiceDate_RU(_corrInvoiceDate);
+        #}
+      ENDSOURCE
+      SOURCE #parmCorrectedInvoiceId_RU
+        #public CorrectedInvoiceId_RU parmCorrectedInvoiceId_RU(CorrectedInvoiceId_RU _corrInvoiceId = salesFormLetterContract.parmCorrectedInvoiceId_RU())
+        #{
+        #    return salesFormLetterContract.parmCorrectedInvoiceId_RU(_corrInvoiceId);
+        #}
+      ENDSOURCE
+      SOURCE #parmCustInvoicePrintoutType_RU
+        #//<GEERU>
+        ##ISOCountryRegionCodes
+        #//</GEERU>
+        #final public CustInvoicePrintoutType_RU parmCustInvoicePrintoutType_RU(CustInvoicePrintoutType_RU _printout = salesFormLetterContract.parmCustInvoicePrintoutType_RU())
+        #{
+        #    return salesFormLetterContract.parmCustInvoicePrintoutType_RU(_printout);
+        #}
+      ENDSOURCE
+      SOURCE #parmCustomsExportOrderType_IN
+        # // <GIN>
+        #public CustomsExportOrderType_IN parmCustomsExportOrderType_IN(CustomsExportOrderType_IN   _customsExportOrderType = customsExportOrderType)
+        #{
+        #    customsExportOrderType = _customsExportOrderType;
+        #
+        #    return customsExportOrderType;
+        #}
+        #// </GIN>
+        #
+      ENDSOURCE
+      SOURCE #parmDirectDeliveryUpdate
+        #public boolean parmDirectDeliveryUpdate(boolean _directDeliveryUpdate = salesFormLetterContract.parmDirectDeliveryUpdate())
+        #{
+        #    return salesFormLetterContract.parmDirectDeliveryUpdate(_directDeliveryUpdate);
+        #}
+      ENDSOURCE
+      SOURCE #parmDocumentStornoId_RU
+        #public Num parmDocumentStornoId_RU(Num _documentStornoId = salesFormLetterContract.parmDocumentStornoId_RU())
+        #{
+        #    return salesFormLetterContract.parmDocumentStornoId_RU(_documentStornoId);
+        #}
+      ENDSOURCE
+      SOURCE #parmDocuSetCode
+        #// <GTH>
+        #public TaxUnrealizedDocuId parmDocuSetCode(TaxUnrealizedDocuId _docuSetCode = salesFormLetterContract.parmDocuSetCode())
+        #{
+        #    return salesFormLetterContract.parmDocuSetCode(_docuSetCode);
+        #}
+        #// </GTH>
+      ENDSOURCE
+      SOURCE #parmExtraPrintoutLineExists_RU
+        #public boolean parmExtraPrintoutLineExists_RU(boolean _extraPrintoutLineExists = false)
+        #{
+        #    container dummy()
+        #    {
+        #        return [ _extraPrintoutLineExists ];
+        #    }
+        #    ;
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #parmFormLetterContract
+        #public SalesFormLetterContract parmFormLetterContract()
+        #{
+        #    return salesFormLetterContract;
+        #}
+      ENDSOURCE
+      SOURCE #parmGoodsInRouteId_RU
+        #public GoodsInRouteId_RU parmGoodsInRouteId_RU(GoodsInRouteId_RU _goodsInRouteId = salesFormLetterContract.parmGoodsInRouteId_RU())
+        #{
+        #    return salesFormLetterContract.parmGoodsInRouteId_RU(_goodsInRouteId);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmInventLocationId_PL
+        #// <GEEPL>
+        #public InventLocationId parmInventLocationId_PL(
+        #    InventLocationId _inventLocationId = salesFormLetterContract.parmInventLocationId_PL())
+        #{
+        #    return salesFormLetterContract.parmInventLocationId_PL(_inventLocationId);
+        #}
+        #// </GEEPL>
+      ENDSOURCE
+      SOURCE #parmLocation
+        #// <GTH>
+        #public TaxUnrealizedDocuPrintLocation parmLocation(TaxUnrealizedDocuPrintLocation _location = salesFormLetterContract.parmLocation())
+        #{
+        #    return salesFormLetterContract.parmLocation(_location);
+        #}
+        #// </GTH>
+      ENDSOURCE
+      SOURCE #parmMarkupOfTypeCustVendExists_RU
+        #public boolean parmMarkupOfTypeCustVendExists_RU(boolean _markupOfTypeCustVendExists = false)
+        #{
+        #    container dummy()
+        #    {
+        #        return [ _markupOfTypeCustVendExists ];
+        #    }
+        #    ;
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #parmMCRInventTransRecid
+        #/// <summary>
+        #///     Sets and returns the record ID for the <c>InventTrans</c> record.
+        #/// </summary>
+        #/// <param name="_inventTransRecId">
+        #///     The record ID of the <c>InventTrans</c> record for which this method
+        #///     sets and returns; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The record ID of the <c>InventTrans</c> record passed.
+        #/// </returns>
+        #/// <remarks>
+        #///     This is needed for the unship process. When the unship process runs,
+        #///     the system needs to look for the specific trans recid and only
+        #///     process the <c>InventTrans</c> record selected during the packing slip
+        #///     return process.
+        #/// </remarks>
+        #public Recid parmMCRInventTransRecid(Recid _inventTransRecId =  salesFormLetterContract.parmMCRInventTransRecid())
+        #{
+        #    return salesFormLetterContract.parmMCRInventTransRecid(_inventTransRecId);
+        #}
+      ENDSOURCE
+      SOURCE #parmMCRPaymMode
+        #public PaymMode parmMCRPaymMode(PaymMode _paymMode = salesFormLetterContract.parmMCRPaymMode())
+        #{
+        #    return salesFormLetterContract.parmMCRPaymMode(_paymMode);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmMCRPickWaveReference
+        #/// <summary>
+        #///     Sets the variable MCRPickWaveReference to the pickwave that is being processed.
+        #/// </summary>
+        #/// <param name="_mcrPickWaveReference">
+        #///     The <c>MCRPickingWave</c> record that is being processed.
+        #/// </param>
+        #/// <returns>
+        #///     The updated <c>MCRPickingWave</c> record.
+        #/// </returns>
+        #/// <remarks>
+        #///     Only used when <c>SalesFormLetter</c> class is called by the picking workbench.
+        #///     This field will be used to decide flow for orders that are picked using workbench,
+        #///     such as progress bar being displayed during posting, selecting only lines needed
+        #///     for the wave, and updating the correct quantity to pick.
+        #/// </remarks>
+        #public MCRPickingWave parmMCRPickWaveReference(MCRPickingWave _mcrPickWaveReference = SalesFormLetterContract.parmMCRPickWaveReference())
+        #{
+        #    return salesFormLetterContract.parmMCRPickWaveReference(_mcrPickWaveReference);
+        #}
+      ENDSOURCE
+      SOURCE #parmMiscText
+        #// <GTH>
+        #public TaxUnrealizedDocuText parmMiscText(TaxUnrealizedDocuText _miscText = salesFormLetterContract.parmMiscText())
+        #{
+        #    return salesFormLetterContract.parmMiscText(_miscText);
+        #}
+        #// </GTH>
+      ENDSOURCE
+      SOURCE #parmNeedTransIDTransit_RU
+        #public boolean parmNeedTransIDTransit_RU(boolean _needTransIDTransit = salesFormLetterContract.parmNeedTransIDTransit_RU())
+        #{
+        #    return salesFormLetterContract.parmNeedTransIDTransit_RU(_needTransIDTransit);
+        #}
+      ENDSOURCE
+      SOURCE #parmPrintHeader
+        #// <GTH>
+        #public TaxUnrealizedDocuPrintHeader parmPrintHeader(TaxUnrealizedDocuPrintHeader _printHeader = salesFormLetterContract.parmPrintHeader())
+        #{
+        #    return salesFormLetterContract.parmPrintHeader(_printHeader);
+        #}
+        #// </GTH>
+      ENDSOURCE
+      SOURCE #parmProdType
+        #// <GTH>
+        #public TaxUnrealizedDocuProdType parmProdType(TaxUnrealizedDocuProdType _prodType = salesFormLetterContract.parmProdType())
+        #{
+        #    return salesFormLetterContract.parmProdType(_prodType);
+        #}
+        #// </GTH>
+      ENDSOURCE
+      SOURCE #parmRelatedJournal
+        #public Common parmRelatedJournal(Common _relatedJournal = salesFormLetterContract.parmRelatedJournal())
+        #{
+        #    return salesFormLetterContract.parmRelatedJournal(_relatedJournal);
+        #}
+      ENDSOURCE
+      SOURCE #parmSendByMail_MX
+        #//<GMX>
+        #public NoYes parmSendByMail_MX(NoYes _sendByMail = salesFormLetterContract.parmSendByMail_MX())
+        #{
+        #    return salesFormLetterContract.parmSendByMail_MX(_sendByMail);
+        #}
+        #//</GMX>
+      ENDSOURCE
+      SOURCE #parmShipmentId
+        #public WMSShipmentId parmShipmentId(WMSShipmentId _shipmentId = salesFormLetterContract.parmShipmentId())
+        #{
+        #    return salesFormLetterContract.parmShipmentId(_shipmentId);
+        #}
+      ENDSOURCE
+      SOURCE #parmSkipRunShipCarrier
+        #public boolean parmSkipRunShipCarrier(boolean _skipRunShipCarrier = skipRunShipCarrier)
+        #{
+        #    skipRunShipCarrier = _skipRunShipCarrier;
+        #    return skipRunShipCarrier;
+        #}
+      ENDSOURCE
+      SOURCE #parmSourceTable
+        #public Common parmSourceTable(Common _salesTable = contract.parmSourceTable() as SalesTable)
+        #{
+        #    return contract.parmSourceTable(_salesTable as SalesTable);
+        #}
+      ENDSOURCE
+      SOURCE #parmTaxProfileMap
+        #// <GCN>
+        #public Map parmTaxProfileMap(Map _taxProfileMap = taxProfileMap)
+        #{
+        #    taxProfileMap = _taxProfileMap;
+        #    return taxProfileMap;
+        #}
+        #// </GCN>
+      ENDSOURCE
+      SOURCE #parmValidateLoadStatus
+        #public boolean parmValidateLoadStatus(boolean _validateLoadStatus = salesFormLetterContract.parmValidateLoadStatus())
+        #{
+        #    return salesFormLetterContract.parmValidateLoadStatus(_validateLoadStatus);
+        #}
+      ENDSOURCE
+      SOURCE #parmWHSLoadId
+        #public WHSLoadId parmWHSLoadId(WHSLoadId    _whsLoadId = salesFormLetterContract.parmWHSLoadId())
+        #{
+        #    return salesFormLetterContract.parmWHSLoadId(_whsLoadId);
+        #}
+      ENDSOURCE
+      SOURCE #pdsCWQtyInvent
+        #/// <summary>
+        #/// Calculates the catch weight inventory quantity when it posts.
+        #/// </summary>
+        #/// <param name="_common">
+        #/// A transaction record.
+        #/// </param>
+        #/// <param name="_qty">
+        #/// A catch weight quantity; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A container that contains the calculated quantities.
+        #/// </returns>
+        #public container pdsCWQtyInvent(Common _common, PdsCWInventQty _qty = naReal())
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #
+        #    return salesQuantity.pdsCWQtyInvent(_common, salesParmUpdate.SpecQty, _qty, salesParmUpdate.CreditRemaining);
+        #}
+      ENDSOURCE
+      SOURCE #pdsMRCParameters
+        #/// <summary>
+        #/// Gets a <c>PdsMRCParameters</c> record.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>PdsMRCParameters</c> record.
+        #/// </returns>
+        #protected PdsMRCParameters pdsMRCParameters()
+        #{
+        #    if (!pdsMRCParameters.RecId)
+        #    {
+        #        pdsMRCParameters = PdsMRCParameters::find();
+        #    }
+        #
+        #    return pdsMRCParameters;
+        #}
+      ENDSOURCE
+      SOURCE #pdsPack
+        #/// <summary>
+        #/// Serializes the current instance of the <c>SalesFormLetter</c> class.
+        #/// </summary>
+        #/// <returns>
+        #/// A container that contains the current instance of the <c>SalesFormLetter</c> class.
+        #/// </returns>
+        #protected container pdsPack()
+        #{
+        #    return [#PdsCurrentVersion, #PdsCurrentList];
+        #}
+      ENDSOURCE
+      SOURCE #pdsUnpack
+        #/// <summary>
+        #/// Deserializes the <paramref name="_packedClass" /> instance of the <c>SalesFormLetter</c> class.
+        #/// </summary>
+        #/// <param name="_packedClass">
+        #/// A container from which to deserialize the instance.
+        #/// </param>
+        #/// <returns>
+        #/// true if the deserialization was successful; otherwise, false .
+        #/// </returns>
+        #protected boolean pdsUnpack(container _packedClass)
+        #{
+        #    Integer         version = conPeek(_packedClass, 1);
+        #    boolean         ret = true;
+        #
+        #    switch (version)
+        #    {
+        #        case #PdsCurrentVersion:
+        #            [version, #PdsCurrentList] = _packedClass;
+        #            break;
+        #
+        #        // Version 0 is special - the packed class was not previously set
+        #        case 0:
+        #            break;
+        #
+        #        default:
+        #            ret = false;
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #postedJournalList_RU
+        #/// <summary>
+        #/// Returns  <c>List</c> object with posted journals
+        #/// </summary>
+        #/// <returns>
+        #/// <c>List</c> object with posted journals
+        #/// </returns>
+        #public Set postedJournalList_RU()
+        #{
+        #    return postedJournalList;
+        #}
+      ENDSOURCE
+      SOURCE #prePromptInit
+        #public void prePromptInit()
+        #{
+        #    FormLetterParmDataOutputContract    outputContract;
+        #    container outputContainer;
+        #
+        #    if (this.parmCallerTable() || this.salesTable() || this.createFromLines()
+        #        // <GIN>
+        #        || (TaxParameters::isCustomsEnable_IN()
+        #            && customsExportOrderTable)
+        #        // </GIN>
+        #                   )
+        #    {
+        #        this.showQueryForm(false);
+        #        this.initLinesQuery();
+        #    }
+        #    else
+        #    {
+        #        this.showQueryForm(true);
+        #        outputContainer = SalesFormletterParmData::chooseLinesServer(this.packDataContract(contract), false, false, true);
+        #        outputContract = this.unpackFormletterParmDataOutputContract(outputContainer);
+        #        this.getValuesFormletterParmData(outputContract);
+        #    }
+        #
+        #    this.initPrinterSettingsFormletter();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #printBillOfLading_RU
+        #/// <summary>
+        #/// Determines if bill of lading should be printed when posting journal
+        #/// </summary>
+        #/// <param name="_printBillOfLading">
+        #/// Print bill of lading parameter
+        #/// </param>
+        #/// <returns>
+        #/// True if bill of lading should be printed; otherwise false
+        #/// </returns>
+        #// <GEERU>
+        #public boolean printBillOfLading_RU(boolean _printBillOfLading = salesFormLetterContract.parmPrintBillOfLading_RU())
+        #{
+        #    return salesFormLetterContract.parmPrintBillOfLading_RU(_printBillOfLading);
+        #}
+        #// </GEERU>
+      ENDSOURCE
+      SOURCE #printCODLabel
+        #public boolean  printCODLabel(boolean  _printCODLabel = salesFormLetterContract.parmPrintCODLabel())
+        #{
+        #    return salesFormLetterContract.parmPrintCODLabel(_printCODLabel);
+        #}
+      ENDSOURCE
+      SOURCE #printEntryCertificate_W
+        #/// <summary>
+        #/// Determines if entry certificate should be printed when posting journal.
+        #/// </summary>
+        #/// <param name="_printEntryCertificate_W">
+        #/// Print entry certificate parameter.
+        #/// </param>
+        #/// <returns>
+        #/// true if entry certificate should be printed; otherwise false.
+        #/// </returns>
+        #public boolean printEntryCertificate_W(boolean  _printEntryCertificate_W = salesFormLetterContract.parmPrintEntryCertificate_W())
+        #{
+        #    return salesFormLetterContract.parmPrintEntryCertificate_W(_printEntryCertificate_W);
+        #}
+      ENDSOURCE
+      SOURCE #printerSettingsCODLabel
+        #public container printerSettingsCODLabel()
+        #{
+        #    return SysOperationHelper::base64Decode(salesFormLetterContract.parmPrinterSettingsCODLabel());
+        #}
+      ENDSOURCE
+      SOURCE #printerSettingsEntryCertificate_W
+        #/// <summary>
+        #/// Returns printer settings which should be used for printing entry certificate.
+        #/// </summary>
+        #/// <returns>
+        #/// Printer settings which should be used for printing entry certificate.
+        #/// </returns>
+        #public container printerSettingsEntryCertificate_W()
+        #{
+        #    return SysOperationHelper::base64Decode(salesFormLetterContract.parmPrinterSettingsEntryCertificate_W());
+        #}
+      ENDSOURCE
+      SOURCE #printerSettingsShippingLabel
+        #public container printerSettingsShippingLabel()
+        #{
+        #    return SysOperationHelper::base64Decode(salesFormLetterContract.parmPrinterSettingsShippingLabel());
+        #}
+      ENDSOURCE
+      SOURCE #printMgmtNodeType
+        #/// <summary>
+        #/// Identifies the print management node type.
+        #/// </summary>
+        #/// <returns>
+        #/// The print management node type.
+        #/// </returns>
+        #protected PrintMgmtNodeType printMgmtNodeType()
+        #{
+        #    return PrintMgmtNodeType::Sales;
+        #}
+      ENDSOURCE
+      SOURCE #printout
+        #public Printout  printout(Printout _printout = salesFormLetterContract.parmPrintOut())
+        #{
+        #    if(this.proforma())
+        #    {
+        #        salesFormLetterContract.parmPrintOut(Printout::Current);
+        #    }
+        #    else if (this.mustPrintInAfterOperation())
+        #    {
+        #        salesFormLetterContract.parmPrintOut(Printout::After);
+        #    }
+        #    else
+        #    {
+        #        salesFormLetterContract.parmPrintOut(_printout);
+        #    }
+        #
+        #    return salesFormLetterContract.parmPrintOut();
+        #}
+      ENDSOURCE
+      SOURCE #printPSDSDocuRef
+        #/// <summary>
+        #///   Print the PSDS documents
+        #/// </summary>
+        #/// <remarks>
+        #/// During posting of packing slips and invoices a list of Product Safety Data Sheets is created.
+        #/// This method finds the documents in DocuRef and prints them.
+        #/// The DocuRef documents are not SSRS documensts and can hence only be printed on the client, which is why
+        #/// this special method is needed.
+        #/// </remarks>
+        #private void printPSDSDocuRef()
+        #{
+        #    Map                 docuRefRecIdsPerJournalMap;
+        #    MapEnumerator       me;
+        #
+        #    // Non-SSRS documents like PSDS can only be printed in afterOperation so print them now.
+        #    // If they should not be printed, like if the printing runs on server, then that is caught later
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PdsMRC)) && formletterOutputContract.parmDocuRefRecIdsPerJournal())
+        #    {
+        #        // Run through all journals and print the associated product safety data sheets
+        #        docuRefRecIdsPerJournalMap = Map::create(SysOperationHelper::base64Decode(formletterOutputContract.parmDocuRefRecIdsPerJournal()));
+        #        me = docuRefRecIdsPerJournalMap.getEnumerator();
+        #        while ( me.moveNext() )
+        #        {
+        #            PdsMRCRegulated::printPSDS(me.currentValue());
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #printShippingLabel
+        #public boolean  printShippingLabel(boolean  _printShippingLabel = salesFormLetterContract.parmPrintShippingLabel())
+        #{
+        #    return salesFormLetterContract.parmPrintShippingLabel(_printShippingLabel);
+        #}
+      ENDSOURCE
+      SOURCE #printTransportInvoice_RU
+        #// <GEERU>
+        #public boolean printTransportInvoice_RU(boolean _printTransportInvoice = salesFormLetterContract.parmPrintTransportInvoice_RU())
+        #{
+        #    return salesFormLetterContract.parmPrintTransportInvoice_RU(_printTransportInvoice);
+        #}
+        #// <GEERU>
+        #
+      ENDSOURCE
+      SOURCE #proforma
+        #public boolean  proforma(boolean  _proforma = this.salesParmUpdate().Proforma)
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    salesParmUpdate.Proforma = _proforma;
+        #    this.salesParmUpdate(salesParmUpdate);
+        #    salesFormLetterContract.parmProforma(_proforma);
+        #    return salesParmUpdate.Proforma;
+        #}
+      ENDSOURCE
+      SOURCE #promptAndRun
+        #/// <summary>
+        #/// Executes a prompt and run scenario.
+        #/// </summary>
+        #/// <remarks>
+        #/// This wrapper method has that will be used instead of manually calling the <c>prompt</c> and
+        #/// <c>run</c> methods.
+        #/// </remarks>
+        #public void promptAndRun()
+        #{
+        #    this.prePromptInit();
+        #    if (this.prompt())
+        #    {
+        #        this.run();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #qtyInvent
+        #public container  qtyInvent(Common         _common,
+        #                            InventQty      _qty = naReal()
+        #                            ,boolean        _isLoadLine = false
+        #                            )
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    InventQty       qty = _qty;
+        #
+        #    qty = !_isLoadLine ? qty : 0;
+        #
+        #    return salesQuantity.qtyInvent(_common, salesParmUpdate.SpecQty, qty, salesParmUpdate.CreditRemaining
+        #                                                                        // <GEEU>
+        #                                                                        , salesParmTable.PackingSlipIdForUpdate_W
+        #                                                                        // </GEEU>
+        #                                                                        );
+        #}
+      ENDSOURCE
+      SOURCE #qtySales
+        #public container  qtySales(Common      _common,
+        #                           SalesQty    _qty = naReal()
+        #                           ,boolean     _isLoadLine = false
+        #                           )
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    InventQty       qty = _qty;
+        #
+        #    qty = !_isLoadLine ? qty : 0;
+        #
+        #    return salesQuantity.qtySales(_common, salesParmUpdate.SpecQty, qty, salesParmUpdate.CreditRemaining
+        #                                                                        // <GEEU>
+        #                                                                        ,salesParmTable.PackingSlipIdForUpdate_W
+        #                                                                        // </GEEU>
+        #                                                                        );
+        #}
+      ENDSOURCE
+      SOURCE #reArrange
+        #/// <summary>
+        #///    Rearranges the order lines in accordance to the specified summary update parameter.
+        #/// </summary>
+        #/// <param name="_validate">
+        #///    A Boolean value that indicates whether to perform validation.
+        #/// </param>
+        #/// <returns>
+        #///    true if the validation is successful; otherwise false.
+        #/// </returns>
+        #public boolean  reArrange(boolean  _validate = true)
+        #{
+        #    boolean                     ok = true;
+        #    container                   packedOutputContract;
+        #
+        #    if (_validate  &&  !this.validate())
+        #    {
+        #        ok = false;
+        #    }
+        #
+        #    if (ok)
+        #    {
+        #        packedOutputContract = SalesFormletterParmData::reArrangeServer(this.packDataContract(salesFormLetterContract), this.isInBatch());
+        #        this.getValuesFormletterParmData(this.unpackFormletterParmDataOutputContract(packedOutputContract));
+        #        this.reArrangeNow(false);
+        #    }
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #recommendedSpecQty
+        #public SalesUpdate recommendedSpecQty()
+        #{
+        #    return SalesParameters::find().recommendedSpecQty(this.documentStatus());
+        #}
+      ENDSOURCE
+      SOURCE #reSelect
+        #/// <summary>
+        #///    Reselects the order lines by a quantity specification.
+        #/// </summary>
+        #/// <param name="_salesParmUpdate">
+        #///    A <c>SalesParmUpdate</c> record.
+        #/// </param>
+        #/// <param name="_inventLocationId">
+        #/// Inventory location ID for Documents numbering by warehouse
+        #/// </param>
+        #public void reSelect(
+        #    SalesParmUpdate   _salesParmUpdate
+        #    // <GEEPL>
+        #    ,InventLocationId _inventLocationId = this.parmInventLocationId_PL()
+        #    // </GEEPL>
+        #    )
+        #{
+        #    container                   packedOutputContract;
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #
+        #    if (salesParmUpdate.SpecQty             != _salesParmUpdate.SpecQty
+        #        || salesParmUpdate.DocumentStatus   != _salesParmUpdate.DocumentStatus
+        #        || salesParmUpdate.Proforma         != _salesParmUpdate.Proforma
+        #        || salesParmUpdate.CreditRemaining  != _salesParmUpdate.CreditRemaining
+        #        // <GEEPL>
+        #        || this.parmInventLocationId_PL()  != _inventLocationId
+        #        // </GEEPL>
+        #        )
+        #    {
+        #        this.salesParmUpdate(_salesParmUpdate);
+        #        this.creditRemaining(_salesParmUpdate.CreditRemaining);
+        #        // <GEEPL>
+        #        this.parmInventLocationId_PL(_inventLocationId);
+        #        // </GEEPL>
+        #        packedOutputContract = SalesFormletterParmData::reSelectServer(this.packDataContract(salesFormLetterContract));
+        #        this.getValuesFormletterParmData(this.unpackFormletterParmDataOutputContract(packedOutPutContract));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #resetParmListCommonCS
+        #/// <summary>
+        #/// Resets all parameters of posting to default values.
+        #/// </summary>
+        #public void resetParmListCommonCS()
+        #{
+        #    Set lineIdSet = new Set(Types::String);
+        #    InterCompanyMapRecord interCompanyMapRecord = InterCompanyMapRecord::construct();
+        #
+        #    super();
+        #
+        #    mrcPostingErr       = NoYes::No;
+        #    mrcPrintOnPack      = NoYes::No;
+        #
+        #    this.parmId('');
+        #    this.salesTable(null);
+        #    this.editLinesChanged(false);
+        #    this.reArrangeNow(true);
+        #    this.initAllowEmptyTable(false);
+        #    this.allowEmptyTable(false);
+        #    this.enableUpdateNowField(false);
+        #    this.lockSalesUpdateField(false);
+        #    this.createFromLines(false);
+        #    this.parmCreateFromHistory(false);
+        #    this.showQueryForm(false);
+        #    this.multiForm(false);
+        #    this.transDate(dateNull());
+        #    this.parmIdSynched('');
+        #    this.chooseLinesQuery(null);
+        #    this.parmInterCompanyCompanyId('');
+        #    this.parmDirectDeliveryUpdate(false);
+        #    this.creditRemaining(false);
+        #    this.parmDataSourceRecordsPacked(conNull());
+        #    this.parmSpecQtyIsSet(false);
+        #    this.interCompanyParmId('');
+        #    this.interCompanyMap(interCompanyMapRecord.map());
+        #    this.parmLineList(conNull());
+        #    this.interCompanyPosted(false);
+        #    this.parmLineIdSet(lineIdSet.pack());
+        #    this.parmShipmentId('');
+        #    this.parmRelatedJournal(null);
+        #    this.validateAll(true);
+        #    this.parmBatchJobId(0);
+        #    this.parmBatchGroupId('');
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        this.parmMCRPaymMode('');
+        #        this.mcrMiscChargePrintOption(mcrOrderParameters::find().MCRMiscChargePrintOption);
+        #    }
+        #    this.parmMCRPickWaveReference('');
+        #    this.parmMCRInventTransRecid(0);
+        #
+        #    this.proforma(false);
+        #    this.parmVersioningUpdateType(VersioningUpdateType::Initial);
+        #    this.parmCheckCreditMax(TypeOfCreditmaxCheck::None);
+        #
+        #    //<GMX>
+        #    if(salesFormLetterContract)
+        #    {
+        #        this.parmSendByMail_MX(NoYes::No);
+        #    }
+        #    //</GMX>
+        #}
+      ENDSOURCE
+      SOURCE #resetProformaUponPhysicalUpdatable
+        #/// <summary>
+        #/// Turns off the sample packing slip.
+        #/// </summary>
+        #/// <remarks>
+        #/// Used by override methods to select between the sample and final packing slip.
+        #/// </remarks>
+        #public void resetProformaUponPhysicalUpdatable()
+        #{
+        #    this.proforma(false);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #run
+        #/// <summary>
+        #/// Contains the code that does the actual job of the class.
+        #/// </summary>
+        #/// <remarks>
+        #/// Do not call this method directly. Use the <c>startOperation</c> method instead. This will handle
+        #/// displaying the dialog and doing validation. The <c>parmShowDialog</c> method can be used before the
+        #/// <c>startOperation</c> method to disable the dialog it is required.
+        #/// </remarks>
+        #public void  run()
+        #{
+        #    FormletterService   formletterService;
+        #    container           outputContainer;
+        #
+        #    setprefix("@SYS25781");
+        #
+        #    //--> Red Maple Begin
+        #    CreditCardPosting::constructAuthCIL(this);
+        #    //<-- Red Maple End
+        #
+        #    if (this.isInBatch())
+        #    {
+        #        this.init();
+        #
+        #        if (this.lateSelection())
+        #        {
+        #            this.resetParmListCommonCS();
+        #            this.transDate(systemdateget());
+        #        }
+        #        else
+        #        {
+        #            this.transDate(salesParmTable.Transdate);
+        #        }
+        #
+        #        this.parmBatchJobId(this.parmCurrentBatch().BatchJobId);
+        #        this.parmBatchGroupId(this.parmCurrentBatch().GroupId);
+        #    }
+        #
+        #    if (!SalesFormLetter::mcrSplitParmData(this.packDataContract(salesFormLetterContract)))
+        #    {
+        #        throw error("@SYS18447");
+        #    }
+        #
+        #    if (reArrangeNow && !this.reArrange(false)
+        #        && !this.salesTable().QuotationId)
+        #    {
+        #        throw error("@SYS18447");
+        #    }
+        #
+        #    if (ledgerVoucher)
+        #    {
+        #        formletterService = FormletterService::newFromContract(this.packDataContract(salesFormLetterContract), FormletterType::Sales);
+        #        //LegerVoucher is not packable....
+        #        formletterService.parmLedgerVoucher(ledgerVoucher);
+        #        formletterService.run();
+        #        formletterOutputContract = formletterService.getOutputContract();
+        #
+        #        // <GEERU>
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #        {
+        #            postedJournalList = Set::union(postedJournalList, Set::create(formletterService.packedJournalList_RU()));
+        #        }
+        #        // </GEERU>
+        #    }
+        #    else
+        #    {
+        #        // <GEERU>
+        #        if (!this.objectOnServer() &&
+        #            (this.shouldRunXpp() || (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]) && appl.ttsLevel() > 0)))
+        #        // </GEERU>
+        #        {// proforma posting have to execute in X++ due to the way proforma records are handled during posting and printing.
+        #            outputContainer = SalesFormLetter::runServer(this.pack(), this.documentStatus())
+        #                + [conNull()]
+        #            ;
+        #            formletterOutputContract.unpack(outputContainer);
+        #            operationReturnValue = formletterOutputContract;
+        #        }
+        #        else
+        #        {
+        #            salesFormLetterContract.parmIsPrintingInAfterOperation(this.mustPrintInAfterOperation());
+        #            //Invoke as service
+        #            super();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #runShipCarrier
+        #/// <summary>
+        #///    Executes any functionality that will require user interaction.
+        #/// </summary>
+        #/// <remarks>
+        #///    This method is called after the <c>run</c> method.
+        #/// </remarks>
+        #public void runShipCarrier()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #salesParmUpdate
+        #public SalesParmUpdate  salesParmUpdate(SalesParmUpdate  _salesParmUpdate = salesFormLetterContract.parmParmUpdate() as SalesParmUpdate)
+        #{
+        #    if (!prmisDefault(_salesParmUpdate))
+        #    {
+        #        salesFormLetterContract.parmLateSelection(_salesParmUpdate.LateSelection);
+        #    }
+        #    return salesFormLetterContract.parmParmUpdate(_salesParmUpdate) as  SalesParmUpdate;
+        #}
+      ENDSOURCE
+      SOURCE #salesTable
+        #public SalesTable  salesTable(SalesTable  _salesTable = salesFormLetterContract.parmSalesTable())
+        #{
+        #    this.parmSourceTable(_salesTable);
+        #    return salesFormLetterContract.parmSalesTable(_salesTable);
+        #}
+      ENDSOURCE
+      SOURCE #setLedgerVoucher
+        #public void  setLedgerVoucher(LedgerVoucher  _ledgerVoucher)
+        #{
+        #    ledgerVoucher       = _ledgerVoucher;
+        #    ledgerVoucherIsSet  = true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #setNewContract
+        #protected void setNewContract(FormLetterContract _contract)
+        #{
+        #    super(_contract);
+        #    if (!contractIsFromPreviousVersion)
+        #    {
+        #        salesFormLetterContract = _contract;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #shouldRunXpp
+        #/// <summary>
+        #/// Determines whether X++ code should be run instead of IL.
+        #/// </summary>
+        #/// <returns>
+        #/// true if X++ code should be run; otherwise, false.
+        #/// </returns>
+        #protected boolean shouldRunXpp()
+        #{
+        #    return this.proforma();
+        #}
+      ENDSOURCE
+      SOURCE #specQty
+        #public SalesUpdate  specQty(SalesUpdate  _specQty = this.salesParmUpdate().SpecQty)
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    salesParmUpdate.SpecQty = _specQty;
+        #    this.salesParmUpdate(salesParmUpdate);
+        #    salesFormLetterContract.parmSpecQtyIsSet(true);
+        #    salesFormLetterContract.parmSpecQty(_specQty);
+        #    return salesParmUpdate.SpecQty;
+        #}
+      ENDSOURCE
+      SOURCE #splitInventOwnerId_RU
+        #public NoYes splitInventOwnerId_RU(NoYes _splitInventOwnerId_RU = this.salesParmUpdate().SplitInventOwnerId_RU)
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    salesParmUpdate.SplitInventOwnerId_RU = _splitInventOwnerId_RU;
+        #    this.salesParmUpdate(salesParmUpdate);
+        #    return salesParmUpdate.SplitInventOwnerId_RU;
+        #}
+      ENDSOURCE
+      SOURCE #splitInventProfileType_RU
+        #public NoYes splitInventProfileType_RU(NoYes _splitInventProfileType = this.salesParmUpdate().SplitInventProfileType_RU)
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    salesParmUpdate.SplitInventProfileType_RU = _splitInventProfileType;
+        #    this.salesParmUpdate(salesParmUpdate);
+        #    return salesParmUpdate.SplitInventProfileType_RU;
+        #}
+      ENDSOURCE
+      SOURCE #splitPostingProfile_RU
+        #public NoYes splitPostingProfile_RU(NoYes _splitPostingProfile = this.salesParmUpdate().SplitPostingProfile_RU)
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    salesParmUpdate.SplitPostingProfile_RU = _splitPostingProfile;
+        #    this.salesParmUpdate(salesParmUpdate);
+        #    return salesParmUpdate.SplitPostingProfile_RU;
+        #}
+      ENDSOURCE
+      SOURCE #splitSite
+        #public TradeSplitSite splitSite(TradeSplitSite  _splitSite = this.salesParmUpdate().SplitSite)
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    salesParmUpdate.SplitSite = _splitSite;
+        #    this.salesParmUpdate(salesParmUpdate);
+        #    return salesParmUpdate.SplitSite;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #sumBy
+        #public AccountOrder  sumBy(AccountOrder  _sumBy = this.salesParmUpdate().SumBy)
+        #{
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #    salesParmUpdate.SumBy = _sumBy;
+        #    this.salesParmUpdate(salesParmUpdate);
+        #    return salesParmUpdate.SumBy;
+        #}
+      ENDSOURCE
+      SOURCE #templateForm
+        #/// <summary>
+        #/// Microsoft internal use only.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>formName</c> value.
+        #/// </returns>
+        #protected formName templateForm()
+        #{
+        #//    return formStr(SalesEditLines);
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #unpack
+        #public boolean  unpack(container  _packedClass)
+        #{
+        #    Integer  version = conPeek(_packedClass,1);
+        #    container packedBase;
+        #
+        #    switch (version)
+        #    {
+        #        case #CurrentVersion + #parentVersion:
+        #            [version, #ParmListCommonCS, packedBase] = _packedClass;
+        #            return super(packedBase);
+        #
+        #        default :
+        #            return super(_packedClass);
+        #    }
+        #
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #update
+        #void  update(Common         _source,
+        #             TransDate      _transDate          = this.transDate(),
+        #             SalesUpdate    _specQty            = SalesUpdate::All,
+        #             AccountOrder   _accountOrder       = AccountOrder::None,
+        #             NoYes          _proforma           = this.salesParmUpdate().Proforma,
+        #             NoYes          _printFormLetter    = this.printFormLetter(),
+        #             NoYes          _usePrintManagement = false,
+        #             NoYes          _creditRemaining    = this.creditRemaining(),
+        #             // <GEERU>
+        #             container      _packedTmpFrmVirtualList = conNull(),
+        #             boolean        _storno             = false,
+        #             boolean        _stornoPhysical     = false)
+        #             // </GEERU>
+        #{
+        #    // <GEERU>
+        #    boolean storno, stornoPhysical;
+        #    // </GEERU>
+        #
+        #    switch(_source.TableId)
+        #    {
+        #        case tableNum(SalesTable):
+        #            this.salesTable(_source);
+        #            this.initParmSalesTable(this.salesTable());
+        #            break;
+        #
+        #        case tableNum(WMSShipment):
+        #            this.parmShipmentId(_source.(fieldNum(WMSShipment, ShipmentId)));
+        #            break;
+        #    }
+        #
+        #    if (!_transDate)
+        #    {
+        #        _transDate = systemDateGet();
+        #    }
+        #
+        #    this.transDate      (_transDate);
+        #    this.specQty        (_specQty);
+        #    this.proforma       (_proforma);
+        #    this.printFormLetter    (_printFormLetter);
+        #    this.printCODLabel      (NoYes::No);
+        #    this.printShippingLabel (NoYes::No);
+        #    this.usePrintManagement (_usePrintManagement);
+        #    this.creditRemaining    (_creditRemaining);
+        #
+        #    // <GEERU>
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]))
+        #    {
+        #        if (prmisDefault(_storno))
+        #        {
+        #            storno = CustParameters::find().CreditError;
+        #        }
+        #        else
+        #        {
+        #            storno = _storno;
+        #        }
+        #        if (prmisDefault(_stornoPhysical))
+        #        {
+        #            stornoPhysical = InventParameters::find().StornoPhysicalPosting_RU;
+        #        }
+        #        else
+        #        {
+        #            stornoPhysical = _stornoPhysical;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        storno         = CustParameters::find().CreditError;
+        #        stornoPhysical = false;
+        #    }
+        #
+        #    this.createParmUpdateFromParmUpdateRecord(SalesFormletterParmData::initSalesParmUpdateFormletter(this.documentStatus(),
+        #                                                                                                     this.pack(),
+        #                                                                                                     true,
+        #                                                                                                     storno,
+        #                                                                                                     stornoPhysical));
+        #    // </GEERU>
+        #
+        #    this.initParameters(this.salesParmUpdate(),
+        #                        Printout::Current);  // Printout
+        #
+        #    this.initLinesQuery();
+        #
+        #    if (_packedTmpFrmVirtualList)
+        #    {
+        #        this.selectFromJournal(_packedTmpFrmVirtualList);
+        #    }
+        #
+        #    // Don't call runShipCarrier here because it invokes a dialog that has to be handled seperately.
+        #    skipRunShipCarrier = true;
+        #    this.run();
+        #
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #updateEstimate
+        #public void updateEstimate()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #updatePrinterSettingsCODLabel
+        #protected void  updatePrinterSettingsCODLabel(container  _printerSettings)
+        #{
+        #    salesFormLetterContract.parmPrinterSettingsCODLabel(SysOperationHelper::base64Encode(_printerSettings));
+        #}
+      ENDSOURCE
+      SOURCE #updatePrinterSettingsEntryCertificate_W
+        #/// <summary>
+        #/// Updates printer settings which should be used for printing entry certificate.
+        #/// </summary>
+        #/// <param name="_printerSettings">
+        #/// Printer settings which should be used for update.
+        #/// </param>
+        #protected void  updatePrinterSettingsEntryCertificate_W(container  _printerSettings)
+        #{
+        #    salesFormLetterContract.parmPrinterSettingsEntryCertificate_W(SysOperationHelper::base64Encode(_printerSettings));
+        #}
+      ENDSOURCE
+      SOURCE #updatePrinterSettingsShippingLabel
+        #protected void  updatePrinterSettingsShippingLabel(container  _printerSettings)
+        #{
+        #    salesFormLetterContract.parmPrinterSettingsShippingLabel(SysOperationHelper::base64Encode(_printerSettings));
+        #}
+      ENDSOURCE
+      SOURCE #updateSalesShippingStat
+        #protected void  updateSalesShippingStat(SalesParmTable _salesParmTable)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #updateSalesType
+        #protected void  updateSalesType()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #validate
+        #/// <summary>
+        #///    Validates whether it is all right to continue.
+        #/// </summary>
+        #/// <param name="_calledFrom">
+        #///    Identifies the object from which this method is called. Default value is null.
+        #/// </param>
+        #/// <returns>
+        #///    true if it is all right to continue; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///    The validate method is used for validating if it is all right to close the sales posting form when
+        #///    you post sales orders.
+        #/// </remarks>
+        #public boolean  validate(Object _calledFrom = null)
+        #{
+        #    CompanyId   companyId;
+        #
+        #    SalesParmUpdate salesParmUpdate = this.salesParmUpdate();
+        #
+        #    // Validate header
+        #    if (! this.checkSumBy())
+        #    {
+        #        return false;
+        #    }
+        #
+        #    if (! this.checkSumNum())
+        #    {
+        #        return false;
+        #    }
+        #
+        #    if (! this.checkLateSelection())
+        #    {
+        #        return false;
+        #    }
+        #
+        #    if (! this.checkInterCompany())
+        #    {
+        #        return false;
+        #    }
+        #
+        #    if (!SalesFormLetter::checkSalesLinesChangedServer(this.documentStatus(), this.pack()))
+        #    {
+        #        return false;
+        #    }
+        #    // <GIN>
+        #    //Shipping Bill NUM field validation
+        #    if (TaxParameters::checkTaxParameters_IN())
+        #    {
+        #        if (! this.checkFormLetterId_IN())
+        #            return false;
+        #
+        #        if ((this.documentStatus() == DocumentStatus::Confirmation
+        #                || this.documentStatus() == DocumentStatus::PackingSlip
+        #                || this.documentStatus() == DocumentStatus::Invoice)
+        #            && !this.checkExciseInventBatch_IN())
+        #        {
+        #            return false;
+        #        }
+        #    }
+        #    // </GIN>
+        #
+        #    if (validateAll)
+        #    {
+        #        if (!this.interCompanyParmId())
+        #        {
+        #            // <GEERU>
+        #            if (salesParmUpdate.Proforma  &&  ! this.printFormLetter() && ! this.printFacture_RU() && ! this.printAcceptanceReport_RU() && ! this.printInventBaileeReport_RU())
+        #            // </GEERU>
+        #            {
+        #                info("@SYS78888");
+        #                return checkFailed("@SYS21533");
+        #            }
+        #        }
+        #
+        #        companyId = curext();
+        #
+        #        // <GEERU>
+        #        if (! salesParmUpdate.Proforma  &&  ! this.printFormLetter() && this.parmShowDialog() && ! this.printFacture_RU() && ! this.printAcceptanceReport_RU() && ! this.printInventBaileeReport_RU())
+        #        // </GEERU>
+        #        {
+        #            if (! this.checkifWMSorder() && Box::okCancel("@SYS28077",DialogButton::Cancel) == DialogButton::Cancel)
+        #            {
+        #                return checkFailed("@SYS21533");
+        #            }
+        #        }
+        #
+        #        if (this.printFormLetter() && !salesParmUpdate.Proforma && !this.usePrintManagement() &&
+        #                new SRSPrintDestinationSettings(this.printerSettingsFormletter()).printMediumType() == SRSPrintMediumType::Screen)
+        #        {
+        #            if (Box::yesNo(strfmt("@SYS105044", strlwr(enum2str(this.documentStatus()))), DialogButton::No) == DialogButton::No)
+        #            {
+        #                return checkFailed("@SYS21533");
+        #            }
+        #        }
+        #
+        #        if(companyId != curext())
+        #        {
+        #            appl.setDefaultCompany(companyId, false);
+        #        }
+        #    }
+        #    // <GEERU><GEEU>
+        #    if (countryRegion_RU || SysCountryRegionCode::isLegalEntityInCountryRegion([#isoCZ, #isoHU, #isoPL]))
+        #    {
+        #        if (! SalesFormletterParmData::newReSelect(this.packDataContract(salesFormLetterContract)).checkAdvancePayments_W(true))
+        #        {
+        #            return checkFailed("@SYS21533");
+        #        }
+        #    }
+        #    // </GEEU></GEERU>
+        #
+        #    // Validate lines
+        #    // <GEERU>
+        #    if (! this.printFormLetter()
+        #       && salesParmUpdate.Proforma
+        #       && !salesParmUpdate.LateSelection
+        #       && !this.printFacture_RU()
+        #       && !this.printAcceptanceReport_RU()
+        #       && !this.printInventBaileeReport_RU())
+        #    // </GEERU>
+        #    {
+        #        info("@SYS78888");
+        #        return checkFailed("@SYS21533");
+        #    }
+        #    // <GEERU>
+        #    if (countryRegion_RU)
+        #    {
+        #        if (! this.checkPrintout_RU())
+        #        {
+        #            return checkFailed("@SYS21533");
+        #        }
+        #
+        #        if (salesParmUpdate.inventOwnerIdCheckFailed_RU())
+        #        {
+        #            return checkFailed(strFmt("@GLS115692", fieldId2pname(tableNum(InventDim), fieldNum(InventDim, InventOwnerId_RU)), "@GLS113769"));
+        #        }
+        #        if (!this.checkAgreement_RU())
+        #        {
+        #            return false;
+        #        }
+        #    }
+        #    // </GEERU>
+        #
+        #    // <GEEPL>
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]) && !this.checkServiceTariffNumber())
+        #    {
+        #        return false;
+        #    }
+        #    // </GEEPL>
+        #
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #callPrinterSettingsCODLabel
+        #/// <summary>
+        #/// Modifies the printer settings for COD labels by using the standard printer settings dialog box.
+        #/// </summary>
+        #/// <param name="_salesFormLetter">
+        #/// The <c>SalesFormLetter</c> class where the printer settings for COD labels are being modified.
+        #/// </param>
+        #/// <returns>
+        #/// true if the settings were modified; otherwise, false.
+        #/// </returns>
+        #static boolean callPrinterSettingsCODLabel(SalesFormLetter _salesFormLetter)
+        #{
+        #    SRSPrintDestinationSettings printSettings = new SRSPrintDestinationSettings(_salesFormLetter.printerSettingsCODLabel());
+        #    boolean ok = SrsReportRunUtil::showSettingsDialog(printSettings);
+        #
+        #    _salesFormLetter.updatePrinterSettingsCODLabel(printSettings.pack());
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #callPrinterSettingsEntryCertificate_W
+        #/// <summary>
+        #/// Allows the user to modify the printer settings for entry certificate by using the standard print job
+        #/// settings dialog box.
+        #/// </summary>
+        #/// <param name="_salesFormLetter">
+        #/// The <c>SalesFormLetter</c> class where the printer settings for entry certificate is being modified.
+        #/// </param>
+        #/// <returns>
+        #/// true if the settings were modified; otherwise, false.
+        #/// </returns>
+        #public static boolean callPrinterSettingsEntryCertificate_W(SalesFormLetter _salesFormLetter)
+        #{
+        #    SRSPrintDestinationSettings printSettings = new SRSPrintDestinationSettings(_salesFormLetter.printerSettingsEntryCertificate_W());
+        #    boolean ok = SrsReportRunUtil::showSettingsDialog(printSettings);
+        #
+        #    _salesFormLetter.updatePrinterSettingsEntryCertificate_W(printSettings.pack());
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #callPrinterSettingsFormletter
+        #/// <summary>
+        #/// Allows the user to modify the printer settings using the standard print job settings dialog.
+        #/// </summary>
+        #/// <param name="_salesFormLetter">
+        #/// The <c>SalesFormLetter</c> class where the printer settings are modified.
+        #/// </param>
+        #/// <param name="_originalCopy">
+        #/// A <c>PrintSetupOriginalCopy</c> value that indicates whether the printer settings for original or
+        #/// copy that is being modified; optional.
+        #/// </param>
+        #/// <returns>
+        #/// true if the settings were modified; otherwise, false.
+        #/// </returns>
+        #static boolean callPrinterSettingsFormletter(SalesFormLetter _salesFormLetter, PrintSetupOriginalCopy _originalCopy = PrintSetupOriginalCopy::Original)
+        #{
+        ##PrintMgmtSetup
+        #    SRSPrintDestinationSettings printSettings = new SRSPrintDestinationSettings(_salesFormLetter.printerSettingsFormletter(_originalCopy));
+        #    boolean ok = SrsReportRunUtil::showSettingsDialog(printSettings, #SRSPrintDestinationTokenPrintMgmt, enum2Symbol(enumNum(PrintMgmtDocumentType), _salesFormLetter.printMgmtDocumentType()));
+        #
+        #    _salesFormLetter.updatePrinterSettingsFormLetter(printSettings.pack(), _originalCopy);
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #callPrinterSettingsShippingLabel
+        #/// <summary>
+        #/// Modifies the printer settings for shipping labels by using the standard printer settings dialog box.
+        #/// </summary>
+        #/// <param name="_salesFormLetter">
+        #/// The <c>SalesFormLetter</c> class where the printer settings for shipping labels are being modified.
+        #/// </param>
+        #/// <returns>
+        #/// true if the settings were modified; otherwise, false.
+        #/// </returns>
+        #static boolean callPrinterSettingsShippingLabel(SalesFormLetter _salesFormLetter)
+        #{
+        #    SRSPrintDestinationSettings printSettings = new SRSPrintDestinationSettings(_salesFormLetter.printerSettingsShippingLabel());
+        #    boolean ok = SrsReportRunUtil::showSettingsDialog(printSettings);
+        #
+        #    _salesFormLetter.updatePrinterSettingsShippingLabel(printSettings.pack());
+        #
+        #    return ok;
+        #}
+      ENDSOURCE
+      SOURCE #checkCreditNoteReason
+        #/// <summary>
+        #/// Checks the reason for the credit note.
+        #/// </summary>
+        #/// <param name="_common">
+        #/// The <c>Common</c> buffer to check the credit note reason for.
+        #/// </param>
+        #// <GEEU>
+        #static void checkCreditNoteReason(Common _common)
+        #{
+        #    SalesTable  salesTable;
+        #
+        #    if (_common is SalesTable)
+        #    {
+        #        salesTable = _common as SalesTable;
+        #
+        #        salesTable.checkCreditNoteReason();
+        #    }
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #checkParmTable
+        #server static container checkParmTable(Num      _parmId,
+        #                                       boolean  _custAccountInQuery,
+        #                                       boolean  _invoiceAccountInQuery)
+        #{
+        #    Counter  numOfAccounts;
+        #    Counter  numOfCurrency;
+        #    SalesParmTable  salesParmT;
+        #
+        #    numOfAccounts = 0;
+        #    numOfCurrency = 0;
+        #
+        #    if (_custAccountInQuery)
+        #    {
+        #        while select salesParmT
+        #                group by CustAccount
+        #                where salesParmT.ParmId == _parmId
+        #        {
+        #            numOfAccounts += 1;
+        #        }
+        #    }
+        #
+        #    if (_invoiceAccountInQuery)
+        #    {
+        #        while select salesParmT
+        #                group by InvoiceAccount
+        #                where salesParmT.ParmId == _parmId
+        #        {
+        #            numOfAccounts += 1;
+        #        }
+        #    }
+        #
+        #    while select salesParmT
+        #            group by CurrencyCode
+        #            where salesParmT.ParmId == _parmId
+        #    {
+        #        numOfCurrency += 1;
+        #    }
+        #
+        #    return [numOfAccounts, numOfCurrency];
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkSalesLinesChangedServer
+        #/// <summary>
+        #///   Checks whether sales lines has been updated since the posting was started.
+        #/// </summary>
+        #/// <param name="_documentStatus">
+        #///   An element from the <c>DocumentStatus</c> enumeration.
+        #/// </param>
+        #/// <param name="_packedFormletter">
+        #///   A packed version of the posting class.
+        #/// </param>
+        #/// <returns>
+        #///  true if the validation passes; otherwise, false.
+        #/// </returns>
+        #static server private boolean  checkSalesLinesChangedServer(
+        #    DocumentStatus _documentStatus,
+        #    container _packedFormletter)
+        #{
+        #    SalesFormletter salesFormletter = SalesFormLetter::construct(_documentStatus);
+        #    salesFormletter.unpack(_packedFormletter);
+        #    return salesFormletter.checkSalesLinesChanged();
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static SalesFormLetter  construct(
+        #    DocumentStatus _document,
+        #    IdentifierName _className  = '',
+        #    IdentifierName _methodName = '',
+        #    SysOperationExecutionMode _executionMode = SysOperationExecutionMode::Synchronous)
+        #{
+        #
+        #    if (_className && _methodName)
+        #    {
+        #        switch(_document)
+        #        {
+        #            case DocumentStatus::Confirmation       :   return SalesFormLetter_Confirm::newConfirm(_className, _methodName, _executionMode);
+        #            case DocumentStatus::PickingList        :   return SalesFormLetter_PickingList::newPickingList(_className, _methodName, _executionMode);
+        #            case DocumentStatus::PackingSlip        :   return SalesFormLetter_PackingSlip::newPackingSlip(_className, _methodName, _executionMode);
+        #            case DocumentStatus::ProjectPackingSlip :   return SalesFormLetter_PackingSlipProject::newPackingSlipProject(_className, _methodName, _executionMode);
+        #            case DocumentStatus::Invoice            :   return SalesFormLetter_Invoice::newInvoice(_className, _methodName, _executionMode);
+        #            case DocumentStatus::ProjectInvoice     :   return SalesFormLetter_InvoiceProject::newInvoiceProject(_className, _methodName, _executionMode);
+        #            case DocumentStatus::FreeTextInvoice    :   return SalesFormLetter_FreeText::newFreeText(_className, _methodName, _executionMode);
+        #            // <GEERU>
+        #            case DocumentStatus::Invoice4Paym_RU         : return SalesFormLetter_Invoice4Paym_RU::newInvoice4Paym(_className, _methodName, _executionMode);
+        #            case DocumentStatus::Facture_RU              : return SalesFormLetter_Facture_RU::newFacture(_className, _methodName, _executionMode);
+        #            case DocumentStatus::FreeTextInvoice4Paym_RU : return SalesFormLetter_FreeTextInvoice4Paym_RU::newFreeTextInvoice4Paym(_className, _methodName, _executionMode);
+        #            // </GEERU>
+        #            // <GIN>
+        #            case DocumentStatus::ShippingBill_IN    :   if (TaxParameters::isCustomsEnable_IN())
+        #                                                        {
+        #                                                            return SalesFormLetter_ShippingBill_IN::newShippingBill(_className, _methodName, _executionMode);
+        #                                                        }
+        #                                                        break;
+        #            // </GIN>
+        #
+        #            // <GBR>
+        #            case DocumentStatus::DeliverySlip_BR    :
+        #                if (BrazilParameters::isEnabled())
+        #                {
+        #                    return SalesFormLetter_DeliverySlip_BR::newDeliverySlip(_className, _methodName, _executionMode);
+        #                }
+        #
+        #            case DocumentStatus::DeliverySlipProject_BR :
+        #                if (BrazilParameters::isEnabled())
+        #                {
+        #                    return SalesFormLetter_DlvSlipProject_BR::newDeliverySlip(_className, _methodName, _executionMode);
+        #                }
+        #                break;
+        #            // </GBR>
+        #
+        #            default : throw error(strFmt("@SYS19306",funcName()));
+        #        }
+        #    }
+        #    else
+        #    {
+        #        switch(_document)
+        #        {
+        #            case DocumentStatus::Confirmation       :   return SalesFormLetter_Confirm::newConfirm();
+        #            case DocumentStatus::PickingList        :   return SalesFormLetter_PickingList::newPickingList();
+        #            case DocumentStatus::PackingSlip        :   return SalesFormLetter_PackingSlip::newPackingSlip();
+        #            case DocumentStatus::ProjectPackingSlip :   return SalesFormLetter_PackingSlipProject::newPackingSlipProject();
+        #            case DocumentStatus::Invoice            :   return SalesFormLetter_Invoice::newInvoice();
+        #            case DocumentStatus::ProjectInvoice     :   return SalesFormLetter_InvoiceProject::newInvoiceProject();
+        #            case DocumentStatus::FreeTextInvoice    :   return SalesFormLetter_FreeText::newFreeText();
+        #            // <GIN>
+        #            case DocumentStatus::ShippingBill_IN    :   if (TaxParameters::isCustomsEnable_IN())
+        #                                                        {
+        #                                                            return SalesFormLetter_ShippingBill_IN::newShippingBill();
+        #                                                        }
+        #                                                        break;
+        #            // </GIN>
+        #            // <GEERU>
+        #            case DocumentStatus::Invoice4Paym_RU         : return SalesFormLetter_Invoice4Paym_RU::newInvoice4Paym();
+        #            case DocumentStatus::Facture_RU              : return SalesFormLetter_Facture_RU::newFacture();
+        #            case DocumentStatus::FreeTextInvoice4Paym_RU : return SalesFormLetter_FreeTextInvoice4Paym_RU::newFreeTextInvoice4Paym();
+        #            // </GEERU>
+        #
+        #            // <GBR>
+        #            case DocumentStatus::DeliverySlip_BR        :
+        #            case DocumentStatus::DeliverySlipProject_BR :
+        #                if (BrazilParameters::isEnabled())
+        #                {
+        #                    return SalesFormLetter_DeliverySlip_BR::newDeliverySlip();
+        #                }
+        #                break;
+        #            // </GBR>
+        #
+        #            default : throw error(strFmt("@SYS19306",funcName()));
+        #        }
+        #    }
+        #
+        #    throw error(strFmt("@SYS19306",funcName()));
+        #}
+      ENDSOURCE
+      SOURCE #getPrinterSettingsFormletter
+        #static container  getPrinterSettingsFormletter(DocumentStatus  document, PrintSetupOriginalCopy _originalCopy = PrintSetupOriginalCopy::Original)
+        #{
+        #    SalesFormLetter  salesFormLetterPrint;
+        #
+        #    salesFormLetterPrint = SalesFormLetter::construct(document);
+        #
+        #    return salesFormLetterPrint.printerSettingsFormletter(_originalCopy);
+        #}
+      ENDSOURCE
+      SOURCE #initOfficialsServer_RU
+        #/// <summary>
+        #/// Executes the <c>initOfficials_RU</c> method on the server tier.
+        #/// </summary>
+        #/// <param name="_documentStatus">
+        #/// The document status.
+        #/// </param>
+        #/// <param name="_packedSalesFormletter">
+        #/// The packed <c>SalesFormLetter</c> class object to be used.
+        #/// </param>
+        #/// <param name="_parmTable">
+        #/// A <c>SalesParmTable</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// container with member variables.
+        #/// </returns>
+        #protected server static container initOfficialsServer_RU(
+        #    DocumentStatus  _documentStatus,
+        #    container       _packedSalesFormletter,
+        #    SalesParmTable  _parmTable)
+        #{
+        #    SalesFormLetter salesFormLetter = SalesFormLetter::construct(_documentStatus);
+        #    salesFormLetter.unpack(_packedSalesFormletter);
+        #    salesFormLetter.init();
+        #    salesFormLetter.initOfficials_RU(_parmTable);
+        #
+        #    return salesFormLetter.pack();
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #static client void  main(Args  args)
+        #{
+        #    Common              record;
+        #    int                 parmEnum;
+        #    WMSShipmentOption   wmsShipmentOption;
+        #    boolean             parmSkipPrompt;
+        #    Object              callerForm;
+        #    IdentifierName      callerFormName;
+        #    boolean             isProforma;
+        #    MenuItemNameAction  callerMenuItem;
+        #    FormDataSource      recordDataSource;
+        #    container           dataSourceRecordsPacked;
+        #    SalesTable          salesTable;
+        #    SalesLine           salesLine;
+        #    WMSShipment         wmsShipment;
+        #    boolean             recordExists;
+        #    Counter             numberOfRecords;
+        #
+        #    container           cachedArgs;
+        #    container           packedSalesFormletter;
+        #    FormletterOutputContract outputContract;
+        #    str                 className, methodName;
+        #    SysOperationExecutionMode mode;
+        #    SalesFormLetter salesFormLetter;
+        #
+        #    // <GIN>
+        #    boolean                     countryRegion_IN    = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIN]);
+        #    SysGlobalCache              cache;
+        #    CustomsExportOrderTable_IN  customsExportOrderTableLoc;
+        #    // </GIN>
+        #    // <GEEU>
+        #    boolean                     countryRegion_EU    = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoLT, #isoLT, #isoEE, #isoLV, #isoCZ, #isoPL, #isoHU, #isoRU]);
+        #    // </GEEU>
+        #
+        #    if (! args)
+        #    {
+        #        throw error("@SYS25407");
+        #    }
+        #    [className, methodName, mode] = FormLetterServiceController::parseServiceInfo(args);
+        #
+        #    record            = args.record();
+        #    parmEnum          = args.parmEnum();
+        #    callerForm        = args.caller();
+        #    callerMenuItem    = args.menuItemName();
+        #
+        #    parmSkipPrompt = false;
+        #    switch(parmEnum)
+        #    {
+        #        case DocumentStatus::PackingSlip:
+        #            if (args.parmObject() && args.parmObject() is WMSShipmentOption)
+        #            {
+        #                wmsShipmentOption = args.parmObject();
+        #                parmSkipPrompt = (wmsShipmentOption.parmPackAllQuantitiesAndPrint() == NoYes::Yes);
+        #            }
+        #            break;
+        #        // <GEEU>
+        #        case DocumentStatus::Invoice:
+        #            if (countryRegion_EU)
+        #            {
+        #                //Verify that can continue for CreditNote
+        #                SalesFormLetter::checkCreditNoteReason(record);
+        #            }
+        #            break;
+        #        // </GEEU>
+        #
+        #        default :
+        #            break;
+        #    }
+        #
+        #    if (callerForm)
+        #    {
+        #        callerFormName    = args.caller().name();
+        #    }
+        #
+        #    isProforma = FormLetterServiceController::isMenuItemProforma(args.menuItemName());
+        #
+        #    if (record && record.dataSource())
+        #    {
+        #        recordDataSource  = record.dataSource();
+        #        dataSourceRecordsPacked = FormLetter::getFormRecord(recordDataSource);
+        #    }
+        #
+        #    cachedArgs = [#CachedArgsList];
+        #
+        #    // <GIN>
+        #    if (TaxParameters::isCustomsEnable_IN())
+        #    {
+        #        cache = classfactory.globalCache();
+        #        cache.set(classStr(FormDataSource), classIdGet(recordDataSource), recordDataSource);
+        #    }
+        #    // </GIN>
+        #
+        #    packedSalesFormletter = SalesFormLetter::mainOnServer(cachedArgs, record, callerForm, dataSourceRecordsPacked);
+        #    if (packedSalesFormletter != conNull())
+        #    {
+        #        salesFormLetter = SalesFormLetter::construct(parmEnum, className, methodName, mode);
+        #        salesFormLetter.unpack(packedSalesFormletter);
+        #        salesFormLetter.init();
+        #        if (salesFormLetter.prompt())
+        #        {
+        #            salesFormLetter.run();
+        #            outputContract  = salesFormLetter.getOutputContract();
+        #            numberOfRecords = outputContract.parmNumberOfOrdersPosted();
+        #        }
+        #    }
+        #
+        #    if (numberOfRecords)
+        #    {
+        #        if (parmEnum == DocumentStatus::PackingSlip
+        #            && !isProforma
+        #            && salesFormLetter.parmWHSLoadId()
+        #            && !salesFormLetter.isVersioningCorrectionOrCancel())
+        #        {
+        #            info(strFmt("@WAX841"));
+        #        }
+        #
+        #        if (callerForm && formHasMethod(callerForm,identifierStr(interCompanyRefreshCache)))
+        #        {
+        #            callerForm.interCompanyRefreshCache();
+        #        }
+        #
+        #        if (recordDataSource)
+        #        {
+        #            if (record is SalesTable)
+        #            {
+        #                salesTable = record as SalesTable;
+        #                recordExists = SalesTable::exist(salesTable.SalesId);
+        #            }
+        #            else
+        #            if (record is SalesLine)
+        #            {
+        #                salesLine = record as SalesLine;
+        #                recordExists = SalesLine::findRecId(salesLine.RecId).RecId;
+        #            }
+        #            else
+        #            if (record is WMSShipment)
+        #            {
+        #                wmsShipment = record as WMSShipment;
+        #                recordExists = WMSShipment::find(wmsShipment.ShipmentId).RecId;
+        #            }
+        #            // <GIN>
+        #            else
+        #            if (countryRegion_IN
+        #                && record is CustomsExportOrderTable_IN)
+        #            {
+        #                customsExportOrderTableLoc = record as CustomsExportOrderTable_IN;
+        #                recordExists = CustomsExportOrderTable_IN::find(customsExportOrderTableLoc.RecId).RecId;
+        #            }
+        #            // </GIN>
+        #            else
+        #            if (record is SalesParmTable)
+        #            {
+        #                recordExists = false;
+        #            }
+        #
+        #            FormLetter::reFreshCallerDataSource(recordDataSource, recordExists, (numberOfRecords > 1));
+        #        }
+        #    }
+        #
+        #    // <GIN>
+        #    //Delete saved object reference from the global cache
+        #    if (TaxParameters::isCustomsEnable_IN()
+        #         && cache.isSet(classStr(FormDataSource), classIdGet(recordDataSource)))
+        #    {
+        #        cache.remove(classStr(FormDataSource), classIdGet(recordDataSource));
+        #    }
+        #    // </GIN>
+        #}
+        #
+      ENDSOURCE
+      SOURCE #mainOnServer
+        #protected server static container mainOnServer(
+        #    container  _cachedArgs,
+        #                                             Common     _record,
+        #                                             Object     _callerForm,
+        #                                             container  _dataSourceRecordsPacked)
+        #{
+        #    SalesFormLetter     salesFormLetter;
+        #
+        #    SalesTable          salesTable;
+        #    SalesLine           salesLine;
+        #    SalesParmTable      salesParmTable;
+        #    WMSShipment         wmsShipment;
+        #    Set                 wmsShipmentIdSet = new Set(Types::String);
+        #    Set                 loadIdSet = new Set(Types::String);
+        #    List                list = new List(Types::Record);
+        #    WHSLoadTable        whsLoadTable;
+        #    //Cached args
+        #    int                 parmEnum;
+        #    IdentifierName      callerFormName;
+        #    boolean             isProforma;
+        #    boolean             parmSkipPrompt;
+        #    MenuItemNameAction  callerMenuItem;
+        #
+        #    DataAreaId          curDataArea = curext();
+        #
+        #    SysGlobalCache      cache = classfactory.globalCache();
+        #    MapEnumerator       mapEnumerator;
+        #
+        #    str className, methodName;
+        #    SysOperationExecutionMode mode;
+        #
+        #    // <GIN>
+        #    CustomsExportOrderTable_IN  customsExportOrderTable;
+        #    // </GIN>
+        #
+        #    void setDatasourceRecordList()
+        #    {
+        #        mapEnumerator = Map::create(_dataSourceRecordsPacked).getEnumerator();
+        #
+        #        while (mapEnumerator.moveNext())
+        #        {
+        #            list.addEnd(mapEnumerator.currentValue());
+        #        }
+        #    }
+        #
+        #    if (_cachedArgs == conNull())
+        #    {
+        #        throw error("@SYS25407");
+        #    }
+        #
+        #    [#CachedArgsList] = _cachedArgs;
+        #
+        #    mode = SysOperationExecutionMode::Synchronous;
+        #    salesFormLetter = SalesFormLetter::construct(parmEnum, className, methodName, mode);
+        #
+        #    salesFormLetter.parmCallerFormName(callerFormName);
+        #    salesFormLetter.getLastFromCallerFormName();
+        #
+        #    salesFormLetter.transDate(systemDateGet());
+        #
+        #    if (_record)
+        #    {
+        #        salesFormLetter.allowEmptyTable(salesFormLetter.initAllowEmptyTable(true));
+        #
+        #        switch(_record.TableId)
+        #        {
+        #            case tableNum(SalesTable)     : salesTable = _record as SalesTable;
+        #                                            salesFormLetter.initParmSalesTable(salesTable);
+        #                                            salesFormLetter.parmDataSourceRecordsPacked(_dataSourceRecordsPacked);
+        #                                            break;
+        #
+        #            case tableNum(CustPackingSlipJour)  :
+        #                                            salesFormLetter.parmCallerTable(_record);
+        #                                            salesFormLetter.initBasedOnMenuItem(callerMenuItem);
+        #                                            salesFormLetter.reArrangeNow(false);
+        #                                            break;
+        #
+        #            case tableNum(SalesLine)      : salesLine = _record as SalesLine;
+        #                                            salesFormLetter.initParmSalesTable(salesLine.salesTable());
+        #                                            salesFormLetter.parmDataSourceRecordsPacked(_dataSourceRecordsPacked);
+        #                                            salesFormLetter.createFromLines(true);
+        #                                            setDatasourceRecordList();
+        #                                            salesFormLetter.parmLineList(list.pack());
+        #
+        #                                            break;
+        #
+        #            case tableNum(WMSShipment)    : wmsShipment = _record as WMSShipment;
+        #                                            salesFormLetter.parmShipmentId(wmsShipment.ShipmentId);
+        #                                            salesFormLetter.createFromLines(true);
+        #                                            setDatasourceRecordList();
+        #                                            mapEnumerator = Map::create(_dataSourceRecordsPacked).getEnumerator();
+        #                                            while (mapEnumerator.moveNext())
+        #                                            {
+        #                                                wmsShipment = mapEnumerator.currentValue();
+        #                                                wmsShipmentIdSet.add(wmsShipment.ShipmentId);
+        #                                            }
+        #                                            salesFormLetter.parmLineIdSet(wmsShipmentIdSet.pack());
+        #                                            salesFormLetter.parmLineList(list.pack());
+        #                                            salesFormLetter.lockSalesUpdateField(true);
+        #                                            break;
+        #
+        #            case tableNum(SalesParmTable) : salesParmTable = _record as SalesParmTable;
+        #                                            salesFormLetter.parmCreateFromHistory(true);
+        #                                            setDatasourceRecordList();
+        #                                            salesFormLetter.parmHistoryList(list.pack());
+        #                                            break;
+        #
+        #            case tableNum(WMSJournalTable):
+        #                                            salesFormLetter.createFromLines(true);
+        #                                            setDatasourceRecordList();
+        #                                            salesFormLetter.parmLineList(list.pack());
+        #                                            salesFormLetter.lockSalesUpdateField(true);
+        #                                            break;
+        #            // <GIN>
+        #            case tableNum(CustomsExportOrderTable_IN) :
+        #                                            if (TaxParameters::isCustomsEnable_IN())
+        #                                            {
+        #                                                customsExportOrderTable = _record as CustomsExportOrderTable_IN;
+        #                                                salesFormLetter.initParmCustomsExportOrderTable_IN(customsExportOrderTable);
+        #                                                salesFormLetter.parmDataSourceRecordsPacked(_dataSourceRecordsPacked);
+        #                                            }
+        #                                            break;
+        #            // </GIN>
+        #            case tableNum(WHSLoadTable)   : whsLoadTable = _record as WHSLoadTable;
+        #                                            salesFormLetter.parmWHSLoadId(whsLoadTable.LoadId);
+        #                                            salesFormLetter.parmCallerTable(_record);
+        #                                            salesFormLetter.parmDataSourceRecordsPacked(_dataSourceRecordsPacked);
+        #                                            salesFormLetter.createFromLines(true);
+        #                                            if (_dataSourceRecordsPacked != conNull())
+        #                                            {
+        #                                                mapEnumerator = Map::create(_dataSourceRecordsPacked).getEnumerator();
+        #                                                while (mapEnumerator.moveNext())
+        #                                                {
+        #                                                    whsLoadTable = mapEnumerator.currentValue();
+        #                                                    loadIdSet.add(whsLoadTable.LoadId);
+        #                                                }
+        #                                                salesFormLetter.parmLineIdSet(loadIdSet.pack());
+        #                                            }
+        #                                            salesFormLetter.lockSalesUpdateField(true);
+        #                                            break;
+        #        }
+        #        salesFormLetter.multiForm(true);
+        #    }
+        #
+        #
+        #    if (_callerForm)
+        #    {
+        #        switch (callerFormName)
+        #        {
+        #            case formStr(SalesTable) :
+        #            case formStr(SalesTableListPage) :
+        #                if (isProforma)
+        #                {
+        #                    salesFormLetter.proforma(true);
+        #                    salesFormLetter.enableUpdateNowField(false);
+        #                }
+        #                else
+        #                {
+        #                    salesFormLetter.proforma(false);
+        #                    salesFormLetter.enableUpdateNowField(true);
+        #                }
+        #                break;
+        #
+        #            case formStr(WMSShipment) :
+        #                salesFormLetter.resetProformaUponPhysicalUpdatable();
+        #                salesFormLetter.enableUpdateNowField(!salesFormLetter.proforma());
+        #                salesFormLetter.printFormLetter(true);
+        #                salesFormLetter.parmShowDialog(!parmSkipPrompt);
+        #                break;
+        #
+        #            case formStr(SalesReleaseOrderPicking) :
+        #                // The updateNow field is not enabled and it is not proforma.
+        #                salesFormLetter.proforma(false);
+        #                salesFormLetter.lockSalesUpdateField(true);
+        #                salesFormLetter.specQty(SalesUpdate::DeliverNow);
+        #                break;
+        #
+        #            case formStr(ReturnTable) :
+        #            case formStr(WMSJournalTable) :
+        #                // The updateNow field is not enabled and it is not proforma.
+        #                salesFormLetter.proforma(false);
+        #                salesFormLetter.lockSalesUpdateField(!salesFormLetter.isVersioningCorrectionOrCancel());
+        #                salesFormLetter.specQty(SalesUpdate::All);
+        #                break;
+        #
+        #            case classStr(WhsShipConfirm) :
+        #            case formStr(WHSLoadPlanningListPage) :
+        #            case formStr(WHSLoadPlanningWorkbench) :
+        #            case formStr(WHSLoadTable) :
+        #                salesFormLetter.resetProformaUponPhysicalUpdatable();
+        #                salesFormLetter.enableUpdateNowField(false);
+        #                salesFormLetter.printFormLetter(false);
+        #                salesFormLetter.parmShowDialog(!parmSkipPrompt);
+        #                salesFormLetter.parmValidateLoadStatus(true);
+        #                break;
+        #
+        #            case formStr(WHSContainerClose) :
+        #            case formStr(WHSContainerTable) :
+        #                salesFormLetter.resetProformaUponPhysicalUpdatable();
+        #                salesFormLetter.enableUpdateNowField(false);
+        #                salesFormLetter.printFormLetter(false);
+        #                salesFormLetter.parmShowDialog(!parmSkipPrompt);
+        #                salesFormLetter.parmValidateLoadStatus(false);
+        #                break;
+        #
+        #            default :
+        #                salesFormLetter.enableUpdateNowField(true);
+        #                salesFormLetter.lockSalesUpdateField(false);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        salesFormLetter.enableUpdateNowField(true);
+        #        salesFormLetter.lockSalesUpdateField(false);
+        #    }
+        #
+        #    salesFormLetter.prePromptInit();
+        #    salesFormLetter.forceSaveLast();
+        #    return salesFormLetter.pack();
+        #
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #mcrSplitParmData
+        #/// <summary>
+        #///     Splits out parm lines into multiple <c>alesParmTable</c> records
+        #///     and <c>SalesParmLine</c> records where appropriate, such as for
+        #///     ship alone items.
+        #/// </summary>
+        #/// <param name="_salesFormLetterContractPacked">
+        #///     Container of the SalesFormLetter.
+        #/// </param>
+        #/// <returns>
+        #///     true if there are no problems and updating should continue;
+        #///     otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     Always return true here in the super class, where by default, no splitting
+        #///     will actually be done.
+        #///
+        #///     Note: this must be done after showing the user the SalesEditLines form.
+        #///     This is not ideal because the user will not be able to see a preview of the
+        #///     final splits WYSIWYG style.  However, it is being done here because it is
+        #///     almost impossible to keep track of, if the user is allowed to manipulate the
+        #///     records in the preview mode.
+        #/// </remarks>
+        #static server  boolean mcrSplitParmData(container _salesFormLetterContractPacked)
+        #{
+        #    SalesFormletterParmData salesFormletterParmData;
+        #
+        #    salesFormletterParmData = SalesFormletterParmData::newChooseLines(_salesFormLetterContractPacked, true);
+        #
+        #    //Run the split data in the data classes
+        #    salesFormletterParmData.mcrSplitData();
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #newFromPurchFormLetter_Invoice
+        #static SalesFormLetter  newFromPurchFormLetter_Invoice(str              _journalLines,
+        #                                                       DocumentStatus   _documentStatus)
+        #{
+        #    SalesFormLetter     salesFormLetter;
+        #    List                journalLinesList;
+        #    ListEnumerator      journalLinesListEnumerator;
+        #    List                list = new List(Types::Record);
+        #    VendInvoiceTrans    vendInvoiceTrans;
+        #
+        #    salesFormLetter = SalesFormLetter::construct(_documentStatus);
+        #    salesFormLetter.getLast();
+        #    salesFormLetter.transDate(systemDateGet());
+        #    salesFormLetter.createFromLines(true);
+        #    salesFormLetter.multiForm(true);
+        #    salesFormLetter.specQty(SalesUpdate::DeliverNow);
+        #
+        #    if (_journalLines)
+        #    {
+        #        journalLinesList= List::create(SysOperationHelper::base64Decode(_journalLines));
+        #        journalLinesListEnumerator = journalLinesList.getEnumerator();
+        #        while(journalLinesListEnumerator.moveNext())
+        #        {
+        #            vendInvoiceTrans = journalLinesListEnumerator.current();
+        #            list.addEnd(vendInvoiceTrans);
+        #        }
+        #        salesFormLetter.parmLineList(list.pack());
+        #    }
+        #
+        #    return salesFormLetter;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #newFromPurchFormLetter_PackingSlip
+        #static SalesFormLetter  newFromPurchFormLetter_PackingSlip(str              _journalLines,
+        #                                                           DocumentStatus   _documentStatus,
+        #                                                           TransDate        _transDate = systemDateGet())
+        #{
+        #    SalesFormLetter         salesFormLetter;
+        #    List                    journalLinesList;
+        #    ListEnumerator          journalLinesListEnumerator;
+        #    List                    list = new List(Types::Record);
+        #    VendPackingSlipTrans    vendPackingSlipTrans;
+        #
+        #    salesFormLetter = SalesFormLetter::construct(_documentStatus);
+        #    salesFormLetter.getLast();
+        #    salesFormLetter.transDate(_transDate);
+        #    salesFormLetter.createFromLines(true);
+        #    salesFormLetter.multiForm(true);
+        #    salesFormLetter.specQty(SalesUpdate::DeliverNow);
+        #
+        #    if (_journalLines)
+        #    {
+        #        journalLinesList = List::create(SysOperationHelper::base64Decode(_journalLines));
+        #        journalLinesListEnumerator = journalLinesList.getEnumerator();
+        #        while (journalLinesListEnumerator.moveNext())
+        #        {
+        #            vendPackingSlipTrans = journalLinesListEnumerator.current();
+        #            list.addEnd(vendPackingSlipTrans);
+        #        }
+        #        salesFormLetter.parmLineList(list.pack());
+        #    }
+        #
+        #    return salesFormLetter;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #newGoodsInRoute_RU
+        #static SalesFormLetter  newGoodsInRoute_RU(DocumentStatus   _documentStatus,
+        #                                           TransDate        _transDate,
+        #                                           NoYes            _creditRemaining,
+        #                                           RecordSortedList _custInvoiceTransList)
+        #{
+        #    SalesFormLetter     salesFormLetter;
+        #    ParmId              parmId;
+        #    List                list = new List(Types::Record);
+        #    RecordSortedList    rsl;
+        #    CustInvoiceTrans    custInvoiceTrans;
+        #    boolean             nextRec;
+        #
+        #    salesFormLetter     = SalesFormLetter::construct(_documentStatus);
+        #    parmId              = salesFormLetter.parmId();
+        #
+        #    salesFormLetter.getLast();
+        #    salesFormLetter.parmId(parmId);
+        #    salesFormLetter.transDate(systemDateGet());
+        #    salesFormLetter.createFromLines(true);
+        #    salesFormLetter.multiForm(true);
+        #    salesFormLetter.specQty(SalesUpdate::DeliverNow);
+        #    salesFormLetter.creditRemaining(_creditRemaining);
+        #
+        #    rsl = _custInvoiceTransList;
+        #    if (rsl)
+        #    {
+        #        for (nextRec = rsl.first(custInvoiceTrans); nextRec; nextRec = rsl.next(custInvoiceTrans))
+        #    {
+        #            list.addEnd(custInvoiceTrans);
+        #    }
+        #        salesFormLetter.parmLineList(list.pack());
+        #}
+        #
+        #    return salesFormLetter;
+        #    }
+      ENDSOURCE
+      SOURCE #posFiscalDocType_PL
+        #// <GEEPL>
+        #public client server static int posFiscalDocType_PL()
+        #{
+        #    return 17;
+        #}
+        #// </GEEPL>
+      ENDSOURCE
+      SOURCE #runServer
+        #static server container runServer(container _packedFormletter, DocumentStatus _documentStatus)
+        #{
+        #    FormletterOutputContract    formletterOutputContract ;
+        #    container                   outputContainer;
+        #    SalesFormLetter             formletter = SalesFormLetter::construct(_documentStatus);
+        #
+        #    formletter.unpack(_packedFormletter);
+        #    formletter.init();
+        #    formletter.run();
+        #    formletterOutputContract = formletter.operationReturnValue();
+        #    outputContainer = formletterOutputContract.pack();
+        #
+        #    return outputContainer;
+        #}
+      ENDSOURCE
+      SOURCE #useInventOwnerIdRange_RU
+        #static boolean useInventOwnerIdRange_RU(NoYes           _splitInventOwnerId,
+        #                                        DocumentStatus  _documentStatus,
+        #                                        SalesLine       _salesLine)
+        #    {
+        #    InventDim inventDim = _salesLine.inventDim();
+        #    ;
+        #    return _splitInventOwnerId && inventDim.InventProfileId_RU && inventDim.inventProfile_RU().splitDocumentByInventOwnerId(_documentStatus);
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

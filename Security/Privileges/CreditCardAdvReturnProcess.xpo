@@ -1,0 +1,89 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: SPV
+
+; 
+; --------------------------------------------------------------------------------
+  VERSION 1
+  
+  PRIVILEGE #CreditCardAdvReturnProcess
+    PROPERTIES
+      Name                #CreditCardAdvReturnProcess
+      Label               #@ACC1639
+      Description         #@ACC1638
+      Origin              #{C8EA9CB4-5F87-43A8-9DBC-C4303B80EFAF}
+    ENDPROPERTIES
+    
+    ENTRYPOINTS #Entry Points
+      ENTRYPOINT #CreditCardTableSecureLookup
+        PROPERTIES
+          Name                #CreditCardTableSecureLookup
+          ObjectType          #MenuItemDisplay
+          ObjectName          #CreditCardTableSecureLookup
+          AccessLevel         #Read
+        ENDPROPERTIES
+        
+      ENDENTRYPOINT
+      
+    ENTRYPOINT #CreditCardTrans
+      PROPERTIES
+        Name                #CreditCardTrans
+        ObjectType          #MenuItemDisplay
+        ObjectName          #CreditCardTrans
+        AccessLevel         #Read
+      ENDPROPERTIES
+      
+    ENDENTRYPOINT
+    
+  ENTRYPOINT #CreditCardTransAuthLookup
+    PROPERTIES
+      Name                #CreditCardTransAuthLookup
+      ObjectType          #MenuItemDisplay
+      ObjectName          #CreditCardTransAuthLookup
+      AccessLevel         #Read
+    ENDPROPERTIES
+    
+  ENDENTRYPOINT
+  
+ENTRYPOINT #CreditCardTransLookup
+  PROPERTIES
+    Name                #CreditCardTransLookup
+    ObjectType          #MenuItemDisplay
+    ObjectName          #CreditCardTransLookup
+    AccessLevel         #Read
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENTRYPOINT #ReturnTableCC
+  PROPERTIES
+    Name                #ReturnTableCC
+    ObjectType          #MenuItemDisplay
+    ObjectName          #ReturnTableCC
+    AccessLevel         #Delete
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENDENTRYPOINTS
+
+PERMISSIONSET #Permissions
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+FORMS #Forms
+ENDFORMS
+
+ENDPERMISSIONSET
+
+ENDPRIVILEGE
+
+
+***Element: END

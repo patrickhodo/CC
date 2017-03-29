@@ -1,0 +1,1122 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardFirstDataLinkpointXMLBuilder
+    PROPERTIES
+      Name                #CreditCardFirstDataLinkpointXMLBuilder
+      Extends             #CreditCardFirstData
+      Origin              #{6516A104-4D46-432D-B0FA-4BB24D2E5E4B}
+      LegacyId            #20037
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeResponse
+        #CreditCardTrans analyzeResponse(CreditCardStr                 msg,
+        #                                CreditCardTrans                    _ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt;
+        #    int                             i;
+        #    TempStr                         tmpStr;
+        #    TempStr                         node;
+        #    TempStr                         errMsg;
+        #    boolean                         accepted;
+        #
+        #    ;
+        #    ttsbegin;
+        #    ccTRans.selectForUpdate(true);
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        //--> Second node should be the soap envelope body
+        #        if (cnt == 1)
+        #        {
+        #            //--> store in comment
+        #            ccTrans.Comment1 = tmpStr;
+        #        }
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'fdggwsapi:ProcessorResponseMessage'   :
+        #                        switch (elementChild2.innerXml())
+        #                        {
+        #                            case 'APPROVED'   :
+        #                                accepted = true;
+        #                                _ccTrans.Result = '0';
+        #                                break;
+        #                            case 'ACCEPTED'     :
+        #                                accepted = true;
+        #                                _ccTrans.Result = '0';
+        #                                break;
+        #                            default :
+        #                                accepted = false;
+        #                                break;
+        #                        }
+        #                        break;
+        #                    case    'fdggwsapi:OrderId'       :
+        #                        _ccTrans.PNRef = elementChild2.innerXML();
+        #                        break;
+        #                    case    'fdggwsapi:AVSResponse'           :
+        #                        _ccTrans.AvsAddr = elementChild2.innerXml();
+        #                        break;
+        #                    case    'fdggwsapi:TDate'           :
+        #                        _ccTrans.RetrevalRefNum = elementChild2.innerXml();
+        #                        break;
+        #                    //--> In case of errors or rejections
+        #                    case 'fdggwsapi:ErrorMessage' :
+        #                        errMsg = elementChild2.innerXML();
+        #                        if (errMsg)
+        #                        {
+        #                            _ccTrans.Result = errMsg;
+        #                        }
+        #                        break;
+        #                    case 'fdggwsapi:ProcessorReferenceNumber'   :
+        #                        _ccTrans.AuthCode    = elementChild2.innerXML();
+        #
+        #                        break;
+        #
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    _ccTrans.update();
+        #    ttscommit;
+        #
+        #    return _ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #xml build()
+        #{
+        #    xml                     xml;
+        #    CreditCardTrans         origCCTrans;
+        #    ;
+        #    switch (this.parmccTrans().TransType)
+        #    {
+        #        case CreditCardTrxType::A    :
+        #            xml= this.buildNewAuth();
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.OrigID)
+        #            {
+        #                xml = this.buildReturn();
+        #            }
+        #            else
+        #            {
+        #                xml = this.buildCredit();
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D     :
+        #            xml = this.buildPostAuth();
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            xml = this.buildNewSale();
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            select transDate from origCCTrans
+        #                where origCCTrans.PNRef == ccTrans.OrigID;
+        #
+        #            if (DayofMth(origCCTRans.TransDate) == DayofMth(systemDateGet())
+        #                && mthofYr(origCCTrans.TransDate) == mthofyr(systemDateGet()))
+        #            {
+        #                xml = this.buildVoid();
+        #            }
+        #            else
+        #            {
+        #                xml = this.buildReturn();
+        #            }
+        #            break;
+        #
+        #
+        #    }
+        #
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #buildCredit
+        #xml buildCredit()
+        #{
+        #    str                             parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('fdggwsapi:FDGGWSApiOrderRequest');
+        #    xmlTextWriter.writeAttributeString('xmlns:v1','http://secure.linkpt.net/fdggwsapi/schemas_us/v1');
+        #    xmlTextWriter.writeAttributeString('xmlns:fdggwsapi','http://secure.linkpt.net/fdggwsapi/schemas_us/fdggwsapi');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Transaction node
+        #    xmlTextWriter.writeStartElement('v1:Transaction');
+        #
+        #    //--> Transaction type node
+        #    xmlTextWriter.writeStartElement('v1:CreditCardTxType');
+        #
+        #    xmlTextWriter.writeStartElement('v1:StoreId');
+        #    xmlTextWriter.writeString(this.parmMerchantFirstData().MerchantId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('v1:Type');
+        #    xmlTextWriter.writeString('credit');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Close Credit Card Tx Type Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('v1:CreditCardData');
+        #    xmlTextWriter.writeStartElement('v1:CardNumber');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration month
+        #    xmlTextWriter.writeStartElement('v1:ExpMonth');
+        #    xmlTextWriter.writeString(this.returnMonth());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration year
+        #    xmlTextWriter.writeStartElement('v1:ExpYear');
+        #    xmlTextWriter.writeString(this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Close Credit Card Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Payment
+        #    xmlTextWriter.writeStartElement('v1:Payment');
+        #    xmlTextWriter.writeStartElement('v1:ChargeTotal');
+        #    xmlTextWriter.writeString(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End fdggwsapi
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelope
+        #str buildEnvelope()
+        #{
+        #    str                             tmpstr;
+        #    ;
+        #
+        #    tmpStr = '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
+        #    tmpStr +=' xmlns:v1="http://secure.linkpt.net/fdggwsapi/schemas_us/v1">';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelopeHeader
+        #str buildEnvelopeHeader()
+        #{
+        #    str                             tmpstr;
+        #    ;
+        #
+        #    tmpStr = '<SOAP-ENV:Header/>';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuth
+        #xml buildNewAuth()
+        #{
+        #    str                             parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('fdggwsapi:FDGGWSApiOrderRequest');
+        #    xmlTextWriter.writeAttributeString('xmlns:v1','http://secure.linkpt.net/fdggwsapi/schemas_us/v1');
+        #    xmlTextWriter.writeAttributeString('xmlns:fdggwsapi','http://secure.linkpt.net/fdggwsapi/schemas_us/fdggwsapi');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Transaction node
+        #    xmlTextWriter.writeStartElement('v1:Transaction');
+        #
+        #    //--> Transaction type node
+        #    xmlTextWriter.writeStartElement('v1:CreditCardTxType');
+        #
+        #    xmlTextWriter.writeStartElement('v1:StoreId');
+        #    xmlTextWriter.writeString(this.parmMerchantFirstData().MerchantId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('v1:Type');
+        #    xmlTextWriter.writeString('preAuth');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Close Credit Card Tx Type Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('v1:CreditCardData');
+        #    xmlTextWriter.writeStartElement('v1:CardNumber');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration month
+        #    xmlTextWriter.writeStartElement('v1:ExpMonth');
+        #    xmlTextWriter.writeString(this.returnMonth());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration year
+        #    xmlTextWriter.writeStartElement('v1:ExpYear');
+        #    xmlTextWriter.writeString(this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        //--> Card Code Value
+        #        xmlTextWriter.writeStartElement('v1:CardCodeValue');
+        #        xmlTextWriter.writeString(this.parmCCTrans().CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> Close Credit Card Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Payment
+        #    xmlTextWriter.writeStartElement('v1:Payment');
+        #    xmlTextWriter.writeStartElement('v1:ChargeTotal');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(ccTrans.AmountMST,9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #        //--> Begin "Billing" node
+        #    if (this.parmPostalAddress().ZipCode || ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('v1:Billing');
+        #        xmlTextWriter.writeStartElement('v1:CustomerID');
+        #        xmlTextWriter.writeString(CustTable::find(ccTrans.CustAccount).Name());
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:Address1');
+        #        xmltextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:City');
+        #        xmltextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:State');
+        #        xmltextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:Zip');
+        #        xmltextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:Country');
+        #        xmltextWriter.writeString(this.parmPostalAddress().CountryRegionId);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        if (ccTrans.AVSPhone)
+        #        {
+        #            xmlTextWriter.writeStartElement('v1:Phone');
+        #            xmltextWriter.writeString(ccTrans.AVSPhone);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        if (ccTrans.AVSEmail)
+        #        {
+        #            xmlTextWriter.writeStartElement('v1:Email');
+        #            xmltextWriter.writeString(ccTrans.AVSEmail);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        //--> End Shipping node
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End fdggwsapi
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewSale
+        #xml buildNewSale()
+        #{
+        #    str                             parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('fdggwsapi:FDGGWSApiOrderRequest');
+        #    xmlTextWriter.writeAttributeString('xmlns:v1','http://secure.linkpt.net/fdggwsapi/schemas_us/v1');
+        #    xmlTextWriter.writeAttributeString('xmlns:fdggwsapi','http://secure.linkpt.net/fdggwsapi/schemas_us/fdggwsapi');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Transaction node
+        #    xmlTextWriter.writeStartElement('v1:Transaction');
+        #
+        #    //--> Transaction type node
+        #    xmlTextWriter.writeStartElement('v1:CreditCardTxType');
+        #
+        #    xmlTextWriter.writeStartElement('v1:StoreId');
+        #    xmlTextWriter.writeString(this.parmMerchantFirstData().MerchantId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('v1:Type');
+        #    xmlTextWriter.writeString('sale');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Close Credit Card Tx Type Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('v1:CreditCardData');
+        #    xmlTextWriter.writeStartElement('v1:CardNumber');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration month
+        #    xmlTextWriter.writeStartElement('v1:ExpMonth');
+        #    xmlTextWriter.writeString(this.returnMonth());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration year
+        #    xmlTextWriter.writeStartElement('v1:ExpYear');
+        #    xmlTextWriter.writeString(this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Close Credit Card Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Payment
+        #    xmlTextWriter.writeStartElement('v1:Payment');
+        #    xmlTextWriter.writeStartElement('v1:ChargeTotal');
+        #    xmlTextWriter.writeString(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Begin "Billing" node
+        #    if (this.parmPostalAddress().ZipCode && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('v1:Billing');
+        #        xmlTextWriter.writeStartElement('v1:CustomerID');
+        #        xmlTextWriter.writeString(CustTable::find(ccTrans.CustAccount).Name());
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:Address1');
+        #        xmltextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:City');
+        #        xmltextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:State');
+        #        xmltextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:Zip');
+        #        xmltextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('v1:Country');
+        #        xmltextWriter.writeString(this.parmPostalAddress().CountryRegionId);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        if (ccTrans.AVSPhone)
+        #        {
+        #            xmlTextWriter.writeStartElement('v1:Phone');
+        #            xmltextWriter.writeString(ccTrans.AVSPhone);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        if (ccTrans.AVSEmail)
+        #        {
+        #            xmlTextWriter.writeStartElement('v1:Email');
+        #            xmltextWriter.writeString(ccTrans.AVSEmail);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        //--> End Shipping node
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End fdggwsapi
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildPostAuth
+        #xml buildPostAuth()
+        #{
+        #    str                             parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('fdggwsapi:FDGGWSApiOrderRequest');
+        #    xmlTextWriter.writeAttributeString('xmlns:v1','http://secure.linkpt.net/fdggwsapi/schemas_us/v1');
+        #    xmlTextWriter.writeAttributeString('xmlns:fdggwsapi','http://secure.linkpt.net/fdggwsapi/schemas_us/fdggwsapi');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Transaction node
+        #    xmlTextWriter.writeStartElement('v1:Transaction');
+        #
+        #    //--> Transaction type node
+        #    xmlTextWriter.writeStartElement('v1:CreditCardTxType');
+        #
+        #    xmlTextWriter.writeStartElement('v1:StoreId');
+        #    xmlTextWriter.writeString(this.parmMerchantFirstData().MerchantId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('v1:Type');
+        #    xmlTextWriter.writeString('postAuth');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Close Credit Card Tx Type Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Payment
+        #    xmlTextWriter.writeStartElement('v1:Payment');
+        #    xmlTextWriter.writeStartElement('v1:ChargeTotal');
+        #    xmlTextWriter.writeString(strLRTRim(num2str(ccTrans.AmountMST,9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction details
+        #    xmlTextWriter.writeStartElement('v1:TransactionDetails');
+        #    xmlTextWriter.writeStartElement('v1:OrderId');
+        #    xmlTextWriter.writeString(this.parmCCTrans().OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End fdggwsapi
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildReturn
+        #xml buildReturn()
+        #{
+        #    str                             parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('fdggwsapi:FDGGWSApiOrderRequest');
+        #    xmlTextWriter.writeAttributeString('xmlns:v1','http://secure.linkpt.net/fdggwsapi/schemas_us/v1');
+        #    xmlTextWriter.writeAttributeString('xmlns:fdggwsapi','http://secure.linkpt.net/fdggwsapi/schemas_us/fdggwsapi');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Transaction node
+        #    xmlTextWriter.writeStartElement('v1:Transaction');
+        #
+        #    //--> Transaction type node
+        #    xmlTextWriter.writeStartElement('v1:CreditCardTxType');
+        #
+        #    xmlTextWriter.writeStartElement('v1:StoreId');
+        #    xmlTextWriter.writeString(this.parmMerchantFirstData().MerchantId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('v1:Type');
+        #    xmlTextWriter.writeString('return');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Close Credit Card Tx Type Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Payment
+        #    xmlTextWriter.writeStartElement('v1:Payment');
+        #    xmlTextWriter.writeStartElement('v1:ChargeTotal');
+        #    xmlTextWriter.writeString(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction details
+        #    xmlTextWriter.writeStartElement('v1:TransactionDetails');
+        #    xmlTextWriter.writeStartElement('v1:OrderId');
+        #    xmlTextWriter.writeString(this.parmCCTrans().OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End fdggwsapi
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #xml buildVoid()
+        #{
+        #    str                             parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<SOAP-ENV:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('fdggwsapi:FDGGWSApiOrderRequest');
+        #    xmlTextWriter.writeAttributeString('xmlns:v1','http://secure.linkpt.net/fdggwsapi/schemas_us/v1');
+        #    xmlTextWriter.writeAttributeString('xmlns:fdggwsapi','http://secure.linkpt.net/fdggwsapi/schemas_us/fdggwsapi');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Transaction node
+        #    xmlTextWriter.writeStartElement('v1:Transaction');
+        #
+        #    //--> Transaction type node
+        #    xmlTextWriter.writeStartElement('v1:CreditCardTxType');
+        #
+        #    xmlTextWriter.writeStartElement('v1:StoreId');
+        #    xmlTextWriter.writeString(this.parmMerchantFirstData().MerchantId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('v1:Type');
+        #    xmlTextWriter.writeString('void');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Close Credit Card Tx Type Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Payment
+        #    xmlTextWriter.writeStartElement('v1:Payment');
+        #    xmlTextWriter.writeStartElement('v1:ChargeTotal');
+        #    xmlTextWriter.writeString(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction details
+        #    xmlTextWriter.writeStartElement('v1:TransactionDetails');
+        #    xmlTextWriter.writeStartElement('v1:OrderId');
+        #    xmlTextWriter.writeString(this.parmCCTrans().OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('v1:TDate');
+        #    xmlTextWriter.writeString(this.parmCCTrans().RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Close Payment Data Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End fdggwsapi
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardFirstDataLinkpointXMLBuilder extends CreditCardFirstData
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #parmCCTrans
+        #CreditCardTrans parmCCTrans(CreditCardTrans _ccTrans = ccTrans)
+        #{
+        #    ;
+        #    ccTrans = _ccTrans;
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantFirstData
+        #CreditCardMerchantFirstData parmMerchantFirstData(CreditCardMerchantFirstData _merchantFirstData = merchantFirstData)
+        #{
+        #    ;
+        #    merchantFirstData = _merchantFirstData;
+        #    return merchantFirstData;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue()
+        #{
+        #    str         returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(this.parmCCTrans().CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount()
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue();
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue();
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumSecure)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue();
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnDayFromDate
+        #str returnDayFromDate(date        dateTrans)
+        #{
+        #    str                     day,parmList;
+        #    ;
+        #    day =  int2str(DayofMth(dateTrans));
+        #    if (strlen(day)==1)
+        #    {
+        #        day = '0' + day;
+        #    }
+        #
+        #    ParmList =  day;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonth
+        #str returnMonth()
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(this.parmCCTrans().OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthCC
+        #str returnMonthCC(CreditCardTable         ccTable)
+        #{
+        #    str                     ParmList;
+        #    str                     month;
+        #    ;
+        #
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthFromDate
+        #str returnMonthFromDate(date        dateTrans)
+        #{
+        #    str                     month,parmList;
+        #    ;
+        #    month =  int2str(Mthofyr(dateTrans));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear
+        #str returnYear()
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(this.parmCCTrans().OneTimeDateExp));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYearCC
+        #str returnYearCC(CreditCardTable         ccTable)
+        #{
+        #    str                     ParmList;
+        #    str                     ccYear;
+        #    ;
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #
+        #    ParmList =  ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #processFirstData
+        #server static str processFirstData(CreditCardTrans     ccTrans)
+        #{
+        #    COM                                 request;
+        #    CreditCardMerchantFirstData         ccFirstData = CreditCardMerchantFirstData::find(ccTrans.TerminalId);
+        #    CreditCardFirstData                 xmlBuilder = CreditCardFirstData::construct(ccFirstData);
+        #    InteropPermission                   comPermission = new InteropPermission(InteropKind::COMInterop);
+        #    str                                 auth;
+        #    str                                 response;
+        #    str                                 parmList;
+        #    ;
+        #    comPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccFirstData
+        #        where ccFirstData.TerminalId == ccTrans.TerminalId;
+        #
+        #    xmlBuilder.parmMerchantFirstData(ccFirstData);
+        #    xmlBuilder.parmCCTrans(ccTrans);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantFirstData(ccFirstData);
+        #
+        #    auth = xmlBuilder.getUIDPWD(ccFirstData);
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build();
+        #
+        #    try
+        #    {
+        #        request = new COM('WinHttp.WinHttpRequest.5.1');
+        #        request.open('POST',ccFirstData.URL, FALSE);
+        #        request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #        request.setRequestHeader('Content-Type','text/xml');
+        #        request.setCredentials(ccFirstData.UserId,ccFirstData.Pwd,0);
+        #        request.setClientCertificate('LOCAL_MACHINE\\MY\\'+ccFirstData.UserId);
+        #        request.send(ParmList);
+        #
+        #        response = request.responseText();
+        #
+        #    }
+        #
+        #    catch (Exception::Error)
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTrans = xmlBuilder.analyzeResponse(response,ccTrans);
+        #
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

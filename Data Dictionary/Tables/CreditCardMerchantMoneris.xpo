@@ -1,0 +1,219 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantMoneris
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantMoneris
+      Label               #@ACC1282
+      FormRef             #creditCardterminalTable
+      TitleField1         #TerminalId
+      TitleField2         #HostAddress
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdx
+      ClusterIndex        #TerminalIdx
+      DeveloperDocumentation  #@ACC1601
+      Origin              #{5E175937-CA4D-4E51-8C6C-02AC718C00E0}
+      LegacyId            #20031
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #APIToken
+        STRING
+        PROPERTIES
+          Name                #APIToken
+          Label               #@ACC1284
+          Table               #CreditCardMerchantMoneris
+          Origin              #{72A420BE-8784-4ED0-838C-9AB0E307DC18}
+          LegacyId            #20002
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #Country
+        ENUM
+        PROPERTIES
+          Name                #Country
+          Table               #CreditCardMerchantMoneris
+          Origin              #{F5C932A8-2411-46AA-B7DA-00C26D410748}
+          EnumType            #CreditCardMonerisCountry
+        ENDPROPERTIES
+        
+      FIELD #HostAddress
+        STRING
+        PROPERTIES
+          Name                #HostAddress
+          Table               #CreditCardMerchantMoneris
+          Origin              #{0D98F751-7F40-4597-896F-C02C0A2DA9FA}
+          LegacyId            #20003
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #Port
+        INT
+        PROPERTIES
+          Name                #Port
+          Label               #@SYS27418
+          HelpText            #@ACC1424
+          Table               #CreditCardMerchantMoneris
+          Origin              #{29F9D2E5-FE6B-486E-AFF5-CEA2EF5B6479}
+          LegacyId            #20004
+          ExtendedDataType    #CreditCardTCPPort
+        ENDPROPERTIES
+        
+      FIELD #StoreId
+        STRING
+        PROPERTIES
+          Name                #StoreId
+          Label               #@ACC1283
+          Table               #CreditCardMerchantMoneris
+          Origin              #{6109B647-A1F1-4DAA-A0DC-DFE44F432AB2}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantMoneris
+          Origin              #{65848732-964E-414D-AED7-EFCB1F8C6EE9}
+          LegacyId            #20005
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #StoreId
+          #APIToken
+          #HostAddress
+          #Port
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #StoreId
+          #APIToken
+          #HostAddress
+          #Port
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS53631
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Login
+        PROPERTIES
+          Name                #Login
+          Label               #@ACC1120
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #StoreId
+          #APIToken
+          #Country
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Network
+        PROPERTIES
+          Name                #Network
+          Label               #@SYS30485
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #HostAddress
+          #Port
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdx
+      PROPERTIES
+        Name                #TerminalIdx
+        AllowDuplicates     #No
+        Origin              #{D32BB0C3-3973-4371-AC60-0C4A440B489E}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #find
+        #static CreditCardMerchantMoneris find(CreditCardTerminalId    terminalId)
+        #{
+        #    CreditCardMerchantMoneris         ccMoneris;
+        #    ;
+        #    select ccMoneris
+        #        where ccMoneris.TerminalId == terminalId;
+        #
+        #    return ccMoneris;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

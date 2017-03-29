@@ -1,0 +1,2121 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #WHSShipConfirm
+    PROPERTIES
+      Name                #WHSShipConfirm
+      RunOn               #Server
+      Origin              #{E04228D4-B525-481A-8A0B-24E12687CC36}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #canShipConfirm
+        #/// <summary>
+        #/// Checks if load can be ship confirmed
+        #/// </summary>
+        #/// <param name="_loadTable">
+        #/// The <c>WHSLoadTable</c> record of the load being validated.
+        #/// </param>
+        #/// <returns>
+        #/// true if load can be ship confirmed; otherwise returns false and adds a warning to InfoLog
+        #/// </returns>
+        #private boolean canShipConfirm(WHSLoadTable _loadTable)
+        #{
+        #    if (InventLocation::find(_loadTable.InventLocationId).whsEnabled)
+        #    {
+        #        if (!WHSShipConfirm::isShipConfirmEnabledForLoad(_loadTable))
+        #        {
+        #            return checkFailed(strFmt("@WAX5828", _loadTable.LoadId));
+        #        }
+        #
+        #        if(!_loadTable.canShipConfirm(this.parmSkipLoadTender()))
+        #        {
+        #            return false;
+        #        }
+        #
+        #        if (!WHSLoadTable::hasOnlyTransportRequestLine(_loadTable.LoadId))
+        #        {
+        #            if (WHSLoadTable::containsWHSItems(_loadTable.LoadId) &&
+        #               !WHSWorkTable::isWorkComplete(_loadTable.LoadId))
+        #            {
+        #                return checkFailed(strFmt("@WAX515", _loadTable.LoadId));
+        #            }
+        #
+        #            if (!this.validateOverUnderDelivery(_loadTable.LoadId))
+        #            {
+        #                return false;
+        #            }
+        #        }
+        #
+        #        if (!this.validateBatchDispositionBlockShipping(_loadTable.LoadId))
+        #        {
+        #            return checkFailed(strFmt("@WAX5747", _loadTable.LoadId));
+        #        }
+        #
+        #        if (!this.validateFreightTerms(_loadTable.LoadId))
+        #        {
+        #            return checkFailed(strFmt("@TRX1631", _loadTable.LoadId));
+        #        }
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class WhsShipConfirm
+        #{
+        #    boolean             skipLoadTender;
+        #    boolean             skipActualShipDate;
+        #    container           loadsWithInvoicedOrders;
+        #}
+      ENDSOURCE
+      SOURCE #createASNItems
+        #/// <summary>
+        #///    Creates ASN item records for outbound shipments
+        #/// </summary>
+        #/// <param name="_licensePlateId">
+        #///    License plate to be used in ASN item creation
+        #/// </param>
+        #/// <param name="_workLine">
+        #///    Workline record to be used in ASN item creation
+        #/// </param>
+        #/// <param name="_whsModule">
+        #///    The <c>WHSModule</c>module used for the ASN item creation
+        #/// </param>
+        #/// <returns>
+        #///    Container showing item id, qty, lowest unit of measure, and unit of measure on load line
+        #/// </returns>
+        #public container createASNItems(
+        #    WHSLicensePlateId   _licensePlateId,
+        #    WHSWorkLine         _workLine,
+        #    WHSModule           _whsModule)
+        #{
+        #    container           asnItems;
+        #    WHSASNItem          asnItem;
+        #    InventTrans         inventTrans;
+        #    InventTransOrigin   inventTransOrigin;
+        #    WHSWorkInventTrans  workInventTrans;
+        #    InventDim           inventDim;
+        #    ItemId              itemId;
+        #    int                 itemIdCount;
+        #    UnitOfMeasureSymbol lowestItemUnit;
+        #    StatusIssue         statusIssueCriteria;
+        #    InventDimParm       inventDimParmShipDim;
+        #    InventDim           workLineInventDim;
+        #    InventBatchId       inventBatchId;
+        #
+        #    ttsbegin;
+        #
+        #    switch (_whsModule)
+        #    {
+        #        case WHSModule::Transfer:
+        #            statusIssueCriteria = StatusIssue::Sold;
+        #            break;
+        #
+        #        case WHSModule::Sales:
+        #            statusIssueCriteria = StatusIssue::Deducted;
+        #            break;
+        #
+        #        default:
+        #            throw error(strFmt("@WAX2543", _workLine.LoadId));
+        #
+        #    }
+        #
+        #    workLineInventDim = InventDim::find(_workLine.InventDimId);
+        #    if (!WHSWorkLine::isInventDimIdBlank(workLineInventDim.InventDimId))
+        #    {
+        #        //Keep only the inventory dimensions that are required for the shipment
+        #        inventDimParmShipDim.initDimTransferReceipt(workLineInventDim);
+        #        //License Plate is a parameter of the method and must be joined seperately in the query
+        #        inventDimParmShipDim.LicensePlateFlag = NoYes::No;
+        #    }
+        #
+        #    while select ItemId, InventDimId, Qty, InventTransOrigin, StatusIssue from inventTrans
+        #        where inventTrans.StatusIssue           == statusIssueCriteria
+        #        join InventTransIdParent, WorkId, LineNum from workInventTrans
+        #        where workInventTrans.WorkId            == _workLine.WorkId
+        #            && workInventTrans.LineNum          == _workLine.LineNum
+        #        join RecId, InventTransId from inventTransOrigin
+        #        where inventTransOrigin.RecId           == inventTrans.InventTransOrigin
+        #            && inventTransOrigin.InventTransId  == workInventTrans.InventTransIdParent
+        #        #InventDimInnerJoin(inventTrans.inventDimId, inventDim, workLineInventDim, inventDimParmShipDim)
+        #            && inventDim.LicensePlateId         == _licensePlateId
+        #
+        #    {
+        #        lowestItemUnit = InventTableModule::find(inventTrans.ItemId, ModuleInventPurchSales::Invent).UnitId;
+        #
+        #        asnItem = WHSASNItem::findByLPModuleItemLineNum(_licensePlateId, _whsModule, inventTrans.ItemId, _workLine.LoadLineRefRecId, inventDim.InventDimId, true);
+        #
+        #        if (asnItem.RecId != 0)
+        #        {
+        #            asnItem.Qty += 0 - inventTrans.Qty;
+        #            asnItem.write();
+        #        }
+        #        else
+        #        {
+        #            asnItem.LicensePlateId      = _licensePlateId;
+        #            asnItem.Module              = _whsModule;
+        #            asnItem.LoadId              = _workLine.LoadId;
+        #            asnItem.ShipmentId          = _workLine.ShipmentId;
+        #            asnItem.LoadLineRefRecId    = _workLine.LoadLineRefRecId;
+        #            asnItem.ItemId              = inventTrans.ItemId;
+        #            asnItem.Qty                 = 0 - inventTrans.Qty;
+        #            asnItem.uom                 = lowestItemUnit;
+        #            asnItem.InventDimId         = inventTrans.InventDimId;
+        #
+        #            inventBatchId               = inventDim.InventBatchId;
+        #            if (!inventBatchId)
+        #            {
+        #                inventBatchId           = InventDim::find(inventTrans.InventDimId).InventBatchId;
+        #            }
+        #            asnItem.Description         = strFmt('%1',InventBatch::find(inventBatchId , inventTrans.ItemId).ExpDate);
+        #
+        #            if (asnItem.Qty)
+        #            {
+        #                asnItem.insert();
+        #            }
+        #
+        #            if (itemId != inventTrans.ItemId)
+        #            {
+        #                itemId      = inventTrans.ItemId;
+        #                itemIdCount = itemIdCount + 1;
+        #            }
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    if (itemIdCount == 1)
+        #    {
+        #        asnItems = [itemId,
+        #                    asnItem.Qty,
+        #                    lowestItemUnit,
+        #                    WHSLoadLine::findbyRecId(_workLine.LoadLineRefRecId).uom];
+        #    }
+        #    else
+        #    {
+        #        asnItems = ['', asnItem.Qty, '', ''];
+        #    }
+        #
+        #    return asnItems;
+        #}
+      ENDSOURCE
+      SOURCE #createContainerASN
+        #/// <summary>
+        #/// Creates ASN item records for outbound shipments from containers.
+        #/// </summary>
+        #/// <param name="_containerId">
+        #/// ContainerId to be used in ASN item creation as the license plate.
+        #/// </param>
+        #/// <param name="_whsModule">
+        #/// The <c>WHSModule</c>module used for the ASN item creation.
+        #/// </param>
+        #private void createContainerASN(
+        #    WHSContainerId      _containerId,
+        #    WHSModule           _whsModule)
+        #{
+        #    WHSASNItem                          asnItem;
+        #    WHSLoadLine                         loadLine;
+        #    WHSContainerLine                    containerLine;
+        #    InventDim                           inventDim;
+        #    UnitIDInventory                     inventUnitId;
+        #    EcoResReleasedProductUnitConverter  releasedProductUnitConverter = EcoResReleasedProductUnitConverter::construct();
+        #
+        #    ttsBegin;
+        #
+        #    while select containerLine
+        #        where containerLine.ContainerId == _containerId
+        #        join RecId, ShipmentId, LoadId from loadLine
+        #            where loadLine.RecId == containerLine.LoadLine
+        #    {
+        #        inventDim = containerLine.mergedClosedInventDim();
+        #
+        #        asnItem = WHSASNItem::findByLPModuleItemLineNum(_containerId, _whsModule, containerLine.ItemId, loadLine.RecId, inventDim.InventDimId, true);
+        #
+        #        inventUnitId = InventTableModule::find(containerLine.ItemId, ModuleInventPurchSales::Invent).UnitId;
+        #
+        #        if (asnItem.RecId != 0)
+        #        {
+        #            asnItem.Qty += releasedProductUnitConverter.convert(containerLine.Qty,
+        #                                                                UnitOfMeasure::findBySymbol(containerLine.UnitId).RecId,
+        #                                                                UnitOfMeasure::findBySymbol(inventUnitId).RecId,
+        #                                                                NoYes::Yes,
+        #                                                                containerLine.ItemId,
+        #                                                                inventDim.InventDimId,
+        #                                                                NoYes::Yes);
+        #            asnItem.write();
+        #        }
+        #        else
+        #        {
+        #            asnItem.LicensePlateId      = _containerId;
+        #            asnItem.Module              = _whsModule;
+        #            asnItem.LoadId              = loadLine.LoadId;
+        #            asnItem.ShipmentId          = loadLine.ShipmentId;
+        #            asnItem.LoadLineRefRecId    = loadLine.RecId;
+        #            asnItem.ItemId              = containerLine.ItemId;
+        #            asnItem.Qty                 = releasedProductUnitConverter.convert(containerLine.Qty,
+        #                                                                               UnitOfMeasure::findBySymbol(containerLine.UnitId).RecId,
+        #                                                                               UnitOfMeasure::findBySymbol(inventUnitId).RecId,
+        #                                                                               NoYes::Yes,
+        #                                                                               containerLine.ItemId,
+        #                                                                               inventDim.InventDimId,
+        #                                                                               NoYes::Yes);
+        #            asnItem.UOM                 = inventUnitId;
+        #            asnItem.InventDimId         = inventDim.InventDimId;
+        #
+        #            if (inventDim.inventBatchId)
+        #            {
+        #                asnItem.Description     = strFmt('%1',InventBatch::find(inventDim.inventBatchId, containerLine.ItemId).ExpDate);
+        #            }
+        #
+        #            if (asnItem.Qty)
+        #            {
+        #                asnItem.insert();
+        #            }
+        #        }
+        #    }
+        #
+        #    ttsCommit;
+        #}
+      ENDSOURCE
+      SOURCE #createContainerUOM
+        #/// <summary>
+        #/// Creates UOM Structures for outbound shipments from containers.
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// The Load Id that will be shipped.
+        #/// </param>
+        #/// <param name="_module">
+        #/// The <c>WHSModule</c>module used for building the UOM
+        #/// </param>
+        #private void createContainerUOM(
+        #    WHSLoadId   _loadId,
+        #    WHSModule   _module)
+        #{
+        #    WHSLoadLine         loadLine;
+        #    WHSContainerLine    containerLine;
+        #    WHSContainerTable   containerTable;
+        #    WHSUOMStructure     structure;
+        #    WHSContainerId      prevContainer;
+        #    EcoResReleasedProductUnitConverter  releasedProductUnitConverter = EcoResReleasedProductUnitConverter::construct();
+        #
+        #    // Build the UOM Structure from containers that were packed for the load.
+        #    while select RecId from loadLine
+        #        where loadLine.LoadId == _loadId
+        #        join ItemId, Qty, UnitId, ShipmentId, InventDimId from containerLine
+        #            where containerLine.LoadLine == loadLine.RecId
+        #        join ContainerId from containerTable
+        #        order by containerTable.ContainerId
+        #            where containerTable.ContainerId        == containerLine.ContainerId
+        #            &&    containerTable.ContainerBuildId   == ''
+        #    {
+        #        select firstonly forupdate structure
+        #            where structure.LicensePlateId  == containerTable.ContainerId
+        #            &&    structure.Module          == _module
+        #            &&    structure.ShipmentId      == containerLine.ShipmentId;
+        #
+        #        if (!structure)
+        #        {
+        #            structure.LicensePlateId    = containerTable.ContainerId;
+        #            structure.ItemId            = containerLine.ItemId;
+        #            structure.Qty               = releasedProductUnitConverter.convert(containerLine.Qty,
+        #                                                                               UnitOfMeasure::findBySymbol(containerLine.UnitId).RecId,
+        #                                                                               UnitOfMeasure::findBySymbol(InventTableModule::find(containerLine.ItemId, ModuleInventPurchSales::Invent).UnitId).RecId,
+        #                                                                               NoYes::Yes,
+        #                                                                               containerLine.ItemId,
+        #                                                                               containerLine.InventDimId,
+        #                                                                               NoYes::Yes);
+        #
+        #            structure.UOMItem           = InventTableModule::find(containerLine.ItemId, ModuleInventPurchSales::Invent).UnitId;
+        #            structure.Module            = _module;
+        #            structure.ShipmentId        = containerLine.ShipmentId;
+        #            structure.insert();
+        #        }
+        #        else
+        #        {
+        #            if (structure.ItemId != containerLine.ItemId)
+        #            {
+        #                structure.ItemId    = '';
+        #                structure.uomItem   = '';
+        #            }
+        #
+        #            structure.Qty  += releasedProductUnitConverter.convert(containerLine.Qty,
+        #                                                                   UnitOfMeasure::findBySymbol(containerLine.UnitId).RecId,
+        #                                                                   UnitOfMeasure::findBySymbol(InventTableModule::find(containerLine.ItemId, ModuleInventPurchSales::Invent).UnitId).RecId,
+        #                                                                   NoYes::Yes,
+        #                                                                   containerLine.ItemId,
+        #                                                                   containerLine.InventDimId,
+        #                                                                   NoYes::Yes);
+        #            structure.write();
+        #        }
+        #
+        #        // Only create ASNs once per ContainerId.
+        #        if (prevContainer   != containerTable.ContainerId)
+        #        {
+        #            prevContainer   = containerTable.ContainerId;
+        #            this.createContainerASN(containerTable.ContainerId, _module);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createInventTransferParmLine
+        #private void createInventTransferParmLine(InventTransferParmTable _inventTransferParmTable, WHSLoadId _loadId)
+        #{
+        #    InventTransferParmLine              inventTransferParmLine;
+        #    WHSLoadLine                         loadLine;
+        #    WHSWorkLine                         workLine;
+        #    WHSWorkLine                         putWorkLine;
+        #    WHSWorkTable                        workTable;
+        #    InventTransferLine                  inventTransferLine;
+        #    LineNum                             lineNum;
+        #    InventDim                           inventDim;
+        #    WMSLocation                         wmslocation;
+        #    WHSLocationProfile                  locationProfile;
+        #    WHSLocType                          finalShiplocType = WHSParameters::find().ShipFinalLocType;
+        #    WHSContainerTable                   containerTable;
+        #    WHSContainerLine                    containerLine;
+        #    EcoResReleasedProductUnitConverter  releasedProductUnitConverter = EcoResReleasedProductUnitConverter::construct();
+        #
+        #    //if the transfer order is by a load where there is a one-one between load lines and transfer lines then we can use a simpler approach to create the parmlines since everything on the transfer will be shipped. This will lead to a better performance when the update is done
+        #    if (this.isTransferOrderShippedBySimpleLoad(_inventTransferParmTable.TransferId, _loadId))
+        #    {
+        #        this.createParmLinesFromTransferLinesOnLoad(_inventTransferParmTable, _loadId);
+        #    }
+        #    else
+        #    {
+        #        while select InventQtyWork, InventDimId from workLine
+        #            where workLine.WorkStatus       != WHSWorkStatus::Cancelled
+        #            &&    workLine.WorkStatus       != WHSWorkStatus::Combined
+        #            &&    workLine.InventQtyWork     > 0
+        #        join RecId from loadLine
+        #            where loadLine.LoadId           == _loadId
+        #            &&    loadLine.OrderNum         == _inventTransferParmTable.TransferId
+        #            &&    loadLine.InventTransType  == InventTransType::TransferOrderShip
+        #            &&    loadLine.TransportRequest == NoYes::No
+        #            &&    loadLine.RecId            == workLine.LoadLineRefRecId
+        #        join inventTransferLine
+        #            where inventTransferLine.InventTransId == workLine.InventTransId
+        #        join TargetLicensePlateId from workTable
+        #            where workTable.WorkId      == workLine.WorkId
+        #            &&    workTable.WorkStatus  != WHSWorkStatus::Combined
+        #        join WorkId, LineNum, WorkType, wmsLocationId from putWorkLine
+        #        order by putWorkLine.LineNum desc
+        #            where putWorkLine.WorkId    == workTable.WorkId
+        #            &&    putWorkLine.WorkType  == WHSWorkType::Put
+        #        join WMSLocationId from wmslocation
+        #            where wmslocation.wMSLocationId     == putWorkLine.WMSLocationId
+        #            &&    wmslocation.inventLocationId  == workTable.InventLocationId
+        #        exists join locationProfile
+        #            where locationProfile.LocProfileId   == wmslocation.LocProfileId
+        #            &&    locationProfile.LocType        == finalShiplocType
+        #        {
+        #            // If there is a pick after this put (staging) then skip.
+        #            if (WHSWorkLine::getNextOppositeWorkLine(putWorkLine.WorkId, putWorkLine.LineNum, putWorkLine.WorkType))
+        #            {
+        #                continue;
+        #            }
+        #
+        #            ++lineNum;
+        #
+        #            inventTransferParmLine.clear();
+        #            inventTransferParmLine.initFromInventTransferLine(inventTransferLine);
+        #            inventTransferParmLine.TransferId = _inventTransferParmTable.TransferId;
+        #            inventTransferParmLine.ParmId = _inventTransferParmTable.ParmId;
+        #
+        #            inventDim = InventDim::find(workLine.InventDimId);
+        #            inventDim.wmsLocationId = putWorkLine.wmsLocationId;
+        #            inventDim.LicensePlateId = workTable.TargetLicensePlateId;
+        #            inventDim = InventDim::findOrCreate(inventDim);
+        #
+        #            // Likely a new loop needed for batch to include dimTracking
+        #            inventTransferParmLine.InventDimId = inventDim.InventDimId;
+        #            inventTransferParmLine.InventTransId = inventTransferLine.InventTransId;
+        #            inventTransferParmLine.InventTransIdTransit = inventTransferLine.InventTransIdTransitTo;
+        #            inventTransferParmLine.QtyShipNow = workLine.InventQtyWork;
+        #            inventTransferParmLine.LineNum = lineNum;
+        #
+        #            inventTransferParmLine.insert();
+        #        }
+        #
+        #        if (WHSParameters::canUsePackFunctionality())
+        #        {
+        #            // Loop over containers that were manually packed to create remaining parmLines.
+        #            while select InventDimId, ContainerId from containerTable
+        #                where containerTable.ContainerBuildId == ''
+        #                join Qty, UnitID, ItemId from containerLine
+        #                    where containerLine.ContainerId == containerTable.ContainerId
+        #                join InventTransId from loadLine
+        #                    where loadLine.RecId            == containerLine.LoadLine
+        #                    &&    loadLine.InventTransType  == InventTransType::TransferOrderShip
+        #                    &&    loadLine.OrderNum         == _inventTransferParmTable.TransferId
+        #                    &&    loadLine.LoadId           == _loadId
+        #                join inventTransferLine
+        #                    where inventTransferLine.InventTransId == loadLine.InventTransId
+        #                    &&    inventTransferLine.TransferId    == _inventTransferParmTable.TransferId
+        #            {
+        #                ++lineNum;
+        #
+        #                inventTransferParmLine.clear();
+        #                inventTransferParmLine.initFromInventTransferLine(inventTransferLine);
+        #                inventTransferParmLine.TransferId   = _inventTransferParmTable.TransferId;
+        #                inventTransferParmLine.ParmId       = _inventTransferParmTable.ParmId;
+        #
+        #                inventDim = InventDim::find(inventTransferParmLine.InventDimId);
+        #                inventDim.wMSLocationId  = InventDim::find(containerTable.InventDimId).wMSLocationId;
+        #                inventDim.LicensePlateId = containerTable.ContainerId;
+        #                inventDim = InventDim::findOrCreate(inventDim);
+        #
+        #                inventTransferParmLine.InventDimId          = inventDim.inventDimId;
+        #                inventTransferParmLine.InventTransId        = inventTransferLine.InventTransId;
+        #                inventTransferParmLine.InventTransIdTransit = inventTransferLine.InventTransIdTransitTo;
+        #                inventTransferParmLine.QtyShipNow           = releasedProductUnitConverter.convert(containerLine.Qty,
+        #                                                                                                   UnitOfMeasure::findBySymbol(containerLine.UnitId).RecId,
+        #                                                                                                   UnitOfMeasure::findBySymbol(InventTableModule::find(containerLine.ItemId, ModuleInventPurchSales::Invent).UnitId).RecId,
+        #                                                                                                   NoYes::Yes,
+        #                                                                                                   containerLine.ItemId,
+        #                                                                                                   inventDim.inventDimId,
+        #                                                                                                   NoYes::Yes);
+        #                inventTransferParmLine.LineNum = lineNum;
+        #
+        #                inventTransferParmLine.insert();
+        #            }
+        #        }
+        #
+        #        this.createInventTransferParmLineTMS(_inventTransferParmTable, _loadId);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createInventTransferParmLineNonWHS
+        #private void createInventTransferParmLineNonWHS(InventTransferParmTable _inventTransferParmTable, WHSLoadId _loadId)
+        #{
+        #    InventTransferParmLine          inventTransferParmLine;
+        #    InventTransferLine              transLine;
+        #    LineNum                         lineNum;
+        #    WHSLoadLine                     loadLine;
+        #
+        #    while select InventQty from loadLine
+        #        where loadLine.LoadId           == _loadId                              &&
+        #              loadLine.OrderNum         == _inventTransferParmTable.TransferId  &&
+        #              loadLine.InventTransType  == InventTransType::TransferOrderShip   &&
+        #              loadLine.TransportRequest == NoYes::No
+        #            join transLine
+        #            where loadLine.InventTransId == transLine.InventTransId
+        #    {
+        #        ++lineNum;
+        #
+        #        inventTransferParmLine.clear();
+        #        inventTransferParmLine.initFromInventTransferLine(transLine);
+        #        inventTransferParmLine.TransferId   = _inventTransferParmTable.TransferId;
+        #        inventTransferParmLine.ParmId       = _inventTransferParmTable.ParmId;
+        #
+        #        inventTransferParmLine.InventTransId = transLine.InventTransId;
+        #        inventTransferParmLine.InventTransIdTransit = transLine.InventTransIdTransitTo;
+        #        inventTransferParmLine.QtyShipNow = loadLine.InventQty;
+        #        inventTransferParmLine.LineNum = lineNum;
+        #
+        #        inventTransferParmLine.insert();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createInventTransferParmLineTMS
+        #/// <summary>
+        #/// This method is used to create invent trans parm lines for TMS-only items
+        #/// </summary>
+        #/// <param name="_inventTransferParmTable">
+        #/// A buffer of <c>InventTransferParmTable</c> table.
+        #/// </param>
+        #/// <param name="_loadId">
+        #/// Load id value
+        #/// </param>
+        #private void createInventTransferParmLineTMS(InventTransferParmTable _inventTransferParmTable, WHSLoadId _loadId)
+        #{
+        #    InventTransferParmLine          inventTransferParmLine;
+        #    InventTransferLine              transLine;
+        #    LineNum                         lineNum;
+        #    WHSLoadLine                     loadLine;
+        #    TMSInventEnabled                tmsInventEnabled;
+        #    WHSInventEnabled                whsInventEnabled;
+        #
+        #    while select InventQty from loadLine
+        #        where loadLine.LoadId           == _loadId                              &&
+        #              loadLine.OrderNum         == _inventTransferParmTable.TransferId  &&
+        #              loadLine.InventTransType  == InventTransType::TransferOrderShip   &&
+        #              loadLine.TransportRequest == NoYes::No
+        #            join transLine
+        #                where loadLine.InventTransId == transLine.InventTransId
+        #            join TableId from tmsInventEnabled
+        #                where tmsInventEnabled.ItemId == loadLine.ItemId
+        #            notexists join TableId from whsInventEnabled
+        #                where whsInventEnabled.ItemId == loadLine.ItemId
+        #    {
+        #        ++lineNum;
+        #
+        #        inventTransferParmLine.clear();
+        #        inventTransferParmLine.initFromInventTransferLine(transLine);
+        #        inventTransferParmLine.TransferId   = _inventTransferParmTable.TransferId;
+        #        inventTransferParmLine.ParmId       = _inventTransferParmTable.ParmId;
+        #
+        #        inventTransferParmLine.InventTransId = transLine.InventTransId;
+        #        inventTransferParmLine.InventTransIdTransit = transLine.InventTransIdTransitTo;
+        #        inventTransferParmLine.QtyShipNow = loadLine.InventQty;
+        #        inventTransferParmLine.LineNum = lineNum;
+        #
+        #        inventTransferParmLine.insert();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createParmLinesFromTransferLinesOnLoad
+        #private void createParmLinesFromTransferLinesOnLoad(
+        #    InventTransferParmTable _inventTransferParmTable,
+        #    WHSLoadId               _loadId)
+        #{
+        #    InventTransferParmLine          inventTransferParmLine;
+        #    InventTransferLine              inventTransferLine;
+        #    LineNum                         lineNum;
+        #    WHSLoadLine                     loadLine;
+        #
+        #    while select inventTransferLine
+        #        where inventTransferLine.TransferId == _inventTransferParmTable.TransferId
+        #    exists join loadLine
+        #        where loadLine.InventTransId    == inventTransferLine.InventTransId
+        #        &&    loadLine.InventTransType  == InventTransType::TransferOrderShip
+        #        &&    loadLine.TransportRequest == NoYes::No
+        #        &&    loadLine.LoadId           == _loadId
+        #    {
+        #        ++lineNum;
+        #
+        #        inventTransferParmLine.clear();
+        #        inventTransferParmLine.initFromInventTransferLine(inventTransferLine);
+        #        inventTransferParmLine.TransferId   = _inventTransferParmTable.TransferId;
+        #        inventTransferParmLine.ParmId       = _inventTransferParmTable.ParmId;
+        #
+        #        inventTransferParmLine.InventTransId        = inventTransferLine.InventTransId;
+        #        inventTransferParmLine.InventTransIdTransit = inventTransferLine.InventTransIdTransitTo;
+        #        inventTransferParmLine.QtyShipNow           = inventTransferLine.QtyTransfer;
+        #        inventTransferParmLine.LineNum = lineNum;
+        #
+        #        inventTransferParmLine.insert();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #generateAndSendASN
+        #/// <summary>
+        #/// Generates and sends ASN for a load.
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load for which we want to generate and send ASN.
+        #/// </param>
+        #private void generateAndSendASN(WHSLoadId _loadId)
+        #{
+        #    WHSShipmentTable        shipmentTable;
+        #    WHSLoadLine             loadLine;
+        #
+        #    ttsbegin;
+        #
+        #    while select ShipmentId, AccountNum from shipmentTable
+        #        where shipmentTable.LoadId == _loadId
+        #        exists join ShipmentId from loadLine
+        #            where shipmentTable.ShipmentId == loadLine.ShipmentId
+        #    {
+        #        if (WHSCustTable::find(shipmentTable.AccountNum).GenerateASN)
+        #        {
+        #            this.generateASN(shipmentTable.ShipmentId);
+        #            this.sendElectronically(shipmentTable);
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #generateASN
+        #/// <summary>
+        #/// Generates ASN for a shipment.
+        #/// </summary>
+        #/// <param name="_shipmentId">
+        #/// Shipment Id for which we want to generate ASN
+        #/// </param>
+        #private void generateASN(WHSShipmentId _shipmentId)
+        #{
+        #    WHSWorkLine             workLine;
+        #    WHSWorkTable            workTable;
+        #    WHSUOMStructure         uomStructure;
+        #    WHSModule               whsModule = WHSModule::Sales;
+        #    RefRecId                prevLoadLineRefRecId;
+        #    WHSWorkId               prevWorkLineWorkId;
+        #    WHSLoadLine             loadLine;
+        #    InventTableModule       inventTableModule;
+        #
+        #
+        #    while select workLine
+        #        join WorkId, TargetLicensePlateId, WorkStatus from workTable
+        #        group by workLine.ShipmentId,
+        #                 workLine.LoadId,
+        #                 workLine.WorkId,
+        #                 workTable.TargetLicensePlateId,
+        #                 workLine.InventTransId,
+        #                 workLine.InventDimId,
+        #                 workLine.LoadLineRefRecId,
+        #                 workLine.LineNum,
+        #                 workLine.ItemId,
+        #                 workLine.InventQtyWork
+        #        order by workLine.ShipmentId,
+        #                 workTable.TargetLicensePlateId
+        #        where workLine.ShipmentId           == _shipmentId
+        #            && workLine.LoadLineRefRecId    != 0
+        #            && workLine.WorkId              == workTable.WorkId
+        #            && workTable.WorkStatus         != WHSWorkStatus::Cancelled
+        #            && workTable.WorkStatus         != WHSWorkStatus::Combined
+        #            && workLine.WorkStatus          != WHSWorkStatus::Cancelled
+        #        join UOM from loadLine
+        #        where loadLine.RecId == workLine.LoadLineRefRecId
+        #        join UnitId from inventTableModule
+        #        where inventTableModule.itemId      == workLine.ItemId
+        #           && inventTableModule.ModuleType  == ModuleInventPurchSales::Invent
+        #
+        #    {
+        #        if (uomStructure.LicensePlateId != workTable.TargetLicensePlateId)
+        #        {
+        #            // Need to insert new UOMStructure record:
+        #            uomStructure.clear();
+        #            uomStructure.LicensePlateId     = workTable.TargetLicensePlateId;
+        #            uomStructure.ItemId             = workLine.ItemId;
+        #            uomStructure.Qty                = workLine.InventQtyWork;
+        #            uomStructure.UOMItem            = inventTableModule.UnitId;
+        #            uomStructure.Module             = whsModule;
+        #            uomStructure.ShipmentId         = workLine.ShipmentId;
+        #            uomStructure.LoadId             = workLine.LoadId;
+        #            uomStructure.CreatedWorkId      = workLine.WorkId;
+        #            uomStructure.UOMPack            = loadLine.UOM;
+        #            uomStructure.HasPacks           = NoYes::No;
+        #            uomStructure.insert();
+        #        }
+        #        else
+        #        {
+        #            // Need to update existing UOMStructure record with data from the current work line:
+        #            uomStructure.Qty        += workLine.InventQtyWork;
+        #            uomStructure.ItemId     = (uomStructure.ItemId  == '' || uomStructure.ItemId != workLine.ItemId) ?              '' : uomStructure.ItemId;
+        #            uomStructure.uomPack    = (uomStructure.uomPack == '' || uomStructure.uomPack != loadLine.UOM) ?                '' : uomStructure.uomPack;
+        #            uomStructure.uomItem    = (uomStructure.uomItem == '' || uomStructure.uomItem != inventTableModule.UnitId) ?    '' : uomStructure.uomItem;
+        #            uomStructure.write();
+        #        }
+        #
+        #        // The update or creation of ASNItems must occur only once per WHSLoadLine or per WHSWorkTable (header) in order to avoid adding the quantity of the InventTrans records twice for the same line.
+        #        if ( workTable.TargetLicensePlateId &&
+        #            (workLine.LoadLineRefRecId != prevLoadLineRefRecId || workLine.WorkId != prevWorkLineWorkId))
+        #        {
+        #            prevLoadLineRefRecId = workLine.LoadLineRefRecId;
+        #            prevWorkLineWorkId   = workLine.WorkId;
+        #            this.createASNItems(workTable.TargetLicensePlateId, workLine, whsModule);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insertInvTransferParmTableFiscalInfo_BR
+        #/// <summary>
+        #/// Inserts the Brazilian fiscal information and shipment parm record in the database so that the fiscal document post engine
+        #/// can retrieve the values.
+        #/// </summary>
+        #/// <param name="_inventTransferParmTableRecId">
+        #/// RecId of the InventTransferParmTable record that should be linked with the InventTransferParmTableFiscalInfo_BR
+        #/// that will be inserted into the database.
+        #/// </param>
+        #/// <param name="_loadId">
+        #/// Id of the load that contains the information which will be used to initialize the InventTransferParmTableFiscalInfo_BR.
+        #/// </param>
+        #/// <param name="_transferOrderId">
+        #/// If of the transfer order that contains the information which will be used to initialize the InventTransferParmTableFiscalInfo_BR.
+        #/// </param>
+        #protected void insertInvTransferParmTableFiscalInfo_BR(RefRecId _inventTransferParmTableRecId, WHSLoadId _loadId, WHSOrderNum _transferOrderId)
+        #{
+        #    InventTransferParmTableFiscalInfo_BR::insertFromLoad(_loadId, _transferOrderId, _inventTransferParmTableRecId);
+        #}
+      ENDSOURCE
+      SOURCE #isTransferOrderShippedBySimpleLoad
+        #/// <summary>
+        #/// Determines if the transfer order is shipped by a load where each transfer line has exactly one corresponding load line which fully corresponds to the transfer lines demand.
+        #/// </summary>
+        #/// <param name="_transferId">
+        #/// A transfer ID.
+        #/// </param>
+        #/// <param name="_loadId">
+        #/// A load ID.
+        #/// </param>
+        #/// <returns>
+        #/// true if the transfer order is shipped by a load where each transfer line has exactly one corresponding load line which fully corresponds to the transfer lines demand; otherwise, false.
+        #/// </returns>
+        #private boolean isTransferOrderShippedBySimpleLoad(
+        #    InventTransferId    _transferId,
+        #    WHSLoadId           _loadId)
+        #{
+        #    InventTransferLine  inventTransferLine;
+        #    WHSLoadLine         loadLine;
+        #
+        #    select firstonly RecId from inventTransferLine
+        #        where inventTransferLine.TransferId == _transferId
+        #    notexists join loadLine
+        #        where loadLine.LoadId == _loadId
+        #        &&    loadLine.InventTransId    == inventTransferLine.InventTransId
+        #        &&    loadLine.InventTransType  == InventTransType::TransferOrderShip
+        #        &&    loadLine.PickedQty        == inventTransferLine.QtyTransfer
+        #        &&    loadLine.InventQty        == inventTransferLine.QtyTransfer;
+        #
+        #    return (inventTransferLine.RecId == 0);
+        #}
+      ENDSOURCE
+      SOURCE #name
+        #private IdentifierName name()
+        #{
+        #    return classStr(WHSShipConfirm);
+        #}
+      ENDSOURCE
+      SOURCE #parmSkipActualShipDate
+        #public boolean parmSkipActualShipDate(boolean _skipActualShipDate = skipActualShipDate)
+        #{
+        #    if (_skipActualShipDate)
+        #    {
+        #        skipActualShipDate = _skipActualShipDate;
+        #    }
+        #
+        #    return skipActualShipDate;
+        #}
+      ENDSOURCE
+      SOURCE #parmSkipLoadTender
+        #public boolean parmSkipLoadTender(boolean _skipLoadTender = skipLoadTender)
+        #{
+        #    if (_skipLoadTender)
+        #    {
+        #        skipLoadTender = _skipLoadTender;
+        #    }
+        #
+        #    return skipLoadTender;
+        #}
+      ENDSOURCE
+      SOURCE #postPackingSlip
+        #/// <summary>
+        #/// Posts packing slip for a load.
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load for which we want to post packing slip
+        #/// </param>
+        #public void postPackingSlip(WHSLoadId _loadId)
+        #{
+        #    WHSLoadTable        loadTable = WHSLoadTable::find(_loadId);
+        #    WHSLoadTable        multiLoadTable;
+        #
+        #    if (!WHSShipConfirm::isPackingSlipEnabledForLoad(loadTable))
+        #    {
+        #        warning(strFmt("@WAX5703", _loadId));
+        #        return;
+        #    }
+        #
+        #    if (TMSRoute::find(loadTable.RouteCode).numOfLoads() > 1)
+        #    {
+        #        while select multiLoadTable
+        #            where multiLoadTable.RouteCode == loadTable.RouteCode
+        #        {
+        #            if (!WHSShipConfirm::isPackingSlipEnabledForLoad(multiLoadTable))
+        #            {
+        #                warning(strFmt("@WAX5704", loadTable.RouteCode, multiLoadTable.LoadId));
+        #                return;
+        #            }
+        #        }
+        #
+        #        while select multiLoadTable
+        #            where multiLoadTable.RouteCode == loadTable.RouteCode
+        #        {
+        #            if (!WHSShipConfirm::isPackingSlipEnabledForLoad(multiLoadTable))
+        #            {
+        #                warning(strFmt("@WAX5704", loadTable.RouteCode, multiLoadTable.LoadId));
+        #                return;
+        #            }
+        #            this.runPackingSlip(multiLoadTable.LoadId);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        this.runPackingSlip(_loadId);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #printBOLForLoad
+        #/// <summary>
+        #/// Prints Bill of lading for a load
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load for which we want to print Bill of lading
+        #/// </param>
+        #public void printBOLForLoad(WHSLoadId _loadId)
+        #{
+        #    WHSLoadTable        loadTable = WHSLoadTable::find(_loadId);
+        #    WHSLoadTable        multiLoadTable;
+        #
+        #    if (!WHSShipConfirm::isBOLEnabledForLoad(loadTable))
+        #    {
+        #        warning(strFmt("@WAX1967", loadTable.LoadId, loadTable.LoadStatus));
+        #        return;
+        #    }
+        #
+        #    ttsbegin;
+        #
+        #    if (TMSRoute::find(loadTable.RouteCode).numOfLoads() > 1)
+        #    {
+        #        while select multiLoadTable
+        #            where multiLoadTable.RouteCode == loadTable.RouteCode
+        #        {
+        #            if (WHSShipConfirm::isBOLEnabledForLoad(multiLoadTable))
+        #            {
+        #                this.runBOLForLoad(multiLoadTable.LoadId);
+        #            }
+        #            else
+        #            {
+        #                warning(strFmt("@WAX1967", multiLoadTable.LoadId, multiLoadTable.LoadStatus));
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        this.runBOLForLoad(_loadId);
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #printBOLForShipment
+        #/// <summary>
+        #/// Prints Bill of lading for a shipment
+        #/// </summary>
+        #/// <param name="_shipmentId">
+        #/// Shipment for which we want to print Bill of lading
+        #/// </param>
+        #public void printBOLForShipment(WHSShipmentId _shipmentId)
+        #{
+        #    if (!WHSShipConfirm::isBOLEnabledForShipment(WHSShipmentTable::find(_shipmentId)))
+        #    {
+        #        warning(strFmt("@WAX1966", _shipmentId, WHSShipmentTable::find(_shipmentId).ShipmentStatus));
+        #    }
+        #    else
+        #    {
+        #        this.runBOLForShipment(_shipmentId);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #retrieveLoads
+        #/// <summary>
+        #///     Generates a map with all loads that have to be ship confirmed at the same time and that can be actually ship confirmed.
+        #/// </summary>
+        #/// <param name="_loadTable">
+        #///     The <c>WHSLoadTable</c> record of the load which user asked to ship confirm.
+        #/// </param>
+        #/// <returns>
+        #///     A container with the loads that have to be ship confirmed.
+        #/// </returns>
+        #/// <remarks>
+        #///     If load belongs to a route then we want to ship confirm all the loads on the route together.
+        #///     If load doesn't belong to a route then we ship confrim only the load that user asked us to ship confirm.
+        #///     If at least one of the loads doesn't match ship confirm criteria then we don't ship confirm loads at all.
+        #/// </remarks>
+        #protected container retrieveLoads(WHSLoadTable _loadTable)
+        #{
+        #    TMSRouteSegmentLoad     segmentLoad;
+        #    container               loads;
+        #
+        #    if (_loadTable.RouteCode)
+        #    {
+        #        while select Id from segmentLoad
+        #            group by Id
+        #            where segmentLoad.RouteCode == _loadTable.RouteCode
+        #        {
+        #            if (!this.canShipConfirm(WHSLoadTable::find(segmentLoad.Id)))
+        #            {
+        #                loads = conNull();
+        #                break;
+        #            }
+        #            loads += segmentLoad.Id;
+        #        }
+        #
+        #        if (!this.validateRouteOnLoad(_loadTable, loads))
+        #        {
+        #            loads = conNull();
+        #        }
+        #    }
+        #    else
+        #    {
+        #        if (this.canShipConfirm(_loadTable))
+        #        {
+        #            loads += _loadTable.LoadId;
+        #        }
+        #    }
+        #
+        #    return loads;
+        #}
+      ENDSOURCE
+      SOURCE #retriveShipDateTime
+        #/// <summary>
+        #///     Generate a map with actual ship date per load. Prompts a dynamically generated dialog if necessary.
+        #/// </summary>
+        #/// <param name="_loadTable">
+        #///     The <c>WHSLoadTable</c> record of the load to retrive actual ship date.
+        #/// </param>
+        #/// <returns>
+        #///     A map with actual ship date per load.
+        #/// </returns>
+        #private Map retriveShipDateTime(WHSLoadTable _loadTable)
+        #{
+        #    Map       shipDateMap;
+        #    container loads;
+        #    int       numOfLoads;
+        #    int       i;
+        #
+        #    loads = this.retrieveLoads(_loadTable);
+        #    numOfLoads = conLen(loads);
+        #
+        #    if (numOfLoads > 0)
+        #    {
+        #        if (!this.parmSkipActualShipDate()
+        #        && TMSParameters::find().OverrideShipConfirmDate)
+        #        {
+        #            shipDateMap = this.runShipDateDialog(loads, _loadTable.RouteCode);
+        #        }
+        #        else
+        #        {
+        #            shipDateMap = new Map(Types::String, Types::UtcDateTime);
+        #
+        #            for (i = 1; i <= numOfLoads; ++i)
+        #            {
+        #                shipDateMap.insert(conPeek(loads, i), DateTimeUtil::getSystemDateTime());
+        #            }
+        #        }
+        #
+        #        if (!shipDateMap || numOfLoads != shipDateMap.elements())
+        #        {
+        #            shipDateMap = null;
+        #            warning(numOfLoads > 1 ? strFmt("@TRX1864", _loadTable.LoadId, _loadTable.RouteCode) : strFmt("@TRX2706", _loadTable.LoadId));
+        #        }
+        #    }
+        #
+        #    return shipDateMap;
+        #}
+      ENDSOURCE
+      SOURCE #runBOLForLoad
+        #/// <summary>
+        #/// Runs print BOL for a particular load
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load that will run through the print BOL process
+        #/// </param>
+        #private void runBOLForLoad(WHSLoadId _loadId)
+        #{
+        #    WHSShipmentTable        shipmentTable;
+        #    WHSLoadLine             loadLine;
+        #
+        #    ttsbegin;
+        #
+        #    while select ShipmentId, LoadId from shipmentTable
+        #        where shipmentTable.LoadId == _loadId
+        #        exists join loadLine
+        #            where shipmentTable.ShipmentId == loadLine.ShipmentId
+        #    {
+        #        this.printBOLForShipment(shipmentTable.ShipmentId);
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #runBOLForShipment
+        #/// <summary>
+        #/// Runs print BOL for a particular shipment
+        #/// </summary>
+        #/// <param name="_shipmentId">
+        #/// Shipment that we will run through the print BOL process
+        #/// </param>
+        #private void runBOLForShipment(WHSShipmentId _shipmentId)
+        #{
+        #    Args                                args;
+        #    WHSShipmentTable                    shipmentTable;
+        #    WHSBillofLadingController           srsReportRun;
+        #    WHSBillOfLadingDataUtil             billOfLadingDataUtil;
+        #
+        #    ttsbegin;
+        #    shipmentTable = WHSShipmentTable::find(_shipmentId, true);
+        #
+        #    if (shipmentTable.RecId != 0 && !shipmentTable.BillOfLadingId)
+        #    {
+        #        shipmentTable.setBillOfLadingId();
+        #        shipmentTable.update();
+        #
+        #        TMSFreightBillDetail::setBillOfLadingId(shipmentTable);
+        #    }
+        #    ttscommit;
+        #
+        #    if (shipmentTable.RecId != 0)
+        #    {
+        #        if (WHSBillOfLading::exist(shipmentTable.BillOfLadingId))
+        #        {
+        #            if (Box::yesNo(strFmt("@SYP4882632", shipmentTable.ShipmentId), DialogButton::No, "@SYP4882633") == DialogButton::Yes)
+        #            {
+        #                billOfLadingDataUtil = WHSBillOfLadingDataUtil::construct();
+        #                billOfLadingDataUtil.parmShipmentCriteria(shipmentTable);
+        #                billOfLadingDataUtil.populateBillOfLadingTables();
+        #            }
+        #        }
+        #        else
+        #        {
+        #            billOfLadingDataUtil = WHSBillOfLadingDataUtil::construct();
+        #            billOfLadingDataUtil.parmShipmentCriteria(shipmentTable);
+        #            billOfLadingDataUtil.populateBillOfLadingTables();
+        #        }
+        #
+        #        args = new Args(ssrsReportStr(WHSBillOfLading, Report));
+        #        args.caller(this);
+        #        args.record(shipmentTable);
+        #
+        #        srsReportRun = new WHSBillofLadingController();
+        #        srsReportRun.parmReportName(ssrsReportStr(WHSBillOfLading, Report));
+        #        srsReportRun.parmArgs(args);
+        #        srsReportRun.parmShowDialog(false);
+        #        srsReportRun.startOperation();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #runPackingSlip
+        #/// <summary>
+        #/// Processes the packing slip process for a given outbound load.
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load that will run through the packing slip process
+        #/// </param>
+        #/// <param name="_caller">
+        #/// The form that is calling the method.
+        #/// </param>
+        #public void runPackingSlip(WHSLoadId _loadId, FormRun _caller = null)
+        #{
+        #    WHSLoadTable                    loadTable;
+        #    Args                            args;
+        #
+        #
+        #    loadTable = WHSLoadTable::find(_loadId);
+        #    args = new Args();
+        #    args.record(loadTable);
+        #    if (_caller == null)
+        #    {
+        #        args.caller(this);
+        #    }
+        #    else
+        #    {
+        #        args.caller(_caller);
+        #    }
+        #    new MenuFunction(menuitemActionStr(SalesFormLetter_PackingSlip), MenuItemType::Action).run(args);
+        #}
+      ENDSOURCE
+      SOURCE #runPackingSlipForContainer
+        #/// <summary>
+        #/// Processes the packing slip process for a container
+        #/// </summary>
+        #/// <param name="_whsContainerTable">
+        #/// Container that will run through the packing slip process
+        #/// </param>
+        #/// <param name="_caller">
+        #/// The form that is calling the method.
+        #/// </param>
+        #public void runPackingSlipForContainer(WHSContainerTable _whsContainerTable, FormRun _caller = null)
+        #{
+        #    this.runPackingSlip(WHSShipmentTable::find(_whsContainerTable.ShipmentId).LoadId, _caller);
+        #}
+      ENDSOURCE
+      SOURCE #runShipDateDialog
+        #/// <summary>
+        #///     Prompts a dynamically generated dialog to enter in actual ship date per load.
+        #/// </summary>
+        #/// <param name="_loads">
+        #///     Loads to enter ship dates.
+        #/// </param>
+        #/// <param name="_routeCode">
+        #///     Rute code to which loads belong to.
+        #/// </param>
+        #/// <returns>
+        #///     A map with actual ship date per load.
+        #/// </returns>
+        #Map runShipDateDialog(
+        #    container    _loads,
+        #    TMSRouteCode _routeCode)
+        #{
+        #    return TMSRouteHelper::getShipDates(_loads, _routeCode);
+        #}
+      ENDSOURCE
+      SOURCE #runTransferShip
+        #/// <summary>
+        #///     Creates the required <c>InventTransferParmTable</c> records related to the shipment of the Transfer Order,
+        #///     the required <c>WHSASNItem</c> and <c>WHSUOMStructure</c> records.
+        #/// </summary>
+        #/// <param name="_loadId">
+        #///     The Load Id that will be shipped.
+        #/// </param>
+        #/// <param name="_shipDateConfirmed">
+        #///     The confirmed ship date.
+        #/// </param>
+        #public void runTransferShip(WHSLoadId _loadId, TMSApptUTCDateTime _shipDateConfirmed)
+        #{
+        #    WHSLoadLine                     loadLine;
+        #    InventTransferParmTable         inventTransferParmTable;
+        #    InventTransferMultiShip         inventTransferMultiShip;
+        #    WHSUOMStructure                 structure;
+        #    WHSWorkLine                     workLine;
+        #    WHSWorkTable                    workTable;
+        #    boolean                         whsWarehouse = InventLocation::find(WHSLoadTable::find(_loadId).InventLocationId).whsEnabled;
+        #    WHSModule                       whsModule = WHSModule::Transfer;
+        #    WHSLoadLine                     prevLoadLine;
+        #    WHSWorkId                       prevWorkId;
+        #    WHSWorkId                       loopWorkId;
+        #    WHSLocType                      finalShiplocType = WHSParameters::find().ShipFinalLocType;
+        #
+        #    ttsbegin;
+        #
+        #    while select loadLine
+        #        group by OrderNum, InventTransType, TransportRequest
+        #        where loadLine.LoadId           == _loadId                              &&
+        #              loadLine.InventTransType  == InventTransType::TransferOrderShip   &&
+        #              loadLine.TransportRequest == NoYes::No
+        #    {
+        #        inventTransferParmTable.clear();
+        #        inventTransferParmTable.initParmDefault();
+        #        inventTransferParmTable.TransferId       = loadLine.OrderNum;
+        #        inventTransferParmTable.UpdateType       = InventTransferUpdateType::Shipment;
+        #        inventTransferParmTable.ShipUpdateQty    = InventTransferShipUpdateQty::PickedQty;
+        #        inventTransferParmTable.ReceiveUpdateQty = InventTransferReceiveUpdateQty::ReceiveNow;
+        #        inventTransferParmTable.EditLines        = true;
+        #        inventTransferParmTable.LineNum          = 1;
+        #        inventTransferParmTable.JobStatus        = ParmJobStatus::Executed;
+        #        inventTransferParmTable.ExecutedDateTime = DateTimeUtil::utcNow();
+        #        inventTransferParmTable.ExecutedDateTime = _shipDateConfirmed;
+        #        inventTransferParmTable.PickUpdateQty    = InventTransferPickUpdateQty::ShipNow;
+        #        inventTransferParmTable.ExplodeLines     = true;
+        #
+        #        inventTransferMultiShip = InventTransferMultiShip::construct();
+        #        inventTransferMultiShip.init();
+        #        inventTransferMultiShip.parmCalledFromWMS(false);
+        #        RunBaseMultiParm::initParm(inventTransferMultiShip);
+        #
+        #        inventTransferParmTable.ParmId = inventTransferMultiShip.parmId();
+        #        inventTransferParmTable.insert(false);
+        #
+        #        // <GBR>
+        #        if (BrazilParameters::isEnabled())
+        #        {
+        #            this.insertInvTransferParmTableFiscalInfo_BR(inventTransferParmTable.RecId, _loadId, loadLine.OrderNum);
+        #        }
+        #        // </GBR>
+        #
+        #        if (whsWarehouse)
+        #        {
+        #            this.createInventTransferParmLine(inventTransferParmTable, _loadId);
+        #        }
+        #        else
+        #        {
+        #            this.createInventTransferParmLineNonWHS(inventTransferParmTable, _loadId);
+        #        }
+        #
+        #
+        #        select inventTransferParmTable
+        #            where inventTransferParmTable.ParmId == inventTransferMultiShip.parmId();
+        #
+        #        while (inventTransferParmTable)
+        #        {
+        #            try
+        #            {
+        #                inventTransferMultiShip.runUpdate(inventTransferParmTable);
+        #                inventTransferMultiShip.addUpdateRec(InventTransferTable::find(inventTransferParmTable.TransferId));
+        #            }
+        #            catch (Exception::Deadlock)
+        #            {
+        #                retry;
+        #            }
+        #            catch (Exception::UpdateConflict)
+        #            {
+        #                throw Exception::UpdateConflict;
+        #            }
+        #            catch (Exception::Error)
+        #            {
+        #                exceptionTextFallThrough();
+        #            }
+        #
+        #            next inventTransferParmTable;
+        #        }
+        #    }
+        #
+        #    while select ItemId, ShipmentId, InventDimId, LoadId, RecId from loadLine
+        #        order by loadLine.RecId, workLine.WorkId
+        #        join workLine
+        #        where   workLine.LoadLineRefRecId == loadLine.RecId
+        #           &&   workLine.WorkStatus       != WHSWorkStatus::Cancelled
+        #           &&   workLine.InventQtyWork     > 0
+        #           &&   loadLine.LoadId           == _loadId
+        #           &&   loadLine.InventTransType  == InventTransType::TransferOrderShip
+        #        join TargetLicensePlateId, InventLocationId from workTable
+        #        where workTable.WorkId                  == workLine.WorkId
+        #            &&  workTable.WorkStatus            != WHSWorkStatus::Combined
+        #            &&  workTable.TargetLicensePlateId  != ''
+        #    {
+        #        if (workLine.WorkId == loopWorkId
+        #        ||  WHSLocationProfile::find(WMSLocation::find(WHSWorkTable::getLastClosedPutWorkLine(workLine.WorkId).WMSLocationId, workTable.InventLocationId).LocProfileId).LocType == finalShiplocType)
+        #        {
+        #            loopWorkId = workLine.WorkId;
+        #
+        #            select firstonly forupdate structure
+        #                where structure.LicensePlateId == workTable.TargetLicensePlateId
+        #                    && structure.Module         == whsModule
+        #                    && structure.ShipmentId     == loadLine.ShipmentId;
+        #
+        #            if (!structure)
+        #            {
+        #                structure.LicensePlateId    = workTable.TargetLicensePlateId;
+        #                structure.ItemId            = loadLine.ItemId;
+        #                structure.Qty               = workLine.InventQtyWork;
+        #                structure.uomItem           = InventTableModule::find(loadLine.ItemId, ModuleInventPurchSales::Invent).UnitId;
+        #                structure.Module            = whsModule;
+        #                structure.ShipmentId        = loadLine.ShipmentId;
+        #                structure.insert();
+        #            }
+        #            else
+        #            {
+        #                if (structure.ItemId == loadLine.ItemId)
+        #                {
+        #                    structure.Qty   += workLine.InventQtyWork;
+        #                    structure.write();
+        #                }
+        #                else
+        #                {
+        #                    structure.ItemId    = '';
+        #                    structure.uomItem   = '';
+        #                    structure.Qty      += workLine.InventQtyWork;
+        #                    structure.write();
+        #                }
+        #            }
+        #
+        #            // Using licenseplate for receiving a transfer order requires ASNitems so we need to create them as part of the ship process.
+        #            // The update or creation of ASNItems must occur only once per WHSLoadLine in order to avoid adding the quantity of the InventTrans records twice for the same line.
+        #            if (workTable.TargetLicensePlateId
+        #                && (loadLine.RecId != prevLoadLine.RecId
+        #                ||  workLine.WorkId!= prevWorkId))
+        #            {
+        #                prevLoadLine = loadLine.data();
+        #                prevWorkId   = workLine.WorkId;
+        #                this.createASNItems(workTable.TargetLicensePlateId, workLine, whsModule);
+        #            }
+        #        }
+        #    }
+        #
+        #    if (WHSParameters::canUsePackFunctionality())
+        #    {
+        #        // Build the UOM Structure from containers that were packed for the load
+        #        this.createContainerUOM(_loadId, whsModule);
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #sendASN
+        #/// <summary>
+        #/// Generates and sends ASN for a load.
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load for which we want to generate and send ASN.
+        #/// </param>
+        #public void sendASN(WHSLoadId _loadId)
+        #{
+        #    WHSLoadTable        loadTable = WHSLoadTable::find(_loadId);
+        #    WHSLoadTable        multiLoadTable;
+        #
+        #    if (!WHSShipConfirm::isSendASNEnabledForLoad(loadTable))
+        #    {
+        #        warning(strFmt("@WAX5703", _loadId));
+        #        return;
+        #    }
+        #
+        #    ttsbegin;
+        #
+        #    if (TMSRoute::find(loadTable.RouteCode).numOfLoads() > 1)
+        #    {
+        #        while select multiLoadTable
+        #            where multiLoadTable.RouteCode == loadTable.RouteCode
+        #        {
+        #            if (!WHSShipConfirm::isSendASNEnabledForLoad(multiLoadTable))
+        #            {
+        #                warning(strFmt("@WAX5704", loadTable.RouteCode, multiLoadTable.LoadId));
+        #                return;
+        #            }
+        #        }
+        #
+        #        while select multiLoadTable
+        #            where multiLoadTable.RouteCode == loadTable.RouteCode
+        #        {
+        #            if (!WHSShipConfirm::isSendASNEnabledForLoad(multiLoadTable))
+        #            {
+        #                warning(strFmt("@WAX5704", loadTable.RouteCode, multiLoadTable.LoadId));
+        #                return;
+        #            }
+        #            this.generateAndSendASN(multiLoadTable.LoadId);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        this.generateAndSendASN(_loadId);
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #sendElectronically
+        #/// <summary>
+        #///     The method creates a package task for service
+        #/// </summary>
+        #/// <param name="_shipmentTable">
+        #///     <c>WHSShipmentTable</c> record information on which will be unloaded by service
+        #/// </param>
+        #/// <param name="_xmlDocPurpose">
+        #///     Purpose of the document
+        #/// </param>
+        #/// <param name="_aifSendMode">
+        #///     Send mode
+        #/// </param>
+        #private void sendElectronically(WHSShipmentTable _shipmentTable,
+        #                                XMLDocPurpose    _xmlDocPurpose = XMLDocPurpose::Original,
+        #                                AifSendMode      _aifSendMode   = AifSendMode::Async)
+        #{
+        #    AxdSendContext      axdSendContext      = AxdSendContext::construct();
+        #    AifEntityKey        aifEntityKey        = AifEntityKey::construct();
+        #    Map                 keyData;
+        #    AifConstraintList   aifConstraintList   = new AifConstraintList();
+        #    AifConstraint       aifConstraint       = new AifConstraint();
+        #
+        #    keyData = SysDictTable::getKeyData(_shipmentTable);
+        #
+        #    aifEntityKey.parmTableId(_shipmentTable.TableId);
+        #    aifEntityKey.parmRecId(_shipmentTable.RecId);
+        #    aifEntityKey.parmKeyDataMap(keyData);
+        #
+        #    axdSendContext.parmXMLDocPurpose(_xmlDocPurpose);
+        #    axdSendContext.parmSecurity(false);
+        #
+        #    aifConstraint.parmType(AifConstraintType::NoConstraint);
+        #    aifConstraintList.addConstraint(aifConstraint);
+        #
+        #    AifSendService::submitDefault(
+        #        classNum(WHSShipmentASNService),
+        #        aifEntityKey,
+        #        aifConstraintList,
+        #        _aifSendMode,
+        #        axdSendContext.pack());
+        #}
+      ENDSOURCE
+      SOURCE #shipConfirm
+        #/// <summary>
+        #/// Runs the ship confirm process for a load or shipment
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load to be ship confirmed
+        #/// </param>
+        #public void shipConfirm(WHSLoadId _loadId)
+        #{
+        #    WHSLoadTable    loadTable = WHSLoadTable::find(_loadId);
+        #    boolean         routeConfirmed;
+        #    Map             loadsShipDateMap;
+        #    container       confirmedLoads;
+        #
+        #    void handleGeneralError()
+        #    {
+        #        if (routeConfirmed || loadsShipDateMap.elements() > 1)
+        #        {
+        #            this.tmsRouteUnConfirm(_loadId);
+        #        }
+        #
+        #        error(strFmt("@WAX2543", _loadId));
+        #    }
+        #
+        #    void handleCLRException()
+        #    {
+        #        System.Exception ex;
+        #
+        #        // BP Deviation Documented
+        #        ex = CLRInterop::getLastException();
+        #
+        #        if (ex != null)
+        #        {
+        #            TMSErrorLog::createLogEntry(ex);
+        #
+        #            error("@SYP4861434", '', SysInfoAction_MenuFunction::newMenuItem(menuitemDisplayStr(TMSErrorLog), MenuItemType::Display));
+        #        }
+        #
+        #        handleGeneralError();
+        #    }
+        #
+        #    if (loadTable.LoadStatus == WHSLoadStatus::Shipped)
+        #    {
+        #        return;
+        #    }
+        #
+        #    loadsShipDateMap = this.retriveShipDateTime(loadTable);
+        #    if (loadsShipDateMap == null || loadsShipDateMap.empty())
+        #    {
+        #        return;
+        #    }
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #
+        #        routeConfirmed = this.tmsRouteConfirmation(loadTable, loadsShipDateMap);
+        #
+        #        confirmedLoads = this.tmsMultiLoadShipConfirm(loadsShipDateMap);
+        #
+        #        ttscommit;
+        #
+        #        if (conLen(confirmedLoads) > 1)
+        #        {
+        #            info(strFmt("@TRX1681", con2Str(confirmedLoads, ', ')));
+        #        }
+        #        else if (conLen(confirmedLoads) == 1)
+        #        {
+        #            info(strFmt("@WAX2544", conPeek(confirmedLoads, 1)));
+        #        }
+        #
+        #        if (conLen(loadsWithInvoicedOrders) > 1)
+        #        {
+        #            info(strFmt("@TRX2710", con2Str(loadsWithInvoicedOrders, ', ')));
+        #        }
+        #        else if (conLen(loadsWithInvoicedOrders) == 1)
+        #        {
+        #            info(strFmt("@TRX2639", conPeek(loadsWithInvoicedOrders, 1)));
+        #        }
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        handleCLRException();
+        #    }
+        #    catch (Exception::Internal)
+        #    {
+        #        handleCLRException();
+        #    }
+        #    catch
+        #    {
+        #        handleGeneralError();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #shipConfirmLoad
+        #/// <summary>
+        #/// Runs the ship confirm process for a load.
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load to be ship confirmed.
+        #/// </param>
+        #/// <param name="_shipDateTime">
+        #/// Actual ship date time of the load.
+        #/// </param>
+        #private void shipConfirmLoad(
+        #    WHSLoadId                      _loadId,
+        #    WHSLoadShipConfirmUTCDateTime  _shipDateTime)
+        #{
+        #    ttsbegin;
+        #
+        #    this.runTransferShip(_loadId, _shipDateTime);
+        #
+        #    TMSRateRoute::calcMiscCharges(_loadId, TMSMiscCharges::Load);
+        #
+        #    WHSLoadTable::setShipConfirmInfo(_loadId, _shipDateTime);
+        #
+        #    //--> Red Maple Credit Card begin
+        #    CreditCardPosting::runConfirmShipment(_loadId);
+        #    //<-- Red Maple Credit Card end
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #tmsLoadConfirmation
+        #/// <summary>
+        #/// Processes the load using TMS
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// Load id that is being processed
+        #/// </param>
+        #/// <param name="_shipDateMap">
+        #/// Map containing shipment dates
+        #/// </param>
+        #/// <returns>
+        #/// true if route was ship confirmed; otherwise, false
+        #/// </returns>
+        #public boolean tmsLoadConfirmation(
+        #    WHSLoadId                 _loadId,
+        #    Map                       _shipDateMap)
+        #{
+        #    return WHSLoadTable::tmsLoadConfirmation(_loadId, _shipDateMap);
+        #}
+      ENDSOURCE
+      SOURCE #tmsMultiLoadShipConfirm
+        #/// <summary>
+        #/// Ship confirms mutliple loads with TMS processes integrated
+        #/// </summary>
+        #/// <param name="_shipDateMap">
+        #/// Map containing shipment dates
+        #/// </param>
+        #/// <returns>
+        #/// Container of loads to ship confirm
+        #/// </returns>
+        #public container tmsMultiLoadShipConfirm(Map _shipDateMap)
+        #{
+        #    WHSLoadId                     loadId;
+        #    MapEnumerator                 me;
+        #    container                     loads;
+        #    WHSLoadShipConfirmUTCDateTime shipDateTime;
+        #
+        #    me = _shipDateMap.getEnumerator();
+        #
+        #    while (me.moveNext())
+        #    {
+        #        loadId          = me.currentKey();
+        #        shipDateTime    = me.currentValue();
+        #
+        #        this.shipConfirmLoad(loadId, shipDateTime);
+        #
+        #        loads += loadId;
+        #    }
+        #
+        #    return loads;
+        #}
+      ENDSOURCE
+      SOURCE #tmsRouteConfirmation
+        #private boolean tmsRouteConfirmation(WHSLoadTable _loadTable, Map _loadsShipDateMap)
+        #{
+        #    TMSRoute        route;
+        #    boolean         rootConfirmed;
+        #
+        #    if (_loadsShipDateMap.elements() > 1)
+        #    {
+        #        route = TMSRoute::find(_loadTable.RouteCode);
+        #
+        #        rootConfirmed = this.tmsRouteConfirmationMultiLoad(route, _loadsShipDateMap);
+        #    }
+        #    else
+        #    {
+        #        // Only capture freight if the Pays Freight on the dlvTerms is not none
+        #        // Method WHSLoadTable::evaluateLoadPaysFreight can update LoadPaysFreight of WHSLoadTable, so we need to reread load table
+        #        _loadTable.reread();
+        #        if(_loadTable.LoadPaysFreight)
+        #        {
+        #            if (_loadTable.RouteCode != '')
+        #            {
+        #                route = TMSRoute::find(_loadTable.RouteCode);
+        #
+        #                rootConfirmed = route.routeConfirmation(_loadsShipDateMap);
+        #            }
+        #            else if (_loadTable.CarrierCode != '')
+        #            {
+        #                rootConfirmed = this.tmsLoadConfirmation(_loadTable.LoadId, _loadsShipDateMap);
+        #            }
+        #        }
+        #    }
+        #
+        #    return rootConfirmed;
+        #}
+      ENDSOURCE
+      SOURCE #tmsRouteConfirmationMultiLoad
+        #/// <summary>
+        #/// Confirms multiple loads with routes.
+        #/// </summary>
+        #/// <param name="_route">
+        #/// The route to be used in confirmation.
+        #/// </param>
+        #/// <param name="_loadsShipDateMap">
+        #/// Map containing shipment dates.
+        #/// </param>
+        #/// <returns>
+        #/// true if route was ship confirmed; otherwise, false.
+        #/// </returns>
+        #public boolean tmsRouteConfirmationMultiLoad(TMSRoute _route, Map _loadsShipDateMap)
+        #{
+        #    WHSLoadTable    loadTable;
+        #    boolean         ret;
+        #
+        #    // If one load pays frieght, they all pay freight
+        #    select firstonly RecId  from loadTable
+        #        where loadTable.RouteCode       == _route.RouteCode &&
+        #              loadTable.LoadPaysFreight == true;
+        #
+        #    if (loadTable.RecId)
+        #    {
+        #        while select LoadId, RouteCode, ActualNetWeight, LoadWeight from loadTable
+        #            where loadTable.RouteCode == _route.RouteCode
+        #        {
+        #            if (_route.loadRouteConfirmation(loadTable.LoadId, _loadsShipDateMap.lookup(loadTable.LoadId)))
+        #            {
+        #                ret = true;
+        #            }
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #tmsRouteUnConfirm
+        #private void tmsRouteUnConfirm(WHSLoadId _loadId)
+        #{
+        #    TMSRoute::unConfirm(WHSLoadTable::find(_loadId).RouteCode);
+        #}
+      ENDSOURCE
+      SOURCE #updateTransferReceiptInventTransDim
+        #[SysObsoleteAttribute('The APIs for merging transferable dimensions ensure that license plates are not transfered when locations are non-license plate controlled')]
+        #private void updateTransferReceiptInventTransDim(InventTransferId _transferId)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #validateBatchDispositionBlockShipping
+        #/// <summary>
+        #/// Validates that the load does not contain any batches with disposition codes set to block shipping.
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// The load Id of the load being validated.
+        #/// </param>
+        #/// <returns>
+        #/// true if no batch exists that should block shipping; othwerise, false.
+        #/// </returns>
+        #private boolean validateBatchDispositionBlockShipping(WHSLoadId  _loadId)
+        #{
+        #    WHSLoadLine             loadLine;
+        #    WHSWorkLine             workLine;
+        #    InventDim               inventDim;
+        #    WHSDimTracking          dimTracking;
+        #    InventBatch             inventBatch;
+        #    PdsDispositionMaster    dispoMaster;
+        #    boolean                 ret;
+        #
+        #    // Batch above location items will have batch specified on the work line
+        #    select firstonly RecId from loadLine
+        #        where loadLine.LoadId == _loadId
+        #        exists join workLine
+        #            where workLine.LoadLineRefRecId == loadLine.RecId
+        #            &&    workLine.WorkStatus       != WHSWorkStatus::Cancelled
+        #            exists join inventDim
+        #                where inventDim.InventDimId == workLine.InventDimId
+        #                exists join inventBatch
+        #                    where inventBatch.InventBatchId == inventDim.InventBatchId
+        #                       && inventBatch.itemId        == workLine.ItemId
+        #                    exists join dispoMaster
+        #                        where dispoMaster.DispositionCode       == inventBatch.PdsDispositionCode
+        #                        &&    dispoMaster.Status                == PdsStatus::Unavailable
+        #                        &&    ((dispoMaster.PdsSalesBlockShip   == NoYes::Yes
+        #                        &&      loadLine.InventTransType        == InventTransType::Sales)
+        #                        ||    (dispoMaster.PdsTransBlockShip    == NoYes::Yes
+        #                        &&     loadLine.InventTransType         == InventTransType::TransferOrderShip));
+        #
+        #
+        #    ret = loadLine.RecId == 0;
+        #
+        #    if (ret)
+        #    {
+        #        // Batch below location items will have batch on the dim tracking records
+        #        select firstonly RecId from loadLine
+        #            where loadLine.LoadId == _loadId
+        #            exists join workLine
+        #                where workLine.LoadLineRefRecId == loadLine.RecId
+        #                &&    workLine.WorkStatus       != WHSWorkStatus::Cancelled
+        #                exists join dimTracking
+        #                    where dimTracking.WorkId    == workLine.WorkId
+        #                    &&    dimTracking.LineNum   == workLine.LineNum
+        #                    exists join inventDim
+        #                        where inventDim.InventDimId == dimTracking.InventDimId
+        #                        exists join inventBatch
+        #                            where inventBatch.InventBatchId == inventDim.InventBatchId
+        #                               && inventBatch.itemId        == workLine.ItemId
+        #                            exists join dispoMaster
+        #                                where dispoMaster.DispositionCode   == inventBatch.PdsDispositionCode
+        #                                &&    dispoMaster.Status                == PdsStatus::Unavailable
+        #                                &&    ((dispoMaster.PdsSalesBlockShip   == NoYes::Yes
+        #                                &&      loadLine.InventTransType        == InventTransType::Sales)
+        #                                ||    (dispoMaster.PdsTransBlockShip    == NoYes::Yes
+        #                                &&     loadLine.InventTransType         == InventTransType::TransferOrderShip));
+        #
+        #        ret = loadLine.RecId == 0;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateFreightTerms
+        #/// <summary>
+        #/// Validates if the Pays Freight on the associated orders are in sync
+        #/// </summary>
+        #/// <param name="_loadId">
+        #/// The load Id of the load being validated.
+        #/// </param>
+        #/// <returns>
+        #/// true if freight terms are set correct; othwerwise, false.
+        #/// </returns>
+        #private boolean validateFreightTerms(WHSLoadId _loadId)
+        #{
+        #    boolean paysFreightError;
+        #    boolean hasInvoicedLines;
+        #
+        #    // Will evaluate if the Pays Freight on the associated orders are in sync
+        #    [hasInvoicedLines, paysFreightError] = WHSLoadTable::evaluateLoadPaysFreight(_loadId);
+        #
+        #    if (hasInvoicedLines)
+        #    {
+        #        loadsWithInvoicedOrders += _loadId;
+        #    }
+        #
+        #    return !paysFreightError;
+        #}
+      ENDSOURCE
+      SOURCE #validateOverUnderDelivery
+        #private boolean validateOverUnderDelivery(WHSLoadId _loadId)
+        #{
+        #    WHSLoadLine         loadLine;
+        #    WHSInventEnabled    whsInventEnabled;
+        #    real                result;
+        #    boolean             ret = true;
+        #
+        #    while select WorkCreatedQty, InventQty, UnderDeliveryPct, OverDeliveryPct, LoadId, ItemId from loadLine
+        #        where loadLine.LoadId       == _loadId  &&
+        #              loadLine.InventQty    != 0
+        #        exists join ItemId from whsInventEnabled
+        #            where   whsInventEnabled.ItemId == loadLine.ItemId
+        #    {
+        #        result = ((loadLine.WorkCreatedQty - loadLine.InventQty) / loadLine.InventQty) * 100;
+        #
+        #        if (result < 0 && abs(result) > loadLine.UnderDeliveryPct)
+        #        {
+        #            error(strFmt("@WAX1686", loadLine.LoadId, loadLine.ItemId));
+        #            ret = false;
+        #            break;
+        #        }
+        #
+        #        if (result > 0 && result > loadLine.OverDeliveryPct)
+        #        {
+        #            error(strFmt("@WAX1687", loadLine.LoadId, loadLine.ItemId));
+        #            ret = false;
+        #            break;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateRouteOnLoad
+        #/// <summary>
+        #/// Validates that all <c>WHSLoadTable</c> records connected with
+        #/// <c>TMSRoute</c> record have the same setup for freight payments.
+        #/// </summary>
+        #/// <param name="_whsLoadTable">
+        #/// The current Load.
+        #/// </param>
+        #/// <param name="_loads">
+        #/// Loads on the same route.
+        #/// </param>
+        #/// <returns>
+        #/// True, if all <c>WHSLoadTable</c> records connected with
+        #/// <c>TMSRoute</c> record have the same setup for freight payments, otherwise False.
+        #/// </returns>
+        #protected boolean validateRouteOnLoad(
+        #    WHSLoadTable _whsLoadTable,
+        #    container    _loads)
+        #{
+        #    WHSLoadTable        otherLoadTable;
+        #    TMSRouteSegmentLoad segmentLoad;
+        #    int                 numOfLoads;
+        #    boolean             ret = true;
+        #
+        #    numOfLoads = conLen(_loads);
+        #
+        #    if (numOfLoads > 1)
+        #    {
+        #        // If one load pays frieght, they all pay freight
+        #        // Method WHSLoadTable::evaluateLoadPaysFreight can update LoadPaysFreight of WHSLoadTable, so we need to reread load table
+        #        _whsLoadTable.reread();
+        #
+        #        while select LoadPaysFreight from otherLoadTable
+        #            exists join segmentLoad
+        #            where segmentLoad.RouteCode == _whsLoadTable.RouteCode
+        #               && otherLoadTable.LoadId == segmentLoad.id
+        #        {
+        #            if(otherLoadTable.LoadPaysFreight != _whsLoadTable.LoadPaysFreight)
+        #            {
+        #                ret = checkFailed(strFmt("@TRX2713", _whsLoadTable.LoadId, _whsLoadTable.RouteCode, otherLoadTable.LoadId));
+        #                break;
+        #            }
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #/// <summary>
+        #///    Initializes a new instance of the <c>WHSShipConfirm </c> class.
+        #/// </summary>
+        #/// <returns>
+        #///    A new instance of the <c>WHSShipConfirm</c> class.
+        #/// </returns>
+        #public static WHSShipConfirm construct()
+        #{
+        #    return new WHSShipConfirm();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #isBOLEnabledForLoad
+        #/// <summary>
+        #/// Checks if print Bill of lading button should be enabled for the load
+        #/// </summary>
+        #/// <param name="_whsLoadTable">
+        #/// Load for which we want to print Bill of Lading
+        #/// </param>
+        #/// <returns>
+        #/// true if Bill of lading button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isBOLEnabledForLoad(WHSLoadTable _whsLoadTable)
+        #{
+        #    InventLocation inventLocation = InventLocation::find(_whsLoadTable.InventLocationId);
+        #
+        #    return _whsLoadTable.LoadId
+        #        && ((inventLocation.PrintBOLBeforeShipConfirm && _whsLoadTable.LoadStatus >= WHSLoadStatus::Loaded)
+        #            || (inventLocation.PrintBOLBeforeShipConfirm && _whsLoadTable.LoadStatus >= WHSLoadStatus::Posted && inventLocation.whsEnabled == NoYes::No)
+        #            || (_whsLoadTable.LoadStatus == WHSLoadStatus::Shipped));
+        #}
+      ENDSOURCE
+      SOURCE #isBOLEnabledForShipment
+        #/// <summary>
+        #/// Checks if print Bill of lading button should be enabled for the Shipment
+        #/// </summary>
+        #/// <param name="_whsShipmentTable">
+        #/// Shipment for which we want to print Bill of Lading
+        #/// </param>
+        #/// <returns>
+        #/// true if Bill of lading button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isBOLEnabledForShipment(WHSShipmentTable _whsShipmentTable)
+        #{
+        #    return _whsShipmentTable.ShipmentId
+        #        && (InventLocation::find(_whsShipmentTable.InventLocationId).PrintBOLBeforeShipConfirm
+        #            || _whsShipmentTable.ShipmentStatus == WHSShipmentStatus::Shipped);
+        #}
+      ENDSOURCE
+      SOURCE #isPackingSlipEnabledForContainer
+        #/// <summary>
+        #/// Checks if post packing slip button should be enabled for the container
+        #/// </summary>
+        #/// <param name="_whsContainerTable">
+        #/// Container for which we want to generate packing slip
+        #/// </param>
+        #/// <returns>
+        #/// true if post packing slip button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isPackingSlipEnabledForContainer(WHSContainerTable _whsContainerTable)
+        #{
+        #    return _whsContainerTable.ContainerId
+        #        && WHSShipConfirm::isPackingSlipEnabledForShipment(WHSShipmentTable::find(_whsContainerTable.ShipmentId));
+        #}
+      ENDSOURCE
+      SOURCE #isPackingSlipEnabledForLoad
+        #/// <summary>
+        #/// Checks if post packing slip button should be enabled for the load
+        #/// </summary>
+        #/// <param name="_whsLoadTable">
+        #/// Load for which we want to generate packing slip
+        #/// </param>
+        #/// <returns>
+        #/// true if post packing slip button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isPackingSlipEnabledForLoad(WHSLoadTable _whsLoadTable)
+        #{
+        #    return _whsLoadTable.LoadId
+        #        && _whsLoadTable.LoadStatus    == WHSLoadStatus::Shipped
+        #        && _whsLoadTable.LoadDirection != WHSLoadDirection::Inbound;
+        #}
+      ENDSOURCE
+      SOURCE #isPackingSlipEnabledForShipment
+        #/// <summary>
+        #/// Checks if post packing slip button should be enabled for the shipment
+        #/// </summary>
+        #/// <param name="_whsShipmentTable">
+        #/// Shipment for which we want to generate packing slip
+        #/// </param>
+        #/// <returns>
+        #/// true if post packing slip button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isPackingSlipEnabledForShipment(WHSShipmentTable _whsShipmentTable)
+        #{
+        #    return _whsShipmentTable.ShipmentId
+        #        && WHSLoadTable::find(_whsShipmentTable.LoadId).displayShipment() != ''
+        #        && WHSShipConfirm::isPackingSlipEnabledForLoad(WHSLoadTable::find(_whsShipmentTable.LoadId));
+        #}
+      ENDSOURCE
+      SOURCE #isSendASNEnabledForLoad
+        #/// <summary>
+        #/// Checks if send ASN button should be enabled for the load
+        #/// </summary>
+        #/// <param name="_whsLoadTable">
+        #/// Load for which we want to send ASN
+        #/// </param>
+        #/// <returns>
+        #/// true if send ASN button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isSendASNEnabledForLoad(WHSLoadTable _whsLoadTable)
+        #{
+        #    return _whsLoadTable.LoadId
+        #        && _whsLoadTable.LoadStatus    == WHSLoadStatus::Shipped
+        #        && _whsLoadTable.LoadDirection != WHSLoadDirection::Inbound;
+        #}
+      ENDSOURCE
+      SOURCE #isSendASNEnabledForShipment
+        #/// <summary>
+        #/// Checks if send ASN button should be enabled for the load
+        #/// </summary>
+        #/// <param name="_whsShipmentTable">
+        #/// Shipment for which we want to send ASN
+        #/// </param>
+        #/// <returns>
+        #/// true if send ASN button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isSendASNEnabledForShipment(WHSShipmentTable _whsShipmentTable)
+        #{
+        #    return _whsShipmentTable.ShipmentId
+        #        && WHSLoadTable::find(_whsShipmentTable.LoadId).displayShipment() != ''
+        #        && WHSShipConfirm::isSendASNEnabledForLoad(WHSLoadTable::find(_whsShipmentTable.LoadId));
+        #}
+      ENDSOURCE
+      SOURCE #isShipConfirmEnabledForLoad
+        #/// <summary>
+        #/// Checks if ship confirm button should be enabled for the load
+        #/// </summary>
+        #/// <param name="_whsLoadTable">
+        #/// Load to be ship confirmed
+        #/// </param>
+        #/// <returns>
+        #/// true if ship confirm button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isShipConfirmEnabledForLoad(WHSLoadTable _whsLoadTable)
+        #{
+        #    return _whsLoadTable.LoadId
+        #        && _whsLoadTable.LoadStatus    != WHSLoadStatus::Shipped
+        #        && _whsLoadTable.LoadDirection != WHSLoadDirection::Inbound;
+        #}
+      ENDSOURCE
+      SOURCE #isShipConfirmEnabledForShipment
+        #/// <summary>
+        #/// Checks if ship confirm button should be enabled for the load
+        #/// </summary>
+        #/// <param name="_whsShipmentTable">
+        #/// Shipment to be ship confirmed
+        #/// </param>
+        #/// <returns>
+        #/// true if ship confirm button should be enabled; otherwise, false
+        #/// </returns>
+        #public static boolean isShipConfirmEnabledForShipment(WHSShipmentTable _whsShipmentTable)
+        #{
+        #    return _whsShipmentTable.ShipmentId
+        #        && WHSLoadTable::find(_whsShipmentTable.LoadId).displayShipment() != ''
+        #        && WHSShipConfirm::isShipConfirmEnabledForLoad(WHSLoadTable::find(_whsShipmentTable.LoadId));
+        #}
+      ENDSOURCE
+      SOURCE #printBOLForAllLoads
+        #/// <summary>
+        #/// Prints Bill of lading for a list of loads.
+        #/// </summary>
+        #/// <param name="_loadIdList">
+        #/// List of loads for which we want to print Bill of lading.
+        #/// </param>
+        #public static void printBOLForAllLoads(List _loadIdList)
+        #{
+        #    ListEnumerator loadIdEnumerator;
+        #    WHSLoadId loadId;
+        #    WHSShipConfirm whsShipConfirm;
+        #
+        #    whsShipConfirm = WHSShipConfirm::construct();
+        #    loadIdEnumerator = _loadIdList.getEnumerator();
+        #
+        #    while (loadIdEnumerator.moveNext())
+        #    {
+        #        loadId = loadIdEnumerator.current();
+        #        whsShipConfirm.printBOLForLoad(loadId);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #sendASNAllLoads
+        #/// <summary>
+        #/// Generates and sends ASN for all loads.
+        #/// </summary>
+        #/// <param name="_loadIdList">
+        #/// List of all LoadIds for which we want to generate and send ASN.
+        #/// </param>
+        #public static void sendASNAllLoads(List _loadIdList)
+        #{
+        #    ListEnumerator loadIdEnumerator;
+        #    WHSLoadId loadId;
+        #    WHSShipConfirm whsShipConfirm;
+        #
+        #    whsShipConfirm = WHSShipConfirm::construct();
+        #    loadIdEnumerator = _loadIdList.getEnumerator();
+        #
+        #    while (loadIdEnumerator.moveNext())
+        #    {
+        #        loadId = loadIdEnumerator.current();
+        #        whsShipConfirm.sendASN(loadId);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #shipConfirmAllLoads
+        #/// <summary>
+        #/// Runs the ship confirm process for all loads.
+        #/// </summary>
+        #/// <param name="_loadIdList">
+        #/// List of loadIds to be ship confirmed.
+        #/// </param>
+        #/// <remarks>
+        #/// This method cannot be run in CIL, as TMS service does not support it.
+        #/// </remarks>
+        #public static void shipConfirmAllLoads(List _loadIdList)
+        #{
+        #    ListEnumerator loadIdEnumerator;
+        #    WHSLoadId      loadId;
+        #    WHSShipConfirm whsShipConfirm;
+        #
+        #    loadIdEnumerator = _loadIdList.getEnumerator();
+        #
+        #    while (loadIdEnumerator.moveNext())
+        #    {
+        #        whsShipConfirm = WHSShipConfirm::construct();
+        #        loadId         = loadIdEnumerator.current();
+        #        whsShipConfirm.shipConfirm(loadId);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #shipConfirmAllLoadsAsIL
+        #[SysObsoleteAttribute]
+        #private static container shipConfirmAllLoadsAsIL(container _packedLoadIdList)
+        #{
+        #    ListEnumerator  loadIdEnumerator;
+        #    WHSLoadId       loadId;
+        #    WHSShipConfirm  whsShipConfirm;
+        #    List            loadIdList = List::create(_packedLoadIdList);
+        #
+        #    loadIdEnumerator = loadIdList.getEnumerator();
+        #
+        #    while (loadIdEnumerator.moveNext())
+        #    {
+        #        whsShipConfirm = WHSShipConfirm::construct();
+        #        loadId         = loadIdEnumerator.current();
+        #        whsShipConfirm.shipConfirm(loadId);
+        #    }
+        #
+        #    return conNull();  // To conform to Run-As-IL pattern
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

@@ -1,0 +1,129 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: SPV
+
+; 
+; --------------------------------------------------------------------------------
+  VERSION 1
+  
+  PRIVILEGE #CreditCardEPCustMaintain
+    PROPERTIES
+      Name                #CreditCardEPCustMaintain
+      Label               #@ACC1861
+      Description         #@SYS326142
+      Origin              #{F14D9F94-0D4C-4F81-89EC-BAF66FB4131E}
+    ENDPROPERTIES
+    
+    ENTRYPOINTS #Entry Points
+      ENTRYPOINT #CreditCardCreateHostPay
+        PROPERTIES
+          Name                #CreditCardCreateHostPay
+          ObjectType          #WebManagedContent
+          ObjectName          #CreditCardCreateHostPay
+          AccessLevel         #Read
+        ENDPROPERTIES
+        
+      ENDENTRYPOINT
+      
+    ENTRYPOINT #CreditCardCreateHostPay1
+      PROPERTIES
+        Name                #CreditCardCreateHostPay1
+        ObjectType          #WebUrlItem
+        ObjectName          #CreditCardCreateHostPay
+        AccessLevel         #Delete
+      ENDPROPERTIES
+      
+    ENDENTRYPOINT
+    
+  ENTRYPOINT #CreditCardEPSetPrimary
+    PROPERTIES
+      Name                #CreditCardEPSetPrimary
+      ObjectType          #MenuItemAction
+      ObjectName          #CreditCardEPSetPrimary
+      AccessLevel         #Correct
+    ENDPROPERTIES
+    
+  ENDENTRYPOINT
+  
+ENTRYPOINT #CreditCardInvoiceListPage
+  PROPERTIES
+    Name                #CreditCardInvoiceListPage
+    ObjectType          #MenuItemDisplay
+    ObjectName          #CreditCardInvoiceListPage
+    AccessLevel         #Read
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENTRYPOINT #CreditCardTableAddEP
+  PROPERTIES
+    Name                #CreditCardTableAddEP
+    ObjectType          #MenuItemDisplay
+    ObjectName          #CreditCardTableAddEP
+    AccessLevel         #Delete
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENTRYPOINT #CreditCardTableList
+  PROPERTIES
+    Name                #CreditCardTableList
+    ObjectType          #WebManagedContent
+    ObjectName          #CreditCardTableList
+    AccessLevel         #Delete
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENTRYPOINT #CreditCardTableList1
+  PROPERTIES
+    Name                #CreditCardTableList1
+    ObjectType          #WebUrlItem
+    ObjectName          #CreditCardTableList
+    AccessLevel         #Read
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENTRYPOINT #CreditCardTableListPage
+  PROPERTIES
+    Name                #CreditCardTableListPage
+    ObjectType          #WebUrlItem
+    ObjectName          #CreditCardTableListPage
+    AccessLevel         #Delete
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENTRYPOINT #CreditCardTableListPage1
+  PROPERTIES
+    Name                #CreditCardTableListPage1
+    ObjectType          #MenuItemDisplay
+    ObjectName          #CreditCardTableListPage
+    AccessLevel         #Delete
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENDENTRYPOINTS
+
+PERMISSIONSET #Permissions
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+FORMS #Forms
+ENDFORMS
+
+ENDPERMISSIONSET
+
+ENDPRIVILEGE
+
+
+***Element: END

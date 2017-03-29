@@ -1,0 +1,321 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardCybersourceXMLBuilder
+    PROPERTIES
+      Name                #CreditCardCybersourceXMLBuilder
+      Origin              #{F6174C37-9005-4F31-B66D-615C544BEE33}
+      LegacyId            #20033
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeCybersourceResponse
+        #CreditCardTrans analyzeCybersourceResponse(CreditCardStr           msg,
+        #                                CreditCardTrans         ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   errMsg;
+        #    boolean                         accepted;
+        #
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        //--> Second node should be the soap envelope body
+        #        if (cnt == 1)
+        #        {
+        #            //--> store in comment
+        #            ccTrans.Comment1 = tmpStr;
+        #        }
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'c:decision'   :
+        #                        switch (elementChild2.innerXml())
+        #                        {
+        #                            case 'ACCEPT'   :
+        #                                accepted = true;
+        #                                ccTrans.Result = '0';
+        #                                break;
+        #                            case 'ERROR'    :
+        #                                break;
+        #                            case 'REJECT'   :
+        #                                break;
+        #                        }
+        #                        break;
+        #                    case    'c:requestToken'       :
+        #                        ccTrans.CybersourceToken = elementChild2.innerXML();
+        #                        break;
+        #                    case    'c:requestID'           :
+        #                        ccTrans.PNRef = elementChild2.innerXml();
+        #                        break;
+        #                    case    'c:paySubscriptionCreateReply'       :
+        #                        childNodeLst2 = elementChild2.childNodes();
+        #                        for (childCnt2 = 0;childCnt2 < childNodeLst2.length();childCnt2++)
+        #                        {
+        #                            elementChild3 = childNodeLst2.item(childCnt2);
+        #                            switch (elementChild3.nodeName())
+        #                            {
+        #                                case 'c:reasonCode' :
+        #                                    tmpStr = elementChild3.innerXml();
+        #                                    if (elementChild3.innerXML() != '100')
+        #                                    {
+        #                                        errMsg = elementChild3.innerXML();
+        #                                        ccTrans.PNRef = CreditCardCybersourceXMLBuilder::returnError(errMsg);
+        #                                    }
+        #                                    else
+        #                                    {
+        #                                        ccTrans.Result = '0';
+        #                                    }
+        #                                    break;
+        #                                case    'c:authorizationCode'       :
+        #                                    cctrans.AuthCode = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:avsCode' :
+        #                                    ccTrans.AvsAddr = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:processorResponse'       :
+        #                                    ccTrans.RepMsg = elementChild3.innerXML();
+        #                                    break;
+        #                                case    'c:subscriptionID'          :
+        #                                    ccTrans.ProfileId = elementChild3.innerXml();
+        #                                    break;
+        #                            }
+        #                        }
+        #                        break;
+        #                    //--> In case of errors or rejections
+        #                    case 'c:reasonCode' :
+        #                        tmpStr = elementChild2.innerXml();
+        #                        if (elementChild2.innerXML() != '100')
+        #                        {
+        #                            errMsg = elementChild2.innerXML();
+        #                            ccTrans.RepMsg = CreditCardCybersourceXMLBuilder::returnError(errMsg);
+        #                        }
+        #                        else
+        #                        {
+        #                            ccTrans.Result = '0';
+        #                        }
+        #                        break;
+        #                    case 'c:invalidField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        cctrans.comment2 += 'Invalid Field:' + tmpStr;
+        #                        break;
+        #                    case 'c:missingField'   :
+        #                        tmpStr = elementChild2.innerXML();
+        #                        ccTrans.comment2 += 'Missing Field:' + tmpStr;
+        #                        break;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantCybersource
+        #boolean checkMerchantCybersource(CreditCardMerchantCybersource  ccMerchantCybersource)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantCybersource.MerchantId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantCybersource.URL)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardCybersourceXMLBuilder
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #analyzeResponse
+        #static CreditCardTrans analyzeResponse(CreditCardTrans      ccTrans,
+        #                                       CreditCardStr        msg)
+        #{
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    CreditCardCybersourceXMLBuilder xmlBuilder;
+        #    ;
+        #    select APIVersion from ccCybersource
+        #        where ccCybersource.TerminalId == ccTrans.TerminalId;
+        #
+        #    switch (ccCybersource.APIVersion)
+        #    {
+        #        case    1.39 :
+        #            xmlBuilder = new CreditCardCybersourceXMLBuilder139();
+        #            ccTrans = xmlBuilder.analyzeCybersourceResponse(msg,ccTrans);
+        #            break;
+        #        default :
+        #            throw error("@ACC1214");
+        #    }
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static str construct(CreditCardTrans        ccTrans,
+        #                     CreditCardAdv          ccAdv)
+        #{
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    str                             parmList;
+        #    ;
+        #    select APIVersion from ccCybersource
+        #        where ccCybersource.TerminalId == ccTrans.TerminalId;
+        #
+        #    switch (ccCybersource.APIVersion)
+        #    {
+        #        case    1.39 :
+        #            parmList = CreditCardCybersourceXMLBuilder139::construct(ccTrans,ccAdv);
+        #            break;
+        #        default :
+        #            throw error("@ACC1214");
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #create3dAuthVerify
+        #static tmpCC3dAuthVerify create3dAuthVerify(tmpCC3dAuthVerify  _tmpCC3dAuthVerify)
+        #{
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    tmpCC3dAuthVerify               tmpCC3dAuthVerify;
+        #    ;
+        #    select APIVersion from ccCybersource
+        #        where ccCybersource.TerminalId == _tmpCC3dAuthVerify.TerminalId;
+        #
+        #    switch (ccCybersource.APIVersion)
+        #    {
+        #        case    1.39 :
+        #            tmpCC3dAuthVerify = CreditCardCybersourceXMLBuilder139::create3dAuthVerify(_tmpCC3dAuthVerify);
+        #            break;
+        #        default :
+        #            throw error("@ACC1214");
+        #
+        #    }
+        #
+        #    return tmpCC3dAuthVerify;
+        #}
+      ENDSOURCE
+      SOURCE #create3dCheck
+        #static tmpCC3dEnrollCheck create3dCheck(tmpCC3dEnrollCheck  _tmpCC3dEnrollCheck)
+        #{
+        #    CreditCardMerchantCybersource   ccCybersource;
+        #    tmpCC3dEnrollCheck              tmp3dEnrollCheck;
+        #    ;
+        #    select APIVersion from ccCybersource
+        #        where ccCybersource.TerminalId == _tmpCC3dEnrollCheck.TerminalId;
+        #
+        #    switch (ccCybersource.APIVersion)
+        #    {
+        #        case    1.39 :
+        #            tmp3dEnrollCheck = CreditCardCybersourceXMLBuilder139::create3dCheck(_tmpCC3dEnrollCheck);
+        #            break;
+        #        default :
+        #            throw error("@ACC1214");
+        #    }
+        #
+        #    return tmp3dEnrollCheck;
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #static void createProfile()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #returnError
+        #static str returnError(str  errCode)
+        #{
+        #    description         err;
+        #    ;
+        #    switch (errCode)
+        #    {
+        #        case    '246'   :
+        #            err = strFmt("@ACC1217");
+        #            break;
+        #        case    '247'   :
+        #            err = strFmt("@ACC1218");
+        #            break;
+        #        case    '101'   :
+        #            err = strFmt("@ACC1219");
+        #            break;
+        #        case    '102'   :
+        #            err = strFmt("@ACC1230");
+        #            break;
+        #        case    '150'   :
+        #            err = strFmt("@ACC1220");
+        #            break;
+        #        case    '151'   :
+        #            err = strFmt("@ACC1221");
+        #            break;
+        #        case    '201'   :
+        #            err = strFmt("@ACC1222");
+        #            break;
+        #        case    '202'   :
+        #            err = strFmt("@ACC1223");
+        #            break;
+        #        case    '203'   :
+        #            err = strFmt("@ACC1224");
+        #            break;
+        #        case    '204'   :
+        #            err = strFmt("@ACC1225");
+        #            break;
+        #        case    '205'   :
+        #            err = strFmt("@ACC1226");
+        #            break;
+        #        case    '207'   :
+        #            err = strFmt("@ACC1227");
+        #            break;
+        #        case    '208'   :
+        #            err = strFmt("@ACC1228");
+        #            break;
+        #        case    '210'   :
+        #            err = strFmt("@ACC1229");
+        #            break;
+        #    }
+        #
+        #    return err;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

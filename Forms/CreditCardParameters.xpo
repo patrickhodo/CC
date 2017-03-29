@@ -1,0 +1,1583 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardParameters
+  PROPERTIES
+    Name                #CreditCardParameters
+    Origin              #{ED389B0A-B139-499A-8EBE-C793F73731C1}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    boolean                     runExecuteDirect;
+      #    FormCheckBoxControl         ctrlAllowSameAs;
+      #    FormStringControl           ctrlLabelSameAs;
+      #    TmpIdRef                    tmpIdRef;
+      #    NumberSeqScope              scope;
+      #    NumberSeqApplicationModule  numberSeqApplicationModule;
+      #    container                   numberSequenceModules;
+      #
+      #    DimensionDynamicAccountController   dimAccountController;
+      #}
+    ENDSOURCE
+    SOURCE #enableCallCenter
+      #public void enableCallCenter()
+      #{
+      #    ;
+      #    if (CreditCardParameters.CallCenter)
+      #    {
+      #        CreditCardOrderHoldTable.enabled(true);
+      #    }
+      #    else
+      #    {
+      #        CreditCardOrderHoldTable.enabled(false);
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #enableCurrency
+      #public void enableCurrency()
+      #{
+      #    ;
+      #    if (CreditCardParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Accounting)
+      #    {
+      #        CreditCardParameters_ds.object(fieldNum(CreditCardParameters,ProcessCurrencyCode)).enabled(false);
+      #    }
+      #    else
+      #    {
+      #        CreditCardParameters_ds.object(fieldNum(CreditCardParameters,ProcessCurrencyCode)).enabled(true);
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #enablePrepayment
+      #void enablePrepayment()
+      #{
+      #    ;
+      #    switch (creditCardParameters.SaleAsPrePay)
+      #    {
+      #        case NoYes::No      :
+      #            creditCardParameters_ds.object(fieldnum(creditCardParameters,PostingProfile)).enabled(false);
+      #            break;
+      #        case NoYes::Yes     :
+      #            creditCardParameters_ds.object(fieldnum(creditCardParameters,PostingProfile)).enabled(true);
+      #            break;
+      #
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #enableProcessors
+      #void enableProcessors()
+      #{
+      #    CreditCardTerminalTable     ccTerminalTable;
+      #    ;
+      #    select processor, terminalid from ccTerminalTable
+      #        where ccTerminalTable.TerminalId == creditCardParameters.TerminalId;
+      #
+      #    switch (ccTerminalTable.Processor)
+      #    {
+      #        case         CreditCardProcessor::PayPal  :
+      #            CreditCardParameters_ds.object(fieldNum(CreditCardParameters,UsePayPalRef)).enabled(true);
+      #            CreditCardParameters_ds.object(fieldNum(CreditCardParameters,CybersourceSoftApproval)).enabled(false);
+      #            //CreditCardParameters_ds.object(fieldNum(CreditCardParameters,AllowOverCapture)).enabled(false);
+      #            break;
+      #        case        CreditCardProcessor::Cybersource    :
+      #            CreditCardParameters_ds.object(fieldNum(CreditCardParameters,UsePayPalRef)).enabled(false);
+      #            CreditCardParameters_ds.object(fieldNum(CreditCardParameters,CybersourceSoftApproval)).enabled(true);
+      #            //CreditCardParameters_ds.object(fieldNum(CreditCardParameters,AllowOverCapture)).enabled(false);
+      #            break;
+      #        case        CreditCardProcessor::Paymentech     :
+      #            CreditCardParameters_ds.object(fieldNum(CreditCardParameters,UsePayPalRef)).enabled(false);
+      #            CreditCardParameters_ds.object(fieldNum(CreditCardParameters,CybersourceSoftApproval)).enabled(true);
+      #            //CreditCardParameters_ds.object(fieldNum(CreditCardParameters,AllowOverCapture)).enabled(true);
+      #            break;
+      #        default:
+      #            CreditCardParameters_ds.object(fieldNum(CreditCardParameters,UsePayPalRef)).enabled(false);
+      #            CreditCardParameters_ds.object(fieldNum(CreditCardParameters,CybersourceSoftApproval)).enabled(false);
+      #            //CreditCardParameters_ds.object(fieldNum(CreditCardParameters,AllowOverCapture)).enabled(false);
+      #            break;
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{;
+      #
+      #    this.numberSeqPreInit();
+      #
+      #    super();
+      #
+      #    dimAccountController = DimensionDynamicAccountController::construct(creditcardParameters_ds, fieldStr(CreditCardParameters, LedgerDimension), fieldStr(CreditCardParameters, AccountType));
+      #
+      #    this.numberSeqPostInit();
+      #
+      #
+      #}
+    ENDSOURCE
+    SOURCE #numberSeqPostInit
+      #void numberSeqPostInit()
+      #{
+      #    allowSameAs.visible(numberSeqApplicationModule.sameAsActive());
+      #    labelSameAs.visible(allowSameAs.visible());
+      #}
+    ENDSOURCE
+    SOURCE #numberSeqPreInit
+      #void numberSeqPreInit()
+      #{
+      #    NumberSeqModule             module;
+      #    NumberSeqModuleCreditCard   moduleCreditCard = new NumberSeqModuleCreditCard();
+      #    ;
+      #    runExecuteDirect   = false;
+      #    numberSequenceModules = [NumberSeqModule::CreditCard];
+      #    numberSeqApplicationModule = new NumberSeqModuleCreditCard();
+      #    scope = NumberSeqScopeFactory::createDataAreaScope();
+      #    module = numberSeqApplicationModule.numberSeqModule();
+      #    appl.numberSeqGlobal().numberSeqModulesMap().insert(NumberSeqModule::CreditCard,moduleCreditCard);
+      #    NumberSeqApplicationModule::createReferences(NumberSeqModule::CreditCard);
+      #    tmpIdRef.setTmpData(NumberSequenceReference::configurationKeyTableMulti(numberSequenceModules));
+      #}
+    ENDSOURCE
+    SOURCE #setAddressPurpose
+      #void setAddressPurpose()
+      #{
+      #    ;
+      #    if (CreditCardParameters.AutoAddress)
+      #    {
+      #        creditCardParameters_ds.object(fieldNum(CreditCardParameters,LocationRoleName)).enabled(true);
+      #    }
+      #    else
+      #    {
+      #        creditCardParameters_ds.object(fieldNum(CreditCardParameters,LocationRoleName)).enabled(false);
+      #    }
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardParameters
+          Table               #CreditCardParameters
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD AllowOverCapture
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    throw warning("@ACC1827");
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD SaleAsPrePay
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.enablePrepayment();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD AutoAddress
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.setAddressPurpose();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          REFERENCEFIELD LedgerDimension
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #resolveReference
+                #public Common resolveReference(FormReferenceControl _formReferenceControl)
+                #{
+                #    Common common = dimAccountController.resolveReference();
+                #
+                #    return common;
+                #}
+                #
+              ENDSOURCE
+            ENDMETHODS
+          ENDREFERENCEFIELD
+          
+          DATAFIELD CallCenter
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.enableCallCenter();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CurrencyProcessType
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.enableCurrency();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    element.enableProcessors();
+          #    element.enablePrepayment();
+          #    element.setAddressPurpose();
+          #    element.enableCurrency();
+          #    element.enableCallCenter();
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #NumberSequenceReference
+          Table               #NumberSequenceReference
+          AllowCheck          #No
+          AllowCreate         #No
+          AllowDelete         #No
+          LinkType            #Passive
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+          REFERENCEFIELD NumberSequenceId
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #resolveReference
+                #public Common resolveReference(FormReferenceControl _formReferenceControl)
+                #{
+                #     NumberSequenceCode code = _formReferenceControl.filterValue(
+                #        AbsoluteFieldBinding::construct(fieldStr(NumberSequenceTable, NumberSequence),
+                #        tableStr(NumberSequenceTable))).value();
+                #
+                #    // Do not call super as we're providing our own disambiguation logic.
+                #    // resolvedRecord = super(_formReferenceControl);
+                #
+                #    return NumberSequenceTable::findByNaturalKey(code, scope.getId(true));
+                #}
+              ENDSOURCE
+              SOURCE #lookupReference
+                #public Common lookupReference(FormReferenceControl _formReferenceControl)
+                #{
+                #
+                #    NumberSequenceTable     selectedRecord;
+                #    SysReferenceTableLookup sysTableLookup = SysReferenceTableLookup::newParameters(tableNum(NumberSequenceTable), _formReferenceControl, true);
+                #    Query lookupQuery;
+                #
+                #    // Do not call super as we're providing our own custom lookup logic.
+                #    // selectedRecord = super(_formReferenceControl);
+                #
+                #    // Display the Title and Department fields in the lookup form.
+                #    sysTableLookup.addLookupfield(fieldNum(NumberSequenceTable, NumberSequence));
+                #
+                #    // Create a custom Query that filters on NumberSequenceScope.
+                #    lookupQuery = new Query();
+                #    lookupQuery.addDataSource(tableNum(NumberSequenceTable)).addRange(fieldNum(NumberSequenceTable, NumberSequenceScope)).value(queryValue(scope.getId(true)));
+                #    sysTableLookup.parmQuery(lookupQuery);
+                #
+                #    // Return the record selected by the user.
+                #    selectedRecord = sysTableLookup.performFormLookup();
+                #
+                #    return selectedRecord;
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDREFERENCEFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #removeFilter
+          #void removeFilter()
+          #{
+          #    runExecuteDirect = false;
+          #    numbersequenceReference_ds.executeQuery();
+          #}
+        ENDSOURCE
+        SOURCE #executeQuery
+          #void executeQuery()
+          #{
+          #    if (runExecuteDirect)
+          #    {
+          #        super();
+          #    }
+          #    else
+          #    {
+          #        runExecuteDirect = true;
+          #        this.queryRun(NumberSeqReference::buildQueryRunMulti(numberSequenceReference,
+          #                                                             tmpIdRef,
+          #                                                             numberSequenceTable,
+          #                                                             numberSequenceModules,
+          #                                                             scope));
+          #        numbersequenceReference_ds.research();
+          #    }
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardBanks
+          Table               #CreditCardBanks
+          JoinSource          #CreditCardParameters
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #NumberSequenceTable
+          Table               #NumberSequenceTable
+          JoinSource          #NumberSequenceReference
+          JoinRelation        #NumberSequenceTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+    CreditCardBanks CreditCardParameters
+    NumberSequenceTable NumberSequenceReference
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@ACC130
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+      Style               #TableOfContents
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          ElementPosition     #536870911
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #BanksActionPane
+          ElementPosition     #1073741822
+          HierarchyParent     #BanksGroup
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #CopyOfActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #BanksActionPane
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #CopyOfNewDeleteGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #CopyOfActionPaneTab
+          DataSource          #CreditCardBanks
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #NewDeleteGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab
+          DataSource          #CreditCardParameters
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #GridGroup
+          MultiSelect         #No
+          ShowRowLabels       #No
+          DataSource          #NumberSequenceReference
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #GridBanks
+          Height              #Column height
+          ElementPosition     #1610612733
+          HierarchyParent     #BanksGroup
+          DataSource          #CreditCardBanks
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #TerminalGrid
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #GroupOverview
+          DataSource          #CreditCardParameters
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Authorizations
+          ElementPosition     #920350134
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Authorizations
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #AVS
+          ElementPosition     #1288490187
+          HierarchyParent     #PostingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #AVS
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #BanksGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Banks
+          Style               #TOCTopicList
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #BanksTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Banks
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CallCenter
+          ElementPosition     #1994091957
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #CallCenter
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CreditCard
+          ElementPosition     #1687308579
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #CreditCard
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Credits
+          ElementPosition     #1717986916
+          HierarchyParent     #PostingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Credits
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Currency
+          ElementPosition     #460175067
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Currency
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Cybersource
+          ElementPosition     #1380525201
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Cybersource
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Expiration
+          ElementPosition     #766958445
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Expiration
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GridGroup
+          ElementPosition     #1073741822
+          HierarchyParent     #NumSeqBody
+          Style               #BorderlessGridContainer
+          TopMargin           #0
+          BottomMargin        #0
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupOverview
+          ElementPosition     #1610612733
+          HierarchyParent     #Overview
+          Style               #TOCTopicList
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Header
+          Width               #Column width
+          ElementPosition     #1073741822
+          HierarchyParent     #NumberSeq
+          FrameType           #None
+          Style               #TOCTitleContainer
+          DataSource          #NumberSequenceReference
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Hosted
+          ElementPosition     #1840700268
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Hosted
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Journal1
+          ElementPosition     #715827882
+          HierarchyParent     #JournalGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Journal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #JournalGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Journal
+          Style               #TOCTopicSimple
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #JournalTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Journal
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #NumSeqBody
+          ElementPosition     #1610612733
+          HierarchyParent     #NumberSeq
+          Style               #TOCTopicList
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Other
+          ElementPosition     #1533916890
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Other
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #OverviewTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Overview
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Payment
+          ElementPosition     #1073741823
+          HierarchyParent     #JournalGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Payment
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PayPalRequest
+          ElementPosition     #1227133512
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #PayPalRequest
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Posting1
+          ElementPosition     #858993458
+          HierarchyParent     #PostingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Posting
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PostingGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Posting
+          Style               #TOCTopicSimple
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PostingTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Posting
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Prepayment
+          ElementPosition     #1789569705
+          HierarchyParent     #JournalGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Prepayment
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #ProcessingGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #Processing
+          Style               #TOCTopicSimple
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #ProcessingTitle
+          ElementPosition     #1073741822
+          HierarchyParent     #Processing
+          Style               #TOCTitleContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Project
+          ElementPosition     #1431655764
+          HierarchyParent     #JournalGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Project
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Restrictions
+          ElementPosition     #1073741823
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Restrictions
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Security
+          ElementPosition     #613566756
+          HierarchyParent     #ProcessingGroup
+          DataSource          #CreditCardParameters
+          DataGroup           #Security
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Test
+          ElementPosition     #306783378
+          HierarchyParent     #ProcessingGroup
+          Caption             #@ACC131
+          DataSource          #CreditCardParameters
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REFERENCEGROUP
+        PROPERTIES
+          Name                #NumberSequenceReference_NumberSequenceId
+          ElementPosition     #1073741823
+          HierarchyParent     #Grid
+          DataSource          #NumberSequenceReference
+          ReferenceField      #NumberSequenceId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #Tab
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741823
+          Style               #VerticalTabs
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Banks
+          ElementPosition     #1342177275
+          HierarchyParent     #Tab
+          Caption             #@ACC987
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Journal
+          ElementPosition     #1073741820
+          HierarchyParent     #Tab
+          Caption             #@SYS24010
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #NumberSeq
+          ElementPosition     #1879048185
+          HierarchyParent     #Tab
+          Caption             #@SYS26442
+          DataSource          #NumberSequenceReference
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Overview
+          ElementPosition     #536870910
+          HierarchyParent     #Tab
+          Caption             #@SYS50012
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Posting
+          ElementPosition     #1610612730
+          HierarchyParent     #Tab
+          Caption             #@SYS5943
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Processing
+          ElementPosition     #805306365
+          HierarchyParent     #Tab
+          Caption             #@SYS8577
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #AllowSameAs
+          AutoDeclaration     #Yes
+          ElementPosition     #1431655764
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          DataSource          #NumberSequenceReference
+          DataField           #AllowSameAs
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #CheckBox
+          ElementPosition     #1431655764
+          HierarchyParent     #Test
+          DataSource          #CreditCardParameters
+          DataField           #Testing
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #CreditCardParameters_Primary
+          ElementPosition     #1717986916
+          HierarchyParent     #TerminalGrid
+          BackgroundColor     #Window background
+          DataSource          #CreditCardParameters
+          DataField           #PrimaryParam
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #Group_AutoAddress
+          ElementPosition     #1288490187
+          HierarchyParent     #CreditCard
+          DataSource          #CreditCardParameters
+          DataField           #AutoAddress
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #Group_AutoProfile
+          ElementPosition     #858993458
+          HierarchyParent     #CreditCard
+          DataSource          #CreditCardParameters
+          DataField           #AutoProfile
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardBanks_CreditCardType
+          ElementPosition     #1073741822
+          HierarchyParent     #GridBanks
+          LabelAlignment      #Right
+          DataSource          #CreditCardBanks
+          DataField           #CreditCardType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #CopyOfDeleteButton
+          ElementPosition     #1610612733
+          HierarchyParent     #CopyOfNewDeleteGroup
+          Text                #@sys14425
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          Primary             #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #CopyOfNewButton
+          ElementPosition     #1073741822
+          HierarchyParent     #CopyOfNewDeleteGroup
+          ButtonDisplay       #Text & Image left
+          NormalImage         #11045
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          Command             #260
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DeleteButton
+          ElementPosition     #1288490187
+          HierarchyParent     #NewDeleteGroup
+          Text                #@sys14425
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          Primary             #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #NewButton
+          ElementPosition     #858993458
+          HierarchyParent     #NewDeleteGroup
+          ButtonDisplay       #Text & Image left
+          NormalImage         #11045
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          Command             #260
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardOrderHoldTable
+          AutoDeclaration     #Yes
+          ElementPosition     #1717986916
+          HierarchyParent     #NewDeleteGroup
+          DataSource          #CreditCardParameters
+          MenuItemName        #CreditCardOrderHoldTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL SEGMENTEDENTRY
+        PROPERTIES
+          Name                #Journal1_LedgerDimension
+          AutoDeclaration     #Yes
+          ElementPosition     #1156337343
+          HierarchyParent     #Journal1
+          DataSource          #CreditCardParameters
+          ReferenceField      #LedgerDimension
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #jumpRef
+            #public void jumpRef()
+            #{
+            #    dimAccountController.jumpRef();
+            #}
+            #
+          ENDSOURCE
+          SOURCE #loadAutoCompleteData
+            #public void loadAutoCompleteData(LoadAutoCompleteDataEventArgs _e)
+            #{
+            #    super(_e);
+            #
+            #    dimAccountController.loadAutoCompleteData(_e);
+            #}
+            #
+          ENDSOURCE
+          SOURCE #loadSegments
+            #public void loadSegments()
+            #{
+            #    super();
+            #
+            #    dimAccountController.parmControl(this);
+            #    dimAccountController.parmJournalName(CreditCardParameters.LedgerJournalNameId);
+            #    dimAccountController.parmDataAreaId(curext());
+            #    dimAccountController.parmDate(systemDateGet());
+            #
+            #    dimAccountController.loadSegments();
+            #
+            #    //currentMainAccountId = dimAccountController.getValue(DimensionAttribute::getMainAccountDimensionAttribute());
+            #}
+            #
+          ENDSOURCE
+          SOURCE #lookup
+            #public void lookup()
+            #{
+            #    if (!CreditCardParameters::accountNumLookup(Journal1_LedgerDimension, CreditCardParameters))
+            #    {
+            #        super();
+            #    }
+            #}
+          ENDSOURCE
+          SOURCE #segmentValueChanged
+            #public void segmentValueChanged(SegmentValueChangedEventArgs _e)
+            #{
+            #    super(_e);
+            #
+            #    dimAccountController.segmentValueChanged(_e);
+            #}
+            #
+          ENDSOURCE
+          SOURCE #validate
+            #public boolean validate()
+            #{
+            #    boolean isValid;
+            #
+            #    isValid = super();
+            #    isValid = dimAccountController.validate() && isValid;
+            #
+            #    return isValid;
+            #}
+            #
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticText1
+          ElementPosition     #1431655764
+          HierarchyParent     #Header
+          Text                #@ACC1578
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticText2
+          ElementPosition     #1431655764
+          HierarchyParent     #ProcessingTitle
+          Text                #@ACC1579
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextBanks
+          ElementPosition     #1431655764
+          HierarchyParent     #BanksTitle
+          Text                #@ACC1581
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextJournal
+          ElementPosition     #1431655764
+          HierarchyParent     #JournalTitle
+          Text                #@ACC1580
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextOverview
+          ElementPosition     #1431655764
+          HierarchyParent     #OverviewTitle
+          Text                #@ACC1584
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #StaticTextTitle
+          ElementPosition     #1431655764
+          HierarchyParent     #PostingTitle
+          Text                #@ACC1582
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardBanks_AccountId
+          ElementPosition     #1610612733
+          HierarchyParent     #GridBanks
+          LabelAlignment      #Right
+          DataSource          #CreditCardBanks
+          DataField           #AccountId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardParameters_TerminalId
+          ElementPosition     #858993458
+          HierarchyParent     #TerminalGrid
+          DataSource          #CreditCardParameters
+          DataField           #TerminalId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Description
+          ElementPosition     #1288490187
+          HierarchyParent     #TerminalGrid
+          DataSource          #CreditCardParameters
+          DataMethod          #displayTerminalName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Group_LocationRoleName
+          ElementPosition     #1717986916
+          HierarchyParent     #CreditCard
+          DataSource          #CreditCardParameters
+          DataField           #LocationRoleName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #LabelSameAs
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Skip                #Yes
+          ElementPosition     #1789569705
+          HierarchyParent     #Grid
+          DataSource          #NumberSequenceReference
+          DataMethod          #referenceSameAsLabel
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #referenceHelp
+          AllowEdit           #No
+          Width               #Column width
+          Height              #39
+          Skip                #Yes
+          ElementPosition     #1610612733
+          HierarchyParent     #NumSeqBody
+          Border              #None
+          MultiLine           #Yes
+          ShowLabel           #No
+          DataSource          #NumberSequenceReference
+          DataMethod          #referenceHelp
+          ViewEditMode        #View
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #referenceLabel1
+          AllowEdit           #No
+          Skip                #Yes
+          ElementPosition     #715827882
+          HierarchyParent     #Grid
+          DataSource          #NumberSequenceReference
+          DataMethod          #referenceLabel
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

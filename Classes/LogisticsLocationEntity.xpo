@@ -1,0 +1,1245 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #LogisticsLocationEntity
+    PROPERTIES
+      Name                #LogisticsLocationEntity
+      Origin              #{2D170000-0000-1000-0719-FFEEBAE8CEC1}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class LogisticsLocationEntity
+        #{
+        #
+        #    // Location tables
+        #    LogisticsLocation               location;
+        #    LogisticsPostalAddress          postalAddress;
+        #
+        #    //Location properties
+        #    LogisticsLocationRecId          locationRecId;
+        #    LogisticsPostalAddressRecId     postalAddressRecId;
+        #    LogisticsLocationId             locationId;
+        #    Description                     description;
+        #    LogisticsDunsNumber             dunsNumber;
+        #
+        #    boolean                         oldSchema;
+        #
+        #    TransDateTime                   transDateTime;
+        #
+        #
+        #    Phone                   phone;
+        #    PhoneLocal              phoneLocal;
+        #    Pager                   pager;
+        #    TeleFax                 teleFax;
+        #    Email                   email;
+        #    SMS                     sms;
+        #    URL                     url;
+        #    Telex                   telex;
+        #    Email                   homeEmail;
+        #    Email                   otherEmail;
+        #    Email                   im;
+        #    Phone                   primaryPhone;
+        #    Phone                   homePhone;
+        #    Phone                   otherPhone;
+        #    Phone                   callBackPhone;
+        #    Phone                   carPhone;
+        #    Phone                   radioPhone;
+        #    TeleFax                 homeFax;
+        #    TeleFax                 otherFax;
+        #    URL                     personalHomePage;
+        #    URL                     ftp;
+        #
+        #    boolean                 update;
+        #    LogisticsLocationEntity thisOrig;
+        #
+        #    LogisticsElectronicAddressLocator locator;
+        #    PhoneLocal locatorExtension;
+        #}
+      ENDSOURCE
+      SOURCE #createLocationCopy
+        #LogisticsLocation createLocationCopy(DirPartyRecId _partyOwner,
+        #                                     boolean _isPrimary = false,
+        #                                     boolean _isPrivate = false,
+        #                                     container _roles = conNull())
+        #{
+        #    LogisticsLocation               newLocation;
+        #    LogisticsPostalAddress          newPostalAddress;
+        #
+        #    ttsbegin;
+        #    newLocation = LogisticsLocation::create(description);
+        #
+        #    newPostalAddress.data(this.getPostalAddress());
+        #    newPostalAddress.Location = newLocation.RecId;
+        #    newPostalAddress.insert();
+        #
+        #    DirParty::addLocation(_partyOwner, newLocation.RecId, newLocation.IsPostalAddress, _isPrimary, _isPrivate, _roles, true);
+        #
+        #    ttscommit;
+        #
+        #    return newLocation;
+        #}
+      ENDSOURCE
+      SOURCE #createLocationCopyEx
+        #/// <summary>
+        #///    Creates a location copy by using the current <c>LogisticsLocationEntity</c> object.
+        #/// </summary>
+        #/// <returns>
+        #///    A new <c>LogisticsLocation</c> table buffer.
+        #/// </returns>
+        #LogisticsLocation createLocationCopyEx()
+        #{
+        #    LogisticsLocation               newLocation;
+        #    LogisticsPostalAddress          newPostalAddress;
+        #    LogisticsElectronicAddress      newElectronicAddress;
+        #
+        #    ttsbegin;
+        #    location = this.getLogisticsLocation();
+        #
+        #    newLocation = LogisticsLocation::create(description, location.IsPostalAddress);
+        #
+        #    if (location.IsPostalAddress)
+        #    {
+        #        newPostalAddress.data(this.getPostalAddress());
+        #        newPostalAddress.Location = newLocation.RecId;
+        #        newPostalAddress.ValidFrom = DirUtility::getCurrentDateTime();
+        #        newPostalAddress.ValidTo = DateTimeUtil::maxValue();
+        #        newPostalAddress.insert();
+        #    }
+        #    else
+        #    {
+        #        this.initializeElectronicAddress();
+        #
+        #        if (email)
+        #        {
+        #            newElectronicAddress.Locator = email;
+        #            newElectronicAddress.Location = newLocation.RecId;
+        #            newElectronicAddress.Type = LogisticsElectronicAddressMethodType::Email;
+        #            newElectronicAddress.IsPrimary = true;
+        #            newElectronicAddress.insert();
+        #        }
+        #
+        #        if (phone)
+        #        {
+        #            newElectronicAddress.clear();
+        #            newElectronicAddress.Locator = phone;
+        #            newElectronicAddress.Location = newLocation.RecId;
+        #            newElectronicAddress.Type = LogisticsElectronicAddressMethodType::Phone;
+        #            newElectronicAddress.IsPrimary = true;
+        #            newElectronicAddress.insert();
+        #        }
+        #
+        #        if (telex)
+        #        {
+        #            newElectronicAddress.clear();
+        #            newElectronicAddress.Locator = telex;
+        #            newElectronicAddress.Location = newLocation.RecId;
+        #            newElectronicAddress.Type = LogisticsElectronicAddressMethodType::Telex;
+        #            newElectronicAddress.IsPrimary = true;
+        #            newElectronicAddress.insert();
+        #        }
+        #
+        #        if (url)
+        #        {
+        #            newElectronicAddress.clear();
+        #            newElectronicAddress.Locator = url;
+        #            newElectronicAddress.Location = newLocation.RecId;
+        #            newElectronicAddress.Type = LogisticsElectronicAddressMethodType::URL;
+        #            newElectronicAddress.IsPrimary = true;
+        #            newElectronicAddress.insert();
+        #        }
+        #
+        #        if (teleFax)
+        #        {
+        #            newElectronicAddress.clear();
+        #            newElectronicAddress.Locator = teleFax;
+        #            newElectronicAddress.Location = newLocation.RecId;
+        #            newElectronicAddress.Type = LogisticsElectronicAddressMethodType::Fax;
+        #            newElectronicAddress.IsPrimary = true;
+        #            newElectronicAddress.insert();
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    return newLocation;
+        #}
+      ENDSOURCE
+      SOURCE #getElectronicAddress
+        #[SysObsoleteAttribute('This method is now obsolete due to schema changes.', true)]
+        #LogisticsElectronicAddress getElectronicAddress()
+        #{
+        #    LogisticsElectronicAddress  electronicAddress;
+        #
+        #    return electronicAddress;
+        #}
+      ENDSOURCE
+      SOURCE #getElectronicAddressOn
+        #[SysObsoleteAttribute('This method is now obsolete due to schema changes.', false)]
+        #LogisticsElectronicAddress getElectronicAddressOn(TransDateTime _transDateTime)
+        #{
+        #    LogisticsElectronicAddress  electronicAddress;
+        #    utcdatetime asOf = _transDateTime;
+        #
+        #    select validtimestate(asOf) electronicAddress
+        #        where electronicAddress.Location == locationRecId;
+        #
+        #    return electronicAddress;
+        #}
+      ENDSOURCE
+      SOURCE #getEmail
+        #public Email getEmail()
+        #{
+        #    return email;
+        #}
+      ENDSOURCE
+      SOURCE #getLocator
+        #/// <summary>
+        #///    Returns the locator object of the electronic address record.
+        #/// </summary>
+        #/// <returns>
+        #///    A <c>LogisticsElectronicAddressLocator</c> value.
+        #/// </returns>
+        #[SysObsoleteAttribute('This method is now obsolete due to schema changes.', false)]
+        #public LogisticsElectronicAddressLocator getLocator()
+        #{
+        #    return locator;
+        #}
+      ENDSOURCE
+      SOURCE #getLocatorExtension
+        #/// <summary>
+        #/// Gets the locator extension of the electronic address record.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>PhoneLocal</c> value.
+        #/// </returns>
+        #public PhoneLocal getLocatorExtension()
+        #{
+        #    return locator;
+        #}
+      ENDSOURCE
+      SOURCE #getLogisticsLocation
+        #LogisticsLocation getLogisticsLocation(boolean _reFetch = false)
+        #{
+        #    if (_reFetch || location.RecId != locationRecId)
+        #    {
+        #        select firstonly location where location.RecId == locationRecId;
+        #    }
+        #    return location;
+        #}
+      ENDSOURCE
+      SOURCE #getPhone
+        #public Phone getPhone()
+        #{
+        #    return phone;
+        #}
+      ENDSOURCE
+      SOURCE #getPhoneLocal
+        #public PhoneLocal getPhoneLocal()
+        #{
+        #    return phoneLocal;
+        #}
+      ENDSOURCE
+      SOURCE #getPostalAddress
+        #LogisticsPostalAddress getPostalAddress(boolean _reFetch = false)
+        #{
+        #    if (_reFetch || !postalAddress.RecId || postalAddressRecId != postalAddress.RecId)
+        #    {
+        #        postalAddress = this.getPostalAddressOn(transDateTime);
+        #        postalAddressRecId = postalAddress.RecId;
+        #    }
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #getPostalAddressOn
+        #LogisticsPostalAddress getPostalAddressOn(TransDateTime _transDateTime)
+        #{
+        #    LogisticsPostalAddress          address;
+        #    utcdatetime asOf = _transDateTime;
+        #
+        #    select validtimestate(asOf) address
+        #        where address.Location == locationRecId;
+        #
+        #    return address;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getTeleFax
+        #public TeleFax getTeleFax()
+        #{
+        #    return teleFax;
+        #}
+      ENDSOURCE
+      SOURCE #getTelex
+        #public Telex getTelex()
+        #{
+        #    return telex;
+        #}
+      ENDSOURCE
+      SOURCE #getURL
+        #public URL getURL()
+        #{
+        #    return url;
+        #}
+      ENDSOURCE
+      SOURCE #initFromLogisticsLocation
+        #void initFromLogisticsLocation(LogisticsLocation _location)
+        #{
+        #    locationRecId = _location.RecId;
+        #    locationId = _location.LocationId;
+        #    description = _location.Description;
+        #    dunsNumber = DirDunsNumber::find(_location.DunsNumberRecId).DunsNumber;
+        #}
+      ENDSOURCE
+      SOURCE #initializeElectronicAddress
+        #/// <summary>
+        #/// Initializes the electronic address fields
+        #/// </summary>
+        #void initializeElectronicAddress()
+        #{
+        #    LogisticsElectronicAddress          contactInfo;
+        #
+        #    select Locator, LocatorExtension from contactInfo
+        #            where contactInfo.Location == locationRecId
+        #            && contactInfo.IsPrimary == true
+        #            && contactInfo.Type == LogisticsElectronicAddressMethodType::Phone;
+        #
+        #    phone = contactInfo.Locator;
+        #    phoneLocal = contactInfo.LocatorExtension;
+        #
+        #    select Locator from contactInfo
+        #            where contactInfo.Location == locationRecId
+        #            && contactInfo.IsPrimary == true
+        #            && contactInfo.Type == LogisticsElectronicAddressMethodType::Fax;
+        #
+        #    teleFax = contactInfo.Locator;
+        #
+        #    select Locator from contactInfo
+        #            where contactInfo.Location == locationRecId
+        #            && contactInfo.IsPrimary == true
+        #            && contactInfo.Type == LogisticsElectronicAddressMethodType::Email;
+        #
+        #    email= contactInfo.Locator;
+        #
+        #    select Locator from contactInfo
+        #            where contactInfo.Location == locationRecId
+        #            && contactInfo.IsPrimary == true
+        #            && contactInfo.Type == LogisticsElectronicAddressMethodType::URL;
+        #
+        #    url = contactInfo.Locator;
+        #
+        #    select Locator from contactInfo
+        #            where contactInfo.Location == locationRecId
+        #            && contactInfo.IsPrimary == true
+        #            && contactInfo.Type == LogisticsElectronicAddressMethodType::Telex;
+        #
+        #    telex = contactInfo.Locator;
+        #}
+      ENDSOURCE
+      SOURCE #parmDunsNumber
+        #LogisticsDunsNumber parmDunsNumber(LogisticsDunsNumber _dunsNumber = dunsNumber)
+        #{
+        #    dunsNumber = _dunsNumber;
+        #    return dunsNumber;
+        #}
+      ENDSOURCE
+      SOURCE #parmLocationDescription
+        #Description parmLocationDescription(Description _description = description)
+        #{
+        #    description = _description;
+        #    return description;
+        #}
+      ENDSOURCE
+      SOURCE #parmLocationId
+        #LogisticsLocationId parmLocationId(LogisticsLocationId _locationId = locationId)
+        #{
+        #    locationId = _locationId;
+        #    return locationId;
+        #}
+      ENDSOURCE
+      SOURCE #parmLocationRecId
+        #LogisticsLocationRecId parmLocationRecId(LogisticsLocationRecId _locationRecId = locationRecId)
+        #{
+        #    locationRecId = _locationRecId;
+        #    return locationRecId;
+        #}
+      ENDSOURCE
+      SOURCE #parmOrig
+        #LogisticsLocationEntity parmOrig(LogisticsLocationEntity _thisOrig = thisOrig)
+        #{
+        #    thisOrig = _thisOrig;
+        #    return thisOrig;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransDateTime
+        #public TransDateTime parmTransDateTime(TransDateTime _transDateTime = transDateTime)
+        #{
+        #    transDateTime = _transDateTime;
+        #    return transDateTime;
+        #}
+      ENDSOURCE
+      SOURCE #parmUpdate
+        #boolean parmUpdate(boolean _update = update)
+        #{
+        #    update = _update;
+        #    return update;
+        #}
+      ENDSOURCE
+      SOURCE #setElectronicAddressOn
+        #void setElectronicAddressOn(
+        #    LogisticsElectronicAddressMethodType _type,
+        #    LogisticsElectronicAddressLocator _locator,
+        #    ValidFromDateTime _validFrom = DirUtility::getCurrentDateTime(),
+        #    ValidToDateTime _validTo = DateTimeUtil::maxValue())
+        #{
+        #    LogisticsElectronicAddress          address;
+        #
+        #    address.Locator = _locator;
+        #    address.Type = _type;
+        #    address.Location = locationRecId;
+        #    address.insert();
+        #}
+      ENDSOURCE
+      SOURCE #address2Addresses
+        #server static void address2Addresses(LogisticsPostalAddressRecId        _addressRecId,
+        #                                      LogisticsLocation                 _location,
+        #                                      LogisticsPostalAddress            _postalAddress,
+        #                                      DirPartyRecId                     _party)
+        #{
+        #    LogisticsLocationEntity::location2Addresses(LogisticsPostalAddress::findRecId(_addressRecId).Location,
+        #                                                _location,
+        #                                                _postalAddress,
+        #                                                _party);
+        #}
+      ENDSOURCE
+      SOURCE #addressLocationRecId
+        #/// <summary>
+        #///    Find the <c>LogisticsLocationRecId</c> for an address.
+        #/// </summary>
+        #/// <param name="_common">
+        #///    The entity for which to find the location.
+        #/// </param>
+        #/// <param name="_roleType">
+        #///    The role of the location.
+        #/// </param>
+        #/// <param name="_transDateTime">
+        #///    The date time value for when the location is valid.
+        #/// </param>
+        #/// <returns>
+        #///    The <c>RecId</c> value of the <c>LogisticsLocation</c> record.
+        #/// </returns>
+        #public static server LogisticsLocationRecId addressLocationRecId(Common _common,
+        #    LogisticsLocationRoleType _roleType, TransDateTime _transDateTime = DirUtility::getCurrentDateTime())
+        #{
+        #    LogisticsLocationEntity entity = LogisticsLocationEntity::findLocation(_common, _roleType, _transDateTime);
+        #    return entity.parmLocationRecId();
+        #}
+      ENDSOURCE
+      SOURCE #canDeleteLocation
+        #static server boolean canDeleteLocation(LogisticsLocationRecId _location,container exceptionList = conNull(), boolean _showInfoLog = false)
+        #{
+        #    Query                   query;
+        #    QueryBuildDataSource    qbDataSource;
+        #    QueryRun                qRun;
+        #    int                     i;
+        #    container               tableList;
+        #    TableId                 tableId;
+        #    DataAreaId              dataAreaId;
+        #    DataAreaId              olddataAreaId;
+        #    SysDictTable            dictTable;
+        #    Common                  common;
+        #    boolean                 flag;
+        #    RecId                   recId;
+        #    void readOne()
+        #    {
+        #        if (qRun.next())
+        #        {
+        #            common = qRun.getNo(1);
+        #            tableId = conPeek(tableList,common.UnionAllBranchId*2-1);
+        #            dataAreaId = common.(dictTable.fieldName2Id(identifierStr(dataAreaId)));
+        #            recId      = common.(dictTable.fieldName2Id(identifierStr(RecId)));
+        #            if (!exceptionList || !conFind(exceptionList,[tableId,recId]))
+        #            {
+        #                flag = true;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            flag = false;
+        #        }
+        #    }
+        #
+        #    unchecked(Uncheck::TableSecurityPermission)
+        #    {
+        #        tableList = LogisticsLocationEntity::locationTableList();
+        #        if (tableList && _location)
+        #        {
+        #            query = new Query();
+        #            query.queryType(QueryType::Union);
+        #            query.allowCrossCompany(true);
+        #            for (i=1; i<=conLen(tableList); i+=2)
+        #            {
+        #                dictTable = new SysDictTable(conPeek(tableList,i));
+        #                qbDataSource = query.addDataSource(conPeek(tableList,i));
+        #                qbDataSource.update(false);
+        #                qbDataSource.fields().dynamic(false);
+        #                qbDataSource.fields().clearFieldList();
+        #                qbDataSource.fields().addField(conPeek(tableList,i+1));
+        #                qbDataSource.addRange(conPeek(tableList,i+1)).value(queryValue(_location));
+        #                qbDataSource.addSortField(dictTable.fieldName2Id(identifierStr(dataAreaId)));
+        #                qbDataSource.unionType(UnionType::UnionAll);
+        #            }
+        #            qRun = new QueryRun(query);
+        #            readOne();
+        #            olddataAreaId = dataAreaId;
+        #            if (flag && _showInfoLog)
+        #            {
+        #                setPrefix(strFmt("@SYS136898",_location));
+        #            }
+        #            while (flag)
+        #            {
+        #                if (_showInfoLog)
+        #                {
+        #                    // Company %1
+        #                    setPrefix(strFmt("@SYS110249",dataAreaId));
+        #                }
+        #                do
+        #                {
+        #                    if (_showInfoLog)
+        #                    {
+        #                        // %1
+        #                        checkFailed(strFmt("@SYS82282",tableId2pname(tableId)));
+        #                    }
+        #                    readOne();
+        #                } while(flag && dataAreaId == olddataAreaId);
+        #                olddataAreaId = dataAreaId;
+        #            }
+        #        }
+        #        if (tableId)
+        #        {
+        #            return false;
+        #        }
+        #    }
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #canDeletePostalAddress
+        #static server boolean canDeletePostalAddress(LogisticsPostalAddressRecId _postalAddress,container exceptionList = conNull(), boolean _showInfoLog = false)
+        #{
+        #    Query                   query;
+        #    QueryBuildDataSource    qbDataSource;
+        #    QueryRun                qRun;
+        #    int                     i;
+        #    container               tableList;
+        #    TableId                 tableId;
+        #    DataAreaId              dataAreaId;
+        #    DataAreaId              olddataAreaId;
+        #    SysDictTable            dictTable;
+        #    Common                  common;
+        #    boolean                 flag;
+        #    RecId                   recId;
+        #    void readOne()
+        #    {
+        #        if (qRun.next())
+        #        {
+        #            common = qRun.getNo(1);
+        #            tableId = conPeek(tableList,common.UnionAllBranchId*2-1);
+        #            dataAreaId = common.(dictTable.fieldName2Id(identifierStr(dataAreaId)));
+        #            recId      = common.(dictTable.fieldName2Id(identifierStr(RecId)));
+        #            if (!exceptionList || !conFind(exceptionList,[tableId,recId]))
+        #            {
+        #                flag = true;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            flag = false;
+        #        }
+        #    }
+        #
+        #    unchecked(Uncheck::TableSecurityPermission)
+        #    {
+        #        tableList = LogisticsLocationEntity::postalAddressTableList();
+        #        if (tableList && _postalAddress)
+        #        {
+        #            query = new Query();
+        #            query.queryType(QueryType::Union);
+        #            query.allowCrossCompany(true);
+        #            for (i=1; i<=conLen(tableList); i+=2)
+        #            {
+        #                dictTable = new SysDictTable(conPeek(tableList,i));
+        #                qbDataSource = query.addDataSource(conPeek(tableList,i));
+        #                qbDataSource.update(false);
+        #                qbDataSource.fields().dynamic(false);
+        #                qbDataSource.fields().clearFieldList();
+        #                qbDataSource.fields().addField(conPeek(tableList,i+1));
+        #                qbDataSource.addRange(conPeek(tableList,i+1)).value(queryValue(_postalAddress));
+        #                qbDataSource.addSortField(dictTable.fieldName2Id(identifierStr(dataAreaId)));
+        #                qbDataSource.unionType(UnionType::UnionAll);
+        #            }
+        #            qRun = new QueryRun(query);
+        #            readOne();
+        #            olddataAreaId = dataAreaId;
+        #            if (flag && _showInfoLog)
+        #            {
+        #                setPrefix(strFmt("@SYS136897",_postalAddress));
+        #            }
+        #            while (flag)
+        #            {
+        #                if (_showInfoLog)
+        #                {
+        #                    // Company %1
+        #                    setPrefix(strFmt("@SYS110249",dataAreaId));
+        #                }
+        #                do
+        #                {
+        #                    if (_showInfoLog)
+        #                    {
+        #                        // %1
+        #                        checkFailed(strFmt("@SYS82282",tableId2pname(tableId)));
+        #                    }
+        #                    readOne();
+        #                } while(flag && dataAreaId == olddataAreaId);
+        #                olddataAreaId = dataAreaId;
+        #            }
+        #        }
+        #        if (tableId)
+        #        {
+        #            return false;
+        #        }
+        #    }
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #constructFromLocationRecId
+        #static LogisticsLocationEntity constructFromLocationRecId(LogisticsLocationRecId _locationRecId, boolean _update = false, TransDateTime _transDateTime = DirUtility::getCurrentDateTime())
+        #{
+        #    LogisticsLocationEntity    locationEntity, locationEntityOrig;
+        #    LogisticsLocation          location;
+        #
+        #    locationEntity = new LogisticsLocationEntity();
+        #    locationEntity.parmLocationRecId(_locationRecId);
+        #    locationEntity.parmTransDateTime(_transDateTime);
+        #    locationEntity.parmUpdate(_update);
+        #
+        #    if(_locationRecId)
+        #    {
+        #        location = LogisticsLocation::find(_locationRecId);
+        #        locationEntity.initFromLogisticsLocation(location);
+        #
+        #        if (location.IsPostalAddress)
+        #        {
+        #            locationEntity.getPostalAddress(false);
+        #        }
+        #        else
+        #        {
+        #            locationEntity.initializeElectronicAddress();
+        #        }
+        #
+        #        if(_update)
+        #        {
+        #            locationEntityOrig = new LogisticsLocationEntity();
+        #            locationEntityOrig.parmLocationRecId(_locationRecId);
+        #            locationEntityOrig.parmTransDateTime(_transDateTime);
+        #            locationEntityOrig.initFromLogisticsLocation(location);
+        #            locationEntity.parmOrig(locationEntityOrig);
+        #        }
+        #    }
+        #
+        #    return locationEntity;
+        #}
+      ENDSOURCE
+      SOURCE #findLocation
+        #/// <summary>
+        #///    Finds a location for the specified common for a specified <c>LogisticsLocationRoleType</c>
+        #///    sequencing, that is, private, primary, or public.
+        #/// </summary>
+        #/// <param name="_common">
+        #///    The entity for which to find the location.
+        #/// </param>
+        #/// <param name="_roleType">
+        #///    The role of the location.
+        #/// </param>
+        #/// <param name="_transDateTime">
+        #///    The <c>DateTime</c> value for when the location is valid.
+        #/// </param>
+        #/// <param name="usePrimary">
+        #///    A Boolean value that specifies whether to return the primary location for the entity.
+        #/// </param>
+        #/// <returns>
+        #///    A <c>LogisticsLocationEntity</c> object that corresponds to the location that was found.
+        #/// </returns>
+        #static server LogisticsLocationEntity findLocation(Common _common, LogisticsLocationRoleType _roleType, TransDateTime _transDateTime = DirUtility::getCurrentDateTime(), boolean usePrimary = false)
+        #{
+        #    Common                          common = _common;
+        #    LogisticsLocationEntity         location;
+        #    DirPartyRecId                   party;
+        #    FieldId                         fieldId;
+        #
+        #    if (common.RecId && common.TableId)
+        #    {
+        #        switch (common.TableId)
+        #        {
+        #            case tableNum(SalesTable) :
+        #            common = CustTable::find(common.(fieldNum(SalesTable,CustAccount)));
+        #            break;
+        #
+        #            case tableNum(PurchTable) :
+        #            common = VendTable::find(common.(fieldNum(PurchTable,OrderAccount)));
+        #            break;
+        #
+        #        }
+        #
+        #        // get the partyFieldId from the table.
+        #        fieldId = DirParty::getPartyFieldId(common.TableId, false);
+        #
+        #        if (fieldId)
+        #        {
+        #            // get the partyRecId from the table.
+        #            party = common.(fieldId);
+        #
+        #            // find location of LogisticsLocationRoleType = _roleType
+        #            location = DirParty::location(party, _roleType, _transDateTime);
+        #            // If there is location found
+        #            if ((!location || (location && !location.parmLocationRecId())) && party)
+        #            {
+        #                if (usePrimary)
+        #                {
+        #                    // Find primary location regardless of _roleType
+        #                    location = DirParty::primaryPostalAddressLocation(party, _transDateTime);
+        #                }
+        #            }
+        #        }
+        #        else
+        #        {
+        #            switch (common.TableId)
+        #            {
+        #                case tableNum(InventSite):
+        #                location = LogisticsLocationEntity::constructFromLocationRecId(InventSite::getLocationFromRole(common.(fieldNum(InventSite,RecId)), LogisticsLocationRoleType::Delivery, _transDateTime));
+        #                break;
+        #
+        #                case tableNum(InventLocation):
+        #                location = LogisticsLocationEntity::constructFromLocationRecId(InventLocation::getLocationFromRole(common.(fieldNum(InventLocation,RecId)), LogisticsLocationRoleType::Delivery, _transDateTime));
+        #                break;
+        #            }
+        #        }
+        #    }
+        #
+        #    return location;
+        #}
+      ENDSOURCE
+      SOURCE #findPostalAddress
+        #/// <summary>
+        #///    Finds a postal address for the specified common for a specified <c>LogisticsLocationRoleType</c>
+        #///    sequencing, that is, private, primary, or public.
+        #/// </summary>
+        #/// <param name="_common">
+        #///    An entity for which to find a postal address.
+        #/// </param>
+        #/// <param name="_roleType">
+        #///    A role of the postal address.
+        #/// </param>
+        #/// <param name="_transDateTime">
+        #///    A <c>DateTime</c> value for when the postal address is valid.
+        #/// </param>
+        #/// <param name="_usePrimary">
+        #///    A Boolean value that indicates whether to return the primary location for the entity.
+        #/// </param>
+        #/// <returns>
+        #///    A <c>LogisticsPostalAddress</c> record for the entity.
+        #/// </returns>
+        #static server LogisticsPostalAddress findPostalAddress(Common _common, LogisticsLocationRoleType _roleType, TransDateTime _transDateTime = DirUtility::getCurrentDateTime(), boolean _usePrimary = false)
+        #{
+        #    LogisticsLocationEntity         location;
+        #
+        #    location = LogisticsLocationEntity::findLocation(_common, _roleType, _transDateTime,_usePrimary);
+        #    return location ? location.getPostalAddress() : null;
+        #}
+      ENDSOURCE
+      SOURCE #getDefaultLocationRoleFromEntity
+        #/// <summary>
+        #///    Gets the default location role, depending on the entity type.
+        #/// </summary>
+        #/// <param name="_entityTableId">
+        #///    The <c>TableId</c> value of the entity, that is, a <c>CustTable</c> value, a <c>HcmWorker</c>
+        #///    value, and so on.
+        #/// </param>
+        #/// <returns>
+        #///    A map of the key and value pair in which the key is the <c>RecId</c> value and the value is the
+        #///    <c>Name</c> value.
+        #/// </returns>
+        #public static Map getDefaultLocationRoleFromEntity(TableId _entityTableId)
+        #{
+        #    LogisticsLocationRole locationRole;
+        #    Map defaultLocationRole = new Map(Types::Int64, Types::String); // Value key pair
+        #
+        #    switch(_entityTableId)
+        #    {
+        #        case tableNum(HcmWorker) :
+        #            locationRole = LogisticsLocationRole::findBytype(LogisticsLocationRoleType::Home);
+        #            break;
+        #
+        #        case tableNum(HcmApplicant) :
+        #        case tableNum(HRMApplicationBasket) :
+        #            locationRole = LogisticsLocationRole::findBytype(LogisticsLocationRoleType::Recruit);
+        #            break;
+        #
+        #        case tableNum(InventLocation):
+        #        case tableNum(InventSite) :
+        #            locationRole = LogisticsLocationRole::findBytype(LogisticsLocationRoleType::Delivery);
+        #            break;
+        #
+        #        default :
+        #            locationRole = LogisticsLocationRole::findBytype(LogisticsLocationRoleType::Business);
+        #    }
+        #
+        #    if (locationRole)
+        #    {
+        #        defaultLocationRole.insert(locationRole.RecId, locationRole.description());
+        #    }
+        #    return defaultLocationRole;
+        #}
+      ENDSOURCE
+      SOURCE #isPhoneNumberValid
+        #/// <summary>
+        #/// Determines whether the telephone number of the specified legal entity is set. If it is not, a
+        #/// message is displayed.
+        #/// </summary>
+        #/// <param name="_dirPartyRecId">
+        #/// The <c>RecId</c> value for the legal entity that has a telephone number to check.
+        #/// </param>
+        #/// <param name="_type">
+        #/// The contact info type.
+        #/// </param>
+        #/// <returns>
+        #/// true if the telephone number is set; otherwise, false.
+        #/// </returns>
+        #public static boolean isPhoneNumberValid(
+        #    DirPartyRecId _dirPartyRecId,
+        #    LogisticsElectronicAddressMethodType _type = LogisticsElectronicAddressMethodType::Phone)
+        #{
+        #    LogisticsElectronicAddress electronicAddress;
+        #    boolean                 isValid = true;
+        #
+        #    electronicAddress = DirParty::primaryElectronicAddress(_dirPartyRecId, _type);
+        #
+        #    if (electronicAddress == null
+        #        || electronicAddress.Locator == '')
+        #    {
+        #        isValid = checkFailed(strFmt("@SYS89866", "@SYS83764"));
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #location2Addresses
+        #server static void location2Addresses(LogisticsLocationRecId            _locationRecId,
+        #                                      LogisticsLocation                 _location,
+        #                                      LogisticsPostalAddress            _postalAddress,
+        #                                      DirPartyRecId                     _party)
+        #{
+        #    DirPartyLocation                partyLocation;
+        #    LogisticsLocation               location;
+        #    LogisticsPostalAddress          postalAddress;
+        #
+        #    location = LogisticsLocation::find(_locationRecId);
+        #
+        #    if (location)
+        #    {
+        #        select partyLocation
+        #                where partyLocation.Party == _party &&
+        #                      partyLocation.Location == location.RecId
+        #            join postalAddress
+        #                where postalAddress.Location == location.RecId;
+        #
+        #        if (partyLocation)
+        #        {
+        #            _location.data(location);
+        #            _postalAddress.data(postalAddress);
+        #            // refresh datasource
+        #            _location.dataSource().refresh();
+        #            _postalAddress.dataSource().refresh();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #location2PostalAddress
+        #static LogisticsPostalAddress location2PostalAddress(LogisticsLocationRecId _locationRecId, TransDateTime _transDateTime = DirUtility::getCurrentDateTime(), boolean _newSchema = false)
+        #{
+        #    LogisticsLocationEntity             locationEntity;
+        #    LogisticsPostalAddress              postalAddress;
+        #
+        #    locationEntity = LogisticsLocationEntity::constructFromLocationRecId(_locationRecId, false,_transDateTime);
+        #    if (locationEntity)
+        #    {
+        #        postalAddress = locationEntity.getPostalAddress(false);
+        #    }
+        #
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #locationTableList
+        #static client server container locationTableList()
+        #{
+        #    container list;
+        #
+        #    list = [tableNum(AssetLocation)    ,fieldNum(AssetLocation,LogisticsLocation)
+        #    ,tableNum(BankAccountTable)    ,fieldNum(BankAccountTable,Location)
+        #    ,tableNum(BankGroup)    ,fieldNum(BankGroup,Location)
+        #    ,tableNum(CustBankAccount)    ,fieldNum(CustBankAccount,Location)
+        #    ,tableNum(CustInvoiceTable)    ,fieldNum(CustInvoiceTable,DeliveryLocation)
+        #    ,tableNum(IntrastatParameters)    ,fieldNum(IntrastatParameters,AgentLocation)
+        #    ,tableNum(IntrastatServicePoint_FI)    ,fieldNum(IntrastatServicePoint_FI,Location)
+        #    ,tableNum(ProjInvoiceTable)    ,fieldNum(ProjInvoiceTable,InvoiceLocation)
+        #    ,tableNum(ProjTable)    ,fieldNum(ProjTable,DeliveryLocation)];
+        #    list +=
+        #//    ,tablenum(PurchReqLine)    ,fieldnum(PurchReqLine,DeliveryLocation)
+        #    [tableNum(SalesBasket)    ,fieldNum(SalesBasket,DeliveryLocation)
+        #    ,tableNum(SalesCarrier)    ,fieldNum(SalesCarrier,Location)
+        #    ,tableNum(SalesQuotationBasket)    ,fieldNum(SalesQuotationBasket,DeliveryLocation)];
+        #    list +=
+        #    [tableNum(Tax1099SoftwareVendParameters)    ,fieldNum(Tax1099SoftwareVendParameters,Location)
+        #    ,tableNum(Tax1099TransmitterParameters)    ,fieldNum(Tax1099TransmitterParameters,Location)
+        #    ,tableNum(TaxAuthorityAddress)    ,fieldNum(TaxAuthorityAddress,Location)
+        #    ,tableNum(TaxEvatParameters_NL)    ,fieldNum(TaxEvatParameters_NL,ContactLocation)
+        #    ,tableNum(TaxIntraCommTable_NL)    ,fieldNum(TaxIntraCommTable_NL,ContactLocation)
+        #/*    ,tablenum(TrvExpTrans)    ,fieldnum(TrvExpTrans,LogisticsLocation)*/
+        #    ,tableNum(VendBankAccount)    ,fieldNum(VendBankAccount,Location)
+        #/*  ,tablenum(VendRequest)    ,fieldnum(VendRequest,BankLocation)
+        #    ,tablenum(VendRequest)    ,fieldnum(VendRequest,cContactLocation)
+        #    ,tablenum(VendRequest)    ,fieldnum(VendRequest,cLocation)
+        #    ,tablenum(VendRFQJour)    ,fieldnum(VendRFQJour,DeliveryLocation)*/];
+        #
+        #    return list;
+        #}
+      ENDSOURCE
+      SOURCE #postalAddressTableList
+        #static client server container postalAddressTableList()
+        #{
+        #    container list;
+        #
+        #    list = [tableNum(CustCollectionLetterJour),    fieldNum(CustCollectionLetterJour,PostalAddress)
+        #    ,tableNum(CustConfirmJour),    fieldNum(CustConfirmJour,DeliveryPostalAddress)
+        #    ,tableNum(CustConfirmSalesLink),    fieldNum(CustConfirmSalesLink,DeliveryPostalAddress)
+        #    ,tableNum(CustInterestJour),    fieldNum(CustInterestJour,PostalAddress)
+        #    ,tableNum(CustInvoiceJour),    fieldNum(CustInvoiceJour,DeliveryPostalAddress)
+        #    ,tableNum(CustInvoiceJour),    fieldNum(CustInvoiceJour,InvoicePostalAddress)
+        #    ,tableNum(CustInvoiceSalesLink),    fieldNum(CustInvoiceSalesLink,DeliveryPostalAddress)
+        #    ,tableNum(CustInvoiceSalesLink),    fieldNum(CustInvoiceSalesLink,InvoicePostalAddress)
+        #    ,tableNum(CustInvoiceTrans),    fieldNum(CustInvoiceTrans,DeliveryPostalAddress)
+        #    ,tableNum(CustPackingSlipJour),    fieldNum(CustPackingSlipJour,DeliveryPostalAddress)
+        #    ,tableNum(CustPackingSlipJour),    fieldNum(CustPackingSlipJour,InvoicePostalAddress)
+        #    ,tableNum(CustPackingSlipSalesLink),    fieldNum(CustPackingSlipSalesLink,DeliveryPostalAddress)
+        #    ,tableNum(CustPackingSlipTrans),    fieldNum(CustPackingSlipTrans,DeliveryPostalAddress)
+        #    ,tableNum(CustQuotationConfirmJour),    fieldNum(CustQuotationConfirmJour,DeliveryPostalAddress)
+        #    ,tableNum(CustQuotationConfirmSalesLink),    fieldNum(CustQuotationConfirmSalesLink,DeliveryPostalAddress)
+        #    ,tableNum(CustQuotationJour),    fieldNum(CustQuotationJour,DeliveryPostalAddress)
+        #    ,tableNum(CustQuotationSalesLink),    fieldNum(CustQuotationSalesLink,DeliveryPostalAddress)
+        #    ,tableNum(InventTransferJour),    fieldNum(InventTransferJour,FromPostalAddress)
+        #    ,tableNum(InventTransferJour),    fieldNum(InventTransferJour,ToPostalAddress)
+        #    ,tableNum(ProjInvoiceJour),    fieldNum(ProjInvoiceJour,DeliveryPostalAddress)
+        #    ,tableNum(ProjProposalJour),    fieldNum(ProjProposalJour,DeliveryPostalAddress)
+        #    ,tableNum(VendInvoiceInfoLine),    fieldNum(VendInvoiceInfoLine,DeliveryPostalAddress)
+        #    ,tableNum(VendInvoiceInfoTable),    fieldNum(VendInvoiceInfoTable,DeliveryPostalAddress)
+        #    ,tableNum(VendPackingSlipJour),    fieldNum(VendPackingSlipJour,DeliveryPostalAddress)
+        #    ,tableNum(VendPurchOrderJour),    fieldNum(VendPurchOrderJour,DeliveryPostalAddress)
+        #    ,tableNum(VendReceiptsListJour),    fieldNum(VendReceiptsListJour,DeliveryPostalAddress)
+        #    ,tableNum(VendRFQJour),    fieldNum(VendRFQJour,DeliveryPostalAddress)];
+        #
+        #    list +=
+        #    [tableNum(CustInvoiceTable),            fieldNum(CustInvoiceTable, PostalAddress)
+        #    ,tableNum(PurchRFQCaseTable),           fieldNum(PurchRFQCaseTable, DeliveryPostalAddress)
+        #    ,tableNum(PurchRFQCaseLine),            fieldNum(PurchRFQCaseLine, DeliveryPostalAddress)
+        #    ,tableNum(PurchRFQTable),               fieldNum(PurchRFQTable, DeliveryPostalAddress)
+        #    ,tableNum(PurchRFQLine),                fieldNum(PurchRFQLine, DeliveryPostalAddress)
+        #    ,tableNum(SalesTable),                  fieldNum(SalesTable, DeliveryPostalAddress)
+        #    ,tableNum(SalesLine),                   fieldNum(SalesLine, DeliveryPostalAddress)
+        #    ,tableNum(SalesParmTable),              fieldNum(SalesParmTable, DeliveryPostalAddress)
+        #    ,tableNum(SalesParmLine),               fieldNum(SalesParmLine, DeliveryPostalAddress)
+        #    ,tableNum(SalesQuotationTable),         fieldNum(SalesQuotationTable, DeliveryPostalAddress)
+        #    ,tableNum(SalesQuotationLine),          fieldNum(SalesQuotationLine, DeliveryPostalAddress)
+        #    ,tableNum(SalesQuotationParmTable),     fieldNum(SalesQuotationParmTable, DeliveryPostalAddress)
+        #    ,tableNum(SalesQuotationParmLine),      fieldNum(SalesQuotationParmLine, DeliveryPostalAddress)
+        #    ,tableNum(PurchTable),                  fieldNum(PurchTable, DeliveryPostalAddress)
+        #    ,tableNum(PurchLine),                   fieldNum(PurchLine, DeliveryPostalAddress)
+        #    ,tableNum(SMAServiceOrderTable),        fieldNum(SMAServiceOrderTable, ServicePostalAddress)
+        #    ,tableNum(InventTransferTable),         fieldNum(InventTransferTable, FromPostalAddress)
+        #    ,tableNum(InventTransferTable),         fieldNum(InventTransferTable, ToPostalAddress)
+        #    // <GEELT><GEELV>
+        #    ,tableNum(TransportationDocument),      fieldNum(TransportationDocument, LoadedPostalAddress)
+        #    ,tableNum(TransportationDocument),      fieldNum(TransportationDocument, UnloadedPostalAddress)
+        #    // </GEELV></GEELT>
+        #    ];
+        #
+        #    // <GEERU>
+        #    list +=
+        #    [tableNum(CustInvoice4PaymJour_RU), fieldNum(CustInvoice4PaymJour_RU, DeliveryPostalAddress)
+        #    ,tableNum(FactureJour_RU),          fieldNum(FactureJour_RU,          DeliveryPostalAddress)
+        #    ,tableNum(InventTransferJour),      fieldNum(InventTransferJour,      LadingPostalAddress_RU)
+        #    ,tableNum(InventTransferJour),      fieldNum(InventTransferJour,      UnladingPostalAddress_RU)
+        #    ,tableNum(InventTransferParmTable), fieldNum(InventTransferParmTable, LadingPostalAddress_RU)
+        #    ,tableNum(InventTransferParmTable), fieldNum(InventTransferParmTable, UnladingPostalAddress_RU)
+        #    ,tableNum(InventTransferTable),     fieldNum(InventTransferTable,     LadingPostalAddress_RU)
+        #    ,tableNum(InventTransferTable),     fieldNum(InventTransferTable,     UnladingPostalAddress_RU)
+        #    ,tableNum(WMSBillOfLading),         fieldNum(WMSBillOfLading,         LadingPostalAddress_RU)
+        #    ,tableNum(WMSBillOfLading),         fieldNum(WMSBillOfLading,         UnladingPostalAddress_RU)
+        #    ];
+        #    // </GEERU>
+        #
+        #    return list;
+        #}
+      ENDSOURCE
+      SOURCE #relatedLocation
+        #server static container relatedLocation(TableId _tableId,RecId _recId)
+        #{
+        #    SysDictTable            dictTable;
+        #    Common                  entity;
+        #    container               locations;
+        #
+        #    dictTable = new DictTable(_tableId);
+        #    if (dictTable)
+        #    {
+        #        entity = dictTable.makeRecord();
+        #
+        #        select firstonly entity
+        #            where entity.RecId == _recId;
+        #    }
+        #    switch (entity.TableId)
+        #    {
+        #        case tableNum(SalesCreateReleaseOrderTableTmp) :
+        #        locations = [LogisticsPostalAddress::locationRecIdFromAddressRecId(entity.(fieldNum(SalesCreateReleaseOrderTableTmp, DeliveryPostalAddress)))];
+        #        break;
+        #
+        #        case tableNum(SalesCreateReleaseOrderLineTmp) :
+        #        locations = [LogisticsPostalAddress::locationRecIdFromAddressRecId(entity.(fieldNum(SalesCreateReleaseOrderLineTmp, DeliveryPostalAddress)))];
+        #        break;
+        #
+        #        case tableNum(PurchReqLine) :
+        #        locations = [LogisticsPostalAddress::locationRecIdFromAddressRecId(entity.(fieldNum(PurchReqLine,DeliveryPostalAddress)))];
+        #        break;
+        #
+        #    }
+        #    return locations;
+        #}
+      ENDSOURCE
+      SOURCE #relatedLocationRole
+        #server static LogisticsLocationRoleType relatedLocationRole(TableId _tableId)
+        #{
+        #    LogisticsLocationRoleType roleType;
+        #
+        #    switch (_tableId)
+        #    {
+        #        case tableNum(SalesCreateReleaseOrderTableTmp) :
+        #        case tableNum(SalesCreateReleaseOrderLineTmp) :
+        #        case tableNum(SalesTable) :
+        #        case tableNum(SalesLine) :
+        #        case tableNum(PurchTable) :
+        #        case tableNum(PurchLine) :
+        #        case tableNum(SalesQuotationTable) :
+        #        case tableNum(SalesQuotationLine) :
+        #        case tableNum(PurchRFQCaseTable) :
+        #        case tableNum(PurchRFQCaseLine) :
+        #        case tableNum(PurchReqTable) :
+        #        case tableNum(PurchReqLine) :
+        #        roleType = LogisticsLocationRoleType::Delivery;
+        #        break;
+        #
+        #        case tableNum(CustInvoiceTable) :
+        #        roleType = LogisticsLocationRoleType::Invoice;
+        #        break;
+        #
+        #        case tableNum(SMAServiceOrderTable) :
+        #        roleType = LogisticsLocationRoleType::Service;
+        #        break;
+        #    }
+        #    return roleType;
+        #}
+      ENDSOURCE
+      SOURCE #showHideEffectiveAddressMessageBar
+        #/// <summary>
+        #/// Displays or hides a message bar on the address book entity forms.
+        #/// </summary>
+        #/// <param name="formRun">
+        #/// An instance of the <c>FormRun</c> class for an address book entity.
+        #/// </param>
+        #/// <param name="_headerAddress">
+        #/// A <c>LogisticsPostalAddress</c> table buffer for the header address.
+        #/// </param>
+        #/// <param name="_lineAddress">
+        #/// A <c>LogisticsPostalAddress</c> table buffer for the line address.
+        #/// </param>
+        #/// <returns>
+        #/// true if the message bar is displayed; otherwise, false.
+        #/// </returns>
+        #public static client boolean showHideEffectiveAddressMessageBar(FormRun formRun,
+        #                                                         LogisticsPostalAddress _headerAddress,
+        #                                                         LogisticsPostalAddress _lineAddress = null)
+        #{
+        #    #define.AddressActionBar('_gab_AddressActionBar')
+        #    #define.MessagePane('Microsoft.Dynamics.Framework.UI.WinForms.Controls.MessagePane')
+        #    #define.Assembly('Microsoft.Dynamics.Framework.UI.WinForms.Controls, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL')
+        #    #define.MessageBar('Microsoft.Dynamics.Framework.UI.WinForms.Controls.MessageBar')
+        #
+        #    FormManagedHostControl  messageBarHost;
+        #    Microsoft.Dynamics.Framework.UI.WinForms.Controls.MessagePane messagePane;
+        #    Microsoft.Dynamics.Framework.UI.WinForms.Controls.MessageBar messageBar;
+        #    Microsoft.Dynamics.Framework.UI.WinForms.Controls.MessageBarType messageBarType;
+        #    boolean show = false;
+        #    boolean isHeaderAddressEffective = _headerAddress.isEffective();
+        #    boolean isLineAddressEffective = _lineAddress.isEffective();
+        #
+        #    formRun.lock();
+        #
+        #    // Decide to show/hide message bar
+        #    show = (_headerAddress.RecId != 0 && isHeaderAddressEffective == false) ||
+        #           (_lineAddress.RecId != 0 && isLineAddressEffective == false);
+        #
+        #    messageBarHost = formRun.design().controlName(#AddressActionBar);
+        #    if (!messageBarHost && show)
+        #    {
+        #        messageBarHost = formRun.design().addControl(FormControlType::ManagedHost, #AddressActionBar, null);
+        #        // This is a bit non-obvious. addControl() will add the control at the bottom of the form.
+        #        // MoveControl() without the second parameter will move it to be the first control.
+        #
+        #        // This will position the message bar under any of the Action Panes because the Action Panes are ripped
+        #        // out of the form and put into a special managed area outside of the normal form area.
+        #        FormRun.design().moveControl(messageBarHost.id());
+        #
+        #        messageBarHost.assemblyName(#Assembly);
+        #        messageBarHost.typeName(#MessagePane);
+        #        messageBarHost.widthMode(FormWidth::ColumnWidth);
+        #        messageBarHost.sizing(Sizing::SizeToContent);
+        #        messagePane = messageBarHost.control();
+        #
+        #        messageBarType = Microsoft.Dynamics.Framework.UI.WinForms.Controls.MessageBarType::InformationOnly;
+        #
+        #        messageBar = new Microsoft.Dynamics.Framework.UI.WinForms.Controls.MessageBar();
+        #        messageBar.set_Text("@SYS314668");
+        #        messageBar.set_MessageBarType(messageBarType);
+        #
+        #        messagePane.Add(messageBar);
+        #    }
+        #
+        #    if (messageBarHost)
+        #    {
+        #        messageBarHost.visible(show);
+        #    }
+        #
+        #    formRun.unLock();
+        #
+        #    return show;
+        #}
+      ENDSOURCE
+      SOURCE #transactionNewAddressDefaultRole
+        #public static LogisticsLocationRoleType transactionNewAddressDefaultRole(TableId _tableId)
+        #{
+        #    LogisticsLocationRoleType type = LogisticsLocationEntity::relatedLocationRole(_tableId);
+        #    return type ? type : LogisticsLocationRoleType::Delivery;
+        #}
+      ENDSOURCE
+      SOURCE #transactionPostalAddressFieldId
+        #/// <summary>
+        #///    Returns the <c>LogisticsPostalAddress</c> field ID on the specified table.
+        #/// </summary>
+        #/// <param name="_tableId">
+        #///    The table for which to get the <c>LogisticsPostalAddress</c> field ID.
+        #/// </param>
+        #/// <param name="_roleType">
+        #/// The role type to differentiate postal addresses if more than one are present on the specified table.
+        #/// </param>
+        #/// <returns>
+        #///    The <c>FieldId</c> value of a <c>LogisticsPostalAddress</c> foreign key.
+        #/// </returns>
+        #// <GEEU>
+        #public static FieldId transactionPostalAddressFieldId(
+        #    TableId                   _tableId,
+        #    LogisticsLocationRoleType _roleType = LogisticsLocationRoleType::None)
+        #// </GEEU>
+        #{
+        #    switch(_tableId)
+        #    {
+        #        case tableNum(SalesCreateReleaseOrderTableTmp): return fieldNum(SalesCreateReleaseOrderTableTmp, DeliveryPostalAddress);
+        #        case tableNum(SalesTable) : return fieldNum(SalesTable, DeliveryPostalAddress);
+        #        // <GEERU>
+        #        case tableNum(SalesParmTable) :
+        #            switch (_roleType)
+        #            {
+        #                case LogisticsLocationRoleType::Lading_W :
+        #                    return fieldNum(SalesParmTable, LadingPostalAddress_RU);
+        #                case LogisticsLocationRoleType::Unlading_W :
+        #                    return fieldNum(SalesParmTable, UnladingPostalAddress_RU);
+        #
+        #                default                                  :
+        #                    return fieldNum(SalesParmTable, DeliveryPostalAddress);
+        #            }
+        #        case tableNum(InventTransferTable) :
+        #            switch (_roleType)
+        #            {
+        #                case LogisticsLocationRoleType::Lading_W :
+        #                    return fieldNum(InventTransferTable, LadingPostalAddress_RU);
+        #                case LogisticsLocationRoleType::Unlading_W :
+        #                    return fieldNum(InventTransferTable, UnladingPostalAddress_RU);
+        #
+        #                default :
+        #                    return fieldNum(InventTransferTable, ToPostalAddress);
+        #            }
+        #        case tableNum(WMSBillOfLading) :
+        #            switch (_roleType)
+        #            {
+        #                case LogisticsLocationRoleType::Lading_W :
+        #                    return fieldNum(WMSBillOfLading, LadingPostalAddress_RU);
+        #                case LogisticsLocationRoleType::Unlading_W :
+        #                    return fieldNum(WMSBillOfLading, UnladingPostalAddress_RU);
+        #
+        #                default :
+        #                    return fieldNum(WMSBillOfLading, DeliveryPostalAddress);
+        #            }
+        #        // </GEERU>
+        #        case tableNum(SalesLine) : return fieldNum(SalesLine, DeliveryPostalAddress);
+        #        case tableNum(SalesQuotationTable) : return fieldNum(SalesQuotationTable, DeliveryPostalAddress);
+        #        case tableNum(SalesQuotationLine) : return fieldNum(SalesQuotationLine, DeliveryPostalAddress);
+        #        case tableNum(LedgerJournalTrans) : return fieldNum(LedgerJournalTrans, RemittanceAddress);
+        #        case tableNum(VendTrans) : return fieldNum(VendTrans, RemittanceAddress);
+        #        case tableNum(CustInvoiceTable) : return fieldNum(CustInvoiceTable, PostalAddress);
+        #        case tableNum(PurchRFQCaseTable) : return fieldNum(PurchRFQCaseTable, DeliveryPostalAddress);
+        #        case tableNum(PurchRFQCaseLine) : return fieldNum(PurchRFQCaseLine, DeliveryPostalAddress);
+        #        case tableNum(PurchRFQTable) : return fieldNum(PurchRFQTable, DeliveryPostalAddress);
+        #        case tableNum(PurchRFQLine) : return fieldNum(PurchRFQLine, DeliveryPostalAddress);
+        #        case tableNum(PurchTable) : return fieldNum(PurchTable, DeliveryPostalAddress);
+        #        case tableNum(TmpPurchTable) : return fieldNum(TmpPurchTable, DeliveryPostalAddress);
+        #        case tableNum(PurchLine) : return fieldNum(PurchLine, DeliveryPostalAddress);
+        #        case tableNum(SMAServiceOrderTable) : return fieldNum(SMAServiceOrderTable, ServicePostalAddress);
+        #        case tableNum(PurchReqLine) : return fieldNum(PurchReqLine, DeliveryPostalAddress);
+        #        case tableNum(VendInvoiceInfoTable) : return fieldNum(VendInvoiceInfoTable, DeliveryPostalAddress);
+        #        case tableNum(AgreementHeaderDefault) : return fieldNum(AgreementHeaderDefault, DeliveryPostalAddress);
+        #        // <GEELT><GEELV>
+        #        case tableNum(TransportationDocument) :
+        #            switch (_roleType)
+        #            {
+        #                case LogisticsLocationRoleType::Unlading_W :
+        #                    return fieldNum(TransportationDocument, UnloadedPostalAddress);
+        #
+        #                default :
+        #                    return fieldNum(TransportationDocument, LoadedPostalAddress);
+        #            }
+        #        case tableNum(CzCustAdvanceInvoiceTable) : return fieldNum(CzCustAdvanceInvoiceTable, PostalAddress);
+        #        case tableNum(CzVendAdvanceInvoiceTable) : return fieldNum(CzVendAdvanceInvoiceTable, PostalAddress);
+        #        // </GEELV></GEELT>
+        #        //--> Advanced Credit Card
+        #        case tableNum(CreditCardTable)  : return fieldNum(CreditCardTable,location);
+        #        //<-- Advanced Credit Card
+        #    }
+        #
+        #    return 0;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

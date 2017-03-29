@@ -1,0 +1,5694 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CustTableListPage
+  PROPERTIES
+    Name                #CustTableListPage
+    FormTemplate        #ListPage
+    InteractionClass    #custtablelistPageInteraction
+    Origin              #{0B110000-0000-1000-9154-41AB319BE726}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+      Query               #CustTableListPage
+      Version             #583
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CustTable
+          Table               #CustTable
+          AllowEdit           #No
+          AllowCreate         #No
+          OnlyFetchActive     #Yes
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD InvoiceAccount
+            PROPERTIES
+              AllowAdd            #Yes
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CustGroup
+            PROPERTIES
+              AllowAdd            #Yes
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CashDisc
+            PROPERTIES
+              AllowAdd            #Yes
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD Currency
+            PROPERTIES
+              AllowAdd            #Yes
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CreditMax
+            PROPERTIES
+              AllowAdd            #Yes
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD PaymMode
+            PROPERTIES
+              AllowAdd            #Yes
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+        DATASOURCE
+          PROPERTIES
+            Name                #CustTable
+            ParentDataSource    #DirPartyTable
+          ENDPROPERTIES
+          
+      ENDLINKTYPES
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #DirPartyTable
+          Table               #DirPartyTable
+          AllowEdit           #No
+          AllowCreate         #No
+          OnlyFetchActive     #Yes
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+        DATASOURCE
+          PROPERTIES
+            Name                #DirPartyTable
+            ParentDataSource    #CustTable
+          ENDPROPERTIES
+          
+        DATASOURCE
+          PROPERTIES
+            Name                #DirPartyTable
+            ParentDataSource    #LogisticsElectronicAddress_Phone
+          ENDPROPERTIES
+          
+        DATASOURCE
+          PROPERTIES
+            Name                #DirPartyTable
+            ParentDataSource    #LogisticsElectronicAddress_Email
+          ENDPROPERTIES
+          
+        DATASOURCE
+          PROPERTIES
+            Name                #DirPartyTable
+            ParentDataSource    #LogisticsPostalAddress_Primary
+          ENDPROPERTIES
+          
+      ENDLINKTYPES
+    ENDDATASOURCE
+    DERIVEDDATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #DirPartyTable_DirOrganizationBase
+          Table               #DirOrganizationBase
+          AllowEdit           #No
+          AllowCreate         #No
+          InsertIfEmpty       #No
+          Extends             #DirPartyTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDERIVEDDATASOURCE
+    DERIVEDDATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #DirPartyTable_DirOrganization1
+          Table               #DirOrganization
+          AllowEdit           #No
+          AllowCreate         #No
+          Extends             #DirPartyTable_DirOrganizationBase
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDERIVEDDATASOURCE
+    DERIVEDDATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #DirPartyTable_OMInternalOrganization
+          Table               #OMInternalOrganization
+          AllowEdit           #No
+          AllowCreate         #No
+          InsertIfEmpty       #No
+          Extends             #DirPartyTable_DirOrganizationBase
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDERIVEDDATASOURCE
+    DERIVEDDATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #DirPartyTable_CompanyInfo
+          Table               #CompanyInfo
+          AllowEdit           #No
+          AllowCreate         #No
+          Extends             #DirPartyTable_OMInternalOrganization
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDERIVEDDATASOURCE
+    DERIVEDDATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #DirPartyTable_OMTeam
+          Table               #OMTeam
+          AllowEdit           #No
+          AllowCreate         #No
+          Extends             #DirPartyTable_OMInternalOrganization
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDERIVEDDATASOURCE
+    DERIVEDDATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #DirPartyTable_OMOperatingUnit
+          Table               #OMOperatingUnit
+          AllowEdit           #No
+          AllowCreate         #No
+          InsertIfEmpty       #No
+          Extends             #DirPartyTable_OMInternalOrganization
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDERIVEDDATASOURCE
+    DERIVEDDATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #DirPartyTable_DirPerson
+          Table               #DirPerson
+          AllowEdit           #No
+          AllowCreate         #No
+          Extends             #DirPartyTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDERIVEDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #LogisticsElectronicAddress_Phone
+          Table               #LogisticsElectronicAddress
+          AllowEdit           #No
+          AllowCreate         #No
+          OnlyFetchActive     #Yes
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+        DATASOURCE
+          PROPERTIES
+            Name                #LogisticsElectronicAddress_Phone
+            ParentDataSource    #DirPartyTable
+          ENDPROPERTIES
+          
+      ENDLINKTYPES
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #LogisticsElectronicAddress_Email
+          Table               #LogisticsElectronicAddress
+          AllowEdit           #No
+          AllowCreate         #No
+          OnlyFetchActive     #Yes
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+        DATASOURCE
+          PROPERTIES
+            Name                #LogisticsElectronicAddress_Email
+            ParentDataSource    #DirPartyTable
+          ENDPROPERTIES
+          
+      ENDLINKTYPES
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #LogisticsPostalAddress_Primary
+          Table               #LogisticsPostalAddress
+          AllowEdit           #No
+          AllowCreate         #No
+          OnlyFetchActive     #Yes
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+        DATASOURCE
+          PROPERTIES
+            Name                #LogisticsPostalAddress_Primary
+            ParentDataSource    #DirPartyTable
+          ENDPROPERTIES
+          
+      ENDLINKTYPES
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+    PARTREFERENCE #CustListPagePreviewPane
+      PROPERTIES
+        Name                #CustListPagePreviewPane
+        MenuItemName        #CustListPagePreviewPane
+        PartLocation        #PreviewPane
+        DataSource          #CustTable
+        DataSourceRelation  #SelfLink
+        ElementPosition     #165191049
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #DirPartyPrimaryPostalAddress
+      PROPERTIES
+        Name                #DirPartyPrimaryPostalAddress
+        MenuItemName        #DirPartyPrimaryPostalAddress
+        DataSource          #DirPartyTable
+        DataSourceRelation  #SelfLink
+        ElementPosition     #330382098
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #CustStatisticsRecentActivity
+      PROPERTIES
+        Name                #CustStatisticsRecentActivity
+        MenuItemName        #CustStatisticsRecentActivity
+        DisplayTarget       #Client
+        DataSource          #CustTable
+        DataSourceRelation  #SelfLink
+        ElementPosition     #495573147
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #CustStatisticsStatistics
+      PROPERTIES
+        Name                #CustStatisticsStatistics
+        MenuItemName        #CustStatisticsStatistics
+        DisplayTarget       #Client
+        DataSource          #CustTable
+        DataSourceRelation  #SelfLink
+        ElementPosition     #660764196
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #CustBillingClassificationBalance
+      PROPERTIES
+        Name                #CustBillingClassificationBalance
+        MenuItemName        #CustBillingClassificationBalance
+        DataSource          #CustTable
+        IsLinked            #Yes
+        ElementPosition     #825955245
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #smmRolesFactBox
+      PROPERTIES
+        Name                #smmRolesFactBox
+        MenuItemName        #smmRolesFactBox
+        DataSource          #DirPartyTable
+        DataSourceRelation  #SelfLink
+        ElementPosition     #991146294
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #smmRelationshipsFactBox
+      PROPERTIES
+        Name                #smmRelationshipsFactBox
+        MenuItemName        #smmRelationshipsFactBox
+        DataSource          #DirPartyTable
+        DataSourceRelation  #SelfLink
+        ElementPosition     #1156337343
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #ContactsInfoPart
+      PROPERTIES
+        Name                #ContactsInfoPart
+        MenuItemName        #contactsInfoPart
+        DataSource          #CustTable
+        DataSourceRelation  #CustTable.DirPartyTable_FK
+        ElementPosition     #1321528392
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #CustRecurrenceInvoiceInfoPart
+      PROPERTIES
+        Name                #CustRecurrenceInvoiceInfoPart
+        MenuItemName        #CustRecurrenceInvoiceInfoPart
+        DisplayTarget       #Client
+        DataSource          #CustTable
+        DataSourceRelation  #CustRecurrenceInvoice.CustTable
+        ElementPosition     #1486719441
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #CustRelatedInfo
+      PROPERTIES
+        Name                #CustRelatedInfo
+        MenuItemName        #CustRelatedInfo
+        DisplayTarget       #Client
+        DataSource          #CustTable
+        IsLinked            #Yes
+        ElementPosition     #1651910490
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #EPCustRelatedInfo
+      PROPERTIES
+        Name                #EPCustRelatedInfo
+        MenuItemName        #EPCustRelatedInfo
+        DisplayTarget       #EP
+        DataSource          #CustTable
+        IsLinked            #Yes
+        ElementPosition     #1817101539
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+    PARTREFERENCE #DirPartyPrimPostalAddressTaxRegistration
+      PROPERTIES
+        Name                #DirPartyPrimPostalAddressTaxRegistration
+        MenuItemName        #DirPartyPrimPostalAddressTaxRegistration
+        DataSource          #DirPartyTable
+        DataSourceRelation  #SelfLink
+        ElementPosition     #1982292588
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@SYS19920
+      UseCaptionFromMenuItem  #Yes
+      TitleDatasource     #CustTable
+      WindowType          #ContentPage
+      DataSource          #CustTable
+      Style               #ListPage
+      NewRecordAction     #NewCustomer
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          VerticalSpacing     #0
+          ElementPosition     #536870911
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #aptabCollect
+          DisplayTarget       #Client
+          ElementPosition     #825955245
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316530
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #aptabGeneral
+          DisplayTarget       #Client
+          ElementPosition     #1486719441
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316573
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #aptabInvoice
+          DisplayTarget       #Client
+          ElementPosition     #660764196
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316513
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #aptabMarket
+          ConfigurationKey    #SmmMA
+          DisplayTarget       #Client
+          ElementPosition     #1321528392
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316566
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #aptabProjects
+          ConfigurationKey    #ProjBasic
+          DisplayTarget       #Client
+          ElementPosition     #991146294
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316547
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #aptabRetail
+          ConfigurationKey    #RetailHeadquarters
+          ElementPosition     #1404123916
+          HierarchyParent     #ActionPane
+          Caption             #@RET3014
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #aptabSell
+          DisplayTarget       #Client
+          ElementPosition     #495573147
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316459
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #aptabService
+          ConfigurationKey    #SMAManagement
+          DisplayTarget       #Client
+          ElementPosition     #1156337343
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316558
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #EPaptabCustomer
+          DisplayTarget       #EP
+          ElementPosition     #1651910490
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316441
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #EPaptabGeneral
+          DisplayTarget       #EP
+          ElementPosition     #1982292588
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316573
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #EPaptabSell
+          DisplayTarget       #EP
+          ElementPosition     #1817101539
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316459
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #HomeTab
+          DisplayTarget       #Client
+          ElementPosition     #330382098
+          HierarchyParent     #ActionPane
+          Caption             #@SYS316441
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #AttachmentsGroup
+          DisplayTarget       #Client
+          ElementPosition     #1887182598
+          HierarchyParent     #HomeTab
+          Caption             #@SYS316708
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpCollectionCollectionLetters
+          ElementPosition     #805306365
+          HierarchyParent     #aptabCollect
+          Caption             #@SYS316531
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpCollectionInterest
+          ElementPosition     #1610612730
+          HierarchyParent     #aptabCollect
+          Caption             #@SYS316534
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpCollectNew
+          ElementPosition     #536870910
+          HierarchyParent     #aptabCollect
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpCustomerAccounts
+          ElementPosition     #780903144
+          HierarchyParent     #HomeTab
+          Caption             #@SYS316444
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpCustomerBalance
+          ElementPosition     #1171354716
+          HierarchyParent     #HomeTab
+          Caption             #@SYS316450
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpCustomerForecast
+          ElementPosition     #2017333122
+          HierarchyParent     #HomeTab
+          Caption             #@SYS316452
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpCustomerSetup
+          ElementPosition     #1464193395
+          HierarchyParent     #HomeTab
+          Caption             #@SYS316454
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpCustomerTransactions
+          ElementPosition     #976128930
+          HierarchyParent     #HomeTab
+          Caption             #@SYS316448
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpGeneralAccounts
+          ElementPosition     #1073741820
+          HierarchyParent     #aptabGeneral
+          Caption             #@SYS316582
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpGeneralActivities
+          ElementPosition     #805306365
+          HierarchyParent     #aptabGeneral
+          Caption             #@SYS316575
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpGeneralCase
+          ElementPosition     #536870910
+          HierarchyParent     #aptabGeneral
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpGeneralSetup
+          ElementPosition     #1476395002
+          HierarchyParent     #aptabGeneral
+          Caption             #@SYS316454
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpGeneralStatistics
+          ElementPosition     #1879048185
+          HierarchyParent     #aptabGeneral
+          Caption             #@SYS316590
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpInvoiceJournals
+          ElementPosition     #1543503870
+          HierarchyParent     #aptabInvoice
+          Caption             #@SYS316520
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpInvoiceNew
+          AllowEdit           #No
+          ElementPosition     #715827882
+          HierarchyParent     #aptabInvoice
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpInvoiceRelatedInfo
+          ElementPosition     #1789569705
+          HierarchyParent     #aptabInvoice
+          Caption             #@SYS316465
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpInvoiceSettle
+          ElementPosition     #1744830462
+          HierarchyParent     #aptabCollect
+          Caption             #@SYS316516
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpInvoiceSetup
+          ElementPosition     #1431655764
+          HierarchyParent     #aptabInvoice
+          Caption             #@SYS316454
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpMarketCampaigns
+          ElementPosition     #858993458
+          HierarchyParent     #aptabMarket
+          Caption             #@SYS316567
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpMarketMailings
+          ElementPosition     #1717986916
+          HierarchyParent     #aptabMarket
+          Caption             #@SYS316574
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpMarketTelemarketing
+          ElementPosition     #1288490187
+          HierarchyParent     #aptabMarket
+          Caption             #@SYS316569
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpPackages
+          ElementPosition     #2013265915
+          HierarchyParent     #aptabCollect
+          Caption             #@GLS110272
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpProjectsNew
+          ElementPosition     #858993458
+          HierarchyParent     #aptabProjects
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpProjectsProjectControl
+          ElementPosition     #1288490187
+          HierarchyParent     #aptabProjects
+          Caption             #@SYS316550
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpProjectsRelatedInfo
+          ElementPosition     #1717986916
+          HierarchyParent     #aptabProjects
+          Caption             #@SYS316465
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpRetailnew
+          ElementPosition     #1073741822
+          HierarchyParent     #aptabRetail
+          Caption             #@SYS77405
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpRetailRelatedInfo
+          ElementPosition     #1476395006
+          HierarchyParent     #aptabRetail
+          Caption             #@SYS316465
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpSellNew
+          AllowEdit           #No
+          ElementPosition     #715827882
+          HierarchyParent     #aptabSell
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpSellRelatedInfo
+          ElementPosition     #1073741823
+          HierarchyParent     #aptabSell
+          Caption             #@SYS316465
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpSellSetup
+          ElementPosition     #1789569705
+          HierarchyParent     #aptabSell
+          Caption             #@SYS316506
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpSellTradeAgreements
+          ElementPosition     #1342177278
+          HierarchyParent     #aptabSell
+          Caption             #@SYS316483
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpServiceNew
+          ElementPosition     #1073741822
+          HierarchyParent     #aptabService
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpServiceRelatedInfo
+          ElementPosition     #1610612733
+          HierarchyParent     #aptabService
+          Caption             #@SYS316465
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #btngrpTaxRegistration
+          ElementPosition     #2082408384
+          HierarchyParent     #HomeTab
+          Caption             #@GLS221054
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #CustomerBalances
+          ElementPosition     #1879048185
+          HierarchyParent     #aptabCollect
+          Caption             #@SYS322791
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpCustomerAccounts
+          ElementPosition     #954437176
+          HierarchyParent     #EPaptabCustomer
+          Caption             #@SYS316582
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpCustomerActivities
+          HelpText            #@SYS334276
+          ElementPosition     #1431655764
+          HierarchyParent     #EPaptabCustomer
+          Caption             #@SYS316575
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpCustomerAttachments
+          ElementPosition     #1908874352
+          HierarchyParent     #EPaptabCustomer
+          Caption             #@SYS316708
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpCustomerList
+          ElementPosition     #1670265058
+          HierarchyParent     #EPaptabCustomer
+          Caption             #@SYS118440
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpCustomerMaintain
+          AllowEdit           #No
+          ElementPosition     #715827882
+          HierarchyParent     #EPaptabCustomer
+          Caption             #@SYS323172
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpCustomerNew
+          AllowEdit           #No
+          ElementPosition     #477218588
+          HierarchyParent     #EPaptabCustomer
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpCustomerPrice
+          ElementPosition     #1193046470
+          HierarchyParent     #EPaptabCustomer
+          Caption             #@SYS316405
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpGeneralAccounts
+          ElementPosition     #1840700268
+          HierarchyParent     #EPaptabGeneral
+          Caption             #@SYS316465
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpGeneralMarket
+          ElementPosition     #1533916890
+          HierarchyParent     #EPaptabGeneral
+          Caption             #@SYS316566
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpGeneralNew
+          ElementPosition     #613566756
+          HierarchyParent     #EPaptabGeneral
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpGeneralService
+          ElementPosition     #1227133512
+          HierarchyParent     #EPaptabGeneral
+          Caption             #@SYS316558
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpSellCollect
+          ElementPosition     #1431655764
+          HierarchyParent     #EPaptabSell
+          Caption             #@SYS316530
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpSellInvoices
+          ElementPosition     #1073741823
+          HierarchyParent     #EPaptabSell
+          Caption             #@SYS316513
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpSellNew
+          ElementPosition     #715827882
+          HierarchyParent     #EPaptabSell
+          Caption             #@SYS311140
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #EPbtngrpSellRelInfo
+          ElementPosition     #1789569705
+          HierarchyParent     #EPaptabSell
+          Caption             #@SYS316465
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #Inquires
+          ElementPosition     #1879048190
+          HierarchyParent     #aptabRetail
+          Caption             #@SYS316992
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #InterestNoteAdjustment
+          ElementPosition     #1342177275
+          HierarchyParent     #aptabCollect
+          Caption             #@SYS343774
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ListGroup
+          ElementPosition     #1757032074
+          HierarchyParent     #HomeTab
+          Caption             #@SYS118440
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #MaintainGroup
+          AllowEdit           #No
+          ElementPosition     #585677358
+          HierarchyParent     #HomeTab
+          Caption             #@SYS316703
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #MCRBtngrpCatalogs
+          ConfigurationKey    #MCRCatalog
+          ElementPosition     #2049870753
+          HierarchyParent     #HomeTab
+          Caption             #@SYS72801
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #MCRBtngrpCustomerService
+          ConfigurationKey    #MCRCallCenter
+          ElementPosition     #2114946015
+          HierarchyParent     #HomeTab
+          Caption             #@MCR10553
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #MCRBtnGrpFraudHold
+          AutoDeclaration     #Yes
+          HelpText            #@MCR21786
+          ConfigurationKey    #MCRFraud
+          ElementPosition     #2033601937
+          HierarchyParent     #HomeTab
+          Caption             #@MCR21785
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #Media
+          ElementPosition     #1744830461
+          HierarchyParent     #aptabRetail
+          Caption             #@REX4520182
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #NewGroup
+          AllowEdit           #No
+          ElementPosition     #390451572
+          HierarchyParent     #HomeTab
+          Caption             #@SYS2055
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ReportingGroup
+          AutoDeclaration     #Yes
+          ElementPosition     #2049870753
+          HierarchyParent     #HomeTab
+          Caption             #@sys4000774
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #SalesQuality
+          AutoDeclaration     #Yes
+          ElementPosition     #1610612734
+          HierarchyParent     #aptabSell
+          Caption             #@SYS73185
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #ListPageGrid
+          AllowEdit           #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612734
+          DataSource          #CustTable
+          DefaultAction       #ViewDetails
+          DefaultActionLabel  #@SYS122402
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Filter
+          Visible             #No
+          ElementPosition     #1073741822
+          Style               #CustomFilter
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #EPbtngrpOrders
+          HelpText            #@SYS316475
+          ElementPosition     #805306365
+          HierarchyParent     #EPbtngrpSellRelInfo
+          Text                #@SYS316474
+          NormalImage         #10768
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #EPbtngrpQuotes
+          HelpText            #@SYS316467
+          ElementPosition     #536870910
+          HierarchyParent     #EPbtngrpSellRelInfo
+          Text                #@SYS325862
+          NormalImage         #10416
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #EPSmmActivities
+          HelpText            #@SYS316577
+          ElementPosition     #1431655764
+          HierarchyParent     #EPbtngrpCustomerActivities
+          Text                #@SYS6731
+          NormalImage         #10197
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #GeneralContacts
+          AllowEdit           #No
+          HelpText            #@SYS116247
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpCustomerAccounts
+          Text                #@SYS30349
+          NormalImage         #10512
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #mbAxdSend
+          HelpText            #@SYS316505
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #1840700268
+          HierarchyParent     #btngrpSellTradeAgreements
+          Text                #@SYS139577
+          NormalImage         #10783
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #mbDiscounts
+          AllowEdit           #No
+          HelpText            #@SYS316601
+          ElementPosition     #1227133512
+          HierarchyParent     #btngrpSellTradeAgreements
+          Text                #@SYS316497
+          NormalImage         #10555
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #mbGeneralActivities
+          AllowEdit           #No
+          HelpText            #@SYS316576
+          ElementPosition     #1610612733
+          HierarchyParent     #btngrpGeneralActivities
+          Text                #@SYS316575
+          NormalImage         #10197
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #mbOrders
+          AllowEdit           #No
+          HelpText            #@SYS316475
+          ElementPosition     #920350134
+          HierarchyParent     #btngrpSellRelatedInfo
+          Text                #@SYS316474
+          NormalImage         #10768
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #mbQuotations
+          AllowEdit           #No
+          HelpText            #@SYS316467
+          ElementPosition     #613566756
+          HierarchyParent     #btngrpSellRelatedInfo
+          Text                #@SYS316466
+          NormalImage         #10416
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #mbSalesPrice
+          AllowEdit           #No
+          HelpText            #@SYS316486
+          ElementPosition     #920350134
+          HierarchyParent     #btngrpSellTradeAgreements
+          Text                #@SYS316485
+          NormalImage         #10769
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #mbSellSetup
+          AllowEdit           #No
+          HelpText            #@SYS316508
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpSellSetup
+          Text                #@SYS316507
+          NormalImage         #3478
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #mbTemplatesButton
+          AutoDeclaration     #Yes
+          HelpText            #@SYS345470
+          DisplayTarget       #Client
+          ElementPosition     #858993458
+          HierarchyParent     #AttachmentsGroup
+          Text                #@SYS345468
+          NormalImage         #ImageResourceOfficeTemplate_ico
+          ImageLocation       #AOTResource
+          ShowShortCut        #No
+          Big                 #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #mouseDown
+            #public int mouseDown(int _x, int _y, int _button, boolean _ctrl, boolean _shift)
+            #{
+            #    int ret;
+            #
+            #    if (DocuActionForTemplate::createTemplateOnMenuButton(this, custTable.TableId))
+            #    {
+            #        docuActionTemplateUndefined.visible(NoYes::No);
+            #    }
+            #
+            #    ret = super(_x, _y, _button, _ctrl, _shift);
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #MenuButtonInterestFee
+          HelpText            #@SYS330122
+          ElementPosition     #1431655764
+          HierarchyParent     #InterestNoteAdjustment
+          Text                #@SYS9154
+          NormalImage         #12009
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #MenuButtonInterestNote
+          HelpText            #@SYS322813
+          ElementPosition     #715827882
+          HierarchyParent     #InterestNoteAdjustment
+          Text                #@SYS8298
+          NormalImage         #10467
+          ImageLocation       #EmbeddedResource
+          MultiSelect         #Yes
+          Big                 #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #MenuButtonInterestTransaction
+          HelpText            #@SYS330121
+          DisplayTarget       #Client
+          ElementPosition     #1073741823
+          HierarchyParent     #InterestNoteAdjustment
+          Text                #@SYS322821
+          NormalImage         #10069
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #MCRBtnCustomerFraudNotes
+          HelpText            #@MCR24301
+          DisplayTarget       #Client
+          ElementPosition     #1717986916
+          HierarchyParent     #MCRBtnGrpFraudHold
+          Text                #@SYS40182
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10101
+          ImageLocation       #EmbeddedResource
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #    MCRCustTableForm::fraudNotes(element, custTable);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #MCRBtnFraudClear
+          AutoDeclaration     #Yes
+          HelpText            #@MCR21805
+          DisplayTarget       #Client
+          ElementPosition     #1288490187
+          HierarchyParent     #MCRBtnGrpFraudHold
+          Text                #@SYS60541
+          ButtonDisplay       #Text & Image left
+          NormalImage         #12191
+          ImageLocation       #EmbeddedResource
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #/// <summary>
+            #/// Clears the customer fraud hold.
+            #/// </summary>
+            #void clicked()
+            #{
+            #    super();
+            #    MCRCustTableForm::fraudClear(
+            #                        CustTable::find(custTable.AccountNum, true),
+            #                        mcrBtnFraudClear,
+            #                        mcrBtnHold);
+            #
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #MCRBtnHold
+          AutoDeclaration     #Yes
+          HelpText            #@MCR21803
+          DisplayTarget       #Client
+          ElementPosition     #858993458
+          HierarchyParent     #MCRBtnGrpFraudHold
+          Text                #@SYS88630
+          ButtonDisplay       #Text & Image left
+          NormalImage         #3025
+          ImageLocation       #EmbeddedResource
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #/// <summary>
+            #/// Puts the customer on hold for possible fraud.
+            #/// </summary>
+            #void clicked()
+            #{
+            #    super();
+            #    MCRCustTableForm::fraudHold(
+            #                        CustTable::find(custTable.AccountNum, true),
+            #                        mcrBtnFraudClear,
+            #                        mcrBtnHold);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #PrintManagement
+          NeededPermission    #Manual
+          HelpText            #@SYS116252
+          ConfigurationKey    #LogisticsBasic
+          SecurityKey         #CustMisc
+          DisplayTarget       #Client
+          ElementPosition     #1789569705
+          HierarchyParent     #btngrpGeneralSetup
+          Text                #@SYS114627
+          NormalImage         #10698
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    PrintMgmtSetupContext setupContext = new PrintMgmtSetupContext();
+            #    List salesDocs = new List(Types::Enum);
+            #    List projectDocs = new List(Types::Enum);
+            #    List inventDocs = new List(Types::Enum);
+            #
+            #    // <GEEHU>
+            #    #ISOCountryRegionCodes
+            #    // </GEEHU>
+            #
+            #    if (custTable_ds.cursor() == null)
+            #    {
+            #        return;
+            #    }
+            #
+            #    super();
+            #
+            #    // Add sales documents
+            #    salesDocs.addEnd(PrintMgmtDocumentType::Confirmation);
+            #    salesDocs.addEnd(PrintMgmtDocumentType::Quotation);
+            #    salesDocs.addEnd(PrintMgmtDocumentType::SalesFreeTextInvoice);
+            #    salesDocs.addEnd(PrintMgmtDocumentType::SalesOrderConfirmation);
+            #    salesDocs.addEnd(PrintMgmtDocumentType::SalesOrderInvoice);
+            #    salesDocs.addEnd(PrintMgmtDocumentType::SalesOrderPackingSlip);
+            #    salesDocs.addEnd(PrintMgmtDocumentType::CustAccountStatement);
+            #    salesDocs.addEnd(PrintMgmtDocumentType::CustInterestNote);
+            #    salesDocs.addEnd(PrintMgmtDocumentType::CustCollectionLetter);
+            #
+            #    // <GEEHU>
+            #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoHU]))
+            #    {
+            #        salesDocs.addEnd(PrintMgmtDocumentType::TaxReimburstmentSlip_HU);
+            #    }
+            #    // </GEEHU>
+            #
+            #    setupContext.addHierarchyContext(PrintMgmtHierarchyType::Sales, PrintMgmtNodeType::CustTable, salesDocs);
+            #
+            #    // Add project documents
+            #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+            #    {
+            #        projectDocs.addEnd(PrintMgmtDocumentType::SIProjInvoice);
+            #        projectDocs.addEnd(PrintMgmtDocumentType::SIProjInvoiceWithBR);
+            #        projectDocs.addEnd(PrintMgmtDocumentType::SIManagedProjInvoice);
+            #        projectDocs.addEnd(PrintMgmtDocumentType::ProjCustRetentionReleaseInvoice);
+            #        projectDocs.addEnd(PrintMgmtDocumentType::ProjectQuotation);
+            #    }
+            #    else
+            #    {
+            #        projectDocs.addEnd(PrintMgmtDocumentType::ProjectInvoice);
+            #    }
+            #    setupContext.addHierarchyContext(PrintMgmtHierarchyType::Project, PrintMgmtNodeType::CustTable, projectDocs);
+            #
+            #    //Add invent documents
+            #    inventDocs.addEnd(PrintMgmtDocumentType::InventPickList);
+            #    setupContext.addHierarchyContext(PrintMgmtHierarchyType::Invent, PrintMgmtNodeType::CustTable, inventDocs);
+            #
+            #    setupContext.parmCaller(element);
+            #    setupContext.parmReferencedTableBuffer(custTable_ds.cursor());
+            #    setupContext.parmCountryRegionId(custTable.postalAddress().CountryRegionId);
+            #    PrintMgmt::launchSetup(setupContext);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #AttachmentsButton
+          HelpText            #@SYS123027
+          DisplayTarget       #Client
+          ElementPosition     #1288490187
+          HierarchyParent     #AttachmentsGroup
+          Text                #@SYS316708
+          NormalImage         #10442
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          Command             #2853
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #cmdbtnDelete
+          HelpText            #@SYS316446
+          ElementPosition     #1431655764
+          HierarchyParent     #MaintainGroup
+          Text                #@SYS14425
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          SaveRecord          #No
+          MultiSelect         #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #EPDelete
+          HelpText            #@SYS122922
+          ElementPosition     #1717986916
+          HierarchyParent     #EPbtngrpCustomerMaintain
+          Text                #@SYS14425
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          SaveRecord          #No
+          MultiSelect         #Yes
+          Primary             #Yes
+          AutoRefreshData     #Yes
+          NeedsRecord         #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #EPSendToExcel
+          ElementPosition     #1431655764
+          HierarchyParent     #EPbtngrpCustomerList
+          NormalImage         #10156
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #Yes
+          Big                 #Yes
+          Primary             #Yes
+          Command             #4436
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #Refresh
+          HelpText            #@sys315818
+          ElementPosition     #1073741822
+          HierarchyParent     #ListGroup
+          NormalImage         #11437
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Command             #2875
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #SendToExcel
+          ElementPosition     #1610612733
+          HierarchyParent     #ListGroup
+          NormalImage         #10156
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #Yes
+          Big                 #Yes
+          Command             #4436
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #AddContacts
+          ElementPosition     #1288490187
+          HierarchyParent     #GeneralContacts
+          Text                #@SYS328383
+          NormalImage         #10866
+          ImageLocation       #EmbeddedResource
+          MultiSelect         #Yes
+          NeedsRecord         #Yes
+          DataSource          #DirPartyTable
+          MenuItemName        #ContactPersonNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #AlcoholLicenseRelTable_RU
+          ElementPosition     #1879048189
+          HierarchyParent     #btngrpTaxRegistration
+          NormalImage         #11024
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          MenuItemName        #AlcoholLicenseRelTable_RU
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #AnalyzeData
+          ElementPosition     #1431655764
+          HierarchyParent     #ReportingGroup
+          ShowShortCut        #No
+          Big                 #Yes
+          MenuItemType        #Action
+          MenuItemName        #CreatePowerViewReportcustCube
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #buttonFiscalDocumentText_BR
+          AllowEdit           #No
+          CountryRegionCodes  #BR
+          HelpText            #@GLS63716
+          ElementPosition     #1717986916
+          HierarchyParent     #AttachmentsGroup
+          NormalImage         #10099
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #FiscalDocumentText_BR
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ClientmibSalesTableNew
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316461
+          ElementPosition     #1073741823
+          HierarchyParent     #btngrpSellNew
+          NormalImage         #10874
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          OpenMode            #New
+          MenuItemType        #Action
+          MenuItemName        #SalesCreateOrderFromCustomer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ClientmibsmmLeadTableNew
+          AllowEdit           #No
+          HelpText            #@SYS318324
+          ElementPosition     #1610612734
+          HierarchyParent     #btngrpSellNew
+          Text                #@SYS107849
+          NormalImage         #10870
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #smmleadtablenew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ClientmibsmmOpportunityTableNew
+          AllowEdit           #No
+          HelpText            #@SYS316464
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpSellNew
+          NormalImage         #10871
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #smmOpportunityTableNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CopyOfmibAxdSendLineDiscount
+          HelpText            #@SYS332618
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #1073741823
+          HierarchyParent     #mbAxdSend
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          MenuItemType        #Action
+          MenuItemName        #AxdSendLineDiscount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CopyOfmibPriceDiscTable_PriceSales
+          AllowEdit           #No
+          HelpText            #@SYS316487
+          ElementPosition     #613566756
+          HierarchyParent     #mbSalesPrice
+          Text                #@SYS316488
+          NormalImage         #10769
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #PriceDiscTable_PriceSales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CopyOfmibPriceDiscTable_Sales
+          AllowEdit           #No
+          ElementPosition     #613566756
+          HierarchyParent     #btngrpSellTradeAgreements
+          Text                #@SYS316484
+          NormalImage         #10785
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #PriceDiscTable_Sales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardTableAdd
+          HelpText            #@SYS316458
+          ElementPosition     #1932735281
+          HierarchyParent     #btngrpCustomerSetup
+          NormalImage         #12227
+          ImageLocation       #EmbeddedResource
+          MenuItemName        #CreditCardTableAdd
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestAdjustmentHistory
+          HelpText            #@SYS322824
+          ElementPosition     #1789569705
+          HierarchyParent     #InterestNoteAdjustment
+          NormalImage         #11455
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemName        #CustInterestAdjustmentHistory
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestFeeReinstate
+          DisplayTarget       #Client
+          ElementPosition     #1610612733
+          HierarchyParent     #MenuButtonInterestFee
+          Text                #@SYS313608
+          NormalImage         #10062
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestReinstate
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args;
+            #    args = new Args();
+            #    args.parmEnumType(enumNum(CustInterestAdjustmentAction));
+            #    args.parmEnum(CustInterestAdjustmentAction::ReInstate);
+            #    args.parm(tableStr(CustInterestFee));
+            #    args.record(custTable);
+            #    new MenuFunction(menuitemActionStr(CustInterestReinstate), MenuItemType::Action).run(args);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestFeeWaive
+          DisplayTarget       #Client
+          ElementPosition     #1073741822
+          HierarchyParent     #MenuButtonInterestFee
+          Text                #@SYS313600
+          NormalImage         #10070
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestWaive
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args;
+            #    args = new Args();
+            #    args.parmEnumType(enumNum(CustInterestAdjustmentAction));
+            #    args.parmEnum(CustInterestAdjustmentAction::Waive);
+            #    args.parm(tableStr(CustInterestFee));
+            #    args.record(custTable);
+            #    new MenuFunction(menuitemActionStr(CustInterestWaive), MenuItemType::Action).run(args);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestReinstate
+          DisplayTarget       #Client
+          ElementPosition     #1288490187
+          HierarchyParent     #MenuButtonInterestNote
+          Text                #@SYS313608
+          NormalImage         #10062
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestReinstate
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args;
+            #    args = new Args();
+            #    args.parmEnumType(enumNum(CustInterestAdjustmentAction));
+            #    args.parmEnum(CustInterestAdjustmentAction::ReInstate);
+            #    args.parm(tableStr(CustInterestJour));
+            #    args.record(custTable);
+            #    new MenuFunction(menuitemActionStr(CustInterestReinstate), MenuItemType::Action).run(args);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestReverse
+          DisplayTarget       #Client
+          ElementPosition     #1717986916
+          HierarchyParent     #MenuButtonInterestNote
+          Text                #@SYS22850
+          NormalImage         #11287
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestReverse
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args;
+            #    args = new Args();
+            #    args.parmEnumType(enumNum(CustInterestAdjustmentAction));
+            #    args.parmEnum(CustInterestAdjustmentAction::Reverse);
+            #    args.parm(tableStr(CustInterestJour));
+            #    args.record(custTable);
+            #    new MenuFunction(menuitemActionStr(CustInterestReverse), MenuItemType::Action).run(args);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestTransReinstate
+          DisplayTarget       #Client
+          ElementPosition     #1288490187
+          HierarchyParent     #MenuButtonInterestTransaction
+          Text                #@SYS313608
+          NormalImage         #10062
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestReinstate
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args;
+            #    args = new Args();
+            #    args.parmEnumType(enumNum(CustInterestAdjustmentAction));
+            #    args.parmEnum(CustInterestAdjustmentAction::ReInstate);
+            #    args.parm(tableStr(CustInterestTrans));
+            #    args.record(custTable);
+            #    new MenuFunction(menuitemActionStr(CustInterestReinstate), MenuItemType::Action).run(args);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestTransReverse
+          DisplayTarget       #Client
+          ElementPosition     #1717986916
+          HierarchyParent     #MenuButtonInterestTransaction
+          Text                #@SYS22850
+          NormalImage         #11287
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestReverse
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args;
+            #    args = new Args();
+            #    args.parmEnumType(enumNum(CustInterestAdjustmentAction));
+            #    args.parmEnum(CustInterestAdjustmentAction::Reverse);
+            #    args.parm(tableStr(CustInterestTrans));
+            #    args.record(custTable);
+            #    new MenuFunction(menuitemActionStr(CustInterestReverse), MenuItemType::Action).run(args);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestTransWaive
+          DisplayTarget       #Client
+          ElementPosition     #858993458
+          HierarchyParent     #MenuButtonInterestTransaction
+          Text                #@SYS313600
+          NormalImage         #10070
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestWaive
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args;
+            #    args = new Args();
+            #    args.parmEnumType(enumNum(CustInterestAdjustmentAction));
+            #    args.parmEnum(CustInterestAdjustmentAction::Waive);
+            #    args.parm(tableStr(CustInterestTrans));
+            #    args.record(custTable);
+            #    new MenuFunction(menuitemActionStr(CustInterestWaive), MenuItemType::Action).run(args);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInterestWaive
+          DisplayTarget       #Client
+          ElementPosition     #858993458
+          HierarchyParent     #MenuButtonInterestNote
+          Text                #@SYS313600
+          NormalImage         #10070
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestWaive
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args;
+            #    args = new Args();
+            #    args.parmEnumType(enumNum(CustInterestAdjustmentAction));
+            #    args.parmEnum(CustInterestAdjustmentAction::Waive);
+            #    args.parm(tableStr(CustInterestJour));
+            #    args.record(custTable);
+            #    new MenuFunction(menuitemActionStr(CustInterestWaive), MenuItemType::Action).run(args);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInvoice4PaymJournal_RU
+          ElementPosition     #1932735281
+          HierarchyParent     #btngrpInvoiceJournals
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10733
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustInvoice4PaymJournal_RU
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustomerRetOrder
+          ElementPosition     #1431655764
+          HierarchyParent     #EPbtngrpSellNew
+          NormalImage         #12021
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #CustomerRetOrder
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustOpenTrans_RU
+          ElementPosition     #1342177277
+          HierarchyParent     #btngrpInvoiceSettle
+          Text                #@GLS104750
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10793
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustOpenTrans_RU
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustTableListPageAddContacts
+          AllowEdit           #No
+          ElementPosition     #1717986916
+          HierarchyParent     #GeneralContacts
+          NormalImage         #10436
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemType        #Action
+          MenuItemName        #CustTableListPageAddContacts
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DocuActionTemplateUndefined
+          AutoDeclaration     #Yes
+          Enabled             #No
+          DisplayTarget       #Client
+          ElementPosition     #1431655764
+          HierarchyParent     #mbTemplatesButton
+          ShowShortCut        #No
+          MenuItemName        #DocuActionTemplateUndefined
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #Edit
+          HelpText            #@SYS325415
+          ElementPosition     #715827882
+          HierarchyParent     #MaintainGroup
+          Text                #@SYS317438
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          OpenMode            #Edit
+          CopyCallerQuery     #Yes
+          FormViewOption      #Details
+          MenuItemName        #CustTableEditDetails
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EditList
+          HelpText            #@SYS342511
+          ElementPosition     #1073741823
+          HierarchyParent     #MaintainGroup
+          Text                #@SYS319303
+          NormalImage         #10011
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          OpenMode            #Edit
+          CopyCallerQuery     #Yes
+          FormViewOption      #Grid
+          MenuItemName        #CustTableEditList
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPbtngCaseListPage
+          AllowEdit           #No
+          HelpText            #@SYS316585
+          ElementPosition     #1431655764
+          HierarchyParent     #EPbtngrpGeneralAccounts
+          NormalImage         #11229
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CaseListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPCustInvoicedItems
+          AutoDeclaration     #Yes
+          ElementPosition     #1717986916
+          HierarchyParent     #EPbtngrpSellInvoices
+          NormalImage         #12479
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustInvoicedItems
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPCustUnpaidInvoices
+          ElementPosition     #1288490187
+          HierarchyParent     #EPbtngrpSellInvoices
+          Text                #@SYS316608
+          NormalImage         #12544
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #CustUnpaidInvoices
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPDocumentsMenuItem
+          HelpText            #@SYS318319
+          ElementPosition     #1431655764
+          HierarchyParent     #EPbtngrpCustomerAttachments
+          Text                #@SYS73813
+          NormalImage         #10442
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          BackStyle           #Transparent
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustTableDocuments
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPEdit
+          HelpText            #@SYS122921
+          ElementPosition     #1288490187
+          HierarchyParent     #EPbtngrpCustomerMaintain
+          Text                #@SYS317438
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #custtableedit
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibCustCollectionLetterJournal
+          AllowEdit           #No
+          HelpText            #@SYS316533
+          ElementPosition     #1073741822
+          HierarchyParent     #EPbtngrpSellCollect
+          Text                #@SYS22663
+          NormalImage         #10498
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustCollectionLetterJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibCustConfirmJournal
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316470
+          ElementPosition     #1073741822
+          HierarchyParent     #EPbtngrpOrders
+          Text                #@SYS316469
+          NormalImage         #10510
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustConfirmJournalListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibCustInterestJournal
+          AllowEdit           #No
+          HelpText            #@SYS316538
+          ElementPosition     #1610612733
+          HierarchyParent     #EPbtngrpSellCollect
+          Text                #@SYS128531
+          NormalImage         #10605
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustInterestJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibCustInvoiceJournal
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316521
+          ElementPosition     #858993458
+          HierarchyParent     #EPbtngrpSellInvoices
+          Text                #@SYS9954
+          NormalImage         #10612
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustInvoiceJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibSalesLineBackOrder
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316479
+          ElementPosition     #1288490187
+          HierarchyParent     #EPbtngrpOrders
+          Text                #@SYS316478
+          NormalImage         #10444
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #SalesLineBackOrderListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibSalesQuotationTable
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316468
+          ElementPosition     #1073741822
+          HierarchyParent     #EPbtngrpQuotes
+          NormalImage         #11208
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #SalesQuotationListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibSMAAgreementTableListPage
+          AllowEdit           #No
+          HelpText            #@SYS316561
+          ElementPosition     #1073741822
+          HierarchyParent     #EPbtngrpGeneralService
+          Text                #@SYS316563
+          NormalImage         #10785
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SMAAgreementTableListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibSMAServiceOrderTableListPage
+          AllowEdit           #No
+          HelpText            #@SYS316562
+          ElementPosition     #1610612733
+          HierarchyParent     #EPbtngrpGeneralService
+          Text                #@SYS316564
+          NormalImage         #10787
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SMAServiceOrderTableListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibSmmCallListsListPage
+          AllowEdit           #No
+          HelpText            #@SYS316571
+          ElementPosition     #1610612733
+          HierarchyParent     #EPbtngrpGeneralMarket
+          NormalImage         #10468
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmCallListsListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPmibSmmCampaignsListPage
+          AllowEdit           #No
+          HelpText            #@SYS316568
+          ElementPosition     #1073741822
+          HierarchyParent     #EPbtngrpGeneralMarket
+          NormalImage         #10469
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmCampaignsListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPNewCustomer
+          HelpText            #@SYS316443
+          ElementPosition     #1431655764
+          HierarchyParent     #EPbtngrpCustomerNew
+          NormalImage         #10882
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          MenuItemName        #CustTableNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPQuotationsNew
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS122917
+          ElementPosition     #715827882
+          HierarchyParent     #EPbtngrpSellNew
+          Text                #@SYS84505
+          NormalImage         #10776
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SalesQuotationTableForNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPSalesOrders
+          ElementPosition     #858993458
+          HierarchyParent     #EPbtngrpOrders
+          NormalImage         #10768
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #salestable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPSmmActivitiesActionNew
+          AllowEdit           #No
+          HelpText            #@SYS316580
+          ElementPosition     #1533916890
+          HierarchyParent     #EPSmmActivities
+          Text                #@SYS116271
+          NormalImage         #10430
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesActionNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPSmmActivitiesAppointmentNew
+          AllowEdit           #No
+          HelpText            #@SYS316579
+          ElementPosition     #1227133512
+          HierarchyParent     #EPSmmActivities
+          Text                #@SYS114626
+          NormalImage         #10433
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesAppointmentNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPSmmActivitiesEventNew
+          AllowEdit           #No
+          HelpText            #@SYS316578
+          ElementPosition     #920350134
+          HierarchyParent     #EPSmmActivities
+          Text                #@SYS114679
+          NormalImage         #10432
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesEventNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPSmmActivitiesListPage
+          AllowEdit           #No
+          HelpText            #@SYS316577
+          ElementPosition     #613566756
+          HierarchyParent     #EPSmmActivities
+          NormalImage         #10197
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPSmmActivitiesTaskNew
+          AllowEdit           #No
+          HelpText            #@SYS316581
+          ElementPosition     #1840700268
+          HierarchyParent     #EPSmmActivities
+          Text                #@SYS116273
+          NormalImage         #10431
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesTaskNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EPView
+          HelpText            #@SYS122920
+          ElementPosition     #858993458
+          HierarchyParent     #EPbtngrpCustomerMaintain
+          Text                #@SYS118396
+          NormalImage         #11002
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustTableDetails
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #FactureJournalCust_RU
+          AllowEdit           #No
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpInvoiceJournals
+          ButtonDisplay       #Text & Image left
+          NormalImage         #12397
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          DataSource          #CustTable
+          MenuItemName        #FactureJournalCust_RU
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #LeadsListPage
+          ElementPosition     #1879048185
+          HierarchyParent     #EPbtngrpSellRelInfo
+          NormalImage         #10625
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmleadslistPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mbDirPartTaxRegistrationSearch
+          ElementPosition     #1610612733
+          HierarchyParent     #btngrpTaxRegistration
+          NormalImage         #10081
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          MenuItemName        #DirPartTaxRegistrationSearchCust
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mbTaxRegistration
+          AllowEdit           #No
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpTaxRegistration
+          NormalImage         #10854
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #DirPartyPostalAddressTaxReg
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #MCRCustMessageAssociation
+          ElementPosition     #1968526675
+          HierarchyParent     #btngrpGeneralSetup
+          ButtonDisplay       #Text & Image left
+          NormalImage         #3061
+          ImageLocation       #EmbeddedResource
+          MenuItemName        #MCRCustMessageAssociation
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #MCRmibCustomerService
+          AutoDeclaration     #Yes
+          HelpText            #@MCR10077
+          ConfigurationKey    #MCRCallCenter
+          ElementPosition     #1431655764
+          HierarchyParent     #MCRBtngrpCustomerService
+          ButtonDisplay       #Text & Image left
+          NormalImage         #11148
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          MenuItemName        #MCRCustomerService
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #MCRmibSendCatalog
+          AutoDeclaration     #Yes
+          ConfigurationKey    #MCRCatalog
+          ElementPosition     #1431655764
+          HierarchyParent     #MCRBtngrpCatalogs
+          ButtonDisplay       #Text & Image left
+          NormalImage         #12253
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          MenuItemName        #MCRCatalogRequest
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #MenuItemButtonRetailLoyaltyRewardPointTrans
+          AutoDeclaration     #Yes
+          ElementPosition     #1431655764
+          HierarchyParent     #Inquires
+          Text                #@RET4359
+          NormalImage         #Retail_LoyaltyCardTransactions_ico
+          ImageLocation       #AOTResource
+          ShowShortCut        #No
+          MenuItemName        #RetailLoyaltyRewardPointTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibAxdSendMultilineDiscount
+          HelpText            #@SYS333233
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #1431655764
+          HierarchyParent     #mbAxdSend
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          MenuItemType        #Action
+          MenuItemName        #AxdSalesSendMultilineDiscount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibAxdSendPricelist
+          HelpText            #@SYS316505
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #715827882
+          HierarchyParent     #mbAxdSend
+          Text                #@SYS8983
+          NormalImage         #10769
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #AxdSendPricelist
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibAxdSendTotalDiscount
+          HelpText            #@SYS334587
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #1789569705
+          HierarchyParent     #mbAxdSend
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          MenuItemType        #Action
+          MenuItemName        #AxdSalesSendTotalDiscount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCaseDetailNewSales
+          AllowEdit           #No
+          HelpText            #@SYS316599
+          ElementPosition     #1431655764
+          HierarchyParent     #EPbtngrpGeneralNew
+          NormalImage         #12420
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CaseDetailNewSales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCaseListPage
+          AllowEdit           #No
+          HelpText            #@SYS316585
+          ElementPosition     #1288490187
+          HierarchyParent     #btngrpGeneralAccounts
+          Text                #@SYS130461
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CaseListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCommissionCalc
+          AllowEdit           #No
+          HelpText            #@SYS316511
+          ElementPosition     #1431655764
+          HierarchyParent     #mbSellSetup
+          NormalImage         #10501
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CommissionCalc
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCreditCardCust
+          AllowEdit           #No
+          HelpText            #@SYS316458
+          ElementPosition     #1646404128
+          HierarchyParent     #btngrpCustomerSetup
+          Text                #@SYS316457
+          NormalImage         #12227
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #creditCardcust
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustAccountStatementExt
+          AllowEdit           #No
+          HelpText            #@SYS316542
+          ElementPosition     #858993458
+          HierarchyParent     #CustomerBalances
+          Text                #@SYS316552
+          NormalImage         #10543
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #Yes
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemType        #Output
+          MenuItemName        #CustAccountStatementExt
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustBankAccounts
+          AllowEdit           #No
+          HelpText            #@SYS316455
+          ElementPosition     #858993458
+          HierarchyParent     #btngrpCustomerSetup
+          NormalImage         #10451
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustBankAccounts
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustBillOfExchangeJour
+          AllowEdit           #No
+          HelpText            #@SYS316524
+          ElementPosition     #1717986916
+          HierarchyParent     #btngrpInvoiceJournals
+          Text                #@SYS316523
+          NormalImage         #10457
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustBillOfExchangeJour
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustBillOfExchangeStat
+          AllowEdit           #No
+          HelpText            #@SYS316528
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpInvoiceRelatedInfo
+          NormalImage         #11103
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustBillOfExchangeStat
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustCollectionLetterCreate
+          AllowEdit           #No
+          HelpText            #@SYS316535
+          ElementPosition     #1610612733
+          HierarchyParent     #btngrpCollectNew
+          Text                #@SYS316597
+          NormalImage         #10497
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #Yes
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustCollectionLetterCreate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustCollectionLetterJournal
+          AllowEdit           #No
+          HelpText            #@SYS316533
+          ElementPosition     #1610612733
+          HierarchyParent     #btngrpCollectionCollectionLetters
+          NormalImage         #10498
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustCollectionLetterJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustCollectionLetterNote
+          AllowEdit           #No
+          HelpText            #@SYS316532
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpCollectionCollectionLetters
+          NormalImage         #10701
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustCollectionLetterNote
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustCollections
+          AllowEdit           #No
+          HelpText            #@SYS316544
+          ElementPosition     #1717986916
+          HierarchyParent     #CustomerBalances
+          NormalImage         #12186
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustCollections
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustConfirmJournal
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316470
+          ElementPosition     #966367638
+          HierarchyParent     #mbOrders
+          Text                #@SYS316469
+          NormalImage         #10510
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustConfirmJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustExternalItem
+          AllowEdit           #No
+          HelpText            #@SYS316509
+          ElementPosition     #715827882
+          HierarchyParent     #mbSellSetup
+          Text                #@SYS54845
+          NormalImage         #10571
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustExternalItem
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustFreeInvoice
+          AllowEdit           #No
+          HelpText            #@SYS316515
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpInvoiceNew
+          NormalImage         #10583
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustFreeInvoiceNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustInterestCreate
+          AllowEdit           #No
+          HelpText            #@SYS316536
+          ElementPosition     #858993458
+          HierarchyParent     #btngrpCollectionInterest
+          Text                #@SYS316598
+          NormalImage         #10467
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #Yes
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #CustInterestCreate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustInterestJournal
+          AllowEdit           #No
+          HelpText            #@SYS316538
+          ElementPosition     #1717986916
+          HierarchyParent     #btngrpCollectionInterest
+          NormalImage         #10605
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustInterestJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustInterestNote
+          AllowEdit           #No
+          HelpText            #@SYS316537
+          ElementPosition     #1288490187
+          HierarchyParent     #btngrpCollectionInterest
+          Text                #@SYS316539
+          NormalImage         #12017
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustInterestNote
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustInvoiceJournal
+          AllowEdit           #No
+          HelpText            #@SYS316521
+          ElementPosition     #858993458
+          HierarchyParent     #btngrpInvoiceJournals
+          NormalImage         #10612
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustInvoiceJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustOpenBalanceCurrency
+          AllowEdit           #No
+          HelpText            #@SYS316451
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpCustomerBalance
+          NormalImage         #10446
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustOpenBalanceCurrency
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustOpenTrans
+          AllowEdit           #No
+          HelpText            #@SYS316518
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpInvoiceSettle
+          Text                #@SYS316517
+          NormalImage         #10793
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustOpenTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustOpenTransReverse
+          AllowEdit           #No
+          HelpText            #@SYS316519
+          ElementPosition     #1610612733
+          HierarchyParent     #btngrpInvoiceSettle
+          NormalImage         #10495
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustOpenTransReverse
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustPackingSlipJournal
+          AllowEdit           #No
+          HelpText            #@SYS316480
+          ElementPosition     #1227133512
+          HierarchyParent     #btngrpSellRelatedInfo
+          NormalImage         #10665
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustPackingSlipJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustPaymManFeeHist
+          AllowEdit           #No
+          HelpText            #@SYS316529
+          ElementPosition     #1789569705
+          HierarchyParent     #btngrpInvoiceRelatedInfo
+          NormalImage         #10593
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustPaymManFeeHist
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustQuotationJournal
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316472
+          ElementPosition     #1431655764
+          HierarchyParent     #mbQuotations
+          Text                #@SYS316471
+          NormalImage         #10731
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustQuotationJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustQuotationJournalConfirmation
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316473
+          ElementPosition     #1789569705
+          HierarchyParent     #mbQuotations
+          Text                #@SYS98918
+          NormalImage         #10732
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #CustQuotationJournalConfirmation
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustRecurrenceInvoice
+          AllowEdit           #No
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpInvoiceSetup
+          Text                #@SYS333944
+          NormalImage         #10519
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #CustRecurrenceInvoice
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustSalesLines
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316477
+          ElementPosition     #1288490187
+          HierarchyParent     #mbOrders
+          NormalImage         #10659
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustSalesLines
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustStatistics
+          AllowEdit           #No
+          HelpText            #@SYS316526
+          ElementPosition     #715827882
+          HierarchyParent     #btngrpInvoiceRelatedInfo
+          Text                #@SYS316525
+          NormalImage         #10679
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustStatistics
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibCustWriteOff
+          AllowEdit           #No
+          HelpText            #@SYS316546
+          ElementPosition     #1288490187
+          HierarchyParent     #CustomerBalances
+          Text                #@SYS316545
+          NormalImage         #12200
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemType        #Action
+          MenuItemName        #CustWriteOff
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibExtCodeValueTable
+          AllowEdit           #No
+          HelpText            #@SYS316510
+          ElementPosition     #1073741823
+          HierarchyParent     #mbSellSetup
+          NormalImage         #10570
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #ExtCodeValueTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibForecastSalesTable
+          AllowEdit           #No
+          HelpText            #@SYS316453
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpCustomerForecast
+          Text                #@SYS13699
+          NormalImage         #10582
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #ForecastSalesTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibInterCompanyTradingRelationSetup
+          AllowEdit           #No
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpGeneralSetup
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10604
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #InterCompanyTradingRelationSetupCustomer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibInventPosting
+          AllowEdit           #No
+          HelpText            #@SYS316512
+          ElementPosition     #1789569705
+          HierarchyParent     #mbSellSetup
+          Text                #@SYS22445
+          NormalImage         #10608
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #InventPosting
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibLeadsList
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316481
+          ElementPosition     #1533916890
+          HierarchyParent     #btngrpSellRelatedInfo
+          Text                #@SYS103010
+          NormalImage         #10625
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #smmLeadsListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibLedgerJournalTable_CustPaym
+          AllowEdit           #No
+          HelpText            #@SYS316514
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpCollectNew
+          NormalImage         #10672
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #LedgerJournalTableCustPaymCustTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibOpportunityList
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316482
+          ElementPosition     #1840700268
+          HierarchyParent     #btngrpSellRelatedInfo
+          Text                #@SYS30318
+          NormalImage         #10871
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #smmOpportunitiesListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibPriceDiscTable_EndDiscSales
+          AllowEdit           #No
+          HelpText            #@SYS316503
+          ElementPosition     #1717986916
+          HierarchyParent     #mbDiscounts
+          Text                #@SYS316502
+          NormalImage         #10831
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #PriceDiscTable_EndDiscSales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibPriceDiscTable_LineDiscSales
+          AllowEdit           #No
+          HelpText            #@SYS316499
+          ElementPosition     #858993458
+          HierarchyParent     #mbDiscounts
+          Text                #@SYS316498
+          NormalImage         #10630
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #PriceDiscTable_LineDiscSales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibPriceDiscTable_MultilineDiscSales
+          AllowEdit           #No
+          HelpText            #@SYS316501
+          ElementPosition     #1288490187
+          HierarchyParent     #mbDiscounts
+          Text                #@SYS316500
+          NormalImage         #10647
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #PriceDiscTable_MultiLineDiscSales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibPriceDiscTable_Sales
+          AllowEdit           #No
+          ElementPosition     #1073741822
+          HierarchyParent     #EPbtngrpCustomerPrice
+          Text                #@SYS316484
+          NormalImage         #10785
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #PriceDiscTable_Sales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibPriceQuery
+          AllowEdit           #No
+          ElementPosition     #1610612733
+          HierarchyParent     #EPbtngrpCustomerPrice
+          NormalImage         #10769
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #PriceQuery
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjCashFlow
+          AllowEdit           #No
+          ElementPosition     #1840700268
+          HierarchyParent     #btngrpProjectsProjectControl
+          NormalImage         #10473
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #ProjCashFlow
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjCostControl
+          AllowEdit           #No
+          ElementPosition     #920350134
+          HierarchyParent     #btngrpProjectsProjectControl
+          NormalImage         #10524
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #ProjCostControl
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjInvoiceControl
+          AllowEdit           #No
+          ElementPosition     #1227133512
+          HierarchyParent     #btngrpProjectsProjectControl
+          Text                #@SYS316553
+          NormalImage         #11056
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #projInvoiceControl
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjInvoiceJournal
+          AllowEdit           #No
+          HelpText            #@SYS316522
+          ConfigurationKey    #ProjBasic
+          SecurityKey         #ProjInquiries
+          ElementPosition     #1395864369
+          HierarchyParent     #btngrpInvoiceJournals
+          Text                #@SYS10619
+          NormalImage         #10715
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #ProjInvoiceListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjInvoiceJournal2
+          AllowEdit           #No
+          HelpText            #@SYS316555
+          ElementPosition     #1288490187
+          HierarchyParent     #btngrpProjectsRelatedInfo
+          Text                #@SYS10619
+          NormalImage         #10715
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #ProjInvoiceListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjProjectsListPage
+          AllowEdit           #No
+          HelpText            #@SYS316557
+          ElementPosition     #1717986916
+          HierarchyParent     #btngrpProjectsRelatedInfo
+          Text                #@SYS36368
+          NormalImage         #10325
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #ProjProjectsListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjSalesPriceCost
+          AllowEdit           #No
+          HelpText            #@SYS316492
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #1227133512
+          HierarchyParent     #mbSalesPrice
+          Text                #@SYS316491
+          NormalImage         #10771
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #ProjSalesPriceCost
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjSalesPriceHour
+          AllowEdit           #No
+          HelpText            #@SYS316490
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #920350134
+          HierarchyParent     #mbSalesPrice
+          Text                #@SYS316489
+          NormalImage         #10773
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #ProjSalesPriceHour
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjSalesPriceRevenue
+          AllowEdit           #No
+          HelpText            #@SYS316494
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #1533916890
+          HierarchyParent     #mbSalesPrice
+          Text                #@SYS316493
+          NormalImage         #10772
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #ProjSalesPriceRevenue
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjStatistic
+          AllowEdit           #No
+          HelpText            #@SYS316551
+          ElementPosition     #613566756
+          HierarchyParent     #btngrpProjectsProjectControl
+          Text                #@SYS316552
+          NormalImage         #10367
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #ProjStatistic
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjTableMainNew
+          AllowEdit           #No
+          HelpText            #@SYS316549
+          ElementPosition     #1610612734
+          HierarchyParent     #btngrpProjectsNew
+          NormalImage         #10720
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          OpenMode            #New
+          MenuItemName        #ProjTableCreate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibProjUtilization
+          AllowEdit           #No
+          ElementPosition     #1533916890
+          HierarchyParent     #btngrpProjectsProjectControl
+          NormalImage         #10595
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #ProjUtilization
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibRetailConcessionContractTable
+          Visible             #No
+          ElementPosition     #1717986916
+          HierarchyParent     #btngrpRetailRelatedInfo
+          Text                #@RET1012
+          NormalImage         #10785
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          MenuItemName        #RetailConcessionContractTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibRetailCustAffiliations
+          HelpText            #@REX4520238
+          ElementPosition     #1932735281
+          HierarchyParent     #btngrpRetailRelatedInfo
+          Text                #@REX51
+          NormalImage         #1213
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          DataSource          #CustTable
+          MenuItemName        #RetailCustAffiliation
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibRetailInfocodeTableSpecific
+          ElementPosition     #858993458
+          HierarchyParent     #btngrpRetailRelatedInfo
+          Text                #@RET2484
+          NormalImage         #Retail_ReasonCodes_ico
+          ImageLocation       #AOTResource
+          Big                 #Yes
+          MenuItemName        #RetailInfocodeTableSpecific
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSalesCOD
+          AllowEdit           #No
+          HelpText            #@SYS316527
+          ElementPosition     #1073741823
+          HierarchyParent     #btngrpInvoiceRelatedInfo
+          NormalImage         #10466
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SalesCOD
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSalesJournalAutoSummary_Cust
+          AllowEdit           #No
+          HelpText            #@SYS316456
+          ElementPosition     #1288490187
+          HierarchyParent     #btngrpCustomerSetup
+          NormalImage         #10820
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SalesJournalAutoSummary_Cust
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSalesLineBackOrder
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316479
+          ElementPosition     #1717986916
+          HierarchyParent     #mbOrders
+          Text                #@SYS316478
+          NormalImage         #10444
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #SalesLineBackOrderListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSalesQuotationListPage
+          AllowEdit           #No
+          HelpText            #@SYS316554
+          ElementPosition     #858993458
+          HierarchyParent     #btngrpProjectsRelatedInfo
+          Text                #@SYS36916
+          NormalImage         #11115
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SalesQuotationListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSalesQuotationProjTableForNew
+          AllowEdit           #No
+          HelpText            #@SYS316548
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpProjectsNew
+          NormalImage         #10716
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #SalesCreateProjQuotation
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSalesQuotationTableNew
+          AllowEdit           #No
+          HelpText            #@SYS316460
+          ElementPosition     #715827882
+          HierarchyParent     #btngrpSellNew
+          NormalImage         #10776
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          OpenMode            #New
+          MenuItemType        #Action
+          MenuItemName        #SalesCreateQuotation
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSalesTable
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316476
+          ElementPosition     #644245092
+          HierarchyParent     #mbOrders
+          Text                #@SYS4363
+          NormalImage         #10768
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #SalesTableListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSalesTableNew
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316461
+          ElementPosition     #1073741823
+          HierarchyParent     #EPbtngrpSellNew
+          NormalImage         #10874
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          OpenMode            #New
+          MenuItemName        #salestablefornew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSMAAgreementTable
+          AllowEdit           #No
+          HelpText            #@SYS316560
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpServiceNew
+          NormalImage         #11191
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SMAAgreementTableForNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSMAAgreementTableListPage
+          AllowEdit           #No
+          HelpText            #@SYS316561
+          ElementPosition     #858993458
+          HierarchyParent     #btngrpServiceRelatedInfo
+          Text                #@SYS316563
+          NormalImage         #10785
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SMAAgreementTableListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSMASalesPriceSubscription
+          AllowEdit           #No
+          HelpText            #@SYS316496
+          ConfigurationKey    #PriceDisc
+          ElementPosition     #1840700268
+          HierarchyParent     #mbSalesPrice
+          Text                #@SYS316495
+          NormalImage         #10774
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #SMASalesPriceSubsciption
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSMAServiceObjectRelation
+          AllowEdit           #No
+          HelpText            #@SYS316565
+          ElementPosition     #1717986916
+          HierarchyParent     #btngrpServiceRelatedInfo
+          NormalImage         #10786
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SMAServiceObjectRelation
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSMAServiceOrderTableListPage
+          AllowEdit           #No
+          HelpText            #@SYS316562
+          ElementPosition     #1288490187
+          HierarchyParent     #btngrpServiceRelatedInfo
+          Text                #@SYS316564
+          NormalImage         #10787
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SMAServiceOrderTableListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSMAServiceOrderTableNew
+          AllowEdit           #No
+          HelpText            #@SYS316559
+          ElementPosition     #715827880
+          HierarchyParent     #btngrpServiceNew
+          NormalImage         #10716
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SMAServiceOrderTableTableForNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmActivitiesActionNew
+          AllowEdit           #No
+          HelpText            #@SYS316580
+          ElementPosition     #1533916890
+          HierarchyParent     #mbGeneralActivities
+          Text                #@SYS116271
+          NormalImage         #10430
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesActionNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmActivitiesAppointmentNew
+          AllowEdit           #No
+          HelpText            #@SYS316579
+          ElementPosition     #1227133512
+          HierarchyParent     #mbGeneralActivities
+          Text                #@SYS114626
+          NormalImage         #10433
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesAppointmentNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmActivitiesEventNew
+          AllowEdit           #No
+          HelpText            #@SYS316578
+          ElementPosition     #920350134
+          HierarchyParent     #mbGeneralActivities
+          Text                #@SYS114679
+          NormalImage         #10432
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesEventNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmActivitiesListPage
+          AllowEdit           #No
+          HelpText            #@SYS316577
+          ElementPosition     #613566756
+          HierarchyParent     #mbGeneralActivities
+          NormalImage         #10197
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmActivitiesTaskNew
+          AllowEdit           #No
+          HelpText            #@SYS316581
+          ElementPosition     #1840700268
+          HierarchyParent     #mbGeneralActivities
+          Text                #@SYS116273
+          NormalImage         #10431
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmActivitiesTaskNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmBusinessSectors
+          AllowEdit           #No
+          HelpText            #@SYS316603
+          ElementPosition     #715827882
+          HierarchyParent     #btngrpGeneralSetup
+          Text                #@SYS316602
+          NormalImage         #11106
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmBusinessSectors
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmBusRelFinancials
+          AllowEdit           #No
+          HelpText            #@SYS316592
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpGeneralStatistics
+          Text                #@SYS316591
+          NormalImage         #10575
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmBusRelFinancials
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmBusRelStatistics
+          AllowEdit           #No
+          ElementPosition     #1610612733
+          HierarchyParent     #btngrpGeneralStatistics
+          Text                #@SYS112767
+          NormalImage         #10464
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmBusRelStatistics
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmBusRelTable
+          AllowEdit           #No
+          HelpText            #@SYS316584
+          ElementPosition     #858993458
+          HierarchyParent     #btngrpGeneralAccounts
+          Text                #@SYS316583
+          NormalImage         #10464
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmBusRelTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmCallListsListPage
+          AllowEdit           #No
+          HelpText            #@SYS316571
+          ElementPosition     #1610612733
+          HierarchyParent     #btngrpMarketTelemarketing
+          Text                #@SYS115009
+          NormalImage         #10468
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmCallListsListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmCampaignsListPage
+          AllowEdit           #No
+          HelpText            #@SYS316568
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpMarketCampaigns
+          Text                #@SYS37339
+          NormalImage         #10469
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmCampaignsListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmContactsList
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316447
+          ElementPosition     #858993458
+          HierarchyParent     #GeneralContacts
+          Text                #@SYS328245
+          NormalImage         #10512
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #smmContactsListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmMailings
+          AllowEdit           #No
+          HelpText            #@SYS316572
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpMarketMailings
+          NormalImage         #10638
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmMailings
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibsmmOpportunityTableNew
+          AllowEdit           #No
+          HelpText            #@SYS316464
+          ElementPosition     #1789569705
+          HierarchyParent     #EPbtngrpSellNew
+          NormalImage         #10871
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #smmOpportunityTableNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmPhoneLog
+          AllowEdit           #No
+          HelpText            #@SYS316570
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpMarketTelemarketing
+          NormalImage         #10281
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmPhoneLog
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmResponsibilities
+          AllowEdit           #No
+          HelpText            #@SYS316589
+          ConfigurationKey    #SmmCRM
+          ElementPosition     #1073741823
+          HierarchyParent     #btngrpGeneralSetup
+          NormalImage         #10759
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmResponsibilities
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSmmTransLog
+          AllowEdit           #No
+          HelpText            #@SYS316586
+          ElementPosition     #1717986916
+          HierarchyParent     #btngrpGeneralAccounts
+          NormalImage         #10835
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Primary             #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #smmTransLog
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibSuppItemTable_Sales
+          HelpText            #@SYS316504
+          ElementPosition     #1533916890
+          HierarchyParent     #btngrpSellTradeAgreements
+          Text                #@SYS342685
+          NormalImage         #10822
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #SuppItemTable_Sales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #mibTransactions
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          HelpText            #@SYS316449
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpCustomerTransactions
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #CustTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #NewCase
+          HelpText            #@SYS130470
+          ElementPosition     #1431655764
+          HierarchyParent     #btngrpGeneralCase
+          Text                #@SYS130477
+          NormalImage         #12420
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #casedetailnewsales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #NewCustomer
+          HelpText            #@SYS316443
+          ElementPosition     #1431655764
+          HierarchyParent     #NewGroup
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          OpenMode            #New
+          CopyCallerQuery     #Yes
+          MenuItemName        #customerquickCreate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #NewSalesAgreements_RU
+          CountryRegionCodes  #RU
+          ElementPosition     #1968526675
+          HierarchyParent     #btngrpSellNew
+          Text                #@SYS302515
+          NormalImage         #10785
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          MenuItemName        #SalesagreementForNew
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #NonConformance
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          ElementPosition     #1431655764
+          HierarchyParent     #SalesQuality
+          NormalImage         #11134
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #InventNonConformanceTableAction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #Opportunities
+          ElementPosition     #1073741820
+          HierarchyParent     #EPbtngrpSellRelInfo
+          NormalImage         #10871
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #smmopportunitieslistPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #PackagingSlip
+          ElementPosition     #1610612730
+          HierarchyParent     #EPbtngrpSellRelInfo
+          Text                #@SYS332886
+          NormalImage         #10665
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #CustPackingSlipJournal_Action
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #PdsCustSellableDays
+          ElementPosition     #2080374782
+          HierarchyParent     #mbSellSetup
+          ShowShortCut        #No
+          DataSource          #CustTable
+          MenuItemName        #PdsCustSellableDays
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #PlCustPackageHolder
+          ElementPosition     #1610612733
+          HierarchyParent     #btngrpPackages
+          MenuItemName        #PlCustPackageHolder
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #PlCustPackageReturn
+          ElementPosition     #1073741822
+          HierarchyParent     #btngrpPackages
+          ButtonDisplay       #Text & Image above
+          Big                 #Yes
+          Primary             #Yes
+          MenuItemName        #PlCustPackageReturn
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjInvoiceListPage
+          ElementPosition     #1073741822
+          HierarchyParent     #EPbtngrpSellInvoices
+          ShowShortCut        #No
+          MenuItemName        #ProjInvoiceListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #Quotations
+          ElementPosition     #954437176
+          HierarchyParent     #mbQuotations
+          Text                #@SYS80163
+          NormalImage         #11208
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #SalesQuotationListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #RetailImagesAttributeValue
+          ElementPosition     #1431655764
+          HierarchyParent     #Media
+          DataSource          #CustTable
+          MenuItemName        #RetailImagesAttributeValue
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ReturnOrders
+          HelpText            #@SYS325864
+          ElementPosition     #1342177275
+          HierarchyParent     #EPbtngrpSellRelInfo
+          Text                #@SYS104918
+          NormalImage         #12344
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #ReturnOrders
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #SalesAgreements_RU
+          CountryRegionCodes  #RU
+          ElementPosition     #766958445
+          HierarchyParent     #btngrpSellTradeAgreements
+          Text                #@SYS302515
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10785
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          NeedsRecord         #Yes
+          MenuItemName        #SalesagreementListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #SalesOpenOrders
+          ElementPosition     #1717986916
+          HierarchyParent     #EPbtngrpOrders
+          NormalImage         #10659
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #SalesOpenOrders
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #SalesPurchCycle_Sales
+          AllowEdit           #No
+          ElementPosition     #1968526675
+          HierarchyParent     #mbSellSetup
+          NormalImage         #12340
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #SalesPurchCycle_Sales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #SmmContactsForCustomer
+          HelpText            #@SYS316447
+          ElementPosition     #1431655764
+          HierarchyParent     #EPbtngrpCustomerAccounts
+          Text                #@SYS30349
+          NormalImage         #10512
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #CustTable
+          MenuItemName        #smmcontactsListPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #TaxDocumentTable_CZ
+          ElementPosition     #1073741823
+          HierarchyParent     #btngrpSellRelatedInfo
+          NormalImage         #10827
+          ImageLocation       #EmbeddedResource
+          DataSource          #CustTable
+          MenuItemName        #CzTaxDocumentTable_Cust
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #TradeAgreement
+          HelpText            #@SYS316463
+          ElementPosition     #1789569705
+          HierarchyParent     #btngrpSellNew
+          Text                #@SYS13768
+          NormalImage         #11191
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          NeedsRecord         #Yes
+          MenuItemName        #PriceDiscAdmTable_SalesCreate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ViewDetails
+          AutoDeclaration     #Yes
+          Visible             #No
+          ElementPosition     #1789569705
+          HierarchyParent     #MaintainGroup
+          NeedsRecord         #Yes
+          CopyCallerQuery     #Yes
+          FormViewOption      #Details
+          MenuItemName        #CustTableDetails
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #WHSAccountItemStatusDefault
+          ElementPosition     #2113929214
+          HierarchyParent     #mbSellSetup
+          ButtonDisplay       #Text & Image above
+          NormalImage         #1224
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          MenuItemName        #whsaccountitemStatusDefault
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #WHSFilterTable
+          ElementPosition     #1932735281
+          HierarchyParent     #btngrpCustomerSetup
+          ButtonDisplay       #Text & Image above
+          NormalImage         #1040
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          DataSource          #CustTable
+          MenuItemName        #whsfiltertable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustTable_AccountNum
+          VerticalSpacing     #0
+          ElementPosition     #1073741823
+          HierarchyParent     #ListPageGrid
+          DataSource          #CustTable
+          DataField           #AccountNum
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustTable_Currency
+          Visible             #No
+          ElementPosition     #477218588
+          HierarchyParent     #ListPageGrid
+          DataSource          #CustTable
+          DataField           #Currency
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustTable_Phone
+          VerticalSpacing     #0
+          ElementPosition     #1431655764
+          HierarchyParent     #ListPageGrid
+          Label               #@SYS318429
+          DataSource          #LogisticsElectronicAddress_Phone
+          DataField           #Locator
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CustTable_PhoneLocal
+          VerticalSpacing     #0
+          ElementPosition     #1789569705
+          HierarchyParent     #ListPageGrid
+          DataSource          #LogisticsElectronicAddress_Phone
+          DataField           #LocatorExtension
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #DirPartyTable_Name
+          HyperLinkMenuItem   #CustTableDetails
+          HyperLinkDataSource #CustTable
+          ElementPosition     #715827882
+          HierarchyParent     #ListPageGrid
+          DataSource          #DirPartyTable
+          DataField           #Name
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #MCRMerged
+          HelpText            #@MCR36796
+          ConfigurationKey    #MCRCallCenter
+          ElementPosition     #1968526675
+          HierarchyParent     #ListPageGrid
+          Label               #@MCR12325
+          DataSource          #CustTable
+          DataMethod          #MCRDisplayIsMerged
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+        CONTROL #PrintManagement
+          PROPERTIES
+            Control             #PrintManagement
+            EffectiveAccess     #Read
+            ManagedBy           #Manual
+          ENDPROPERTIES
+          
+        ENDCONTROL
+        
+    ENDFORM
+    
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+    CONTROL #PrintManagement
+      PROPERTIES
+        Control             #PrintManagement
+        EffectiveAccess     #Read
+        ManagedBy           #Manual
+      ENDPROPERTIES
+      
+    ENDCONTROL
+    
+ENDFORM
+
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+    CONTROL #PrintManagement
+      PROPERTIES
+        Control             #PrintManagement
+        EffectiveAccess     #Read
+        ManagedBy           #Manual
+      ENDPROPERTIES
+      
+    ENDCONTROL
+    
+ENDFORM
+
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+    CONTROL #PrintManagement
+      PROPERTIES
+        Control             #PrintManagement
+        EffectiveAccess     #Read
+        ManagedBy           #Manual
+      ENDPROPERTIES
+      
+    ENDCONTROL
+    
+ENDFORM
+
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

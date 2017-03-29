@@ -1,0 +1,40 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: JOB
+
+; 
+; --------------------------------------------------------------------------------
+  JOBVERSION 1
+  
+  SOURCE #PostInstall
+    #static void PostInstall(Args _args)
+    #{
+    #    NumberSeqApplicationModule  numberSeqApplicationModule = new NumberSeqModuleCreditCard();
+    #    LanguageTable               languageTable;
+    #    Set                         languageSet = new Set(Types::String);
+    #    ;
+    #    numberSeqApplicationModule.load();
+    #
+    #    // Create and flush all language modules (the al? files)
+    #    while select LanguageId from languageTable
+    #        where languageTable.LabelFile
+    #        && languageTable.LanguageId != 'en-us'
+    #    {
+    #        languageSet.add(languageTable.LanguageId);
+    #    }
+    #    languageSet.add('en-us');
+    #
+    #    // make sure language tree node created before file gets flushed
+    #    SysLabelFile::createLabelFileInAOT('ACC', languageSet);
+    #
+    #    //SysSecurity::reload(true,false,true,true);
+    #
+    #}
+  ENDSOURCE
+  PROPERTIES
+    Origin              #{BED236ED-4261-4849-9BE3-77FFB8F38076}
+  ENDPROPERTIES
+  
+
+***Element: END

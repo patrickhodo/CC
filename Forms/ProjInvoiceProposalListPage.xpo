@@ -1,0 +1,1765 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #ProjInvoiceProposalListPage
+  PROPERTIES
+    Name                #ProjInvoiceProposalListPage
+    FormTemplate        #ListPage
+    InteractionClass    #ProjInvoiceProposalListPageInteraction
+    Origin              #{0777CB66-78B5-438F-894E-039941D52281}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+      Query               #ProjInvoiceProposalListPage
+      Version             #11
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #ProjProposalJour
+          Table               #ProjProposalJour
+          AllowEdit           #No
+          AllowCreate         #No
+          StartPosition       #Last
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+      LINKTYPES
+      ENDLINKTYPES
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+    PARTREFERENCE #ProjInvoiceProposalPreviewPane
+      PROPERTIES
+        Name                #ProjInvoiceProposalPreviewPane
+        MenuItemName        #ProjInvoiceProposalPreviewPane
+        PartLocation        #PreviewPane
+        DataSource          #ProjProposalJour
+        DataSourceRelation  #SelfLink
+        ElementPosition     #1073741823
+      ENDPROPERTIES
+      
+    ENDPARTREFERENCE
+    
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@GLS360109
+      UseCaptionFromMenuItem  #Yes
+      TitleDatasource     #ProjProposalJour
+      DataSource          #ProjProposalJour
+      WorkflowEnabled     #Yes
+      WorkflowDatasource  #ProjProposalJour
+      WorkflowType        #PSAProjInvoiceProposal
+      Style               #ListPage
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          VerticalSpacing     #0
+          ElementPosition     #536870911
+          DataSource          #ProjProposalJour
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #DebitNoteProposal_BR
+          AutoDeclaration     #Yes
+          CountryRegionCodes  #BR
+          ElementPosition     #1610612734
+          HierarchyParent     #ActionPane
+          Caption             #@GLS3800182
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #InvoiceProposal
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #ActionPane
+          Caption             #@GLS360107
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #Manage
+          ElementPosition     #1879048190
+          HierarchyParent     #ActionPane
+          Caption             #@SYS115306
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #AttachmentsButtonGroup
+          ElementPosition     #1757032074
+          HierarchyParent     #InvoiceProposal
+          Caption             #@SYS316708
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroupAttachments
+          ElementPosition     #1366580502
+          HierarchyParent     #InvoiceProposal
+          Caption             #@GLS360112
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroupFunctions
+          ElementPosition     #780903144
+          HierarchyParent     #InvoiceProposal
+          Caption             #@GLS360113
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroupList
+          ElementPosition     #1171354716
+          HierarchyParent     #InvoiceProposal
+          Caption             #@GLS360114
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroupMaintain
+          ElementPosition     #585677358
+          HierarchyParent     #InvoiceProposal
+          Caption             #@SYS316703
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroupNew
+          ElementPosition     #390451572
+          HierarchyParent     #InvoiceProposal
+          Caption             #@SYS2055
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroupPrint
+          ElementPosition     #976128930
+          HierarchyParent     #InvoiceProposal
+          Caption             #@GLS360118
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroupSetup
+          ElementPosition     #1952257860
+          HierarchyParent     #InvoiceProposal
+          Caption             #@SYS342635
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DebitNoteAttachmentsButtonGroup
+          ElementPosition     #1757032074
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@SYS316708
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DebitNoteButtonGroupAttachments
+          ElementPosition     #1366580502
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@GLS360112
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DebitNoteButtonGroupFunctions
+          ElementPosition     #780903144
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@GLS360113
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DebitNoteButtonGroupList
+          ElementPosition     #1171354716
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@GLS360114
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DebitNoteButtonGroupMaintain
+          ElementPosition     #585677358
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@GLS360115
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DebitNoteButtonGroupPrint
+          ElementPosition     #976128930
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@GLS360118
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DebitNoteButtonGroupSetup
+          ElementPosition     #1952257860
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@SYS342635
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DebitNoteListButtonGroup
+          DisplayTarget       #Client
+          ElementPosition     #1561806288
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@SYS118440
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #DNButtonGroupNew
+          ElementPosition     #390451572
+          HierarchyParent     #DebitNoteProposal_BR
+          Caption             #@GLS360116
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ListButtonGroup
+          DisplayTarget       #Client
+          ElementPosition     #1561806288
+          HierarchyParent     #InvoiceProposal
+          Caption             #@SYS118440
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ManageCreditCard
+          ElementPosition     #1431655764
+          HierarchyParent     #Manage
+          Caption             #@ACC1423
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #ListPageGrid
+          AllowEdit           #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          DataSource          #ProjProposalJour
+          DefaultAction       #ProjInvoiceProposalView
+          DefaultActionLabel  #@SYS4000811
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Filter
+          DisplayTarget       #Client
+          ElementPosition     #1073741822
+          Style               #CustomFilter
+          SaveFilter          #Yes
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Reason
+          AutoDeclaration     #Yes
+          CountryRegionCodes  #CZ,EE,HU,PL,LT,LV
+          ElementPosition     #1979053555
+          HierarchyParent     #ListPageGrid
+          BackgroundColor     #Window background
+          DataSource          #ProjProposalJour
+          DataGroup           #Reason
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #SplitInfo_BR
+          ElementPosition     #1642193374
+          HierarchyParent     #ListPageGrid
+          BackgroundColor     #Window background
+          DataSource          #ProjProposalJour
+          DataGroup           #SplitInfo_BR
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REFERENCEGROUP
+        PROPERTIES
+          Name                #SplitInfo_BR_FiscalDocumentType_BR
+          AutoDeclaration     #Yes
+          ElementPosition     #1288490187
+          HierarchyParent     #SplitInfo_BR
+          DataSource          #ProjProposalJour
+          ReferenceField      #FiscalDocumentType_BR
+          ReplacementFieldGroup #FiscalDocumentType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REFERENCEGROUP
+        PROPERTIES
+          Name                #SplitInfo_BR_FiscalEstablishment_BR
+          AutoDeclaration     #Yes
+          ElementPosition     #858993458
+          HierarchyParent     #SplitInfo_BR
+          DataSource          #ProjProposalJour
+          ReferenceField      #FiscalEstablishment_BR
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ButtonDelete
+          AutoDeclaration     #Yes
+          HelpText            #@GLS360111
+          DisplayTarget       #Client
+          ElementPosition     #1789569705
+          HierarchyParent     #ButtonGroupMaintain
+          Text                #@SYS14425
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          SaveRecord          #No
+          MultiSelect         #Yes
+          Primary             #Yes
+          KeyTip              #Delete the selected invoice proposal
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args               args = new Args();
+            #
+            #    if (!projProposalJour.ProposalId)
+            #    {
+            #        return;
+            #    }
+            #
+            #    super();
+            #
+            #    args.caller(this);
+            #    args.record(projProposalJour);
+            #
+            #    if (ProjInvoiceCancel::main(args))
+            #    {
+            #        projProposalJour_ds.research();
+            #    }
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #DebitNoteButtonDelete
+          AutoDeclaration     #Yes
+          HelpText            #@GLS510066
+          DisplayTarget       #Client
+          ElementPosition     #1789569705
+          HierarchyParent     #DebitNoteButtonGroupMaintain
+          Text                #@GLS360100
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          SaveRecord          #No
+          MultiSelect         #Yes
+          Primary             #Yes
+          KeyTip              #Delete the selected debit note proposal
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args               args = new Args();
+            #
+            #    if (!projProposalJour.ProposalId)
+            #    {
+            #        return;
+            #    }
+            #
+            #    super();
+            #
+            #    args.caller(this);
+            #    args.record(projProposalJour);
+            #
+            #    if (ProjInvoiceCancel::main(args))
+            #    {
+            #        projProposalJour_ds.research();
+            #    }
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #DebitNotePrintMgmt
+          NeededPermission    #Update
+          HelpText            #@SYS69373
+          SecurityKey         #CustMisc
+          DisplayTarget       #Client
+          ElementPosition     #1431655764
+          HierarchyParent     #DebitNoteButtonGroupSetup
+          Text                #@SYS114627
+          NormalImage         #10698
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    PrintMgmtSetupContext setupContext = new PrintMgmtSetupContext();
+            #    ProjFundingSource     fundingSource = ProjFundingSource::find(projProposalJour.FundingSource);
+            #
+            #    super();
+            #
+            #    setupContext.addHierarchyContext(PrintMgmtHierarchyType::Project, PrintMgmtNodeType::ProjProposalJour);
+            #
+            #    setupContext.parmCaller(element);
+            #    setupContext.parmReferencedTableBuffer(projProposalJour_ds.cursor());
+            #    setupContext.parmCountryRegionId(LogisticsPostalAddress::findByLocation(fundingSource.InvoiceLocation).CountryRegionId);
+            #    PrintMgmt::launchSetup(setupContext);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #PrintMgmt
+          NeededPermission    #Update
+          HelpText            #@SYS69373
+          ConfigurationKey    #LogisticsBasic
+          SecurityKey         #CustMisc
+          DisplayTarget       #Client
+          ElementPosition     #1431655764
+          HierarchyParent     #ButtonGroupSetup
+          Text                #@SYS114627
+          NormalImage         #10698
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    PrintMgmtSetupContext setupContext = new PrintMgmtSetupContext();
+            #    ProjFundingSource     fundingSource = ProjFundingSource::find(projProposalJour.FundingSource);
+            #
+            #    super();
+            #
+            #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+            #    {
+            #        setupContext.addHierarchyContext(PrintMgmtHierarchyType::Project, PrintMgmtNodeType::ProjProposalJour);
+            #        setupContext.parmCaller(element);
+            #        setupContext.parmReferencedTableBuffer(projProposalJour_ds.cursor());
+            #    }
+            #    else
+            #    {
+            #        setupContext.addHierarchyContext(PrintMgmtHierarchyType::Project, PrintMgmtNodeType::ProjInvoiceTable);
+            #        setupContext.parmCaller(element);
+            #        setupContext.parmReferencedTableBuffer(ProjInvoiceTable::find(projProposalJour.ProjInvoiceProjId));
+            #    }
+            #
+            #    setupContext.parmCountryRegionId(LogisticsPostalAddress::findByLocation(fundingSource.InvoiceLocation).CountryRegionId);
+            #    PrintMgmt::launchSetup(setupContext);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #PSAProjProposalSelection
+          HelpText            #@GLS360102
+          DisplayTarget       #Client
+          ElementPosition     #715827882
+          HierarchyParent     #ButtonGroupNew
+          Text                #@GLS360107
+          ButtonDisplay       #Text & Image below
+          NormalImage         #12005
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args = new Args(formStr(ProjInvoiceProposalCreateLines));
+            #    FormRun formRun;
+            #
+            #    args.caller(element);
+            #    args.openMode(OpenMode::New);
+            #    args.copyCallerQuery(CopyCallerQuery::No);
+            #    formRun = classfactory.formRunClass(args);
+            #    formRun.init();
+            #    formRun.run();
+            #    formRun.wait();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #PSAProjProposalSelectionCLIN
+          HelpText            #@PSA992
+          DisplayTarget       #Client
+          ElementPosition     #1073741823
+          HierarchyParent     #ButtonGroupNew
+          Text                #@GLS360221
+          ButtonDisplay       #Text & Image left
+          NormalImage         #12005
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Primary             #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Args args = new Args(formStr(PSAProjProposalSelectionCLIN));
+            #    FormRun formRun;
+            #
+            #    args.caller(element);
+            #    args.openMode(OpenMode::New);
+            #    args.copyCallerQuery(CopyCallerQuery::No);
+            #    formRun = classfactory.formRunClass(args);
+            #    formRun.init();
+            #    formRun.run();
+            #    formRun.wait();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #ProjectInvoiceProposaleJour_InvoiceStatus
+          ElementPosition     #1810623465
+          HierarchyParent     #ListPageGrid
+          Label               #@GLS360121
+          DataSource          #ProjProposalJour
+          DataField           #LineProperty
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #AttachmentsButton
+          HelpText            #@SYS319846
+          DisplayTarget       #Client
+          ElementPosition     #1073741822
+          HierarchyParent     #AttachmentsButtonGroup
+          Text                #@SYS316708
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10442
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          Command             #2853
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DebitNoteAttachmentsButton
+          HelpText            #@SYS319846
+          DisplayTarget       #Client
+          ElementPosition     #1431655764
+          HierarchyParent     #DebitNoteAttachmentsButtonGroup
+          Text                #@SYS316708
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10442
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          Command             #2853
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DebitNoteExportToExcelButton
+          ElementPosition     #1610612733
+          HierarchyParent     #DebitNoteListButtonGroup
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10156
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #Yes
+          Big                 #Yes
+          Command             #4436
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DebitNoteRefreshButton
+          HelpText            #@SYS315818
+          ElementPosition     #1073741822
+          HierarchyParent     #DebitNoteListButtonGroup
+          ButtonDisplay       #Text & Image above
+          NormalImage         #11437
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Command             #2875
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #ExportToExcelButton
+          ElementPosition     #1610612734
+          HierarchyParent     #ListButtonGroup
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10156
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          MultiSelect         #Yes
+          Big                 #Yes
+          Command             #4436
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #RefreshButton
+          HelpText            #@SYS315818
+          ElementPosition     #1073741822
+          HierarchyParent     #ListButtonGroup
+          ButtonDisplay       #Text & Image above
+          NormalImage         #11437
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Command             #2875
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #DNProjectInvoiceProposalJour_InvoiceDate
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          CountryRegionCodes  #BR
+          HelpText            #@GLS510067
+          ElementPosition     #946015669
+          HierarchyParent     #ListPageGrid
+          Label               #@GLS3800153
+          DataSource          #ProjProposalJour
+          DataField           #InvoiceDate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #ProjectInvoiceProposalJour_InvoiceDate
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          ElementPosition     #1260418504
+          HierarchyParent     #ListPageGrid
+          Label               #@SYS57610
+          DataSource          #ProjProposalJour
+          DataField           #InvoiceDate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardTrans
+          ElementPosition     #1610612733
+          HierarchyParent     #ManageCreditCard
+          Text                #@SYS1084
+          DataSource          #ProjProposalJour
+          MenuItemName        #CreditCardTRans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CtrlPaymentSchedule
+          AutoDeclaration     #Yes
+          Enabled             #No
+          HelpText            #@SYS89895
+          ElementPosition     #1533916890
+          HierarchyParent     #ButtonGroupFunctions
+          ButtonDisplay       #Image only
+          NormalImage         #10673
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #CustPaymScheduleProjInvoiceProposal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CtrlTotals
+          AutoDeclaration     #Yes
+          ElementPosition     #1738439142
+          HierarchyParent     #ButtonGroupFunctions
+          ButtonDisplay       #Image only
+          NormalImage         #10832
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #ProjInvoiceTotals
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DebitNotebtPrintPreview
+          AutoDeclaration     #Yes
+          HelpText            #@GLS3800168
+          DisplayTarget       #Client
+          ElementPosition     #1610612733
+          HierarchyParent     #DebitNoteButtonGroupPrint
+          Text                #@SYS25597
+          ButtonDisplay       #Text & Image above
+          NormalImage         #1084
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemType        #Output
+          MenuItemName        #ProjInvoice
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+            #    {
+            #        ProjFormLetter::printPreview(projProposalJour);
+            #    }
+            #    else
+            #    {
+            #        super();
+            #    }
+            #}
+            #
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DebitNoteCtrlPaymentSchedule
+          AutoDeclaration     #Yes
+          Enabled             #No
+          HelpText            #@GLS3800170
+          ElementPosition     #1533916890
+          HierarchyParent     #DebitNoteButtonGroupFunctions
+          ButtonDisplay       #Image only
+          NormalImage         #10673
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #CustPaymScheduleProjInvoiceProposal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DebitNoteCtrlTotals
+          AutoDeclaration     #Yes
+          HelpText            #@GLS3800171
+          ElementPosition     #1840700268
+          HierarchyParent     #DebitNoteButtonGroupFunctions
+          ButtonDisplay       #Image only
+          NormalImage         #10832
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #ProjInvoiceTotals
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DebitNoteProjFormLetter_Invoice
+          AutoDeclaration     #Yes
+          HelpText            #@GLS510069
+          ElementPosition     #613566756
+          HierarchyParent     #DebitNoteButtonGroupFunctions
+          Text                #@GLS360122
+          NormalImage         #10285
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          KeyTip              #Post the selected debit note
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #ProjFormLetter_Invoice
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DebitNoteTaxTrans
+          AutoDeclaration     #Yes
+          Visible             #No
+          DisplayTarget       #Client
+          ElementPosition     #1227133512
+          HierarchyParent     #DebitNoteButtonGroupFunctions
+          ButtonDisplay       #Image only
+          NormalImage         #10777
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #TaxTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProInvoiceProposalTableCC
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #ManageCreditCard
+          Text                #@ACC1514
+          ButtonDisplay       #Text & Image above
+          NormalImage         #12464
+          ImageLocation       #EmbeddedResource
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #ProjInvoiceProposalCC
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjDebitNoteDetails
+          AutoDeclaration     #Yes
+          HelpText            #@GLS3800172
+          ElementPosition     #1073741822
+          HierarchyParent     #DebitNoteButtonGroupPrint
+          Text                #@GLS3800157
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10671
+          ImageLocation       #EmbeddedResource
+          MultiSelect         #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #PSAProjInvoiceDetails
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjDebitNoteProposalEdit
+          HelpText            #@GLS510071
+          ElementPosition     #715827882
+          HierarchyParent     #DebitNoteButtonGroupMaintain
+          Text                #@GLS360125
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Primary             #Yes
+          KeyTip              #Edit the selected debit note proposal
+          NeedsRecord         #Yes
+          OpenMode            #Edit
+          CopyCallerQuery     #Yes
+          FormViewOption      #Details
+          MenuItemName        #ProjDebitNoteProposal_BR
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjDebitNoteProposalEditInGrid
+          HelpText            #@GLS510071
+          ElementPosition     #1073741823
+          HierarchyParent     #DebitNoteButtonGroupMaintain
+          Text                #@GLS360126
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10011
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          KeyTip              #Edit the selected debit note proposal
+          NeedsRecord         #Yes
+          OpenMode            #Edit
+          CopyCallerQuery     #Yes
+          FormViewOption      #Grid
+          MenuItemName        #ProjDebitNoteProposal_BR
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjDebitNoteProposalSelection
+          ElementPosition     #1431655764
+          HierarchyParent     #DNButtonGroupNew
+          Text                #@GLS3800182
+          ButtonDisplay       #Text & Image below
+          ImageLocation       #AOTResource
+          Big                 #Yes
+          MenuItemName        #ProjDebitNoteProposalSelection_BR
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjDebitNoteProposalView
+          Visible             #No
+          HelpText            #@GLS510071
+          ElementPosition     #1431655764
+          HierarchyParent     #DebitNoteButtonGroupMaintain
+          Text                #@GLS360164
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Primary             #Yes
+          KeyTip              #Edit the selected debit note proposal
+          NeedsRecord         #Yes
+          OpenMode            #View
+          CopyCallerQuery     #Yes
+          MenuItemName        #ProjDebitNoteProposal_BR
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjFormLetter_Invoice
+          AutoDeclaration     #Yes
+          HelpText            #@GLS360123
+          ElementPosition     #613566756
+          HierarchyParent     #ButtonGroupFunctions
+          Text                #@GLS360122
+          NormalImage         #10285
+          ImageLocation       #EmbeddedResource
+          MultiSelect         #Yes
+          Big                 #Yes
+          KeyTip              #Post the selected invoice
+          NeedsRecord         #Yes
+          MenuItemType        #Action
+          MenuItemName        #ProjFormLetter_Invoice
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjInvoiceProposalEdit
+          HelpText            #@GLS360124
+          ElementPosition     #715827882
+          HierarchyParent     #ButtonGroupMaintain
+          Text                #@SYS317438
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          MultiSelect         #No
+          Big                 #Yes
+          Primary             #Yes
+          KeyTip              #Edit the selected invoice proposal
+          NeedsRecord         #Yes
+          OpenMode            #Edit
+          CopyCallerQuery     #Yes
+          FormViewOption      #Details
+          MenuItemName        #ProjInvoiceProposal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjInvoiceProposalEditInGrid
+          HelpText            #@GLS360124
+          ElementPosition     #1073741823
+          HierarchyParent     #ButtonGroupMaintain
+          Text                #@SYS319303
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10011
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          KeyTip              #Edit the selected invoice proposal
+          NeedsRecord         #Yes
+          OpenMode            #Edit
+          CopyCallerQuery     #Yes
+          FormViewOption      #Grid
+          MenuItemName        #ProjInvoiceProposal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ProjInvoiceProposalView
+          Visible             #No
+          HelpText            #@GLS360127
+          ElementPosition     #1431655764
+          HierarchyParent     #ButtonGroupMaintain
+          Text                #@GLS360164
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10040
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          Primary             #Yes
+          KeyTip              #Edit the selected invoice proposal
+          NeedsRecord         #Yes
+          OpenMode            #View
+          CopyCallerQuery     #Yes
+          MenuItemName        #ProjInvoiceProposal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #PSAbtPrintPreview
+          AutoDeclaration     #Yes
+          DisplayTarget       #Client
+          ElementPosition     #1610612734
+          HierarchyParent     #ButtonGroupPrint
+          Text                #@SYS25597
+          ButtonDisplay       #Text & Image above
+          NormalImage         #1084
+          ImageLocation       #EmbeddedResource
+          MultiSelect         #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemType        #Output
+          MenuItemName        #ProjInvoice
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    ProjProposalJour projProposalJourlocal;
+            #
+            #    for (projProposalJourlocal = projProposalJour_ds.getFirst(true) ? projProposalJour_ds.getFirst(true): projProposalJour_ds.cursor();
+            #         projProposalJourlocal;
+            #         projProposalJourlocal=projProposalJour_ds.getNext())
+            #    {
+            #        ProjFormLetter::printPreview(projProposalJourlocal);
+            #    }
+            #}
+            #
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #PSAProjInvoiceDetails
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #ButtonGroupPrint
+          ButtonDisplay       #Text & Image above
+          NormalImage         #10671
+          ImageLocation       #EmbeddedResource
+          MultiSelect         #No
+          Big                 #Yes
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #PSAProjInvoiceDetails
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #PSAProjProposalSelectionCLINNew
+          AutoDeclaration     #Yes
+          DisplayTarget       #EP
+          ElementPosition     #1789569705
+          HierarchyParent     #ButtonGroupNew
+          Text                #@GLS360221
+          ButtonDisplay       #Text & Image left
+          NormalImage         #12005
+          ImageLocation       #EmbeddedResource
+          Big                 #Yes
+          MenuItemName        #PSAProjProposalSelectionCLIN
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #PSAProjProposalSelectionNew
+          DisplayTarget       #EP
+          ElementPosition     #1431655764
+          HierarchyParent     #ButtonGroupNew
+          Text                #@GLS360107
+          ButtonDisplay       #Text & Image below
+          ImageLocation       #AOTResource
+          Big                 #Yes
+          MenuItemName        #PSAProjProposalSelection
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #TaxTmpWorkProjectDebitNoteProposal
+          AutoDeclaration     #Yes
+          Visible             #No
+          HelpText            #@GLS3800169
+          DisplayTarget       #Client
+          ElementPosition     #920350134
+          HierarchyParent     #DebitNoteButtonGroupFunctions
+          ButtonDisplay       #Image only
+          NormalImage         #10777
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #TaxTmpWorkProjectInvoiceProposal
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Object                  tmpTaxTransForm;
+            #    Args                    args = new Args();
+            #    ProjProposalTotals      projProposalTotals;
+            #
+            #    projProposalTotals = new ProjProposalTotals(projProposalJour);
+            #    projProposalTotals.calc();
+            #
+            #    tmpTaxTransForm = Tax::showTaxes(menuitemDisplayStr(TaxTmpWorkProjectInvoiceProposal), projProposalTotals.tax());
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #TaxTmpWorkProjectInvoiceProposal
+          AutoDeclaration     #Yes
+          Visible             #No
+          DisplayTarget       #Client
+          ElementPosition     #920350134
+          HierarchyParent     #ButtonGroupFunctions
+          ButtonDisplay       #Image only
+          NormalImage         #10777
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #TaxTmpWorkProjectInvoiceProposal
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    Object                  tmpTaxTransForm;
+            #    Args                    args = new Args();
+            #    ProjProposalTotals      projProposalTotals;
+            #
+            #    projProposalTotals = new ProjProposalTotals(projProposalJour);
+            #    projProposalTotals.calc();
+            #
+            #    tmpTaxTransForm = Tax::showTaxes(menuitemDisplayStr(TaxTmpWorkProjectInvoiceProposal), projProposalTotals.tax()
+            #        // <GEEU>
+            #        , projProposalJour
+            #        // </GEEU>
+            #        );
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #TaxTrans
+          AutoDeclaration     #Yes
+          Visible             #No
+          DisplayTarget       #Client
+          ElementPosition     #1227133512
+          HierarchyParent     #ButtonGroupFunctions
+          ButtonDisplay       #Image only
+          NormalImage         #10777
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #TaxTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #TransportationDocument
+          ElementPosition     #1942961394
+          HierarchyParent     #ButtonGroupFunctions
+          ButtonDisplay       #Text & Image above
+          ShowShortCut        #No
+          Big                 #Yes
+          Primary             #Yes
+          NeedsRecord         #Yes
+          DataSource          #ProjProposalJour
+          MenuItemName        #TransportationDocument
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #ProjProposalJour_InvoiceAmount
+          ElementPosition     #788814252
+          HierarchyParent     #ListPageGrid
+          DataSource          #ProjProposalJour
+          DataField           #InvoiceAmount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CtrlCompanyLookup
+          AutoDeclaration     #Yes
+          Left                #Right edge
+          DisplayTarget       #Client
+          ElementPosition     #1431655764
+          HierarchyParent     #Filter
+          LookupButton        #Always
+          Label               #@SYS305493
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #lookup
+            #public void lookup()
+            #{
+            #    Args args = new Args(formStr(ProjListPageCompanyLookup));
+            #    FormRun formRun;
+            #
+            #    args.caller(element);
+            #    args.callerFormControl(this);
+            #    args.record(projProposalJour);
+            #    formRun = classfactory.formRunClass(args);
+            #    formRun.init();
+            #    this.performFormLookup(formRun);
+            #    formRun.wait();
+            #}
+          ENDSOURCE
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    return ProjLegalEntityLookupListPageHelper::setFilterValuesFromControl(projProposalJour_ds, ctrlCompanyLookup.valueStr(), formStr(ProjInvoiceProposalListPage));
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #DNProjectInvoiceProposalJour_ProposalId
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          CountryRegionCodes  #BR
+          HelpText            #@GLS510068
+          ElementPosition     #284225775
+          HierarchyParent     #ListPageGrid
+          Label               #@GLS3800182
+          DataSource          #ProjProposalJour
+          DataField           #ProposalId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #DNProjProposalJour_ProjInvoiceId
+          AutoDeclaration     #Yes
+          CountryRegionCodes  #BR
+          HelpText            #@GLS3800178
+          ElementPosition     #1614121693
+          HierarchyParent     #ListPageGrid
+          Label               #@GLS510025
+          DataSource          #ProjProposalJour
+          DataField           #ProjInvoiceId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #LegalEntity
+          AllowEdit           #No
+          ElementPosition     #547397789
+          HierarchyParent     #ListPageGrid
+          Label               #@SYS315616
+          DataSource          #ProjProposalJour
+          DataField           #dataAreaId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjectInvoiceProposalJour_CurrencyCode
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          ElementPosition     #631612835
+          HierarchyParent     #ListPageGrid
+          DataSource          #ProjProposalJour
+          DataField           #CurrencyId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjectInvoiceProposalJour_Project
+          ElementPosition     #378967701
+          HierarchyParent     #ListPageGrid
+          DataSource          #ProjProposalJour
+          DataField           #ProjInvoiceProjId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjectInvoiceProposalJour_ProposalId
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          ElementPosition     #189483850
+          HierarchyParent     #ListPageGrid
+          DataSource          #ProjProposalJour
+          DataField           #ProposalId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjProposalJour_DeliveryName
+          ElementPosition     #505290267
+          HierarchyParent     #ListPageGrid
+          DataSource          #ProjProposalJour
+          DataField           #DeliveryName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ProjProposalJour_ProjInvoiceId
+          AutoDeclaration     #Yes
+          ElementPosition     #1417619921
+          HierarchyParent     #ListPageGrid
+          DataSource          #ProjProposalJour
+          DataField           #ProjInvoiceId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Reason_M_editReasonCode
+          CountryRegionCodes  #CZ,EE,HU,PL,LT,LV
+          HelpText            #@GLS221842
+          ElementPosition     #1073741822
+          HierarchyParent     #Reason
+          DataSource          #ProjProposalJour
+          DataMethod          #editReasonCode
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #Reason_M_editReasonComment
+          CountryRegionCodes  #CZ,EE,HU,PL,LT,LV
+          HelpText            #@GLS221843
+          ElementPosition     #1610612733
+          HierarchyParent     #Reason
+          Label               #@SYS53151
+          DataSource          #ProjProposalJour
+          DataMethod          #editReasonComment
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SplitInfo_BR_TaxServiceCodeId_BR
+          AutoDeclaration     #Yes
+          ElementPosition     #1717986916
+          HierarchyParent     #SplitInfo_BR
+          DataSource          #ProjProposalJour
+          DataField           #TaxServiceCodeId_BR
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+      TABLE #ProjProposalTransUnion
+        PROPERTIES
+          Table               #ProjProposalTransUnion
+          EffectiveAccess     #Read
+          ManagedBy           #Manual
+        ENDPROPERTIES
+        
+      ENDTABLE
+      
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

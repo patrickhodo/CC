@@ -1,0 +1,180 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardStoredValueProcess
+    PROPERTIES
+      Name                #CreditCardStoredValueProcess
+      Origin              #{76DD466C-F823-453E-B718-5CCA88B2B336}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardStoredValueProcess
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #activateGiftCard
+        #public static boolean activateGiftCard(RetailGiftCardTable         retailGiftCardTable,
+        #                                    RetailGiftCardTransactions  retailGiftCardTransactions)
+        #{
+        #    RetailParameters                    retailParameters;
+        #    CreditCardTerminalTable             terminalTable;
+        #    retailGiftCardTerminalTransactions  giftCardTransactions;
+        #    ;
+        #    retailParameters = RetailParameters::find();
+        #
+        #    terminalTable = CreditCardTerminalTable::findTerminalWithId(retailParameters.GiftCardTerminalId);
+        #
+        #    if (terminalTable)
+        #    {
+        #        switch  (terminalTable.Processor)
+        #        {
+        #            case    CreditCardProcessor::GiveX  :
+        #                break;
+        #            case    CreditCardProcessor::OpenEdge   :
+        #                giftCardTransactions = CreditCardOpenEdgeBuilder::processGiftCard(retailGiftCardTable,
+        #                    terminalTable.terminalId,
+        #                    retailGiftCardTransactions);
+        #                break;
+        #        }
+        #    }
+        #
+        #    if (giftCardTransactions.Result == "0")
+        #    {
+        #        return true;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("An error of type %1 occured activating gift card with message of %2",
+        #            giftCardTransactions.Result,
+        #            giftCardTransactions.RepMsg));
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #addGiftCard
+        #public static boolean addGiftCard(RetailGiftCardTable         retailGiftCardTable,
+        #                                    RetailGiftCardTransactions  retailGiftCardTransactions)
+        #{
+        #    RetailParameters                    retailParameters;
+        #    CreditCardTerminalTable             terminalTable;
+        #    retailGiftCardTerminalTransactions  giftCardTransactions;
+        #    ;
+        #    retailParameters = RetailParameters::find();
+        #
+        #    terminalTable = CreditCardTerminalTable::findTerminalWithId(retailParameters.GiftCardTerminalId);
+        #
+        #    if (terminalTable)
+        #    {
+        #        switch  (terminalTable.Processor)
+        #        {
+        #            case    CreditCardProcessor::GiveX  :
+        #                break;
+        #            case    CreditCardProcessor::OpenEdge   :
+        #                giftCardTransactions = CreditCardOpenEdgeBuilder::processGiftCard(retailGiftCardTable,
+        #                    terminalTable.terminalId,
+        #                    retailGiftCardTransactions);
+        #                break;
+        #        }
+        #    }
+        #
+        #    if (giftCardTransactions.Result == "0")
+        #    {
+        #        return true;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("An error of type %1 occured activating gift card with message of %2",
+        #            giftCardTransactions.Result,
+        #            giftCardTransactions.RepMsg));
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #balanceGiftCard
+        #public static amount balanceGiftCard(RetailGiftCardTable         retailGiftCardTable)
+        #{
+        #    RetailParameters                    retailParameters;
+        #    CreditCardTerminalTable             terminalTable;
+        #    Amount                              amount;
+        #    retailGiftCardTerminalTransactions  giftCardTransactions;
+        #    ;
+        #    retailParameters = RetailParameters::find();
+        #
+        #    terminalTable = CreditCardTerminalTable::findTerminalWithId(retailParameters.GiftCardTerminalId);
+        #
+        #    if (terminalTable)
+        #    {
+        #        switch  (terminalTable.Processor)
+        #        {
+        #            case    CreditCardProcessor::GiveX  :
+        #                break;
+        #            case    CreditCardProcessor::OpenEdge   :
+        #                giftCardTransactions = CreditCardOpenEdgeBuilder::processGiftCard(retailGiftCardTable,
+        #                    terminalTable.terminalId);
+        #                break;
+        #        }
+        #    }
+        #
+        #    if (giftCardTransactions.Result == "0")
+        #    {
+        #        return giftCardTransactions.amount;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("An error of type %1 occured retrieving gift card balance with message of %2",
+        #            giftCardTransactions.Result,
+        #            giftCardTransactions.RepMsg));
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #redeemGiftCard
+        #public static boolean redeemGiftCard(RetailGiftCardTable         retailGiftCardTable,
+        #                                    RetailGiftCardTransactions  retailGiftCardTransactions)
+        #{
+        #    RetailParameters                    retailParameters;
+        #    CreditCardTerminalTable             terminalTable;
+        #    retailGiftCardTerminalTransactions  giftCardTransactions;
+        #    ;
+        #    retailParameters = RetailParameters::find();
+        #
+        #    terminalTable = CreditCardTerminalTable::findTerminalWithId(retailParameters.GiftCardTerminalId);
+        #
+        #    if (terminalTable)
+        #    {
+        #        switch  (terminalTable.Processor)
+        #        {
+        #            case    CreditCardProcessor::GiveX  :
+        #                break;
+        #            case    CreditCardProcessor::OpenEdge   :
+        #                giftCardTransactions = CreditCardOpenEdgeBuilder::processGiftCard(retailGiftCardTable,
+        #                    terminalTable.terminalId,
+        #                    retailGiftCardTransactions);
+        #                break;
+        #        }
+        #    }
+        #
+        #    if (giftCardTransactions.Result == "0")
+        #    {
+        #        return true;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("An error of type %1 occured activating gift card with message of %2",
+        #            giftCardTransactions.Result,
+        #            giftCardTransactions.RepMsg));
+        #    }
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

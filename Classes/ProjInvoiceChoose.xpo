@@ -1,0 +1,4352 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #ProjInvoiceChoose
+    PROPERTIES
+      Name                #ProjInvoiceChoose
+      Extends             #RunBaseBatch
+      Origin              #{2D11047E-0000-1000-0A5B-55F88C103096}
+      LegacyId            #1150
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #addCostTransSaleRange
+        #public void addCostTransSaleRange(QueryBuildDataSource _costSaleDataSource)
+        #{
+        #    QueryBuildRange costTransStatus;
+        #    QueryBuildRange costFundingSource;
+        #    ProjFundingSource fundingSource = ProjFundingSource::findContractFundingSource(pProjInvoiceTable.ProjInvoiceProjId, fundingSourceId);
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Invoices)
+        #    {
+        #        costTransStatus   = _costSaleDataSource.addRange(fieldNum(ProjCostTransSale, TransStatus));
+        #        costTransStatus.value(queryValue(ProjTransStatus::Posted));
+        #    }
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Creditnotes)
+        #    {
+        #        costTransStatus   = _costSaleDataSource.addRange(fieldNum(ProjCostTransSale,TransStatus));
+        #        costTransStatus.value(queryValue(ProjTransStatus::MarkedCreditnote));
+        #    }
+        #
+        #    if (!this.createProposal())
+        #    {
+        #        // add lines to proposal
+        #        if (this.parmProjProposalJour().FundingSource)
+        #        {
+        #            costFundingSource  = _costSaleDataSource.addRange(fieldNum(ProjCostTransSale,FundingSource));
+        #            costFundingSource.value(queryValue(this.parmProjProposalJour().FundingSource));
+        #        }
+        #    }
+        #    else if (fundingSource)
+        #    {
+        #        costFundingSource  = _costSaleDataSource.addRange(fieldNum(ProjCostTransSale,FundingSource));
+        #        costFundingSource.value(queryValue(fundingSource.RecId));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #addEmplTransSaleRange
+        #public void addEmplTransSaleRange(QueryBuildDataSource _emplSaleDataSource)
+        #{
+        #    QueryBuildRange emplTransStatus;
+        #    QueryBuildRange emplFundingSource;
+        #    ProjFundingSource fundingSource = ProjFundingSource::findContractFundingSource(pProjInvoiceTable.ProjInvoiceProjId, fundingSourceId);
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Invoices)
+        #    {
+        #        emplTransStatus  = _emplSaleDataSource.addRange(fieldNum(ProjEmplTransSale, TransStatus));
+        #        emplTransStatus.value(queryValue(ProjTransStatus::Posted));
+        #    }
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Creditnotes)
+        #    {
+        #        emplTransStatus  = _emplSaleDataSource.addRange(fieldNum(ProjEmplTransSale,TransStatus));
+        #        emplTransStatus.value(queryValue(ProjTransStatus::MarkedCreditnote));
+        #    }
+        #
+        #    if (!this.createProposal())
+        #    {
+        #        // Add lines to proposal
+        #        if (this.parmProjProposalJour().FundingSource)
+        #        {
+        #            emplFundingSource  = _emplSaleDataSource.addRange(fieldNum(ProjEmplTransSale,FundingSource));
+        #            emplFundingSource.value(queryValue(this.parmProjProposalJour().FundingSource));
+        #        }
+        #    }
+        #    else if (fundingSource)
+        #    {
+        #        emplFundingSource  = _emplSaleDataSource.addRange(fieldNum(ProjEmplTransSale, FundingSource));
+        #        emplFundingSource.value(queryValue(fundingSource.RecId));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #addItemTransSaleRange
+        #public void addItemTransSaleRange(QueryBuildDataSource _itemSaleDataSource)
+        #{
+        #    QueryBuildRange itemTransStatus;
+        #    QueryBuildRange itemFundingSource;
+        #    ProjFundingSource fundingSource = ProjFundingSource::findContractFundingSource(pProjInvoiceTable.ProjInvoiceProjId, fundingSourceId);
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Invoices)
+        #    {
+        #        itemTransStatus   = _itemSaleDataSource.addRange(fieldNum(ProjItemTransSale, TransStatus));
+        #        itemTransStatus.value(queryValue(ProjTransStatus::Posted));
+        #    }
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Creditnotes)
+        #    {
+        #        itemTransStatus   = _itemSaleDataSource.addRange(fieldNum(ProjItemTransSale, TransStatus));
+        #        itemTransStatus.value(queryValue(ProjTransStatus::MarkedCreditnote));
+        #    }
+        #
+        #    if (!this.createProposal())
+        #    {
+        #        // Add lines to proposal
+        #        if (this.parmProjProposalJour().FundingSource)
+        #        {
+        #            itemFundingSource  = _itemSaleDataSource.addRange(fieldNum(ProjItemTransSale,FundingSource));
+        #            itemFundingSource.value(queryValue(this.parmProjProposalJour().FundingSource));
+        #        }
+        #    }
+        #    else if (fundingSource)
+        #    {
+        #        itemFundingSource  = _itemSaleDataSource.addRange(fieldNum(ProjItemTransSale,FundingSource));
+        #        itemFundingSource.value(queryValue(fundingSource.RecId));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #addOnAccTransSaleRange
+        #public void addOnAccTransSaleRange(QueryBuildDataSource _onAccSaleDataSource)
+        #{
+        #    QueryBuildRange onAccTransStatus;
+        #    QueryBuildRange onAccFundingSource;
+        #    ProjFundingSource fundingSource = ProjFundingSource::findContractFundingSource(pProjInvoiceTable.ProjInvoiceProjId, fundingSourceId);
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Invoices)
+        #    {
+        #        onAccTransStatus   = _onAccSaleDataSource.addRange(fieldNum(ProjOnAccTransSale, TransStatus));
+        #        onAccTransStatus.value(queryValue(ProjTransStatus::Registered));
+        #    }
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Creditnotes)
+        #    {
+        #        onAccTransStatus  = _onAccSaleDataSource.addRange(fieldNum(ProjOnAccTransSale, TransStatus));
+        #        onAccTransStatus.value(queryValue(ProjTransStatus::MarkedCreditnote));
+        #    }
+        #
+        #    if (!this.createProposal())
+        #    {
+        #        // Add lines to proposal
+        #        if (this.parmProjProposalJour().FundingSource)
+        #        {
+        #            onAccFundingSource  = _onAccSaleDataSource.addRange(fieldNum(ProjOnAccTransSale,FundingSource));
+        #            onAccFundingSource.value(queryValue(this.parmProjProposalJour().FundingSource));
+        #        }
+        #    }
+        #    else if (fundingSource)
+        #    {
+        #        onAccFundingSource  = _onAccSaleDataSource.addRange(fieldNum(ProjOnAccTransSale,FundingSource));
+        #        onAccFundingSource.value(queryValue(fundingSource.RecId));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #addRevenueTransSaleRange
+        #public void addRevenueTransSaleRange(QueryBuildDataSource _revenueSaleDataSource)
+        #{
+        #    QueryBuildRange revenueTransStatus;
+        #    QueryBuildRange revenueFundingSource;
+        #    ProjFundingSource fundingSource = ProjFundingSource::findContractFundingSource(pProjInvoiceTable.ProjInvoiceProjId, fundingSourceId);
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Invoices)
+        #    {
+        #        revenueTransStatus   = _revenueSaleDataSource.addRange(fieldNum(ProjRevenueTransSale, TransStatus));
+        #        revenueTransStatus.value(queryValue(ProjTransStatus::Posted));
+        #    }
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Creditnotes)
+        #    {
+        #        revenueTransStatus  = _revenueSaleDataSource.addRange(fieldNum(ProjRevenueTransSale, TransStatus));
+        #        revenueTransStatus.value(queryValue(ProjTransStatus::MarkedCreditnote));
+        #    }
+        #
+        #    if (queryRetention)
+        #    {
+        #        revenueTransStatus = _revenueSaleDataSource.addRange(fieldNum(ProjRevenueTransSale, TransStatus));
+        #        revenueTransStatus.value(queryValue(ProjTransStatus::Invoiced));
+        #    }
+        #    if (!this.createProposal())
+        #    {
+        #        // Add lines to proposal
+        #        if (this.parmProjProposalJour().FundingSource)
+        #        {
+        #            revenueFundingSource  = _revenueSaleDataSource.addRange(fieldNum(ProjRevenueTransSale,FundingSource));
+        #            revenueFundingSource.value(queryValue(this.parmProjProposalJour().FundingSource));
+        #        }
+        #    }
+        #    else if (fundingSource)
+        #    {
+        #        revenueFundingSource  = _revenueSaleDataSource.addRange(fieldNum(ProjRevenueTransSale,FundingSource));
+        #        revenueFundingSource.value(queryValue(fundingSource.RecId));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #addSalesLineRange
+        #public void addSalesLineRange(QueryBuildDataSource _salesLineDataSource)
+        #{
+        #    QueryBuildRange salesLineTypeRange, salesLineDlvDate, salesLineCurrency;
+        #
+        #    if (fromDate || toDate)
+        #    {
+        #         salesLineDlvDate    = _salesLineDataSource.addRange(fieldNum(SalesLine, ConfirmedDlv));
+        #         salesLineDlvDate.value(this.queryFromDate() + '..' + this.queryToDate());
+        #    }
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Invoices)
+        #    {
+        #        // Include both regular sales orders and subscription sales orders
+        #        salesLineTypeRange     = _salesLineDataSource.addRange(fieldNum(SalesLine, SalesType));
+        #        salesLineTypeRange.value(queryValue(SalesType::Sales));
+        #
+        #        salesLineTypeRange     = _salesLineDataSource.addRange(fieldNum(SalesLine, SalesType));
+        #        salesLineTypeRange.value(queryValue(SalesType::Subscription));
+        #    }
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Creditnotes)
+        #    {
+        #        salesLineTypeRange  = _salesLineDataSource.addRange(fieldNum(SalesLine, SalesType));
+        #        salesLineTypeRange.value(queryValue(SalesType::ReturnItem));
+        #    }
+        #
+        #    if (queryInvoiceType == ProjInvoiceTypeSelection::Both || queryInvoiceType == ProjInvoiceTypeSelection::Creditnotes)
+        #    {
+        #        salesLineTypeRange = _salesLineDataSource.addRange(fieldNum(SalesLine, SalesType));
+        #        salesLineTypeRange.value(queryValue(SalesType::Journal));
+        #    }
+        #
+        #    if (currencyId)
+        #    {
+        #        salesLineCurrency = _salesLineDataSource.addRange(fieldNum(SalesLine, CurrencyCode));
+        #        salesLineCurrency.value(queryValue(currencyId));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #assignTables
+        #protected void assignTables()
+        #{
+        #    this.parmProjInvoiceTable(queryRun.get(tableNum(ProjInvoiceTable)));
+        #    this.parmProjTable(queryRun.get(tableNum(ProjTable)));
+        #}
+      ENDSOURCE
+      SOURCE #calcRetentionBillingRule
+        #public void calcRetentionBillingRule(PSAContractLineNum _psaContractLineNum, boolean _isCreditNote = false, RecId _projRevenueTransSaleRecId = 0)
+        #{
+        #    PSAContractLineItems    psaContractLineItems;
+        #
+        #    if (_psaContractLineNum && !_isCreditNote)
+        #    {
+        #        select ContractLineNum from psaContractLineItems
+        #            join psaProjFundingSourceRetain
+        #                where psaContractLineItems.ContractLineNum == psaProjFundingSourceRetain.BillingRuleId
+        #            join forupdate projProposalProj
+        #                where psaProjFundingSourceRetain.BillingRuleId == projProposalProj.ContractLineNum
+        #                    && psaProjFundingSourceRetain.ProjFundingSource == pProjProposalJour.FundingSource
+        #                    && projProposalProj.ContractLineNum == _psaContractLineNum
+        #                    && projProposalProj.ProjProposalId == pProjProposalJour.ProposalId;
+        #
+        #        if (projProposalProj)
+        #        {
+        #            invoiceAmount = projProposalProj.InvoicedNow + projProposalProj.calcTotalIndirectComponentInvoice(projProposalProj);
+        #            projProposalProj.RetainedNow       = (invoiceAmount * psaProjFundingSourceRetain.RetainPercent) / 100;
+        #            projProposalProj.RetainedPercent   = psaProjFundingSourceRetain.RetainPercent;
+        #            projProposalProj.update();
+        #        }
+        #    }
+        #    if (_isCreditNote)
+        #    {
+        #        this.retentionReversal(_projRevenueTransSaleRecId, pProjProposalJour.ProposalId, _psaContractLineNum);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #calcRetentionProject
+        #public void calcRetentionProject(ProjProposalId _proposalId, ProjId _projId, boolean _isCreditNote = false, RecId _projRevenueTransSaleRecId = 0)
+        #{
+        #    if (_proposalId && !_isCreditNote)
+        #    {
+        #        select RecId, Percent from psaProjWorkComplete
+        #            order by TransDate desc
+        #            join psaProjFundingSourceRetain
+        #            join forupdate ProjId, RecId, InvoicedNow, ContractLineNum, ProjProposalId, InvoicedNowLeadRetainage from projProposalProj
+        #                where psaProjFundingSourceRetain.ProjId == psaProjWorkComplete.ProjId
+        #                    && psaProjFundingSourceRetain.ProjId == projProposalProj.ProjId
+        #                    && psaProjFundingSourceRetain.ProjFundingSource == pProjProposalJour.FundingSource
+        #                    && projProposalProj.ProjProposalId == _proposalId
+        #                    && projProposalProj.ProjId == _projId
+        #                    && projProposalProj.IsPreBill == NoYes::No;
+        #
+        #        if (psaProjFundingSourceRetain)
+        #        {
+        #            select RetentionTermId, CompletePercent, RetainPercent from psaCustomerRetentionTermLine
+        #                order by psaCustomerRetentionTermLine.CompletePercent
+        #                    join RecId from psaCustomerRetentionTermTable
+        #                    where psaCustomerRetentionTermLine.RetentionTermId == psaCustomerRetentionTermTable.RetentionTermId
+        #                        && psaCustomerRetentionTermLine.CompletePercent >= psaProjWorkComplete.Percent
+        #                        && psaCustomerRetentionTermTable.RecId == psaProjFundingSourceRetain.CustRetentionTermId;
+        #
+        #            if (projProposalProj)
+        #            {
+        #                invoiceAmount = projProposalProj.InvoicedNow + projProposalProj.calcTotalIndirectComponentInvoice(projProposalProj);
+        #                projProposalProj.RetainedNow       = (invoiceAmount * psaCustomerRetentionTermLine.RetainPercent) / 100;
+        #                projProposalProj.RetainedPercent   = psaCustomerRetentionTermLine.RetainPercent;
+        #                projProposalProj.update();
+        #            }
+        #        }
+        #    }
+        #    if (_isCreditNote)
+        #    {
+        #        this.retentionReversal(_projRevenueTransSaleRecId, _proposalId);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #calculateRetainage
+        #public void calculateRetainage(ProjProposalId _proposalId, ProjFundingSourceRefId _fundingSource = 0)
+        #{
+        #    ProjProposalEmpl        projProposalEmpl;
+        #    ProjProposalEmplDetail  projProposalEmplDetail;
+        #    ProjEmplTransSale       projEmplTransSale;
+        #
+        #    ProjProposalRevenue     projProposalRevenue;
+        #    ProjProposalRevenueDetail projProposalRevenueDetail;
+        #    ProjRevenueTransSale      projRevenueTransSale;
+        #
+        #    ProjProposalCost        projProposalCost;
+        #    ProjProposalCostDetail  projProposalCostDetail;
+        #    ProjCostTransSale       projCostTransSale;
+        #
+        #    ProjItemTransSale       projItemTransSale;
+        #    ProjProposalItem        projProposalItem;
+        #    ProjProposalItemDetail  projProposalItemDetail;
+        #    SalesLine               salesLine;
+        #
+        #    ProjOnAccTransSale      projOnAccTransSale;
+        #    ProjProposalOnAcc       projProposalOnAcc;
+        #    ProjProposalOnAccDetail projProposalOnAccDetail;
+        #    ProjOnAccTrans          projOnAccTrans;
+        #
+        #    boolean isMarkedForCreditNote(ProjTransStatus _projTransStatus)
+        #    {
+        #        return (_projTransStatus == ProjTransStatus::CreditnoteProposal) ? true : false;
+        #    }
+        #
+        #    while select projProposalEmplDetail
+        #        join projEmplTransSale
+        #            where projEmplTransSale.RecId == projProposalEmplDetail.SaleRefRecId
+        #        join projProposalEmpl
+        #            where projProposalEmplDetail.ProposalRefRecId == projProposalEmpl.RecId
+        #               && projProposalEmpl.ProposalId == _proposalId
+        #    {
+        #        if (ProjProposalJour::psaIsCTLNChecked(pProjProposalJour.ProposalId))
+        #        {
+        #            this.calcRetentionBillingRule(projProposalEmpl.psaContractLineNum, isMarkedForCreditNote(projEmplTransSale.TransStatus), projEmplTransSale.RecId);
+        #        }
+        #        else
+        #        {
+        #            this.calcRetentionProject(projProposalEmpl.ProposalId, projProposalEmpl.projEmplTrans().ProjId, isMarkedForCreditNote(projEmplTransSale.TransStatus), projEmplTransSale.RecId);
+        #        }
+        #    }
+        #
+        #    while select projProposalRevenueDetail
+        #        join projRevenueTransSale
+        #            where projRevenueTransSale.RecId == projProposalRevenueDetail.SaleRefRecId
+        #        join projProposalRevenue
+        #            where projProposalRevenueDetail.ProposalRefRecId == projProposalRevenue.RecId
+        #               && projProposalRevenue.ProposalId == _proposalId
+        #    {
+        #        if (ProjProposalJour::psaIsCTLNChecked(pProjProposalJour.ProposalId))
+        #        {
+        #            this.calcRetentionBillingRule(projProposalRevenue.psaContractLineNum, isMarkedForCreditNote(projRevenueTransSale.TransStatus), projRevenueTransSale.RecId);
+        #        }
+        #        else
+        #        {
+        #            this.calcRetentionProject(projProposalRevenue.ProposalId, projProposalRevenue.projRevenueTrans().ProjId, isMarkedForCreditNote(projRevenueTransSale.TransStatus), projRevenueTransSale.RecId);
+        #        }
+        #    }
+        #
+        #    while select projProposalCostDetail
+        #        join projCostTransSale
+        #            where projCostTransSale.RecId == projProposalCostDetail.SaleRefRecId
+        #        join projProposalCost
+        #            where projProposalCostDetail.ProposalRefRecId == projProposalCost.RecId
+        #               && projProposalCost.ProposalId == _proposalId
+        #    {
+        #        if (ProjProposalJour::psaIsCTLNChecked(pProjProposalJour.ProposalId))
+        #        {
+        #            this.calcRetentionBillingRule(projProposalCost.psaContractLineNum, isMarkedForCreditNote(projCostTransSale.TransStatus), projCostTransSale.RecId);
+        #        }
+        #        else
+        #        {
+        #            this.calcRetentionProject(projProposalCost.ProposalId, projProposalCost.projCostTrans().ProjId, isMarkedForCreditNote(projCostTransSale.TransStatus), projCostTransSale.RecId);
+        #        }
+        #    }
+        #
+        #    while select projProposalItemDetail
+        #        join projItemTransSale
+        #            where projItemTransSale.RecId == projProposalItemDetail.SaleRefRecId
+        #        join projProposalItem
+        #            where projProposalItemDetail.ProposalRefRecId == projProposalItem.RecId
+        #               && projProposalItem.ProposalId == _proposalId
+        #    {
+        #        if (ProjProposalJour::psaIsCTLNChecked(pProjProposalJour.ProposalId))
+        #        {
+        #            this.calcRetentionBillingRule(projProposalItem.psaContractLineNum, isMarkedForCreditNote(projItemTransSale.TransStatus), projProposalItem.RecId);
+        #        }
+        #        else
+        #        {
+        #            this.calcRetentionProject(projProposalItem.ProposalId, projProposalItem.projItemTrans().ProjId, isMarkedForCreditNote(projItemTransSale.TransStatus), projProposalItem.RecId);
+        #        }
+        #    }
+        #
+        #    // Sales Orders
+        #    while select ProposalId, psaContractLineNum, RecId from projProposalItem
+        #        join salesLine
+        #        where salesLine.ProjTransId == projProposalItem.ProjTransId
+        #            && projProposalItem.ProposalId == _proposalId
+        #            && projProposalItem.ItemType   == ProjItemType::SalesOrder
+        #    {
+        #        if (ProjProposalJour::psaIsCTLNChecked(pProjProposalJour.ProposalId))
+        #        {
+        #            this.calcRetentionBillingRule(projProposalItem.psaContractLineNum, salesLine.creditNoteLine(), projProposalItem.RecId);
+        #        }
+        #        else
+        #        {
+        #            this.calcRetentionProject(projProposalItem.ProposalId, salesLine.ProjId, salesLine.creditNoteLine(), projProposalItem.RecId);
+        #        }
+        #    }
+        #
+        #    while select projProposalOnAccDetail
+        #        join projOnAccTrans
+        #        join projOnAccTransSale
+        #            where projOnAccTrans.TransId == projOnAccTransSale.TransId
+        #               && projOnAccTrans.psaIsOnAccount == NoYes::No
+        #               && projOnAccTransSale.RecId == projProposalOnAccDetail.SaleRefRecId
+        #        join projProposalOnAcc
+        #            where projProposalOnAccDetail.ProposalRefRecId == projProposalOnAcc.RecId
+        #               && projProposalOnAcc.ProposalId == _proposalId
+        #    {
+        #        if (ProjProposalJour::psaIsCTLNChecked(pProjProposalJour.ProposalId))
+        #        {
+        #            this.calcRetentionBillingRule(projProposalOnAcc.psaContractLineNum, isMarkedForCreditNote(projOnAccTransSale.TransStatus), projOnAccTransSale.RecId);
+        #        }
+        #        else
+        #        {
+        #            this.calcRetentionProject(projProposalOnAcc.ProposalId, projProposalOnAcc.projOnAccTrans().ProjID, isMarkedForCreditNote(projOnAccTransSale.TransStatus), projOnAccTransSale.RecId);
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkOrigin
+        #public boolean checkOrigin()
+        #{
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PublicSector))
+        #        && (this.parmProjRevenueTrans().TransactionOrigin == ProjOrigin::FeeJournal
+        #            || this.parmProjRevenueTrans().TransactionOrigin == ProjOrigin::FreeTextInvoice
+        #            || this.parmProjRevenueTrans().TransactionOrigin == ProjOrigin::AdvancedLedgerEntry)
+        #        && queryRevenue)
+        #    {
+        #        return true;
+        #    }
+        #    else
+        #    {
+        #        if ((this.parmProjRevenueTrans().TransactionOrigin == ProjOrigin::FeeJournal ||
+        #            this.parmProjRevenueTrans().TransactionOrigin == ProjOrigin::FreeTextInvoice) && queryRevenue)
+        #        {
+        #            return true;
+        #        }
+        #    }
+        #
+        #    if (this.parmProjRevenueTrans().TransactionOrigin == ProjOrigin::Subscription && querySubscription)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    if(this.parmProjRevenueTrans().TransactionOrigin == ProjOrigin::BeginningBalance && queryRevenue)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #abstract public class ProjInvoiceChoose extends RunBaseBatch
+        #{
+        #    // Tables
+        #    ProjItemTrans           pProjItemTrans;
+        #    ProjEmplTrans           pProjEmplTrans;
+        #    ProjCostTrans           pProjCostTrans;
+        #    ProjRevenueTrans        pProjRevenueTrans;
+        #    ProjOnAccTrans          pProjOnAccTrans;
+        #
+        #    ProjTable               pProjTable;
+        #    ProjInvoiceTable        pProjInvoiceTable;
+        #
+        #    SalesTable              pSalesTable;
+        #    SalesLine               pSalesLine;
+        #
+        #    ProjProposalJour        pProjProposalJour;
+        #    TmpProjProposalJour     tmpProjProposalJour;
+        #
+        #    // Datatypes
+        #    ProjInvoiceType         projInvoiceType;
+        #    SalesEndDiscPct         enddiscPercent;
+        #    SalesUpdate             salesUpdate;
+        #    ProjInvoiceProjId       projInvoiceProjId;
+        #    ProjId                  projId;
+        #    container               projTransIdList;
+        #    container               projTransIdContainer;
+        #
+        #    Counter                 progressTotal;
+        #    Counter                 progressCounter;
+        #
+        #    //<GEEPL>
+        #    PlTaxPeriodPaymentCode  taxPeriodPaymentCode;
+        #    //</GEEPL>
+        #
+        #    DialogField             dialogQtyUpdate;
+        #    DialogField             dialogFromDate;
+        #    DialogField             dialogToDate;
+        #
+        #    DialogField             dialogInvoiceDate;
+        #
+        #    DialogField             dialogRevenue;
+        #    DialogField             dialogSubscription;
+        #    DialogField             dialogSalesLine;
+        #    DialogField             dialogEmpl;
+        #    DialogField             dialogCost;
+        #    DialogField             dialogItem;
+        #    DialogField             dialogOnAcc;
+        #    DialogField             dialogInvoiceType;
+        #
+        #    //<GEEPL>
+        #    DialogField             dialogTaxPeriodPaymentCode;
+        #    #ISOCountryRegionCodes
+        #    //</GEEPL>
+        #    boolean                 newProposal;
+        #
+        #    boolean                 querySalesLine;
+        #    boolean                 queryEmpl;
+        #    boolean                 queryCost;
+        #    boolean                 queryRevenue;
+        #    boolean                 querySubscription;
+        #    boolean                 queryItem;
+        #    boolean                 queryOnAcc;
+        #
+        #    TransDate               fromDate;
+        #    TransDate               toDate;
+        #    InvoiceDate             invoiceDate;
+        #
+        #    boolean                 resetQuery;
+        #    boolean                 calledFromTrans;
+        #    InterCompanyPosted      interCompanyPosted;
+        #    boolean                 showMessages;
+        #    List                    projRevenueProposalList;
+        #
+        #    // Objects
+        #    QueryRun                queryRun;
+        #
+        #    QueryBuildDataSource    projInvoiceDataSource,
+        #                            projTableDataSource,
+        #                            emplDataSource,
+        #                            emplSaleDataSource,
+        #                            costDataSource,
+        #                            costSaleDataSource,
+        #                            itemDataSource,
+        #                            itemSaleDataSource,
+        #                            revenueDataSource,
+        #                            revenueSaleDataSource,
+        #                            onAccDataSource,
+        #                            onAccSaleDataSource,
+        #                            salesTableDataSource,
+        #                            salesLineDataSource;
+        #
+        #    // Progress invoicing
+        #    PSATmpRevRecWizard      m_tTmpProgressInv;
+        #    PSAProjProposalProj     m_tProjProposalProj;
+        #
+        #    //  Invoice proposal selection
+        #    str                     m_sQueryCustAccount, m_sQueryProjInvoiceProjId, m_sQueryProjId, m_sQueryEmplId;
+        #    boolean                 m_bSkipQueryOffset;
+        #
+        #    //  Creation of invoicing propsal from PSaTmpProjProposalTrans
+        #
+        #    PSATmpProjProposalTrans  m_TmpProjProposalTrans;
+        #    PSATmpProjProposalTrans  m_TmpProjProposalTransPreBill;
+        #    boolean                  m_bUseTmpProjProjProposal;
+        #
+        #    //  Invoice proposal on PSATmpProjProposalSummary
+        #    PSATmpProjProposalSummary  m_TmpProjProposalSummary;
+        #
+        #    //  Proposal info by contract line
+        #    PSAProjProposalContLine     m_tProjProposalContLine;
+        #    PSAContractLineNum          m_sContLineNum;
+        #    Map                         retentionLineMap;
+        #
+        #    // end date to insert rProjProposalJour
+        #    ToDate                      dEndDate;
+        #    PSAContractLineNum          m_aUsed; // last used contract line
+        #    Map                         contractLineMap;
+        #
+        #    PSAProjFundingSourceRetain      psaProjFundingSourceRetain;
+        #    PSAProjWorkComplete             psaProjWorkComplete;
+        #    PSACustomerRetentionTermLine    psaCustomerRetentionTermLine;
+        #    PSACustomerRetentionTermTable   psaCustomerRetentionTermTable;
+        #    PSAProjProposalProj             projProposalProj;
+        #    Amount                          invoiceAmount;
+        #
+        #    boolean                     queryAdvances;
+        #    boolean                     queryRetention;
+        #    ProjFundingSourceId         fundingSourceId;
+        #    ProjRevenueTrans            pProjRetentionTrans;
+        #    SMAServiceOrderTable        smaServiceOrderTable;
+        #    boolean                     updateProposal;
+        #    List                        proposalIdList;
+        #    boolean                     filterOnAccTrans;
+        #    boolean                     isInvoiceProposalCreated;
+        #    ProjInvoiceTypeSelection    queryInvoiceType;
+        #    CurrencyCode                currencyId;
+        #
+        #    // <GBR>
+        #    ProjInvoiceProposalSplit_BR projInvoiceProposalSplit_BR;
+        #    // </GBR>
+        #
+        #    // <GEEPL>
+        #    #ISOCountryRegionCodes
+        #    // </GEEPL>
+        #
+        #    // <GEEPL>
+        #    #define.CurrentVersion(16)
+        #    // </GEEPL>
+        #
+        #    #localmacro.CurrentList
+        #        queryEmpl,
+        #        queryCost,
+        #        queryRevenue,
+        #        queryItem,
+        #        queryOnAcc,
+        #        querySalesLine,
+        #        SalesUpdate,
+        #        FromDate,
+        #        ToDate,
+        #        InvoiceDate,
+        #        projInvoiceProjId,
+        #        projId,
+        #        queryInvoiceType,
+        #        querySubscription,
+        #        projTransIdList,
+        #        calledFromTrans
+        #        // <GEEPL>
+        #        ,taxPeriodPaymentCode
+        #        // </GEEPL>
+        #        ,queryAdvances
+        #        ,queryRetention
+        #        ,fundingSourceId
+        #        ,updateProposal
+        #        ,filterOnAccTrans
+        #     #endmacro
+        #}
+        #
+      ENDSOURCE
+      SOURCE #copyDocu
+        #private void copyDocu(Common  _common, ProjTransIdBase    _transId)
+        #{
+        #    ProjProposalRevenue     projProposalRevenue;
+        #    ProjProposalOnAcc       projProposalOnAcc;
+        #    ProjProposalItem        projProposalItem;
+        #    ProjProposalCost        projProposalCost;
+        #    ProjProposalEmpl        projProposalEmpl;
+        #    ProjJournalTrans        projJournalTrans;
+        #    InventJournalTrans      inventJournalTrans;
+        #    LedgerJournalTrans      ledgerJournalTrans;
+        #    LedgerJournalTrans_Project ledgerJournalTrans_Project;
+        #
+        #    switch (_common.TableId)
+        #    {
+        #        case tableNum(ProjProposalRevenue):
+        #            projProposalRevenue = _common;
+        #            select * from projJournalTrans where projJournalTrans.TransId == _transId;
+        #            ttsbegin;
+        #            Docu::copy(projJournalTrans,projProposalRevenue);
+        #            ttscommit;
+        #            break;
+        #
+        #        case tableNum(ProjProposalOnAcc):
+        #            projProposalOnAcc = _common;
+        #            select * from projJournalTrans where projJournalTrans.TransId == _transId;
+        #            ttsbegin;
+        #            Docu::copy(projJournalTrans,projProposalOnAcc);
+        #            ttscommit;
+        #            break;
+        #
+        #        case tableNum(ProjProposalCost):
+        #            projProposalCost = _common;
+        #            select * from ledgerJournalTrans join ledgerJournalTrans_Project
+        #                where ledgerJournalTrans_Project.TransId == _transId &&
+        #                      ledgerJournalTrans.RecId == ledgerJournalTrans_Project.RefRecId;
+        #            ttsbegin;
+        #            Docu::copy(ledgerJournalTrans,projProposalCost);
+        #            ttscommit;
+        #            break;
+        #
+        #        case tableNum(ProjProposalItem):
+        #            projProposalItem = _common;
+        #            select * from inventJournalTrans where inventJournalTrans.ProjTransId == _transId;
+        #            ttsbegin;
+        #            Docu::copy(inventJournalTrans,projProposalItem);
+        #            ttscommit;
+        #            break;
+        #
+        #        case tableNum(ProjProposalEmpl):
+        #            projProposalEmpl = _common;
+        #            select * from projJournalTrans where projJournalTrans.TransId == _transId;
+        #            ttsbegin;
+        #            Docu::copy(projJournalTrans,projProposalEmpl);
+        #            ttscommit;
+        #            break;
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createFeeJournal
+        #public ProjRevenueTrans createFeeJournal(ProjId _projId, AmountCur _retainedAmount, ProjFundingSourceRefId _fundingSource, PSAContractLineNum _contractLineNum = '', boolean _isRetained = false, ProjCategoryId _category='',TransDate _transDate =systemDateGet(),TransTxt _transTxt = '', ProjTaxGroup taxGroup = '', ProjTaxItemGroup taxItemGroup = '', boolean _isReleased = false)
+        #{
+        #    ProjJournalTable            projJournalTable;
+        #    ProjJournalTrans            projJournalTrans;
+        #    ProjJournalCheckPost        projJournalCheckPost;
+        #    ProjRevenueTrans            projRevenueTrans;
+        #    ProjTable                   projTable;
+        #    PSAContractLineItems        psaContractLineItems;
+        #    PSAContractLineItemsSetup   psaContractLineItemsSetup;
+        #    ProjOnAccTrans              projOnAccTrans;
+        #    ProjCategory                projCategoryLoc;
+        #
+        #    #OCCRetryCount
+        #
+        #    try
+        #    {
+        #        if(!_category)
+        #        {
+        #            if (!ProjCategory::isMarkedCategory().CategoryId)
+        #            {
+        #                 throw error("@SYS50153");
+        #            }
+        #        }
+        #
+        #        if (_isRetained &&
+        #            !ProjLinePropertySetup::findLinePropertyId(_projId, ProjCategory::isMarkedCategory().CategoryId))
+        #        {
+        #            throw error("@SYS50154");
+        #        }
+        #
+        #        ttsbegin;
+        #        //create the fee journal
+        #        projJournalTable.initFromProjJournalName(ProjJournalName::find(ProjParameters::find().RevenueJournalNameId));
+        #        if (HcmEmployment::findByWorkerLegalEntity(HcmWorker::userId2Worker(curUserId()), CompanyInfo::find().RecId, DateTimeUtil::minValue(), DateTimeUtil::utcNow()))
+        #        {
+        #            projJournalTable.Worker = HcmWorker::userId2Worker(curUserId());
+        #        }
+        #        projJournalTable.insert();
+        #
+        #        projJournalTrans.clear();
+        #        projJournalTrans.initFromProjJournalTable(projJournalTable);
+        #        projJournalTrans.Voucher       = NumberSeq::newGetVoucherFromCode(projJournalTable.getNumberSequenceTable().NumberSequence).voucher();
+        #        projJournalTrans.ProjTransDate = _transDate;
+        #        projJournalTrans.TransDate     = _transDate;
+        #        if (_contractLineNum)
+        #        {
+        #            psaContractLineItems = PSAContractLineItems::find(_contractLineNum);
+        #            switch(psaContractLineItems.LineType)
+        #            {
+        #                case PSAContractLineType::Fee       :
+        #                case PSAContractLineType::UOD       :
+        #                case PSAContractLineType::Progress  :
+        #                    projJournalTrans.ProjId = psaContractLineItems.FeeProjId;
+        #                break;
+        #
+        #                case PSAContractLineType::TAndM     :
+        #                    projJournalTrans.ProjId = (select firstonly psaContractLineItemsSetup
+        #                                                    where psaContractLineItemsSetup.ContractLineNum == _contractLineNum
+        #                                                       && psaContractLineItemsSetup.ProjId).ProjId;
+        #                break;
+        #
+        #                case PSAContractLineType::LumpSum   :
+        #                    select firstonly psaContractLineItemsSetup
+        #                        join ProjID from projOnAccTrans
+        #                            where projOnAccTrans.TransId == psaContractLineItemsSetup.ProjOnAccTransId
+        #                               && psaContractLineItemsSetup.ContractLineNum == _contractLineNum
+        #                               && psaContractLineItemsSetup.ProjOnAccTransId;
+        #                    if (psaContractLineItemsSetup)
+        #                    {
+        #                        projJournalTrans.ProjId = projOnAccTrans.ProjID;
+        #                    }
+        #                break;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            projJournalTrans.ProjId    = _projId;
+        #        }
+        #
+        #        // Category Id must be set before call to initFromProjTable to set the Line Property field correctly.
+        #        if(_category)
+        #        {
+        #            projCategoryLoc                = ProjCategory::find(_category);
+        #            projJournalTrans.CategoryId    = projCategoryLoc.CategoryId;
+        #        }
+        #        else
+        #        {
+        #            projCategoryLoc                = ProjCategory::isMarkedCategory();
+        #            projJournalTrans.CategoryId    = projCategoryLoc.CategoryId;
+        #        }
+        #
+        #        projTable                      = ProjTable::find(projJournalTrans.ProjId);
+        #        projJournalTrans.initFromProjTable(projTable);
+        #        // <GIN>
+        #        if(SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIN]) && psaContractLineItems.RecId != 0)
+        #        {
+        #            projJournalTrans.initFromPSAContractLineItems_IN(psaContractLineItems);
+        #        }
+        #        // </GIN>
+        #
+        #        projJournalTrans.Qty               = 1;
+        #
+        #        if(!_transTxt)
+        #        {
+        #            projJournalTrans.Txt               = projTable.psaRetainageBillingDesc();
+        #        }
+        #
+        #        else
+        #        {
+        #            projJournalTrans.Txt               = _transTxt;
+        #        }
+        #
+        #        projJournalTrans.CurrencyId        = ProjInvoiceTable::find(projTable.ProjInvoiceProjId).CurrencyId;
+        #        projJournalTrans.SalesPrice    = CurrencyExchangeHelper::round(_retainedAmount, projJournalTrans.CurrencyId);
+        #
+        #        if (HcmEmployment::findByWorkerLegalEntity(HcmWorker::userId2Worker(curUserId()), CompanyInfo::find().RecId, DateTimeUtil::minValue(), DateTimeUtil::utcNow()))
+        #        {
+        #            projJournalTrans.Worker        = HcmWorker::userId2Worker(curUserId());
+        #        }
+        #        if(!projJournalTrans.TaxItemGroupId && projJournalTrans.CategoryId)
+        #        {
+        #            projJournalTrans.TaxItemGroupId = projCategoryLoc.TaxItemGroupId;
+        #        }
+        #
+        #        if (_isRetained || _isReleased)
+        #        {
+        #            projJournalTrans.TaxGroupId = taxGroup;
+        #            projJournalTrans.TaxItemGroupId = taxItemGroup;
+        #        }
+        #
+        #        projJournalTrans.insert();
+        #
+        #        //update the fee journal
+        #        ProjJournalTable::initTotal(projJournalTable);
+        #        projJournalTable.update();
+        #
+        #        //Post the fee journal
+        #        projJournalCheckPost = ProjJournalCheckPost::newJournalCheckPost(true,
+        #                                                                         false,
+        #                                                                         JournalCheckPostType::Post,
+        #                                                                         tableNum(ProjJournalTable),
+        #                                                                         projJournalTable.JournalId);
+        #        if(!_category)
+        #        {
+        #            projJournalCheckPost.parmIsRetainage(true);
+        #        }
+        #        else
+        #        {
+        #            projJournalCheckPost.parmIsRetainage(false);
+        #        }
+        #
+        #        projJournalCheckPost.parmFundingSourceId(_fundingSource);
+        #        projJournalCheckPost.run();
+        #
+        #        select forupdate projRevenueTrans
+        #            join JournalId, Voucher, TransId from projJournalTrans
+        #            where projJournalTrans.JournalId       == projJournalTable.JournalId
+        #                && projRevenueTrans.VoucherJournal == projJournalTrans.Voucher
+        #                && projRevenueTrans.TransId        == projJournalTrans.TransId;
+        #
+        #        if (projRevenueTrans)
+        #        {
+        #
+        #            projRevenueTrans.IsRetained = _isRetained;
+        #            if(!_category)
+        #            {
+        #                projRevenueTrans.IsReleased = !_isRetained;
+        #            }
+        #
+        #            else
+        #            {
+        #               projRevenueTrans.IsReleased = _isRetained;
+        #            }
+        #
+        #            projRevenueTrans.psaContractLineNum = _contractLineNum;
+        #            projRevenueTrans.update();
+        #        }
+        #
+        #        ttscommit;
+        #    }
+        #
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    catch (Exception::UpdateConflict)
+        #    {
+        #        if (appl.ttsLevel() == 0)
+        #        {
+        #            if (xSession::currentRetryCount() >= #RetryNum)
+        #            {
+        #                throw Exception::UpdateConflictNotRecovered;
+        #            }
+        #            else
+        #            {
+        #                retry;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            throw Exception::UpdateConflict;
+        #        }
+        #    }
+        #
+        #    return projRevenueTrans;
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createProposal
+        #protected boolean createProposal()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #doCost
+        #protected void doCost()
+        #{
+        #    ProjProposalCost        projProposalCost;
+        #    ProjProposalCostDetail  projProposalCostDetail;
+        #    ProjCostTransSale       projCostTransSale;
+        #    Query                   saleQuery;
+        #    QueryBuildDataSource    saleQbds;
+        #    QueryBuildRange         transIdQbr;
+        #    QueryRun                saleQueryRun;
+        #    ProjFundingSource       projFundingSource;
+        #
+        #    if(this.parmProjCostTrans())
+        #    {
+        #        saleQuery = new Query();
+        #        saleQbds = saleQuery.addDataSource(tableNum(ProjCostTransSale));
+        #
+        #        transIdQbr = saleQbds.addRange(fieldNum(ProjCostTransSale,TransId));
+        #        transIdQbr.value(this.parmProjCostTrans().TransId);
+        #
+        #        this.addCostTransSaleRange(saleQbds);
+        #
+        #        saleQueryRun = new QueryRun(saleQuery);
+        #        while (saleQueryRun.next())
+        #        {
+        #            projCostTransSale = saleQueryRun.get(tableNum(ProjCostTransSale));
+        #
+        #            if (this.parmFundingSource() && pProjProposalJour && pProjProposalJour.FundingSource != projCostTransSale.FundingSource)
+        #            {
+        #                continue;
+        #            }
+        #
+        #            projCostTransSale.selectForUpdate(true);
+        #
+        #            if (projCostTransSale.canBeInvoiced())
+        #            {
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled())
+        #                {
+        #                    this.setProjProposalJour_BR(this.parmProjCostTrans(), this.parmProjCostTrans().CurrencyId, projCostTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjCostTrans().ProjId));
+        #                }
+        #                else
+        #                {
+        #                // </GBR>
+        #                this.setProjProposalJour(projCostTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjCostTrans().ProjId), this.parmProjCostTrans().CurrencyId);
+        #                // <GBR>
+        #                }
+        #                // </GBR>
+        #
+        #                this.progressUpdate(strFmt("@SYS26810", this.parmProjCostTrans().ProjId, date2StrUsr(this.parmProjCostTrans().TransDate, DateFlags::FormatAll)));
+        #
+        #                // update contract line num
+        #                if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #                {
+        #                    this.parmContLineNum(this.parmProjCostTrans().psaContractLineNum);
+        #                }
+        #
+        #                projProposalCost = ProjProposalCost::find(this.parmProjCostTrans().TransId, this.parmProjProposalJour().ProposalId);
+        #                if (!projProposalCost)
+        #                {
+        #                    projProposalCost             = ProjProposalCost::initProposaleFromTrans(this.parmProjCostTrans());
+        #                    projProposalCost.ProposalId  = this.parmProjProposalJour().ProposalId;
+        #                    projFundingSource            = ProjFundingSource::find(projCostTransSale.FundingSource);
+        #
+        #                    if (CustTable::isCustDKPublic(projFundingSource.CustAccount) == NoYes::Yes && projFundingSource.eInvoiceLineSpec == NoYes::Yes)
+        #                    {
+        #                        projProposalCost.eInvoiceAccountCode    = projFundingSource.eInvoiceAccountCode;
+        #                    }
+        #
+        #                    // <GBR>
+        #                    if (BrazilParameters::isEnabled() && this.parmProjInvoiceTable().ProjInvoiceNetPrice_BR)
+        #                    {
+        #                        projProposalCost.IncludedTaxPercent_BR = Tax::getIncludedTaxPct_BR(projProposalCost.TaxGroupId, projProposalCost.TaxItemGroupId);
+        #                    }
+        #                    // </GBR>
+        #
+        #                    if (projProposalCost.validateWrite())
+        #                    {
+        #                        projProposalCost.insert();
+        #                    }
+        #                    else
+        #                    {
+        #                        throw error("@SYS18447");
+        #                    }
+        #                }
+        #
+        #                projProposalCostDetail = ProjProposalCostDetail::initProposaleFromTrans(projCostTransSale);
+        #                projProposalCostDetail.ProposalRefRecId = projProposalCost.RecId;
+        #
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled() && projProposalCost.IncludedTaxPercent_BR)
+        #                {
+        #                    projProposalCostDetail.AmountCur = Currency::amount(projProposalCost.qty() * projProposalCostDetail.salesPriceInclTax_BR(projProposalCost.IncludedTaxPercent_BR), pProjProposalJour.CurrencyId);
+        #                }
+        #                // </GBR>
+        #
+        #                if (projProposalCostDetail.validateWrite())
+        #                {
+        #                    if (projCostTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projProposalCostDetail.AmountCur = projProposalCostDetail.AmountCur * -1;
+        #                    }
+        #
+        #                    projProposalCostDetail.insert();
+        #
+        #                    if (projCostTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projCostTransSale.TransStatus = ProjTransStatus::CreditnoteProposal;
+        #                    }
+        #                    else
+        #                    {
+        #                        projCostTransSale.TransStatus = ProjTransStatus::InvoiceProposal;
+        #                    }
+        #
+        #                    projCostTransSale.update();
+        #                }
+        #                else
+        #                {
+        #                    throw error("@SYS18447");
+        #                }
+        #            }
+        #        }
+        #    }
+        #}
+        #
+        #
+        #
+      ENDSOURCE
+      SOURCE #doEmpl
+        #protected void doEmpl()
+        #{
+        #    ProjProposalEmpl        projProposalEmpl;
+        #    ProjProposalEmplDetail  projProposalEmplDetail;
+        #    ProjEmplTransSale       projEmplTransSale;
+        #    Query                   saleQuery;
+        #    QueryBuildDataSource    saleQbds;
+        #    QueryBuildRange         transIdQbr;
+        #    QueryRun                saleQueryRun;
+        #    ProjFundingSource       projFundingSource;
+        #
+        #    if(this.parmProjEmplTrans())
+        #    {
+        #        saleQuery = new Query();
+        #        saleQbds = saleQuery.addDataSource(tableNum(ProjEmplTransSale));
+        #
+        #        transIdQbr = saleQbds.addRange(fieldNum(ProjEmplTransSale,TransId));
+        #        transIdQbr.value(this.parmProjEmplTrans().TransId);
+        #
+        #        this.addEmplTransSaleRange(saleQbds);
+        #
+        #        saleQueryRun = new QueryRun(saleQuery);
+        #        while (saleQueryRun.next())
+        #        {
+        #            projEmplTransSale = saleQueryRun.get(tableNum(ProjEmplTransSale));
+        #
+        #            if (this.parmFundingSource() && pProjProposalJour && pProjProposalJour.FundingSource != projEmplTransSale.FundingSource)
+        #            {
+        #                continue;
+        #            }
+        #
+        #            projEmplTransSale.selectForUpdate(true);
+        #
+        #            if (projEmplTransSale.canBeInvoiced())
+        #            {
+        #                //  update contract line num
+        #                if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #                {
+        #                    this.parmContLineNum(this.parmProjEmplTrans().psaContractLineNum);
+        #                }
+        #
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled())
+        #                {
+        #                    this.setProjProposalJour_BR(this.parmProjEmplTrans(), this.parmProjEmplTrans().CurrencyId, projEmplTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjEmplTrans().ProjId));
+        #                }
+        #                else
+        #                {
+        #                // </GBR>
+        #                this.setProjProposalJour(projEmplTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjEmplTrans().ProjId), this.parmProjEmplTrans().CurrencyId);
+        #                // <GBR>
+        #                }
+        #                // </GBR>
+        #                this.progressUpdate(strFmt("@SYS26810", this.parmProjEmplTrans().ProjId, date2StrUsr(this.parmProjEmplTrans().TransDate, DateFlags::FormatAll)));
+        #
+        #                projProposalEmpl = ProjProposalEmpl::find(this.parmProjEmplTrans().TransId, this.parmProjProposalJour().ProposalId);
+        #                if (!projProposalEmpl)
+        #                {
+        #                    projProposalEmpl            = ProjProposalEmpl::initProposaleFromTrans(this.parmProjEmplTrans());
+        #                    projProposalEmpl.ProposalId = this.parmProjProposalJour().ProposalId;
+        #                    projFundingSource           = ProjFundingSource::find(projEmplTransSale.FundingSource);
+        #
+        #                    if (CustTable::isCustDKPublic(projFundingSource.CustAccount) == NoYes::Yes && projFundingSource.eInvoiceLineSpec == NoYes::Yes)
+        #                    {
+        #                        projProposalEmpl.eInvoiceAccountCode = projFundingSource.eInvoiceAccountCode;
+        #                    }
+        #
+        #                    // <GBR>
+        #                    if (BrazilParameters::isEnabled() && this.parmProjInvoiceTable().ProjInvoiceNetPrice_BR)
+        #                    {
+        #                        projProposalEmpl.IncludedTaxPercent_BR = Tax::getIncludedTaxPct_BR(projProposalEmpl.TaxGroupId, projProposalEmpl.TaxItemGroupId);
+        #                    }
+        #                    // </GBR>
+        #
+        #                    if (projProposalEmpl.validateWrite())
+        #                    {
+        #                        projProposalEmpl.insert();
+        #                    }
+        #                    else
+        #                    {
+        #                        throw error("@SYS18447");
+        #                    }
+        #
+        #                    // <GEEPL>
+        #                    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #                    {
+        #                        TaxServiceTariff::insertTaxServiceTariffForNewParent(this.parmProjEmplTrans().TableId, this.parmProjEmplTrans().RecId, projProposalEmpl.TableId, projProposalEmpl.RecId);
+        #                    }
+        #                    // </GEEPL>
+        #                }
+        #
+        #                projProposalEmplDetail = ProjProposalEmplDetail::initProposaleFromTrans(projEmplTransSale);
+        #
+        #                projProposalEmplDetail.ProposalRefRecId = projProposalEmpl.RecId;
+        #
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled() && projProposalEmpl.IncludedTaxPercent_BR)
+        #                {
+        #                    projProposalEmplDetail.AmountCur = Currency::amount(projProposalEmpl.qty() * projProposalEmplDetail.salesPriceInclTax_BR(projProposalEmpl.IncludedTaxPercent_BR), pProjProposalJour.CurrencyId);
+        #                }
+        #                // </GBR>
+        #
+        #                if (projProposalEmplDetail.validateWrite())
+        #                {
+        #                    if (projEmplTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projProposalEmplDetail.AmountCur = projProposalEmplDetail.AmountCur * -1;
+        #                    }
+        #
+        #                    projProposalEmplDetail.insert();
+        #
+        #                    if (projEmplTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projEmplTransSale.TransStatus = ProjTransStatus::CreditnoteProposal;
+        #                    }
+        #                    else
+        #                    {
+        #                        projEmplTransSale.TransStatus = ProjTransStatus::InvoiceProposal;
+        #                    }
+        #
+        #                    projEmplTransSale.update();
+        #                }
+        #                else
+        #                {
+        #                    throw error("@SYS18447");
+        #                }
+        #
+        #                //--> Credit Card Begin
+        #                SalesTableCC::updateTransForProjEmpl(projProposalEmpl);
+        #                //<-- Credit Card End
+        #            }
+        #        }
+        #    }
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #doItem
+        #protected void doItem()
+        #{
+        #    ProjProposalItem        projProposalItem;
+        #    ProjProposalItemDetail  projProposalItemDetail;
+        #    ProjItemTransSale       projItemTransSale;
+        #    Query                   saleQuery;
+        #    QueryBuildDataSource    saleQbds;
+        #    QueryBuildRange         transIdQbr;
+        #    QueryRun                saleQueryRun;
+        #    ProjFundingSource       projFundingSource;
+        #
+        #    if(this.parmProjItemTrans())
+        #    {
+        #        saleQuery = new Query();
+        #        saleQbds = saleQuery.addDataSource(tableNum(ProjItemTransSale));
+        #
+        #        transIdQbr = saleQbds.addRange(fieldNum(ProjItemTransSale,ProjTransId));
+        #        transIdQbr.value(this.parmProjItemTrans().ProjTransId);
+        #
+        #        this.addItemTransSaleRange(saleQbds);
+        #
+        #        saleQueryRun = new QueryRun(saleQuery);
+        #        while (saleQueryRun.next())
+        #        {
+        #            projItemTransSale = saleQueryRun.get(tableNum(ProjItemTransSale));
+        #
+        #            if (this.parmFundingSource() && pProjProposalJour && pProjProposalJour.FundingSource != projItemTransSale.FundingSource)
+        #            {
+        #                continue;
+        #            }
+        #
+        #            projItemTransSale.selectForUpdate(true);
+        #
+        #            if (projItemTransSale.canBeInvoiced())
+        #            {
+        #                // update contract line num
+        #                if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #                {
+        #                    this.parmContLineNum(this.parmProjItemTrans().psaContractLineNum);
+        #                }
+        #
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled())
+        #                {
+        #                    this.setProjProposalJour_BR(this.parmProjItemTrans(), this.parmProjItemTrans().CurrencyId, projItemTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjItemTrans().ProjId));
+        #                }
+        #                else
+        #                {
+        #                // </GBR>
+        #                this.setProjProposalJour(projItemTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjItemTrans().ProjId), this.parmProjItemTrans().CurrencyId);
+        #                // <GBR>
+        #                }
+        #                // </GBR>
+        #
+        #                this.progressUpdate(strFmt("@SYS26810", this.parmProjItemTrans().ProjId, date2StrUsr(this.parmProjItemTrans().TransDate, DateFlags::None), DateFlags::FormatAll));
+        #
+        #                projProposalItem = ProjProposalItem::find(this.parmProjItemTrans().ProjTransId, this.parmProjProposalJour().ProposalId);
+        #                if (!projProposalItem)
+        #                {
+        #                    projProposalItem                = ProjProposalItem::initProposaleFromTrans(this.parmProjItemTrans());
+        #                    projProposalItem.ProposalId     = this.parmProjProposalJour().ProposalId;
+        #                    projFundingSource               = ProjFundingSource::find(projItemTransSale.FundingSource);
+        #
+        #                    if (CustTable::isCustDKPublic(projFundingSource.CustAccount) == NoYes::Yes && projFundingSource.eInvoiceLineSpec == NoYes::Yes)
+        #                    {
+        #                        projProposalItem.eInvoiceAccountCode = projFundingSource.eInvoiceAccountCode;
+        #                    }
+        #
+        #                    // <GBR>
+        #                    if (BrazilParameters::isEnabled() && this.parmProjInvoiceTable().ProjInvoiceNetPrice_BR)
+        #                    {
+        #                        projProposalItem.IncludedTaxPercent_BR = Tax::getIncludedTaxPct_BR(projProposalItem.TaxGroupId, projProposalItem.TaxItemGroupId);
+        #                    }
+        #                    // </GBR>
+        #
+        #                    if (projProposalItem.validateWrite())
+        #                    {
+        #                        projProposalItem.insert();
+        #                    }
+        #                    else
+        #                    {
+        #                        throw error("@SYS18447");
+        #                    }
+        #
+        #                    // <GEEPL>
+        #                    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #                    {
+        #                        TaxServiceTariff::insertTaxServiceTariffForNewParent(this.parmProjItemTrans().TableId, this.parmProjItemTrans().RecId, projProposalItem.TableId, projProposalItem.RecId);
+        #                    }
+        #                    // </GEEPL>
+        #                }
+        #
+        #                projProposalItemDetail = ProjProposalItemDetail::initProposaleFromTrans(projItemTransSale);
+        #                projProposalItemDetail.ProposalRefRecId = projProposalItem.RecId;
+        #
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled() && projProposalItem.IncludedTaxPercent_BR)
+        #                {
+        #                    projProposalItemDetail.AmountCur = Currency::amount(projProposalItem.qty() * projProposalItemDetail.salesPriceInclTax_BR(projProposalItem.IncludedTaxPercent_BR), pProjProposalJour.CurrencyId);
+        #                }
+        #                // </GBR>
+        #
+        #                if (projProposalItemDetail.validateWrite())
+        #                {
+        #                    if (projItemTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projProposalItemDetail.AmountCur = projProposalItemDetail.AmountCur * -1;
+        #                    }
+        #
+        #                    projProposalItemDetail.insert();
+        #
+        #                    if (projItemTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projItemTransSale.TransStatus = ProjTransStatus::CreditnoteProposal;
+        #                    }
+        #                    else
+        #                    {
+        #                        projItemTransSale.TransStatus = ProjTransStatus::InvoiceProposal;
+        #                    }
+        #
+        #                    projItemTransSale.update();
+        #                }
+        #                else
+        #                {
+        #                    throw error("@SYS18447");
+        #                }
+        #
+        #                //--> Credit Card Begin
+        #                SalesTableCC::updateTransForProjItem(projProposalItem);
+        #                //<-- Credit Card End
+        #            }
+        #        }
+        #    }
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #doOnAccount
+        #protected void doOnAccount()
+        #{
+        #    ProjProposalOnAcc       projProposalOnAcc;
+        #    ProjProposalOnAccDetail projProposalOnAccDetail;
+        #    ProjOnAccTransSale      projOnAccTransSale;
+        #    Query                   saleQuery;
+        #    QueryBuildDataSource    saleQbds;
+        #    QueryBuildRange         transIdQbr;
+        #    QueryRun                saleQueryRun;
+        #    ProjFundingSource       projFundingSource;
+        #
+        #    if(this.parmProjOnAccTrans())
+        #    {
+        #        saleQuery = new Query();
+        #        saleQbds = saleQuery.addDataSource(tableNum(ProjOnAccTransSale));
+        #
+        #        transIdQbr = saleQbds.addRange(fieldNum(ProjOnAccTransSale,TransId));
+        #        transIdQbr.value(this.parmProjOnAccTrans().TransId);
+        #
+        #        this.addOnAccTransSaleRange(saleQbds);
+        #
+        #        saleQueryRun = new QueryRun(saleQuery);
+        #        while (saleQueryRun.next())
+        #        {
+        #            projOnAccTransSale = saleQueryRun.get(tableNum(ProjOnAccTransSale));
+        #
+        #            if (this.parmFundingSource() && pProjProposalJour && pProjProposalJour.FundingSource != projOnAccTransSale.FundingSource)
+        #            {
+        #                continue;
+        #            }
+        #
+        #            projOnAccTransSale.selectForUpdate(true);
+        #
+        #            if (projOnAccTransSale.canBeInvoiced())
+        #            {
+        #                // update contract line num
+        #                if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #                {
+        #                    this.parmContLineNum(this.parmProjOnAccTrans().psaContractLineNum);
+        #                }
+        #
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled())
+        #                {
+        #                    this.setProjProposalJour_BR(this.parmProjOnAccTrans(), this.parmProjOnAccTrans().CurrencyId, projOnAccTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjOnAccTrans().ProjID));
+        #                }
+        #                else
+        #                {
+        #                // </GBR>
+        #                this.setProjProposalJour(projOnAccTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjOnAccTrans().ProjID), this.parmProjOnAccTrans().CurrencyId);
+        #                // <GBR>
+        #                }
+        #                // </GBR>
+        #
+        #                this.progressUpdate(strFmt("@SYS26810", this.parmProjOnAccTrans().ProjID, date2StrUsr(this.parmProjOnAccTrans().TransDate, DateFlags::FormatAll)));
+        #
+        #                projProposalOnAcc = ProjProposalOnAcc::find(this.parmProjOnAccTrans().TransId, this.parmProjProposalJour().ProposalId);
+        #                if (!projProposalOnAcc)
+        #                {
+        #                    projProposalOnAcc               = ProjProposalOnAcc::initProposaleFromTrans(this.parmProjOnAccTrans());
+        #                    projProposalOnAcc.ProposalId    = this.parmProjProposalJour().ProposalId;
+        #                    projFundingSource               = ProjFundingSource::find(projOnAccTransSale.FundingSource);
+        #
+        #                    if (CustTable::isCustDKPublic(projFundingSource.CustAccount) == NoYes::Yes && projFundingSource.eInvoiceLineSpec == NoYes::Yes)
+        #                    {
+        #                        projProposalOnAcc.eInvoiceAccountCode = projFundingSource.eInvoiceAccountCode;
+        #                    }
+        #
+        #                    // <GBR>
+        #                    if (BrazilParameters::isEnabled() && this.parmProjInvoiceTable().ProjInvoiceNetPrice_BR)
+        #                    {
+        #                        projProposalOnAcc.IncludedTaxPercent_BR = Tax::getIncludedTaxPct_BR(projProposalOnAcc.TaxGroupId, projProposalOnAcc.TaxItemGroupId);
+        #                    }
+        #                    // </GBR>
+        #
+        #                    if (projProposalOnAcc.validateWrite())
+        #                    {
+        #                        projProposalOnAcc.insert();
+        #                    }
+        #                    else
+        #                    {
+        #                        throw error("@SYS18447");
+        #                    }
+        #
+        #                    // <GEEPL>
+        #                    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #                    {
+        #                        TaxServiceTariff::insertTaxServiceTariffForNewParent(this.parmProjOnAccTrans().TableId, this.parmProjOnAccTrans().RecId, projProposalOnAcc.TableId, projProposalOnAcc.RecId);
+        #                    }
+        #                    // </GEEPL>
+        #                }
+        #
+        #                projProposalOnAccDetail = ProjProposalOnAccDetail::initProposaleFromTrans(projOnAccTransSale);
+        #                projProposalOnAccDetail.ProposalRefRecId = projProposalOnAcc.RecId;
+        #                if (projProposalOnAccDetail.validateWrite())
+        #                {
+        #                    if (projOnAccTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projProposalOnAccDetail.AmountCur = projProposalOnAccDetail.AmountCur * -1;
+        #                    }
+        #
+        #                    // <GBR>
+        #                    if (BrazilParameters::isEnabled() && projProposalOnAcc.IncludedTaxPercent_BR)
+        #                    {
+        #                        projProposalOnAccDetail.AmountCur = Currency::amount(projProposalOnAcc.qty() * projProposalOnAccDetail.salesPriceInclTax_BR(projProposalOnAcc.IncludedTaxPercent_BR), pProjProposalJour.CurrencyId);
+        #                    }
+        #                    // </GBR>
+        #
+        #                    projProposalOnAccDetail.insert();
+        #
+        #                    if (projOnAccTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projOnAccTransSale.TransStatus = ProjTransStatus::CreditnoteProposal;
+        #                    }
+        #                    else
+        #                    {
+        #                        projOnAccTransSale.TransStatus = ProjTransStatus::InvoiceProposal;
+        #                    }
+        #
+        #                    projOnAccTransSale.update();
+        #                }
+        #                else
+        #                {
+        #                    throw error("@SYS18447");
+        #                }
+        #
+        #                //--> Credit Card Begin
+        #                SalesTableCC::updateTransForProjFee(projOnAccTransSale);
+        #                //<-- Credit Card End
+        #            }
+        #        }
+        #    }
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #doProposal
+        #protected void doProposal()
+        #{
+        #    boolean doOnAccount = true;
+        #
+        #    if (onAccDataSource &&
+        #        onAccDataSource.enabled() &&
+        #        queryRun.changed(tableNum(ProjOnAccTrans)))
+        #    {
+        #        if (pProjOnAccTrans && !queryOnAcc    && this.isOnAccTrans(pProjOnAccTrans))
+        #        {
+        #            doOnAccount = false;
+        #        }
+        #
+        #        if (pProjOnAccTrans && !queryAdvances && this.isAdvanceTrans(pProjOnAccTrans))
+        #        {
+        #            doOnAccount = false;
+        #        }
+        #
+        #        if (doOnAccount)
+        #        /*
+        #        if (queryOnAcc && queryRun.changed(tableNum(ProjOnAccTrans)))
+        #        */
+        #        {
+        #            this.doOnAccount();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #doRetention
+        #public void doRetention()
+        #{
+        #    TmpProjProposalJour             tmpProjProposalJourLoc;
+        #
+        #    tmpProjProposalJourLoc.setTmpData(tmpProjProposalJour);
+        #
+        #    while select tmpProjProposalJourLoc
+        #        order by ProjInvoiceProjId
+        #    {
+        #        select ProposalId, FundingSource, InvoiceAmount from pProjProposalJour
+        #            where pProjProposalJour.RecId == tmpProjProposalJourLoc.RefProjProposalJour;
+        #
+        #        if (pProjProposalJour)
+        #        {
+        #            this.calculateRetainage(pProjProposalJour.ProposalId, pProjProposalJour.FundingSource);
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #doRevenue
+        #protected void doRevenue()
+        #{
+        #    ProjProposalRevenue         projProposalRevenue;
+        #    ProjProposalRevenueDetail   projProposalRevenueDetail;
+        #    ProjRevenueTransSale        projRevenueTransSale;
+        #    Query                       saleQuery;
+        #    QueryBuildDataSource        saleQbds;
+        #    QueryBuildRange             transIdQbr;
+        #    QueryRun                    saleQueryRun;
+        #    ProjFundingSource           projFundingSource;
+        #    ProjRevenueTransSale        projRevenueTransSaleLoc;
+        #    ProjRevenueTrans            projRevenueTransLoc;
+        #
+        #    projRevenueTransLoc = this.parmProjRevenueTrans();
+        #    if (this.isRetentionTrans(projRevenueTransLoc))
+        #    {
+        #        select RecId, FundingSource from projRevenueTransSale
+        #            where projRevenueTransSale.TransId == projRevenueTransLoc.TransId;
+        #
+        #        pProjRevenueTrans = this.createFeeJournal(pProjTable.ProjId,
+        #                                                  abs(projRevenueTransLoc.transTurnover()),
+        #                                                  projRevenueTransSale.FundingSource,
+        #                                                  projRevenueTransLoc.psaContractLineNum);
+        #
+        #        update_recordset projRevenueTransSaleLoc
+        #            setting psaRefREcId = projRevenueTransSale.RecId
+        #                where projRevenueTransSaleLoc.TransId == pProjRevenueTrans.TransId;
+        #    }
+        #
+        #    if(this.parmProjRevenueTrans() && this.checkOrigin())
+        #    {
+        #        saleQuery = new Query();
+        #        saleQbds = saleQuery.addDataSource(tableNum(ProjRevenueTransSale));
+        #
+        #        transIdQbr = saleQbds.addRange(fieldNum(ProjRevenueTransSale,TransId));
+        #        transIdQbr.value(this.parmProjRevenueTrans().TransId);
+        #
+        #        this.addRevenueTransSaleRange(saleQbds);
+        #
+        #        saleQueryRun = new QueryRun(saleQuery);
+        #        while (saleQueryRun.next())
+        #        {
+        #            projRevenueTransSale = saleQueryRun.get(tableNum(ProjRevenueTransSale));
+        #            if (this.parmFundingSource() && pProjProposalJour && pProjProposalJour.FundingSource != projRevenueTransSale.FundingSource)
+        #            {
+        #                continue;
+        #            }
+        #
+        #            projRevenueTransSale.selectForUpdate(true);
+        #
+        #            if (projRevenueTransSale.canBeInvoiced())
+        #            {
+        #                // update contract line num
+        #                if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #                {
+        #                    this.parmContLineNum(this.parmProjRevenueTrans().psaContractLineNum);
+        #                }
+        #
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled())
+        #                {
+        #                    this.setProjProposalJour_BR(this.parmProjRevenueTrans(), this.parmProjRevenueTrans().CurrencyId, projRevenueTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjRevenueTrans().ProjId));
+        #                }
+        #                else
+        #                {
+        #                // </GBR>
+        #                this.setProjProposalJour(projRevenueTransSale.FundingSource, ProjParameters::taxGroupInvoice(this.parmProjRevenueTrans().ProjId), this.parmProjRevenueTrans().CurrencyId);
+        #                // <GBR>
+        #                }
+        #                // </GBR>
+        #
+        #                this.progressUpdate(strFmt("@SYS26810", this.parmProjRevenueTrans().ProjId, date2StrUsr(this.parmProjRevenueTrans().TransDate, DateFlags::FormatAll)));
+        #
+        #                projProposalRevenue = ProjProposalRevenue::find(this.parmProjRevenueTrans().TransId, this.parmProjProposalJour().ProposalId);
+        #                if (!projProposalRevenue)
+        #                {
+        #                    projProposalRevenue             = ProjProposalRevenue::initProposaleFromTrans(this.parmProjRevenueTrans());
+        #                    projProposalRevenue.ProposalId  = this.parmProjProposalJour().ProposalId;
+        #                    projFundingSource               = ProjFundingSource::find(projRevenueTransSale.FundingSource);
+        #
+        #                    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)) &&
+        #                        !PSAContractLineItems::find(this.parmContLineNum()).SalesTaxGroup && projFundingSource)
+        #                    {
+        #                        // get the tax group based on funding source
+        #                        projProposalRevenue.TaxGroupId = ProjParameters::taxGroupInvoice(this.parmProjRevenueTrans().ProjId);
+        #                    }
+        #
+        #                    if (CustTable::isCustDKPublic(projFundingSource.CustAccount) == NoYes::Yes && projFundingSource.eInvoiceLineSpec == NoYes::Yes)
+        #                    {
+        #                        projProposalRevenue.eInvoiceAccountCode = projFundingSource.eInvoiceAccountCode;
+        #                    }
+        #
+        #                    // <GBR>
+        #                    if (BrazilParameters::isEnabled() && this.parmProjInvoiceTable().ProjInvoiceNetPrice_BR)
+        #                    {
+        #                        projProposalRevenue.IncludedTaxPercent_BR = Tax::getIncludedTaxPct_BR(projProposalRevenue.TaxGroupId, projProposalRevenue.TaxItemGroupId);
+        #                    }
+        #                    // </GBR>
+        #
+        #                    if (projProposalRevenue.validateWrite())
+        #                    {
+        #                        projProposalRevenue.insert();
+        #                    }
+        #                    else
+        #                    {
+        #                        throw error("@SYS18447");
+        #                    }
+        #                }
+        #
+        #                projProposalRevenueDetail = ProjProposalRevenueDetail::initProposaleFromTrans(projRevenueTransSale);
+        #                projProposalRevenueDetail.ProposalRefRecId = projProposalRevenue.RecId;
+        #
+        #                // <GBR>
+        #                if (BrazilParameters::isEnabled() && projProposalRevenue.IncludedTaxPercent_BR)
+        #                {
+        #                    projProposalRevenueDetail.AmountCur = Currency::amount(projProposalRevenue.qty() * projProposalRevenueDetail.salesPriceInclTax_BR(projProposalRevenue.IncludedTaxPercent_BR), pProjProposalJour.CurrencyId);
+        #                }
+        #                // </GBR>
+        #
+        #                if (projProposalRevenueDetail.validateWrite())
+        #                {
+        #                    if (projRevenueTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projProposalRevenueDetail.AmountCur = projProposalRevenueDetail.AmountCur * -1;
+        #                    }
+        #
+        #                    projProposalRevenueDetail.insert();
+        #
+        #                    if (projRevenueTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #                    {
+        #                        projRevenueTransSale.TransStatus = ProjTransStatus::CreditnoteProposal;
+        #                    }
+        #                    else
+        #                    {
+        #                        projRevenueTransSale.TransStatus = ProjTransStatus::InvoiceProposal;
+        #                    }
+        #
+        #                    projRevenueTransSale.update();
+        #                }
+        #                else
+        #                {
+        #                    throw error("@SYS18447");
+        #                }
+        #            }
+        #        }
+        #    }
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #doSalesLine
+        #protected void doSalesLine()
+        #{
+        #    #ISOCountryRegionCodes
+        #    ProjProposalItem        projProposalItem;
+        #    ProjProposalItemDetail  projProposalItemDetail;
+        #    ProjFundingSource       projFundingSource;
+        #    SalesQuantity           salesQuantity   = SalesQuantity::construct(DocumentStatus::Invoice);
+        #    SalesLine               salesLine;
+        #    /*
+        #    Query                   saleQuery;
+        #    QueryBuildDataSource    saleQbds;
+        #    QueryBuildRange         salesIdQbr;
+        #
+        #    QueryRun                saleQueryRun;
+        #    */
+        #    ProjFundingSourceRefId  projFundingSourceRefId;
+        #    DocuRef                 docuRef;
+        #    boolean                 docuRefCopied = false;
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoIT])
+        #        && this.parmInvoiceDate())
+        #    {
+        #        salesQuantity.parmTransDate(this.parmInvoiceDate());
+        #    }
+        #
+        #    salesLine = this.parmSalesLine();
+        #    if (salesLine && salesLine.canBeInvoiced())
+        #    {
+        #        // Update %1, line %2
+        #        // update contract line num
+        #        if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #        {
+        #            this.parmContLineNum(salesLine.psaContractLineNum);
+        #        }
+        #
+        #        this.progressUpdate(strFmt("@SYS26810", salesLine.ProjId, salesLine.ItemId));
+        #        this.parmProjTable(ProjTable::find(salesLine.ProjId));
+        #        this.parmProjInvoiceTable(ProjInvoiceTable::find(this.parmProjTable().ProjInvoiceProjId));
+        #
+        #        if (this.parmSalesTable().DiscPercent)
+        #        {
+        #            enddiscPercent = this.parmSalesTable().DiscPercent;
+        #        }
+        #
+        #        projProposalItem = ProjProposalItem::initProposaleFromSalesLine(salesLine);
+        #
+        #        if (CustTable::isCustDKPublic(ProjFundingSource::findCustAccount(pProjInvoiceTable.ProjInvoiceProjId).CustAccount) == NoYes::Yes && pProjInvoiceTable.eInvoiceLineSpec == NoYes::Yes)
+        #        {
+        #            projProposalItem.eInvoiceAccountCode = pProjInvoiceTable.eInvoiceAccountCode;
+        #        }
+        #
+        #        [projProposalItem.DeliverNow, projProposalItem.RemainBefore, projProposalItem.RemainAfter] = salesQuantity.qtySales(salesLine, salesUpdate);
+        #
+        #        [projProposalItem.InventNow, projProposalItem.RemainBeforeInvent, projProposalItem.RemainAfterInvent] = salesQuantity.qtyInvent(salesLine, salesUpdate);
+        #
+        #        if (projProposalItem.DeliverNow)
+        #        {
+        #            // Get singleton funding source single, multiple funding sources are not suppported for sales orders/item req.
+        #            select firstonly RecId from projFundingSource
+        #                where projFundingSource.ContractId == pProjInvoiceTable.ProjInvoiceProjId;
+        #
+        #            projFundingSourceRefId = projFundingSource.RecId;
+        #
+        #            this.setProjProposalJour(projFundingSourceRefId, ProjParameters::taxGroupInvoice(salesLine.ProjId) ,salesLine.CurrencyCode);
+        #
+        #            projProposalItem.ProposalId = this.parmProjProposalJour().ProposalId;
+        #
+        #            if (projProposalItem.validateWrite())
+        #            {
+        #                projProposalItem.insert();
+        #
+        #                projProposalItemDetail                  = ProjProposalItemDetail::initProposaleFromSalesLine(salesLine);
+        #                projProposalItemDetail.LineAmount       = salesLine.SalesPurchLine::calcLineAmount(projProposalItem.DeliverNow);
+        #                projProposalItemDetail.ProposalRefRecId = projProposalItem.RecId;
+        #                if (projProposalItemDetail.validateWrite())
+        #                {
+        #                    projProposalItemDetail.insert();
+        #                }
+        #                else
+        #                {
+        #                    // Update has been canceled.
+        #                    throw error("@SYS18447");
+        #                }
+        #            }
+        #            else
+        #            {
+        #                // Update has been canceled.
+        #                throw error("@SYS18447");
+        #            }
+        #
+        #            // Copy notes from Sales Table
+        #            if (!docuRefCopied)
+        #            {
+        #                docuRefCopied = true;
+        #                select firstonly docuRef index RefIdx where docuRef.RefCompanyId  == SalesTable::find(projProposalItem.SalesId).DataAreaId &&
+        #                                    docuRef.RefTableId    == tableNum(SalesTable)  &&
+        #                                    docuRef.RefRecId      == SalesTable::find(projProposalItem.SalesId).RecId;
+        #
+        #                if(docuRef)
+        #                {
+        #                    Docu::copy(SalesTable::find(projProposalItem.SalesId), this.parmProjProposalJour());
+        #                    docuRef.doClear();
+        #                }
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getFromDialog
+        #public boolean getFromDialog()
+        #{
+        #    boolean ret;
+        #
+        #    ret = super();
+        #
+        #    if (this.parmCalledFromTrans())
+        #    {
+        #        this.getFromDialogMapTransId();
+        #    }
+        #    else
+        #    {
+        #        this.parmQuerySalesLine(dialogSalesLine.value());
+        #        this.parmQueryEmplTrans(dialogEmpl.value());
+        #        this.parmQueryCostTrans(dialogCost.value());
+        #        this.parmQueryRevenueTrans(dialogRevenue.value());
+        #        this.parmQuerySubscriptionTrans(dialogSubscription.value());
+        #        this.parmQueryItemTrans(dialogItem.value());
+        #        this.parmQueryOnAccTrans(dialogOnAcc.value());
+        #
+        #        this.parmFromDate(dialogFromDate.value());
+        #        this.parmToDate(dialogToDate.value());
+        #
+        #        this.parmSalesUpdate(dialogQtyUpdate.value());
+        #    }
+        #
+        #    this.parmInvoiceDate(dialogInvoiceDate.value());
+        #
+        #    this.parmQueryInvoiceType(dialogInvoiceType.value());
+        #    // <GEEPL>
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #    {
+        #    this.parmTaxPeriodPaymentCode_PL(dialogTaxPeriodPaymentCode.value());
+        #    }
+        #    // </GEEPL>
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #getFromDialogMapTransId
+        #public void getFromDialogMapTransId()
+        #{
+        #    List            list;
+        #    ListIterator    li;
+        #
+        #    Common      commonTrans;
+        #
+        #    querySalesLine      = false;
+        #    queryEmpl           = false;
+        #    queryCost           = false;
+        #    queryRevenue        = false;
+        #    querySubscription   = false;
+        #    queryItem           = false;
+        #    queryOnAcc          = false;
+        #
+        #    if(this.parmTransIdList())
+        #    {
+        #        list    = List::create(this.parmTransIdList());
+        #    }
+        #
+        #    li = new ListIterator(list);
+        #
+        #    li.begin();
+        #
+        #    while (li.more())
+        #    {
+        #        commonTrans         = li.value();
+        #
+        #        switch(commonTrans.TableId)
+        #        {
+        #            case tableNum(ProjEmplTrans):
+        #                queryEmpl   = true;
+        #                break;
+        #
+        #            case tableNum(ProjCostTrans):
+        #                queryCost   = true;
+        #                break;
+        #
+        #            case tableNum(ProjItemTrans):
+        #                queryItem   = true;
+        #                break;
+        #
+        #            case tableNum(ProjOnAccTrans):
+        #                queryOnAcc  = true;
+        #                break;
+        #
+        #            case tableNum(ProjRevenueTrans):
+        #                queryRevenue        = true;
+        #                querySubscription   = true;
+        #                break;
+        #        }
+        #        li.next();
+        #    }
+        #
+        #    this.parmFromDate(dateNull());
+        #    this.parmToDate(dateNull());
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getProposalIdList
+        #/// <summary>
+        #/// Gets a list of proposal ID that were generated.
+        #/// </summary>
+        #/// <returns>
+        #/// List of proposal ID that were generated.
+        #/// </returns>
+        #public List getProposalIdList()
+        #{
+        #    return proposalIdList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #initParmDefault
+        #/// <summary>
+        #/// Initializes the internal variables.
+        #/// </summary>
+        #/// <remarks>
+        #/// This method is called when no <c>SysLastValue</c> record can be found when calling the
+        #/// <c>SysLastValue.GetLast</c> method. Remember to call the <c>super</c> method.
+        #/// </remarks>
+        #public void initParmDefault()
+        #{
+        #    super();
+        #
+        #    this.queryBuild();
+        #}
+      ENDSOURCE
+      SOURCE #initProjInvoiceProposalSplit_BR
+        #/// <summary>
+        #///     Initializes <c>ProjInvoiceProposalSplit_BR</c>
+        #/// </summary>
+        #
+        #protected void initProjInvoiceProposalSplit_BR()
+        #{
+        #    projInvoiceProposalSplit_BR = new ProjInvoiceProposalSplit_BR(ProjInvoiceTable::find(this.parmprojInvoiceProjId()), projInvoiceType);
+        #}
+      ENDSOURCE
+      SOURCE #initQuery
+        #public void initQuery()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #interCompanyPosted
+        #public InterCompanyPosted interCompanyPosted(InterCompanyPosted _interCompanyPosted = interCompanyPosted)
+        #{
+        #    interCompanyPosted = _interCompanyPosted;
+        #
+        #    return interCompanyPosted;
+        #}
+      ENDSOURCE
+      SOURCE #isAdvanceTrans
+        #/// <summary>
+        #/// Returns a true/false value indicating whether the record in <c>ProjOnAccTrans</c> table is of type advance.
+        #/// </summary>
+        #/// <param name="_trans">
+        #/// A record in <c>ProjOnAccTrans</c> table is of type advance.
+        #/// </param>
+        #/// <returns>
+        #/// Returns true if the record in <c>ProjOnAccTrans</c> table is of type advance; otherwise false.
+        #/// </returns>
+        #protected boolean isAdvanceTrans(ProjOnAccTrans _trans)
+        #{
+        #    return (_trans.TransactionOrigin == ProjOrigin::Prepayment);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #isOnAccTrans
+        #/// <summary>
+        #/// Returns a true/false value indicating whether the record in <c>ProjOnAccTrans</c> table is of type On Account.
+        #/// </summary>
+        #/// <param name="_trans">
+        #/// A record in <c>ProjOnAccTrans</c> table is of type advance.
+        #/// </param>
+        #/// <returns>
+        #/// Returns true if the record in <c>ProjOnAccTrans</c> table is of type On Account; otherwise false.
+        #/// </returns>
+        #protected boolean isOnAccTrans(ProjOnAccTrans _trans)
+        #{
+        #    boolean ret = false;
+        #    ProjOnAccTrans relatedTrans;
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+        #    {
+        #        select firstonly RecId from relatedTrans
+        #            where relatedTrans.RecId             == _trans.psaRefRecId &&
+        #                  relatedTrans.TransactionOrigin == ProjOrigin::Prepayment;
+        #    }
+        #
+        #    return (relatedTrans.RecId == 0);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #isRetentionRelease
+        #private boolean isRetentionRelease(ProjProposalId _projProposalId)
+        #{
+        #    ProjRevenueTrans    projRevenueTrans;
+        #    ProjProposalRevenue projProposalRevenue;
+        #
+        #    select RecId from projRevenueTrans
+        #        where projRevenueTrans.IsReleased == NoYes::Yes
+        #        exists join projProposalRevenue
+        #            where projProposalRevenue.TransId    == projRevenueTrans.TransId &&
+        #                    projProposalRevenue.ProposalId == _projProposalId;
+        #
+        #    return (projRevenueTrans ? true : false);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #isRetentionTrans
+        #/// <summary>
+        #/// Returns a true/false value indicating whether the record in <c>ProjRevenueTrans</c> table is of type Fee.
+        #/// </summary>
+        #/// <param name="_projRevenueTrans">
+        #/// A record in <c>ProjRevenueTrans</c> table is of type Fee.
+        #/// </param>
+        #/// <returns>
+        #/// Returns true if the record in <c>ProjRevenueTrans</c> table is of type Fee; otherwise false.
+        #/// </returns>
+        #protected boolean isRetentionTrans(ProjRevenueTrans _projRevenueTrans)
+        #{
+        #    return (_projRevenueTrans.TransactionOrigin == ProjOrigin::FeeJournal &&
+        #            _projRevenueTrans.IsRetained        == true);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #new
+        #public void new(ProjProposalJour _projProposalJour = null)
+        #{
+        #    projRevenueProposalList = new List(Types::String);
+        #    this.parmProjProposalJour(_projProposalJour);
+        #
+        #    this.parmShowMessages(false);
+        #
+        #    proposalIdList = new List(Types::String);
+        #
+        #    isInvoiceProposalCreated = true;
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #pack
+        #public container pack()
+        #{
+        #    container pack = conNull();
+        #
+        #    if (queryRun)
+        #    {
+        #        pack = queryRun.pack();
+        #    }
+        #
+        #    return [#CurrentVersion, #CurrentList] + [pack];
+        #}
+      ENDSOURCE
+      SOURCE #parmCalledFromTrans
+        #public boolean parmCalledFromTrans(boolean _calledFromTrans    = calledFromTrans)
+        #{
+        #    calledFromTrans = _calledFromTrans;
+        #
+        #    return calledFromTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmContLineNum
+        #
+        #public PSAContractLineNum parmContLineNum(PSAContractLineNum _contLineNum = m_sContLineNum)
+        #{
+        #    m_sContLineNum = _contLineNum;
+        #    return m_sContLineNum;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCurrencyId
+        #public CurrencyCode parmCurrencyId(CurrencyCode _currencyId = currencyId)
+        #{
+        #    currencyId = _currencyId;
+        #
+        #    return currencyId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmDEndDate
+        #public ToDate parmDEndDate(ToDate _dEndDate = dEndDate)
+        #{
+        #    dEndDate = _dEndDate;
+        #
+        #    return dEndDate;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmFilterOnAccTrans
+        #public boolean parmFilterOnAccTrans(boolean _filterOnAccTrans)
+        #{
+        #    filterOnAccTrans = _filterOnAccTrans;
+        #
+        #    return filterOnAccTrans;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmFromDate
+        #public TransDate parmFromDate(TransDate _fromDate = fromDate)
+        #{
+        #    fromDate = _fromDate;
+        #
+        #    return fromDate;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmFundingSource
+        #public ProjFundingSourceId parmFundingSource(ProjFundingSourceId _fundingSourceId = fundingSourceId)
+        #{
+        #    fundingSourceId = _fundingSourceId;
+        #
+        #    return fundingSourceId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmInvoiceDate
+        #public InvoiceDate parmInvoiceDate(InvoiceDate _invoiceDate = invoiceDate)
+        #{
+        #    invoiceDate = _invoiceDate;
+        #
+        #    return invoiceDate;
+        #}
+      ENDSOURCE
+      SOURCE #parmIsInvoiceProposalCreated
+        #public boolean parmIsInvoiceProposalCreated(boolean _isInvoiceProposalCreated = isInvoiceProposalCreated)
+        #{
+        #    isInvoiceProposalCreated = _isInvoiceProposalCreated;
+        #
+        #    return isInvoiceProposalCreated;
+        #}
+      ENDSOURCE
+      SOURCE #parmProjCostTrans
+        #public ProjCostTrans parmProjCostTrans(ProjCostTrans _projCostTrans = pProjCostTrans)
+        #{
+        #    pProjCostTrans = _projCostTrans;
+        #
+        #    return pProjCostTrans;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProjEmplTrans
+        #public ProjEmplTrans parmProjEmplTrans(ProjEmplTrans _projEmplTrans = pProjEmplTrans)
+        #{
+        #    pProjEmplTrans = _projEmplTrans;
+        #
+        #    return pProjEmplTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmProjId
+        #protected ProjId parmProjId(ProjId _projId = projId)
+        #{
+        #    projId  = _projId;
+        #
+        #    return projId;
+        #}
+      ENDSOURCE
+      SOURCE #parmprojInvoiceProjId
+        #protected ProjInvoiceProjId parmprojInvoiceProjId(ProjInvoiceProjId _projInvoiceProjId = projInvoiceProjId)
+        #{
+        #    projInvoiceProjId  = _projInvoiceProjId;
+        #
+        #    return projInvoiceProjId;
+        #}
+      ENDSOURCE
+      SOURCE #parmProjInvoiceTable
+        #public ProjInvoiceTable parmProjInvoiceTable(ProjInvoiceTable _projInvoiceTable = pProjInvoiceTable)
+        #{
+        #    pProjInvoiceTable = _projInvoiceTable;
+        #
+        #    return pProjInvoiceTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProjItemTrans
+        #public ProjItemTrans parmProjItemTrans(ProjItemTrans _projItemTrans = pProjItemTrans)
+        #{
+        #    pProjItemTrans = _projItemTrans;
+        #
+        #    return pProjItemTrans;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #parmProjOnAccTrans
+        #public ProjOnAccTrans parmProjOnAccTrans(ProjOnAccTrans _projOnAccTrans = pProjOnAccTrans)
+        #{
+        #    pProjOnAccTrans = _projOnAccTrans;
+        #
+        #    return pProjOnAccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmProjProposalJour
+        #public ProjProposalJour parmProjProposalJour(ProjProposalJour _projProposalJour = pProjProposalJour)
+        #{
+        #    pProjProposalJour = _projProposalJour;
+        #
+        #    return pProjProposalJour;
+        #}
+      ENDSOURCE
+      SOURCE #parmProjRetentionTrans
+        #public ProjRevenueTrans parmProjRetentionTrans(ProjRevenueTrans _projRetentionTrans = pProjRetentionTrans)
+        #{
+        #    pProjRetentionTrans = _projRetentionTrans;
+        #
+        #    return pProjRetentionTrans;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProjRevenueProposalList
+        #public List parmProjRevenueProposalList(List _projRevenueProposalList = projRevenueProposalList)
+        #{
+        #    projRevenueProposalList = _projRevenueProposalList;
+        #
+        #    return projRevenueProposalList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProjRevenueTrans
+        #public ProjRevenueTrans parmProjRevenueTrans(ProjRevenueTrans _projRevenueTrans = pProjRevenueTrans)
+        #{
+        #    pProjRevenueTrans = _projRevenueTrans;
+        #
+        #    return pProjRevenueTrans;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmProjTable
+        #public ProjTable parmProjTable(ProjTable _projTable = pProjTable)
+        #{
+        #    pProjTable = _projTable;
+        #
+        #    return pProjTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmPSATmpProjProposalSummary
+        #
+        #public PSATmpProjProposalSummary parmPSATmpProjProposalSummary(PSATmpProjProposalSummary _tmpProjProposalSummary = null)
+        #{
+        #    if (_tmpProjProposalSummary)
+        #        m_TmpProjProposalSummary.setTmpData(_tmpProjProposalSummary);
+        #
+        #    m_bUseTmpProjProjProposal = true;
+        #    return m_TmpProjProposalSummary;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #parmPSATmpProjProposalTrans
+        #
+        #public PSATmpProjProposalTrans parmPSATmpProjProposalTrans(PSATmpProjProposalTrans _tmpProjProposalTrans = null)
+        #{
+        #
+        #    if(_tmpProjProposalTrans)
+        #        m_TmpProjProposalTrans.setTmpData(_tmpProjProposalTrans);
+        #
+        #    m_bUseTmpProjProjProposal = true;
+        #    return m_TmpProjProposalTrans;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmPSATmpProjProposalTransPreBill
+        #
+        #public PSATmpProjProposalTrans parmPSATmpProjProposalTransPreBill(PSATmpProjProposalTrans _tmpProjProposalTrans = null)
+        #{
+        #    if(_tmpProjProposalTrans)
+        #    {
+        #        m_TmpProjProposalTransPreBill.setTmpData(_tmpProjProposalTrans);
+        #    }
+        #
+        #    return m_TmpProjProposalTransPreBill;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmQueryAdvanceTrans
+        #public boolean parmQueryAdvanceTrans(boolean _queryAdvances = queryAdvances)
+        #{
+        #    queryAdvances = _queryAdvances;
+        #
+        #    return queryAdvances;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmQueryCostTrans
+        #public boolean parmQueryCostTrans(boolean _queryCost = queryCost)
+        #{
+        #    queryCost = _queryCost;
+        #
+        #    return queryCost;
+        #}
+      ENDSOURCE
+      SOURCE #parmQueryEmplTrans
+        #public boolean parmQueryEmplTrans(boolean _queryEmpl = queryEmpl)
+        #{
+        #    queryEmpl = _queryEmpl;
+        #
+        #    return queryEmpl;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmQueryInvoiceType
+        #public ProjInvoiceTypeSelection parmQueryInvoiceType(ProjInvoiceTypeSelection _queryInvoiceType = queryInvoiceType)
+        #{
+        #    queryInvoiceType  = _queryInvoiceType;
+        #
+        #    return queryInvoiceType;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmQueryItemTrans
+        #public boolean parmQueryItemTrans(boolean _queryItem = queryItem)
+        #{
+        #    queryItem = _queryItem;
+        #
+        #    return queryItem;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmQueryOnAccTrans
+        #public boolean parmQueryOnAccTrans(boolean _queryOnAcc = queryOnAcc)
+        #{
+        #    queryOnAcc = _queryOnAcc;
+        #
+        #    return queryOnAcc;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #parmQueryRetentionTrans
+        #public boolean parmQueryRetentionTrans(boolean _queryRetention = queryRetention)
+        #{
+        #    queryRetention = _queryRetention;
+        #
+        #    return queryRetention;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmQueryRevenueTrans
+        #public boolean parmQueryRevenueTrans(boolean _queryRevenue = queryRevenue)
+        #{
+        #    queryRevenue = _queryRevenue;
+        #
+        #    return queryRevenue;
+        #}
+      ENDSOURCE
+      SOURCE #parmQuerySalesLine
+        #public boolean parmQuerySalesLine(boolean _querySalesLine = querySalesLine)
+        #{
+        #    querySalesLine = _querySalesLine;
+        #
+        #    return querySalesLine;
+        #}
+      ENDSOURCE
+      SOURCE #parmQuerySubscriptionTrans
+        #public boolean parmQuerySubscriptionTrans(boolean _querySubscription = querySubscription)
+        #{
+        #    querySubscription = _querySubscription;
+        #
+        #    return querySubscription;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #parmSalesLine
+        #public SalesLine parmSalesLine(SalesLine _salesLine = pSalesLine)
+        #{
+        #    pSalesLine = _salesLine;
+        #
+        #    return pSalesLine;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesTable
+        #public SalesTable parmSalesTable(SalesTable _salesTable = pSalesTable)
+        #{
+        #    pSalesTable = _salesTable;
+        #
+        #    return pSalesTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesUpdate
+        #public SalesUpdate parmSalesUpdate(SalesUpdate _salesUpdate = salesUpdate)
+        #{
+        #    salesUpdate  = _salesUpdate;
+        #
+        #    return salesUpdate;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmShowMessages
+        #public boolean parmShowMessages(boolean _showMessages = showMessages)
+        #{
+        #    showMessages = _showMessages;
+        #
+        #    return showMessages;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmSmaServiceOrderTable
+        #/// <summary>
+        #/// returns a record in <c>SMAServiceOrderTable</c> table.
+        #/// </summary>
+        #/// <param name="_smaServiceOrderTable">
+        #/// A record in <c>SMAServiceOrderTable</c> table.
+        #/// </param>
+        #/// <returns>
+        #/// record in <c>SMAServiceOrderTable</c> table.
+        #/// </returns>
+        #public SMAServiceOrderTable parmSmaServiceOrderTable(SMAServiceOrderTable _smaServiceOrderTable = smaServiceOrderTable)
+        #{
+        #    smaServiceOrderTable = _smaServiceOrderTable;
+        #
+        #    return smaServiceOrderTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmTaxPeriodPaymentCode_PL
+        #public PlTaxPeriodPaymentCode parmTaxPeriodPaymentCode_PL(PlTaxPeriodPaymentCode _taxPeriodPaymentCode = taxPeriodPaymentCode)
+        #{
+        #    ;
+        #
+        #    taxPeriodPaymentCode = _taxPeriodPaymentCode;
+        #
+        #    return taxPeriodPaymentCode;
+        #}
+      ENDSOURCE
+      SOURCE #parmToDate
+        #public TransDate parmToDate(TransDate _toDate = toDate)
+        #{
+        #    toDate = _toDate;
+        #
+        #    return toDate;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmTransIdContainer
+        #public container parmTransIdContainer(container _transIdContainer  = projTransIdContainer)
+        #{
+        #    projTransIdContainer = _transIdContainer;
+        #
+        #    return projTransIdContainer;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransIdList
+        #public container parmTransIdList(container _transIdList  = projTransIdList)
+        #{
+        #    projTransIdList = _transIdList;
+        #
+        #    return projTransIdList;
+        #}
+      ENDSOURCE
+      SOURCE #parmUpdateProposal
+        #public boolean parmUpdateProposal(boolean _update = updateProposal)
+        #{
+        #    updateProposal = _update;
+        #
+        #    return updateProposal;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #processTransIdContainer
+        #/// <summary>
+        #/// Adds the transactions in the cotnainer to TransIdList list.
+        #/// </summary>
+        #public void processTransIdContainer()
+        #{
+        #    int                                 conPos  = 1;
+        #    List                                transIdList;
+        #    ProjEmplTrans                       tProjEmplTrans;
+        #    ProjCostTrans                       tProjCostTrans;
+        #    ProjItemTrans                       tProjItemTrans;
+        #    SalesLine                           salesLine;
+        #    ProjRevenueTrans                    tProjRevenueTrans;
+        #    ProjOnAccTrans                      tProjOnAccTrans;
+        #    PSAContractLineNum                  spsaContractLineNum;
+        #
+        #    if (conLen(projTransIdContainer) == 0)
+        #    {
+        #        return;
+        #    }
+        #
+        #    if(this.parmTransIdList())
+        #    {
+        #        transIdList    = List::create(this.parmTransIdList());
+        #    }
+        #    else
+        #    {
+        #        transIdList    = new List(Types::Record);
+        #    }
+        #
+        #    while (conPos < conLen(projTransIdContainer))
+        #    {
+        #        switch(conPeek(projTransIdContainer,conPos))
+        #        {
+        #            case ProjTransType::Cost:
+        #                tProjCostTrans = ProjCostTrans::find(conPeek(projTransIdContainer,conPos +1), true);
+        #                if (tProjCostTrans)
+        #                {
+        #                    tProjCostTrans.psaContractLineNum = spsaContractLineNum;
+        #                    tProjCostTrans.update();
+        #                    transIdList.addEnd(tProjCostTrans);
+        #                }
+        #                break;
+        #            case ProjTransType::Hour:
+        #                tProjEmplTrans = ProjEmplTrans::find(conPeek(projTransIdContainer,conPos +1), true);
+        #                if (tProjEmplTrans)
+        #                {
+        #                    tProjEmplTrans.psaContractLineNum = spsaContractLineNum;
+        #                    tProjEmplTrans.update();
+        #                    transIdList.addEnd(tProjEmplTrans);
+        #                }
+        #                break;
+        #            case ProjTransType::Item:
+        #                tProjItemTrans = ProjItemTrans::find(conPeek(projTransIdContainer,conPos +1), true);
+        #                if (tProjItemTrans)
+        #                {
+        #                    tProjItemTrans.psaContractLineNum = spsaContractLineNum;
+        #                    tProjItemTrans.update();
+        #                    transIdList.addEnd(tProjItemTrans);
+        #                }
+        #                salesLine = SalesLine::findInventTransId(conPeek(projTransIdContainer,conPos +1), true);
+        #                if (salesLine)
+        #                {
+        #                    salesLine.psaContractLineNum = spsaContractLineNum;
+        #                    salesLine.update();
+        #                    transIdList.addEnd(salesLine);
+        #                }
+        #                break;
+        #            case ProjTransType::Revenue:
+        #                tProjRevenueTrans = ProjRevenueTrans::find(conPeek(projTransIdContainer,conPos +1), true);
+        #                if(tProjRevenueTrans)
+        #                {
+        #                    tProjRevenueTrans.psaContractLineNum = spsaContractLineNum;
+        #                    tProjRevenueTrans.update();
+        #                    transIdList.addEnd(tProjRevenueTrans);
+        #                }
+        #                break;
+        #            case ProjTransType::OnAccount:
+        #                tProjOnAccTrans = ProjOnAccTrans::find(conPeek(projTransIdContainer,conPos +1), true);
+        #                if (tProjOnAccTrans)
+        #                {
+        #                    tProjOnAccTrans.psaContractLineNum = spsaContractLineNum;
+        #                    tProjOnAccTrans.update();
+        #                    transIdList.addEnd(tProjOnAccTrans);
+        #                }
+        #                break;
+        #        }
+        #
+        #        conPos = conPos + 2;
+        #    }
+        #
+        #    this.parmTransIdList(transIdList.pack());
+        #}
+      ENDSOURCE
+      SOURCE #progressUpdate
+        #protected void progressUpdate(str text)
+        #{
+        #    progressCounter++;
+        #    progress.setCount(progressCounter);
+        #    progress.setText(text);
+        #}
+      ENDSOURCE
+      SOURCE #psaAddEndDateToProposalJour
+        #
+        #// Description:     insert end date to projProposalJour
+        #// Parameters:      None
+        #// Return value:    None
+        #private void psaAddEndDateToProposalJour()
+        #{
+        #    ProjProposalJour  tProjProposalJour;
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+        #    {
+        #        ttsbegin;
+        #        select forupdate  tProjProposalJour
+        #            where tProjProposalJour.RecId==pProjProposalJour.RecId;
+        #        if (tProjProposalJour)
+        #        {
+        #            tProjProposalJour.psaEndDate=dEndDate;
+        #            tProjProposalJour.update();
+        #        }
+        #    ttscommit;
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #psaBuildQuery
+        #
+        #void psaBuildQuery()
+        #{
+        #    queryRun = this.queryBuild();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #psaCreateProjOnAccTrans
+        #
+        #ProjOnAccTrans psaCreateProjOnAccTrans()
+        #{
+        #    ProjOnAccTrans   tProjOnAccTrans;
+        #    ProjInvoiceOnAcc tProjInvoiceOnAcc;
+        #
+        #    if (!isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+        #    {
+        #        return null;
+        #    }
+        #
+        #    select * from m_tTmpProgressInv
+        #        where m_tTmpProgressInv.ProjId ==  pProjOnAccTrans.ProjID;
+        #
+        #    if (m_tTmpProgressInv.RecId)
+        #    {
+        #        return null;
+        #    }
+        #
+        #    // if there exists an unposted OnAccTrans for progress invoice do not create a new one
+        #    select firstonly TransId, psaProjProgressInvoice from tProjOnAccTrans
+        #        where tProjOnAccTrans.ProjID == pProjOnAccTrans.ProjID
+        #        &&    tProjOnAccTrans.psaProjProgressInvoice == NoYes::Yes
+        #        notexists join TransId from tProjInvoiceOnAcc
+        #            where tProjInvoiceOnAcc.TransId == tProjOnAccTrans.TransId;
+        #
+        #    if (tProjOnAccTrans.RecId)
+        #    {
+        #        return null;
+        #    }
+        #
+        #    tProjOnAccTrans.initFromProjTable(pProjOnAccTrans.ProjID); // projId, currency, taxGroup
+        #    tProjOnAccTrans.TransDate   = invoiceDate;
+        #    tProjOnAccTrans.Description = "@PSA1283";
+        #    tProjOnAccTrans.psaProjProgressInvoice = NoYes::Yes;
+        #    tProjOnAccTrans.insert();
+        #
+        #    m_tTmpProgressInv.ProjId    = pProjOnAccTrans.ProjID;
+        #    m_tTmpProgressInv.ProjRecId = tProjOnAccTrans.RecId;
+        #    m_tTmpProgressInv.insert();
+        #
+        #    return tProjOnAccTrans;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #psaInitProjProposalProj
+        #private void psaInitProjProposalProj(ProjProposalJour _rProjProposalJour, ProjFundingSourceRefId _projFundingRefId)
+        #{
+        #    boolean isPreBillLoc;
+        #
+        #    if (pProjOnAccTrans)
+        #    {
+        #        isPreBillLoc = pProjOnAccTrans.TransactionOrigin == ProjOrigin::Deduction ? true : false;
+        #    }
+        #
+        #    if (!ProjProposalJour::psaIsCTLNChecked(_rProjProposalJour.ProposalId))
+        #    {
+        #        select m_tProjProposalProj
+        #            where m_tProjProposalProj.ProjId          == this.parmProjTable().ProjId
+        #                && m_tProjProposalProj.ProjProposalId  == _rProjProposalJour.ProposalId
+        #                && m_tProjProposalProj.IsPreBill       == isPreBillLoc;
+        #    }
+        #    else
+        #    {
+        #        select m_tProjProposalProj
+        #            where m_tProjProposalProj.ProjProposalId  == _rProjProposalJour.ProposalId
+        #                && m_tProjProposalProj.ContractLineNum == this.parmContLineNum()
+        #                && m_tProjProposalProj.IsPreBill       == isPreBillLoc;
+        #    }
+        #    if (!m_tProjProposalProj)
+        #    {
+        #        m_tProjProposalProj.ProjId          = this.parmContLineNum() ? PSAContractLineItems::find(this.parmContLineNum()).FeeProjId :
+        #                                                                    this.parmProjTable().ProjId;
+        #        m_tProjProposalProj.ProjProposalId  = _rProjProposalJour.ProposalId;
+        #        m_tProjProposalProj.ContractLineNum = this.parmContLineNum();
+        #        m_tProjProposalProj.FundingSource   = _projFundingRefId;
+        #        m_tProjProposalProj.IsPreBill       = isPreBillLoc;
+        #        m_tProjProposalProj.insert();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #psAisSelected
+        #boolean psAisSelected()
+        #{
+        #    boolean bret = false;
+        #
+        #    if (pProjRevenueTrans)
+        #    {
+        #        bret = retentionLineMap.exists(pProjRevenueTrans.RecId);
+        #    }
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #    {
+        #        // Allow invoice proposal on PSATmpProjProposalSummary
+        #        while select forupdate m_TmpProjProposalSummary
+        #            where m_TmpProjProposalSummary.Selected == NoYes::Yes
+        #               && (m_TmpProjProposalSummary.ContractLineNum == pProjRevenueTrans.psaContractLineNum
+        #                || m_TmpProjProposalSummary.ContractLineNum == pProjOnAccTrans.psaContractLineNum
+        #                || m_TmpProjProposalSummary.ContractLineNum == pProjEmplTrans.psaContractLineNum
+        #                || m_TmpProjProposalSummary.ContractLineNum == pProjCostTrans.psaContractLineNum
+        #                || m_TmpProjProposalSummary.ContractLineNum == pProjItemTrans.psaContractLineNum
+        #                || m_TmpProjProposalSummary.ContractLineNum == pSalesLine.psaContractLineNum)
+        #        {
+        #            bret = true;
+        #        }
+        #
+        #         //For Prebill reconcillation transactions
+        #        while select forupdate  m_TmpProjProposalTransPreBill
+        #              where m_TmpProjProposalTransPreBill.RefTableId   == tableNum(ProjOnAccTrans)
+        #               &&  m_TmpProjProposalTransPreBill.RefRecIdTrans == pProjOnAccTrans.RecId
+        #               &&  m_TmpProjProposalTransPreBill.Selected == NoYes::Yes
+        #        {
+        #            bret = true;
+        #            m_TmpProjProposalTransPreBill.delete();
+        #        }
+        #    }
+        #
+        #    while select forupdate  m_TmpProjProposalTrans
+        #        where  ((m_TmpProjProposalTrans.RefTableId  == tableNum(ProjEmplTrans)
+        #           &&  m_TmpProjProposalTrans.RefRecIdTrans == pProjEmplTrans.RecId)
+        #           ||  (m_TmpProjProposalTrans.RefTableId   == tableNum(ProjRevenueTrans)
+        #           &&  m_TmpProjProposalTrans.RefRecIdTrans == pProjRevenueTrans.RecId)
+        #           ||  (m_TmpProjProposalTrans.RefTableId   == tableNum(ProjCostTrans)
+        #           &&  m_TmpProjProposalTrans.RefRecIdTrans == pProjCostTrans.RecId)
+        #           ||  (m_TmpProjProposalTrans.RefTableId   == tableNum(ProjItemTrans)
+        #           &&  m_TmpProjProposalTrans.RefRecIdTrans == pProjItemTrans.RecId)
+        #           ||  (m_TmpProjProposalTrans.RefTableId   == tableNum(ProjOnAccTrans)
+        #           &&  m_TmpProjProposalTrans.RefRecIdTrans == pProjOnAccTrans.RecId)
+        #           ||  (m_TmpProjProposalTrans.RefTableId   == tableNum(SalesLine)
+        #           &&  m_TmpProjProposalTrans.RefRecIdTrans == pSalesLine.RecId))
+        #           &&  (m_TmpProjProposalTrans.Selected == NoYes::Yes)
+        #
+        #    {
+        #        bret = true;
+        #        this.retentionRelatedRecs(m_TmpProjProposalTrans.RefRecIdTrans, m_TmpProjProposalTrans.RefTableId);
+        #        m_TmpProjProposalTrans.delete();
+        #    }
+        #
+        #    return bret;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #psaParmQueryOnAcc
+        #
+        #public boolean psaParmQueryOnAcc(boolean _queryOnAcc = queryOnAcc)
+        #{
+        #    queryOnAcc = _queryOnAcc;
+        #    return queryOnAcc;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #psaParmQuerySalesLine
+        #
+        #public boolean psaParmQuerySalesLine(boolean _querySalesLine = querySalesLine)
+        #{
+        #    querySalesLine = _querySalesLine;
+        #    return querySalesLine;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #psaParmQueryValues
+        #
+        #protected void psaParmQueryValues(str _sProjInvoiceProjId, str _sProjId, TransDate _dFrom, TransDate _dTo)
+        #{
+        #    m_sQueryProjInvoiceProjId   = _sProjInvoiceProjId;
+        #    m_sQueryProjId              = _sProjId;
+        #    fromDate                    = _dFrom;
+        #    toDate                      = _dTo;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #psaParmSalesUpdate
+        #
+        #// Description    : Parm function for SalesUpdate member variable
+        #// Parameters     : _eSalesUpdate: Sales update to be set
+        #// Return value   : Sales update value
+        #SalesUpdate psaParmSalesUpdate(SalesUpdate _eSalesUpdate = salesUpdate)
+        #{
+        #    salesUpdate = _eSalesUpdate;
+        #
+        #    return salesUpdate;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #psaParmSkipQueryOffset
+        #
+        #public boolean psaParmSkipQueryOffset(boolean _bSkipQueryOffset = m_bSkipQueryOffset)
+        #{
+        #    m_bSkipQueryOffset = _bSkipQueryOffset;
+        #    return m_bSkipQueryOffset;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #queryBuild
+        #public abstract QueryRun queryBuild()
+        #{
+        #//    return queryRun;
+        #}
+      ENDSOURCE
+      SOURCE #queryFromDate
+        #protected str queryFromDate()
+        #{
+        #    return queryValue(fromDate ? fromDate : dateNull());
+        #}
+      ENDSOURCE
+      SOURCE #queryRun
+        #/// <summary>
+        #/// Retrieves the instance of the <c>QueryRun</c> class, which is used by the <c>queryPrompt</c> method.
+        #/// </summary>
+        #/// <returns>
+        #/// The instance of the <c>QueryRun</c> class, which is used by the <c>queryPrompt</c> method.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method is used if a query prompt is the dialog, and if a Select menu item is added to a
+        #/// dialog. Do not create the instance of the <c>QueryRun</c> class when this method is called. Do it
+        #/// in the <c>unpack</c> method and the <c>initParmDefault</c> method, or in the <c>init</c> method.
+        #/// </remarks>
+        #public QueryRun queryRun()
+        #{
+        #    return queryRun;
+        #}
+      ENDSOURCE
+      SOURCE #queryToDate
+        #protected str queryToDate()
+        #{
+        #    return queryValue(toDate ? toDate : dateMax());
+        #}
+      ENDSOURCE
+      SOURCE #rangeTransId
+        #public void rangeTransId(QueryBuildDataSource        dataSource)
+        #{
+        #    ProjTrans               projTrans;
+        #    Common                  commonTrans;
+        #    List                    list;
+        #    ListIterator            li;
+        #    QueryBuildRange         queryRangeTransId;
+        #
+        ##localMacro.clearRange
+        #    queryRangeTransId    = dataSource.findRange(fieldnum(%1,TransId));
+        #
+        #    while (queryRangeTransId)
+        #    {
+        #        dataSource.clearRange(fieldnum(%1,TransId));
+        #        queryRangeTransId    = dataSource.findRange(fieldnum(%1,TransId));
+        #    }
+        ##endMacro
+        #
+        ##localMacro.clearRangeItem
+        #    queryRangeTransId    = dataSource.findRange(fieldnum(%1,projTransId));
+        #
+        #    while (queryRangeTransId)
+        #    {
+        #        dataSource.clearRange(fieldnum(%1,projTransId));
+        #        queryRangeTransId    = dataSource.findRange(fieldnum(%1,projTransId));
+        #    }
+        ##endMacro
+        #
+        ##localMacro.addRange
+        #    li.begin();
+        #
+        #    while (li.more())
+        #    {
+        #        commonTrans = li.value();
+        #        projTrans   = ProjTrans::construct(commonTrans);
+        #
+        #        if (projTrans.canBeInvoiced() && projTrans.tableId() == tableNum(%1))
+        #        {
+        #            dataSource.addRange(fieldnum(%1,TransId)).value(projTrans.transId());
+        #        }
+        #
+        #        li.next();
+        #    }
+        #
+        #    queryRangeTransId    = dataSource.findRange(fieldnum(%1,TransId));
+        #    if (! queryRangeTransId)
+        #    {
+        #            dataSource.addRange(fieldnum(%1,TransId)).value(sysQuery::valueEmptyString());
+        #    }
+        #
+        ##endMacro
+        #
+        ##localMacro.addRangeItem
+        #    li.begin();
+        #
+        #    while (li.more())
+        #    {
+        #        commonTrans = li.value();
+        #        projTrans   = ProjTrans::construct(commonTrans);
+        #
+        #        if (projTrans.canBeInvoiced() && projTrans.tableId() == tableNum(%1))
+        #        {
+        #            dataSource.addRange(fieldnum(%1,projTransId)).value(projTrans.transId());
+        #        }
+        #
+        #        li.next();
+        #    }
+        #
+        #    queryRangeTransId    = dataSource.findRange(fieldnum(%1,ProjTransId));
+        #    if (! queryRangeTransId)
+        #    {
+        #            dataSource.addRange(fieldnum(%1,ProjTransId)).value(sysQuery::valueEmptyString());
+        #    }
+        ##endMacro
+        #
+        #    // init list and list iterator
+        #    if(this.parmTransIdList())
+        #    {
+        #        list    = List::create(this.parmTransIdList());
+        #    }
+        #
+        #    li = new ListIterator(list);
+        #
+        #    switch (dataSource.table())
+        #    {
+        #        case (tableNum(ProjEmplTrans)):
+        #            #clearRange(ProjEmplTrans)
+        #            #addRange(ProjEmplTrans)
+        #            break;
+        #
+        #        case (tableNum(ProjCostTrans)):
+        #            #clearRange(ProjCostTrans)
+        #            #addRange(ProjCostTrans)
+        #            break;
+        #
+        #        case (tableNum(ProjItemTrans)):
+        #            #clearRangeItem(ProjItemTrans)
+        #            #addRangeItem(ProjItemTrans)
+        #            break;
+        #
+        #        case (tableNum(ProjRevenueTrans)):
+        #            #clearRange(ProjRevenueTrans)
+        #            #addRange(ProjRevenueTrans)
+        #            break;
+        #
+        #        case (tableNum(ProjOnAccTrans)):
+        #            #clearRange(ProjOnAccTrans)
+        #            #addRange(ProjOnAccTrans)
+        #            break;
+        #    }
+        #
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #resetPaymSchedule
+        #public void resetPaymSchedule()
+        #{
+        #    CustPaymSched   custPaymSched;
+        #
+        #    delete_from custPaymSched index hint ExtTableRecIdx
+        #        where custPaymSched.ExtTableId == tableNum(ProjProposalJour)
+        #        &&    custPaymSched.ExtRecId   == pProjProposalJour.RecId;
+        #}
+      ENDSOURCE
+      SOURCE #retentionRelatedRecs
+        #public void retentionRelatedRecs(RecId _recId, TableId _tableId)
+        #{
+        #    ProjProposalRevenueDetail   projProposalRevenueDetail;
+        #    ProjProposalRevenue         projProposalRevenue;
+        #    ProjProposalRevenue         projProposalRevenueLoc;
+        #    ProjProposalEmpl            projProposalEmpl;
+        #    ProjProposalCost            projProposalCost;
+        #    ProjProposalItem            projProposalItem;
+        #    ProjProposalOnAcc           projProposalOnAcc;
+        #
+        #    ProjEmplTrans               projEmplTrans;
+        #    ProjCostTrans               projCostTrans;
+        #    ProjItemTrans               projItemTrans;
+        #    ProjOnAccTrans              projOnAccTrans;
+        #    ProjRevenueTrans            projRevenueTrans;
+        #    ProjRevenueTrans            projRevenueTransLoc;
+        #    ProjRevenueTransSale        projRevenueTransSale;
+        #    ProjRevenueTransSale        projRevenueTransSaleLoc;
+        #
+        #    void insertRetentionMap(ProjProposalId _proposalId, PSAContractLineNum _psaContractLineNum)
+        #    {
+        #        while select RecId from projProposalRevenueDetail
+        #            join RecId, TransId from projRevenueTransSale
+        #                where projRevenueTransSale.RecId == projProposalRevenueDetail.SaleRefRecId
+        #                   && projRevenueTransSale.TransStatus == ProjTransStatus::MarkedCreditnote
+        #            join RecId from projProposalRevenueLoc
+        #                where projProposalRevenueDetail.ProposalRefRecId == projProposalRevenueLoc.RecId
+        #                   && projProposalRevenueLoc.ProposalId == _proposalId
+        #                   && projProposalRevenueLoc.psaContractLineNum == _psaContractLineNum
+        #                   && (projProposalRevenueLoc.IsRetained == NoYes::Yes
+        #                   || projProposalRevenueLoc.IsReleased == NoYes::Yes)
+        #        {
+        #            while select RecId from projRevenueTransSaleLoc
+        #                join RecId from projRevenueTransLoc
+        #                    where projRevenueTransLoc.TransId == projRevenueTransSaleLoc.TransId
+        #                       && (projRevenueTransSaleLoc.psaRefREcId == projRevenueTransSale.RecId
+        #                       || projRevenueTransSaleLoc.RecId == projRevenueTransSale.RecId)
+        #
+        #            if (projRevenueTransLoc)
+        #            {
+        #                if (!retentionLineMap.exists(projRevenueTransLoc.RecId))
+        #                {
+        #                    retentionLineMap.insert(projRevenueTransLoc.RecId, _recId);
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    if (_tableId == tableNum(ProjEmplTrans))
+        #    {
+        #        while select projProposalEmpl
+        #            join projEmplTrans
+        #                where projEmplTrans.TransId == projProposalEmpl.TransId
+        #                   && projEmplTrans.RecId == _recId
+        #        if (projProposalEmpl)
+        #        {
+        #            insertRetentionMap(projProposalEmpl.ProposalId, projProposalEmpl.psaContractLineNum);
+        #        }
+        #    }
+        #
+        #    if (_tableId == tableNum(ProjRevenueTrans))
+        #    {
+        #        while select projProposalRevenue
+        #            join projRevenueTrans
+        #                where projProposalRevenue.TransId == projRevenueTrans.TransId
+        #                   && projRevenueTrans.RecId == _recId
+        #        if (projProposalRevenue)
+        #        {
+        #            insertRetentionMap(projProposalRevenue.ProposalId, projProposalRevenue.psaContractLineNum);
+        #        }
+        #    }
+        #
+        #    if (_tableId == tableNum(ProjCostTrans))
+        #    {
+        #        while select projProposalCost
+        #            join projCostTrans
+        #            where projCostTrans.TransId == projProposalCost.TransId
+        #               && projCostTrans.RecId == _recId
+        #        if (projProposalCost)
+        #        {
+        #            insertRetentionMap(projProposalCost.ProposalId, projProposalCost.psaContractLineNum);
+        #        }
+        #    }
+        #
+        #    if (_tableId == tableNum(ProjItemTrans))
+        #    {
+        #        while select projProposalItem
+        #            join projItemTrans
+        #            where projItemTrans.ProjTransId == projProposalItem.ProjTransId
+        #               && projItemTrans.RecId == _recId
+        #        if (projProposalItem)
+        #        {
+        #            insertRetentionMap(projProposalItem.ProposalId, projProposalItem.psaContractLineNum);
+        #        }
+        #    }
+        #
+        #    if (_tableId == tableNum(ProjOnAccTrans))
+        #    {
+        #        while select projProposalOnAcc
+        #            join projOnAccTrans
+        #            where projOnAccTrans.TransId == projProposalOnAcc.TransId
+        #               && projOnAccTrans.RecId == _recId
+        #        if (projProposalOnAcc)
+        #        {
+        #            insertRetentionMap(projProposalOnAcc.ProposalId, projProposalOnAcc.psaContractLineNum);
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #retentionReversal
+        #public void retentionReversal(RecId _recId, ProjProposalId _proposalId = '', PSAContractLineNum _contractLineNum ='')
+        #{
+        #    ProjRevenueTransSale        projRevenueTransSaleLoc;
+        #    ProjRevenueTrans            projRevenueTrans;
+        #    PSAProjProposalProj         projProposalProjLoc;
+        #
+        #    if (_recId)
+        #    {
+        #        select projRevenueTrans
+        #            join LineAmount,psaRetentionPercent from projRevenueTransSaleLoc
+        #            where projRevenueTrans.TransId == projRevenueTransSaleLoc.TransId
+        #                && (projRevenueTrans.IsRetained == NoYes::Yes
+        #                || projRevenueTrans.IsReleased == NoYes::Yes)
+        #                && projRevenueTransSaleLoc.RecId == _recId;
+        #
+        #        if (projRevenueTrans)
+        #        {
+        #            select forupdate projProposalProjLoc
+        #                where projProposalProjLoc.ProjProposalId == _proposalId;
+        #
+        #            if (projProposalProjLoc)
+        #            {
+        #                if (projRevenueTrans.IsReleased)
+        #                {
+        #                    projProposalProjLoc.ReleasedAmount = projRevenueTransSaleLoc.LineAmount;
+        #                }
+        #                else
+        #                {
+        #                    projProposalProjLoc.RetainedNow     = projRevenueTransSaleLoc.LineAmount;
+        #                    projProposalProjLoc.RetainedPercent = projRevenueTransSaleLoc.psaRetentionPercent;
+        #                }
+        #                projProposalProjLoc.update();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #/// <summary>
+        #/// Contains the code that does the actual job of the class.
+        #/// </summary>
+        #public void run()
+        #{
+        #    #OCCRetryCount
+        #    this.saveLast();
+        #    // Build a new query based on the selection the user made....
+        #    try
+        #    {
+        #        ttsbegin;
+        #
+        #        this.progressInit("@SYS54552", progressTotal, #AviFormLetter);
+        #        progress.setText("@SYS26577");
+        #        retentionLineMap = new Map(Types::Int64, Types::Int64);
+        #
+        #        this.processTransIdContainer();
+        #        this.initQuery();
+        #
+        #        // <GBR>
+        #        if(BrazilParameters::isEnabled())
+        #        {
+        #            this.initProjInvoiceProposalSplit_BR();
+        #        }
+        #        // </GBR>
+        #
+        #        while (queryRun.next())
+        #        {
+        #            this.assignTables();
+        #
+        #            //check permissions if we need to create an invoice
+        #            //don't worry about it if updating
+        #            if(this.createProposal() && !pProjTable.status().checkRule(ProjStatusRule::CreateInvoiceProposal))
+        #            {
+        #                //only display the warning once, avoid flooding the log with the same message
+        #                if(queryRun.changed(tableNum(ProjTable)))
+        #                {
+        #                    warning(strFmt("@SYS113136", pProjTable.ProjId, pProjTable.Type, pProjTable.Status));
+        #                }
+        #                continue;
+        #            }
+        #
+        #            if (!m_bUseTmpProjProjProposal || (m_bUseTmpProjProjProposal && this.psAisSelected()))
+        #            {
+        #                this.doProposal();
+        #            }
+        #        }
+        #
+        #        // <GBR>
+        #        if(BrazilParameters::isEnabled())
+        #        {
+        #            this.updateInvoiceTotal_BR();
+        #        }
+        #        else
+        #        {
+        #        // </GBR>
+        #        this.updateInvoiceTotal();
+        #        // <GBR>
+        #        }
+        #        // </GBR>
+        #
+        #        // When an invoice proposal is generated, the system will
+        #        // automatically create retainage withholding records and/or retainage billing records at the project level.
+        #        if (isConfigurationkeyEnabled(configurationKeyNum(PSAARRetainage)))
+        #        {
+        #            this.doRetention();
+        #        }
+        #        ttscommit;
+        #    }
+        #
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    catch (Exception::UpdateConflict)
+        #    {
+        #        if (appl.ttsLevel() == 0)
+        #        {
+        #            if (xSession::currentRetryCount() >= #RetryNum)
+        #            {
+        #                throw Exception::UpdateConflictNotRecovered;
+        #            }
+        #            else
+        #            {
+        #                retry;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            throw Exception::UpdateConflict;
+        #        }
+        #    }
+        #
+        #    catch (Exception::Error)
+        #    {
+        #        // Update has been canceled.
+        #        throw error("@SYS18447");
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #runsImpersonated
+        #/// <summary>
+        #/// Determines whether the batch task is run on the server or on a client.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the task is run on the server; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// Your classes that extend <c>RunBaseBatch</c> must override the <c>runsImpersonated</c> method and
+        #/// return false, if you want those tasks to run on a client.
+        #/// </remarks>
+        #public boolean runsImpersonated()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #setProjProposalJour
+        #public void setProjProposalJour(ProjFundingSourceRefId _projFundingRefId,
+        #                                TaxGroup  _taxGroup,
+        #                                CurrencyCode _currencyId,
+        #                                ProjInvoiceProjId _sBillTo = '',
+        #                                DimensionDefault defaultDimension = 0)
+        #{
+        #    ProjProposalJour rProjProposalJour;
+        #    boolean             isPreBillLoc;
+        #
+        #    if (! this.createProposal())
+        #    {
+        #        return;
+        #    }
+        #
+        #    select tmpProjProposalJour
+        #    where   tmpProjProposalJour.ProjInvoiceProjId   == this.parmProjTable().ProjInvoiceProjId
+        #    &&      tmpProjProposalJour.FundingSource       == _projFundingRefId
+        #    &&      tmpProjProposalJour.TaxGroupId          == _taxGroup
+        #    &&      tmpProjProposalJour.CurrencyId          == _currencyId;
+        #
+        #    if (tmpProjProposalJour)
+        #    {
+        #        select rProjProposalJour
+        #            where rProjProposalJour.RecId == tmpProjProposalJour.RefProjProposalJour;
+        #    }
+        #    else
+        #    {
+        #        if (updateProposal && pProjProposalJour)
+        #        {
+        #            rProjProposalJour = pProjProposalJour;
+        #        }
+        #
+        #        else if (updateProposal && pProjProposalJour)
+        #        {
+        #            rProjProposalJour = pProjProposalJour;
+        #        }
+        #        else
+        #        {
+        #            // <GEEPL>
+        #            /*
+        #            // </GEEPL>
+        #            rProjProposalJour = this.parmProjInvoiceTable().createProposalJour(projInvoiceType,_currencyId, _projFundingRefId, invoiceDate, this.interCompanyPosted());
+        #            // <GEEPL>
+        #            */
+        #            rProjProposalJour = this.parmProjInvoiceTable().createProposalJour(projInvoiceType,_currencyId, _projFundingRefId, invoiceDate, this.interCompanyPosted(), PSAInvoiceMethod::Progress, taxPeriodPaymentCode);
+        #            // </GEEPL>
+        #
+        #            tmpProjProposalJour.DiscPercent             = enddiscPercent;
+        #            tmpProjProposalJour.ProjInvoiceProjId       = this.parmProjInvoiceTable().ProjInvoiceProjId;
+        #            tmpProjProposalJour.FundingSource           = _projFundingRefId;
+        #            tmpProjProposalJour.TaxGroupId              = _taxGroup;
+        #            tmpProjProposalJour.CurrencyId              = _currencyId;
+        #            tmpProjProposalJour.RefProjProposalJour     = rProjProposalJour.RecId;
+        #            tmpProjProposalJour.insert();
+        #            proposalIdList.addEnd(rProjProposalJour.ProposalId);
+        #        }
+        #
+        #        if (!isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+        #        {
+        #
+        #            projRevenueProposalList.addEnd(rProjProposalJour.ProposalId);
+        #        }
+        #    }
+        #
+        #    if (pProjOnAccTrans)
+        #    {
+        #        isPreBillLoc = pProjOnAccTrans.TransactionOrigin == ProjOrigin::Deduction ? true : false;
+        #    }
+        #
+        #    if (!ProjProposalJour::psaIsCTLNChecked(rProjProposalJour.ProposalId))
+        #    {
+        #        select m_tProjProposalProj
+        #            where m_tProjProposalProj.ProjId          == this.parmProjTable().ProjId
+        #                && m_tProjProposalProj.ProjProposalId  == rProjProposalJour.ProposalId
+        #                && m_tProjProposalProj.IsPreBill       == isPreBillLoc;
+        #    }
+        #    else
+        #    {
+        #        select m_tProjProposalProj
+        #            where m_tProjProposalProj.ProjProposalId  == rProjProposalJour.ProposalId
+        #                && m_tProjProposalProj.ContractLineNum == this.parmContLineNum()
+        #                && m_tProjProposalProj.IsPreBill       == isPreBillLoc;
+        #    }
+        #
+        #    if (!m_tProjProposalProj)
+        #    {
+        #        m_tProjProposalProj.ProjId          = this.parmContLineNum() ? PSAContractLineItems::find(this.parmContLineNum()).FeeProjId :
+        #                                                                   this.parmProjTable().ProjId;
+        #        m_tProjProposalProj.ProjProposalId  = rProjProposalJour.ProposalId;
+        #        m_tProjProposalProj.ContractLineNum = this.parmContLineNum();
+        #        m_tProjProposalProj.FundingSource   = _projFundingRefId;
+        #        m_tProjProposalProj.IsPreBill       = isPreBillLoc;
+        #        m_tProjProposalProj.insert();
+        #    }
+        #
+        #
+        #    this.parmProjProposalJour(rProjProposalJour);
+        #
+        #    // Add end date to rProjProposalJour
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)) && rProjProposalJour.ProposalId)
+        #    {
+        #        if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #        {
+        #            if (pProjInvoiceTable.psaContractLines==NoYes::Yes)
+        #            {
+        #                this.psaAddEndDateToProposalJour();
+        #            }
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #setProjProposalJour_BR
+        #/// <summary>
+        #///     Initializes the <c>ProjProposalJour</c> records
+        #/// </summary>
+        #/// <param name="_projProposalTransMap">
+        #///     Table map of project transactions
+        #/// </param>
+        #/// <param name="_currencyCode">
+        #///     Currency code
+        #/// </param>
+        #/// <param name="_projFundingRefId">
+        #///     Project fundiong recId
+        #/// </param>
+        #/// <param name="_taxGroup">
+        #///     Tax group
+        #/// </param>
+        #/// <param name="_sBillTo">
+        #///     Contract to bill to
+        #/// </param>
+        #/// <param name="_defaultDimension">
+        #///     Default ledger dimension
+        #/// </param>
+        #/// <param name="_serviceCodeId">
+        #///     Service code id
+        #/// </param>
+        #
+        #protected void setProjProposalJour_BR(ProjProposalTransMap_BR _projProposalTransMap,
+        #                                   CurrencyCode            _currencyCode,
+        #                                   ProjFundingSourceRefId  _projFundingRefId,
+        #                                   TaxGroup                _taxGroup,
+        #                                   ProjInvoiceProjId       _sBillTo = '',
+        #                                   DimensionDefault        _defaultDimension = 0,
+        #                                   TaxServiceCodeId_BR     _serviceCodeId = '')
+        #{
+        #    ProjProposalJour rProjProposalJour;
+        #
+        #    if (! this.createProposal())
+        #    {
+        #        return;
+        #    }
+        #
+        #    projInvoiceProposalSplit_BR.parmInvoiceDate(invoiceDate);
+        #    projInvoiceProposalSplit_BR.interCompanyPosted(this.interCompanyPosted());
+        #    projInvoiceProposalSplit_BR.parmEndDiscPercent(enddiscPercent);
+        #
+        #    projInvoiceProposalSplit_BR.parmProjInvoiceTable(pProjInvoiceTable);
+        #
+        #    rProjProposalJour = projInvoiceProposalSplit_BR.doSplit(_projProposalTransMap, _currencyCode, _projFundingRefId, _taxGroup, _sBillTo, _defaultDimension);
+        #
+        #    if (!isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+        #    {
+        #        projRevenueProposalList.addEnd(rProjProposalJour.ProposalId);
+        #    }
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+        #    {
+        #        this.PSAInitProjProposalProj(rProjProposalJour, _projFundingRefId);
+        #    }
+        #
+        #
+        #    this.parmProjProposalJour(rProjProposalJour);
+        #}
+      ENDSOURCE
+      SOURCE #setQueryRange
+        #protected void setQueryRange()
+        #{
+        #    QueryBuildRange     queryRangeProjInvoiceProjId;
+        #    QueryBuildRange     queryRangeProjId;
+        #    ProjId              escapedProjId;
+        #    #DEFINE.asterisk("*")
+        #    ProjTable           tProjTable = ProjTable::find(projId);
+        #
+        #
+        #    if (queryRun.query().dataSourceTable(tableNum(ProjInvoiceTable)).findRange(fieldNum(ProjInvoiceTable,ProjInvoiceProjId)))
+        #    {
+        #        queryRangeProjInvoiceProjId = queryRun.query().dataSourceTable(tableNum(ProjInvoiceTable)).rangeField(fieldNum(ProjInvoiceTable,ProjInvoiceProjId));
+        #        if (projInvoiceProjId)
+        #        {
+        #            queryRangeProjInvoiceProjId.value(SysQuery::value(projInvoiceProjId));
+        #        }
+        #        else
+        #        {
+        #            queryRangeProjInvoiceProjId.value(SysQuery::valueUnlimited());
+        #        }
+        #    }
+        #    if (queryRun.query().dataSourceTable(tableNum(ProjTable)).findRange(fieldNum(ProjTable,ProjId)))
+        #    {
+        #        queryRangeProjId    = queryRun.query().dataSourceTable(tableNum(ProjTable)).rangeField(fieldNum(ProjTable,ProjId));
+        #        if (!projId)
+        #        {
+        #            queryRangeProjId.value(SysQuery::valueUnlimited());
+        #        }
+        #        else if (strFind(projId, #asterisk, 1, strLen(projId)) == strLen(projId))
+        #        {
+        #            escapedProjId = subStr(projId, 1, strLen(projId) -1 );
+        #            escapedProjId = SysQuery::value(escapedProjId);
+        #            projId = strFmt('%1*', escapedProjId);
+        #            queryRangeProjId.value(projId);
+        #        }
+        #        else
+        #        {
+        #            queryRangeProjId.value(SysQuery::value(projId));
+        #        }
+        #    }
+        #
+        #    // Invoice proposal selection ranges
+        #    if (m_sQueryCustAccount)
+        #    {
+        #        queryRun.query().dataSourceTable(tableNum(ProjFundingSource)).addRange(fieldNum(ProjFundingSource, CustAccount)).value(m_sQueryCustAccount);
+        #    }
+        #
+        #    if (m_sQueryProjInvoiceProjId)
+        #    {
+        #        queryRangeProjInvoiceProjId.value(m_sQueryProjInvoiceProjId);
+        #    }
+        #
+        #    if (m_sQueryProjId)
+        #    {
+        #        queryRangeProjId.value(m_sQueryProjId);
+        #    }
+        #
+        #    if (m_sQueryEmplId)
+        #    {
+        #        queryRun.query().dataSourceTable(tableNum(ProjTable)).addRange(fieldNum(ProjTable,WorkerResponsible)).value(m_sQueryEmplId);
+        #    }
+        #
+        #    if (!isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)) || ProjInvoiceTable::find(queryRangeProjInvoiceProjId.value()).psaContractLines == NoYes::No)
+        #    {
+        #        // Allow split billing on fixed price
+        #        if (tProjTable.Type==ProjType::TimeMaterial)
+        #        {
+        #            queryRangeProjInvoiceProjId.value('');
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #showQueryValues
+        #/// <summary>
+        #/// Determines whether to add a Select button to the dialog.
+        #/// </summary>
+        #/// <returns>
+        #/// Always returns true.
+        #/// </returns>
+        #/// <remarks>
+        #/// If you click this button, it will show the query form. Therefore, the <c>queryRun</c> method has to
+        #/// return a valid <c>queryRun</c> object.If you change the return value to false the button will no
+        #/// longer be added.
+        #/// </remarks>
+        #public boolean showQueryValues()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #unpack
+        #public boolean unpack(container packedClass)
+        #{
+        #    Integer         version         = RunBase::getVersion(packedClass);
+        #    container       packedQuery;
+        #
+        #    // <GEEPL>
+        #    #define.CurrentVersionV15(15)
+        #    #localmacro.CurrentListV15
+        #        queryEmpl,
+        #        queryCost,
+        #        queryRevenue,
+        #        queryItem,
+        #        queryOnAcc,
+        #        querySalesLine,
+        #        SalesUpdate,
+        #        FromDate,
+        #        ToDate,
+        #        InvoiceDate,
+        #        projInvoiceProjId,
+        #        projId,
+        #        queryInvoiceType,
+        #        querySubscription,
+        #        projTransIdList,
+        #        calledFromTrans
+        #     #endmacro
+        #    // </GEEPL>
+        #
+        #    switch (version)
+        #    {
+        #        case #CurrentVersion:
+        #            [version,#CurrentList,packedQuery] = packedClass;
+        #
+        #            if (SysQuery::isPackedOk(packedQuery))
+        #            {
+        #                queryRun = new QueryRun(packedQuery);
+        #            }
+        #            else
+        #            {
+        #                queryRun = this.queryBuild();
+        #            }
+        #            break;
+        #    // <GEEPL>
+        #        case #CurrentVersionV15:
+        #            [version, #CurrentListV15, packedQuery] = packedClass;
+        #
+        #            if (SysQuery::isPackedOk(packedQuery))
+        #            {
+        #                queryRun = new QueryRun(packedQuery);
+        #            }
+        #            else
+        #            {
+        #                queryRun = this.queryBuild();
+        #            }
+        #            break;
+        #    // </GEEPL>
+        #
+        #        default:
+        #            return false;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #updateInvoiceTotal
+        #protected void updateInvoiceTotal()
+        #{
+        #    #define.ProjInvoiceProposalDetail("ProjInvoiceProposalDetail")
+        #    SysInfoAction_Formrun   infoAction;
+        #
+        #    if (pProjProposalJour)
+        #    {
+        #        select firstonly tmpProjProposalJour where tmpProjProposalJour.RefProjProposalJour == pProjProposalJour.RecId;
+        #
+        #        if (!tmpProjProposalJour)
+        #        {
+        #            tmpProjProposalJour.data(pProjProposalJour);
+        #            tmpProjProposalJour.RefProjProposalJour = pProjProposalJour.RecId;
+        #            tmpProjProposalJour.insert();
+        #        }
+        #    }
+        #
+        #    if (this.createProposal())
+        #    {
+        #        if (this.parmShowMessages())
+        #        {
+        #            select firstonly tmpProjProposalJour;
+        #
+        #            if (! tmpProjProposalJour)
+        #            {
+        #                info("@SYS66026");
+        #                isInvoiceProposalCreated = false;
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        pProjProposalJour.DueDate        = dateNull();
+        #        pProjProposalJour.CashDiscDate   = dateNull();
+        #        pProjProposalJour.InvoiceDate    = invoiceDate;
+        #        ProjInvoiceProposalInsertLines::setProjProposalTotals(this.parmProjProposalJour().ProposalId);
+        #        this.resetPaymSchedule();
+        #    }
+        #
+        #    while select tmpProjProposalJour
+        #        order by ProjInvoiceProjId
+        #    {
+        #        select forupdate pProjProposalJour
+        #            where pProjProposalJour.RecId    == tmpProjProposalJour.RefProjProposalJour;
+        #
+        #        if (pProjProposalJour)
+        #        {
+        #            if (CustTable::blocked(pProjProposalJour.InvoiceAccount) == CustVendorBlocked::No)
+        #            {
+        #                progress.setText("@SYS8311");
+        #
+        #                pProjProposalJour.DiscPercent        = tmpProjProposalJour.DiscPercent;
+        #                ProjInvoiceProposalInsertLines::setProjProposalTotals(this.parmProjProposalJour().ProposalId);
+        #                if (this.parmShowMessages())
+        #                {
+        #                    /*
+        #                    infoAction = SysInfoAction_Formrun::newFormname('ProjInvoiceProposal');
+        #                    */
+        #                    infoAction = SysInfoAction_Formrun::newFormname(#ProjInvoiceProposalDetail);
+        #                    infoAction.parmCallerBuffer(pProjProposalJour);
+        #                    if (pProjProposalJour.InvoiceAmount < 0)
+        #                    {
+        #                        info(strFmt("@SYS91513",pProjProposalJour.ProposalId,pProjProposalJour.ProjInvoiceProjId, pProjProposalJour.CurrencyId), '', infoAction);
+        #                    }
+        #                    else
+        #                    {
+        #                        info(strFmt("@SYS66077",pProjProposalJour.ProposalId,pProjProposalJour.ProjInvoiceProjId, pProjProposalJour.CurrencyId), '', infoAction);
+        #                    }
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (this.parmShowMessages())
+        #                {
+        #                    info(strFmt("@SYS66078", pProjProposalJour.ProposalId,
+        #                                             pProjProposalJour.ProjInvoiceProjId,
+        #                                             pProjProposalJour.CurrencyId,
+        #                                             pProjProposalJour.InvoiceAccount));
+        #
+        #                    isInvoiceProposalCreated = false;
+        #                }
+        #                pProjProposalJour.delete();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateInvoiceTotal_BR
+        #private void updateInvoiceTotal_BR()
+        #{
+        #    boolean more;
+        #    RecordSortedList proposalJourList;
+        #    ;
+        #
+        #    if (this.createProposal())
+        #    {
+        #        if (! projInvoiceProposalSplit_BR.isProposalJourCreated())
+        #        {
+        #            info("@SYS66026");
+        #        }
+        #    }
+        #    else
+        #    {
+        #        pProjProposalJour.DueDate        = dateNull();
+        #        pProjProposalJour.CashDiscDate   = dateNull();
+        #        pProjProposalJour.InvoiceDate    = invoiceDate;
+        #        ProjInvoiceProposalInsertLines::setProjProposalTotals(this.parmProjProposalJour().ProposalId);
+        #        this.resetPaymSchedule();
+        #    }
+        #
+        #    proposalJourList = projInvoiceProposalSplit_BR.getProjProposalJourList();
+        #
+        #    for (more = proposalJourList.first(pProjProposalJour);
+        #         more;
+        #         more = proposalJourList.next(pProjProposalJour))
+        #    {
+        #        if (CustTable::blocked(pProjProposalJour.InvoiceAccount) == CustVendorBlocked::No)
+        #        {
+        #            progress.setText("@SYS8311");
+        #
+        #            ProjInvoiceProposalInsertLines::setProjProposalTotals(this.parmProjProposalJour().ProposalId);
+        #
+        #            if (pProjProposalJour.InvoiceAmount < 0)
+        #            {
+        #                info(strFmt("@SYS91513",pProjProposalJour.ProposalId,pProjProposalJour.ProjInvoiceProjId, pProjProposalJour.CurrencyId));
+        #            }
+        #            else
+        #            {
+        #                info(strFmt("@SYS66077",pProjProposalJour.ProposalId,pProjProposalJour.ProjInvoiceProjId, pProjProposalJour.CurrencyId));
+        #            }
+        #        }
+        #        else
+        #        {
+        #            info(strFmt("@SYS66078", pProjProposalJour.ProposalId,
+        #                                     pProjProposalJour.ProjInvoiceProjId,
+        #                                     pProjProposalJour.CurrencyId,
+        #                                     pProjProposalJour.InvoiceAccount));
+        #            pProjProposalJour.delete();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateRetainage
+        #private void updateRetainage(ProjProposalId _projProposalId)
+        #{
+        #    ProjProposalRevenue         projProposalRevenue;
+        #    ProjProposalRevenueDetail   projProposalRevenueDetail;
+        #    PSAProjProposalProj         projProposalProjLoc;
+        #
+        #    select RecId, ProposalId, psaContractLineNum, IsReleased from projProposalRevenue
+        #        where projProposalRevenue.ProposalId == _projProposalId;
+        #
+        #    if (projProposalRevenue)
+        #    {
+        #        select forupdate RecId, ProjId,ProjProposalId, ContractLineNum from projProposalProjLoc
+        #            where projProposalProjLoc.ProjProposalId == _projProposalId;
+        #
+        #        if (projProposalProjLoc)
+        #        {
+        #            select sum(AmountCur) from projProposalRevenueDetail
+        #                exists join projProposalRevenue
+        #                    where projProposalRevenueDetail.ProposalRefRecId == projProposalRevenue.RecId
+        #                        && projProposalRevenue.ProposalId == projProposalProjLoc.ProjProposalId
+        #                        && projProposalRevenue.psaContractLineNum == projProposalProjLoc.ContractLineNum
+        #                        && projProposalRevenue.IsReleased == NoYes::Yes;
+        #
+        #            if (projProposalRevenueDetail)
+        #            {
+        #                projProposalProjLoc.ReleasedAmount   = projProposalRevenueDetail.AmountCur;
+        #                projProposalProjLoc.update();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validate
+        #public boolean validate(Object _calledFrom = null)
+        #{
+        #    boolean ret;
+        #
+        #    ret = super(_calledFrom);
+        #
+        #    if (fromDate > toDate && toDate)
+        #    {
+        #        ret = checkFailed("@SYS91020");
+        #    }
+        #
+        #    return ret;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #construct
+        #private static ProjInvoiceChoose construct(ProjChoose _projChoose, ProjProposalJour _projProposalJour = null)
+        #{
+        #    ProjInvoiceChoose   projInvoiceChoose;
+        #
+        #    switch(_projChoose)
+        #    {
+        #        case ProjChoose::CreateProposalOnAccount:
+        #            projInvoiceChoose = new ProjInvoiceChooseOnAcc(_projProposalJour);
+        #            break;
+        #
+        #        case ProjChoose::CreateProposalNormal:
+        #            projInvoiceChoose = new ProjInvoiceChooseNormal(_projProposalJour);
+        #            break;
+        #
+        #        case ProjChoose::UpdateProposal:
+        #            switch(_projProposalJour.InvoiceType)
+        #            {
+        #                case ProjInvoiceType::Invoice:
+        #                    projInvoiceChoose = new ProjInvoiceChooseNormalUpdate(_projProposalJour);
+        #                    projInvoiceChoose.parmCurrencyId(_projProposalJour.CurrencyId);
+        #                    break;
+        #
+        #                case ProjInvoiceType::OnAccount:
+        #                    projInvoiceChoose = new ProjInvoiceChooseOnAccUpdate(_projProposalJour);
+        #                    projInvoiceChoose.parmCurrencyId(_projProposalJour.CurrencyId);
+        #                    break;
+        #
+        #                default:
+        #                    throw error("@SYS50049");
+        #            }
+        #            break;
+        #
+        #        default:
+        #            throw error("@SYS50049");
+        #    }
+        #
+        #    return projInvoiceChoose;
+        #}
+      ENDSOURCE
+      SOURCE #createTransIdList
+        #public static List createTransIdList(Args     args)
+        #{
+        #    List                transIdList;
+        #
+        #    FormDataSource      formDataSource;
+        #    ProjCostTrans       projCostTrans;
+        #    ProjEmplTrans       projEmplTrans;
+        #    ProjItemTrans       projItemTrans;
+        #    ProjOnAccTrans      projOnAccTrans;
+        #    ProjRevenueTrans    projRevenueTrans;
+        #
+        #    ProjEmplTransSale       projEmplTransSale;
+        #    ProjCostTransSale       projCostTransSale;
+        #    ProjRevenueTransSale    projRevenueTransSale;
+        #    ProjItemTransSale       projItemTransSale;
+        #
+        #    SMAServiceOrderTable    smaServiceOrderTable;
+        #    SMAServiceOrderLine     smaServiceOrderLine;
+        #    SalesLine               salesLine;
+        #
+        #    ProjPostTransView       dataSourceRecord;
+        #    Args                    callerArgs;
+        #
+        #    #define.ItemTrans(1)
+        #    #define.HourTrans(2)
+        #    #define.CostTrans(3)
+        #    #define.RevenueTrans(4)
+        #    #define.OnAccountTrans(5)
+        #
+        #    transIdList     = new List(Types::Record);
+        #
+        #    if (args.caller())
+        #    {
+        #        callerArgs = args.caller().args();
+        #    }
+        #
+        #    if (callerArgs          &&
+        #        callerArgs.caller() &&
+        #       (callerArgs.caller().name() == formStr(projProjectTransactionsListPage) ||
+        #        callerArgs.caller().name() == formStr(ProjGrantTransListPage)))
+        #    {
+        #        formDataSource = callerArgs.caller().datasource(1);
+        #
+        #        for (dataSourceRecord = formDataSource.getFirst(true) ?
+        #                formDataSource.getFirst(true) : formDataSource.cursor();
+        #                dataSourceRecord; dataSourceRecord = formDataSource.getNext())
+        #        {
+        #            switch (dataSourceRecord.UnionAllBranchId)
+        #            {
+        #                case #ItemTrans:
+        #                projItemTrans = ProjItemTrans::find(dataSourceRecord.TransId);
+        #                transIdList.addEnd(projItemTrans);
+        #                break;
+        #
+        #            case #HourTrans:
+        #                projEmplTrans = ProjEmplTrans::find(dataSourceRecord.TransId);
+        #                transIdList.addEnd(projEmplTrans);
+        #                break;
+        #
+        #            case #CostTrans:
+        #                projCostTrans = ProjCostTrans::find(dataSourceRecord.TransId);
+        #                transIdList.addEnd(projCostTrans);
+        #                break;
+        #
+        #            case #RevenueTrans:
+        #                projRevenueTrans = ProjRevenueTrans::find(dataSourceRecord.TransId);
+        #                transIdList.addEnd(projRevenueTrans);
+        #                break;
+        #
+        #            case #OnAccountTrans:
+        #                projOnAccTrans = ProjOnAccTrans::find(dataSourceRecord.TransId);
+        #                transIdList.addEnd(projOnAccTrans);
+        #                break;
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        formDataSource  = args.record().dataSource();
+        #
+        #        switch(args.dataset())
+        #        {
+        #            case tableNum(ProjCostTrans):
+        #                projCostTrans   = args.record();
+        #                if (formDataSource)
+        #                {
+        #                    for (projCostTrans = formDataSource.getFirst(true) ?
+        #                         formDataSource.getFirst(true) : formDataSource.cursor();
+        #                         projCostTrans; projCostTrans = formDataSource.getNext())
+        #                    {
+        #                        transIdList.addEnd(projCostTrans);
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    transIdList.addEnd(projCostTrans);
+        #                }
+        #                break;
+        #
+        #            case tableNum(ProjEmplTrans):
+        #                projEmplTrans   = args.record();
+        #                if (formDataSource)
+        #                {
+        #                    for (projEmplTrans = formDataSource.getFirst(true) ?
+        #                         formDataSource.getFirst(true) : formDataSource.cursor();
+        #                         projEmplTrans; projEmplTrans = formDataSource.getNext())
+        #                    {
+        #                        transIdList.addEnd(projEmplTrans);
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    transIdList.addEnd(projEmplTrans);
+        #                }
+        #                break;
+        #
+        #            case tableNum(ProjItemTrans):
+        #                projItemTrans   = args.record();
+        #                if (formDataSource)
+        #                {
+        #                    for (projItemTrans = formDataSource.getFirst(true) ?
+        #                         formDataSource.getFirst(true) : formDataSource.cursor();
+        #                         projItemTrans; projItemTrans = formDataSource.getNext())
+        #                    {
+        #                        transIdList.addEnd(projItemTrans);
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    transIdList.addEnd(projItemTrans);
+        #                }
+        #                break;
+        #
+        #            case tableNum(ProjOnAccTrans):
+        #                projOnAccTrans   = args.record();
+        #                if (formDataSource)
+        #                {
+        #                    for (projOnAccTrans = formDataSource.getFirst(true) ?
+        #                         formDataSource.getFirst(true) : formDataSource.cursor();
+        #                         projOnAccTrans; projOnAccTrans = formDataSource.getNext())
+        #                    {
+        #                        transIdList.addEnd(projOnAccTrans);
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    transIdList.addEnd(projOnAccTrans);
+        #                }
+        #                break;
+        #
+        #            case tableNum(ProjRevenueTrans):
+        #                projRevenueTrans   = args.record();
+        #                if (formDataSource)
+        #                {
+        #                    for (projRevenueTrans = formDataSource.getFirst(true) ?
+        #                         formDataSource.getFirst(true) : formDataSource.cursor();
+        #                         projRevenueTrans; projRevenueTrans = formDataSource.getNext())
+        #                    {
+        #                        transIdList.addEnd(projRevenueTrans);
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    transIdList.addEnd(projRevenueTrans);
+        #                }
+        #                break;
+        #
+        #            case tableNum(SMAServiceOrderTable):
+        #                smaServiceOrderTable = args.record();
+        #
+        #                while select ProjTransId, TransactionType from smaServiceOrderLine
+        #                    where smaServiceOrderLine.ServiceOrderId     == smaServiceOrderTable.ServiceOrderId &&
+        #                          smaServiceOrderLine.ServiceOrderStatus == SMAServiceOrderStatus::Posted
+        #                {
+        #                    switch (smaServiceOrderLine.TransactionType)
+        #                    {
+        #                        case SMATransactionType::Hour      :
+        #                            select TransStatus from projEmplTransSale
+        #                                where projEmplTransSale.TransId == smaServiceOrderLine.ProjTransId;
+        #
+        #                            if (projEmplTransSale && projEmplTransSale.TransStatus == ProjTransStatus::Adjusted)
+        #                            {
+        #                                transIdList.appendList(ProjInvoiceChoose::createTransListOnProjAdjustment(smaServiceOrderLine.TransactionType, smaServiceOrderLine.ProjTransId));
+        #                            }
+        #
+        #                            if (projEmplTransSale && projEmplTransSale.TransStatus != ProjTransStatus::Adjusted)
+        #                            {
+        #                                transIdList.addEnd(ProjEmplTrans::find(smaServiceOrderLine.ProjTransId));
+        #                            }
+        #                            break;
+        #
+        #                        case SMATransactionType::Expense   :
+        #                            select TransStatus from projCostTransSale
+        #                                where projCostTransSale.TransId == smaServiceOrderLine.ProjTransId;
+        #
+        #                            if (projCostTransSale && projCostTransSale.TransStatus == ProjTransStatus::Adjusted)
+        #                            {
+        #                                transIdList.appendList(ProjInvoiceChoose::createTransListOnProjAdjustment(smaServiceOrderLine.TransactionType, smaServiceOrderLine.ProjTransId));
+        #                            }
+        #
+        #                            if (projCostTransSale && projCostTransSale.TransStatus != ProjTransStatus::Adjusted)
+        #                            {
+        #                                transIdList.addEnd(ProjCostTrans::find(smaServiceOrderLine.ProjTransId));
+        #                            }
+        #                            break;
+        #
+        #                        case SMATransactionType::Fee       :
+        #                            select TransStatus from projRevenueTransSale
+        #                                where projRevenueTransSale.TransId == smaServiceOrderLine.ProjTransId;
+        #
+        #                            if (projRevenueTransSale && projRevenueTransSale.TransStatus == ProjTransStatus::Adjusted)
+        #                            {
+        #                                transIdList.appendList(ProjInvoiceChoose::createTransListOnProjAdjustment(smaServiceOrderLine.TransactionType, smaServiceOrderLine.ProjTransId));
+        #                            }
+        #
+        #                            if (projRevenueTransSale && projRevenueTransSale.TransStatus != ProjTransStatus::Adjusted)
+        #                            {
+        #                                transIdList.addEnd(ProjRevenueTrans::find(smaServiceOrderLine.ProjTransId));
+        #                            }
+        #                            break;
+        #
+        #                        case SMATransactionType::Item      :
+        #                            select TransStatus from projItemTransSale
+        #                                where projItemTransSale.ProjTransId == smaServiceOrderLine.ProjTransId;
+        #
+        #                            if (projItemTransSale && projItemTransSale.TransStatus == ProjTransStatus::Adjusted)
+        #                            {
+        #                                transIdList.appendList(ProjInvoiceChoose::createTransListOnProjAdjustment(smaServiceOrderLine.TransactionType, smaServiceOrderLine.ProjTransId));
+        #                            }
+        #
+        #                            if (projItemTransSale && projItemTransSale.TransStatus != ProjTransStatus::Adjusted)
+        #                            {
+        #                                transIdList.addEnd(ProjItemTrans::find(smaServiceOrderLine.ProjTransId));
+        #                            }
+        #                            break;
+        #                    }
+        #                }
+        #
+        #                //checking to find if any saleslines are related and ready to be invoiced
+        #                while select RecId from salesLine
+        #                    where salesLine.SalesType      == SalesType::ItemReq &&
+        #                          salesLine.ProjId         == smaServiceOrderTable.ProjId &&
+        #                          salesLine.ServiceOrderId == smaServiceOrderTable.ServiceOrderId &&
+        #                          salesLine.SalesStatus    == SalesStatus::Invoiced
+        #                     join projItemTrans
+        #                         where projItemTrans.ProjTransId == salesLine.ProjTransId
+        #                     join TransStatus from projItemTransSale
+        #                         where projItemTransSale.ProjTransId == projItemTrans.ProjTransId
+        #                {
+        #                        if (projItemTransSale.TransStatus == ProjTransStatus::Adjusted)
+        #                        {
+        #                            transIdList.appendList(ProjInvoiceChoose::createTransListOnProjAdjustment(SMATransactionType::Item,
+        #                                                                                                      projItemTrans.ProjTransId));
+        #                        }
+        #                        else
+        #                        {
+        #                            transIdList.addEnd(projItemTrans);
+        #                        }
+        #                }
+        #        }
+        #    }
+        #
+        #    return transIdList;
+        #}
+      ENDSOURCE
+      SOURCE #createTransListOnProjAdjustment
+        #/// <summary>
+        #/// Creates a transaction list that will contain new created project transaction after adjustment.
+        #/// </summary>
+        #/// <param name="_smaTransactionType">
+        #/// An enumeration value that represents transaction type in service management.
+        #/// </param>
+        #/// <param name="_projTransId">
+        #/// A string represents project transaction ID.
+        #/// </param>
+        #/// <returns>
+        #/// A list that contains project transactions which are created after adjustment.
+        #/// </returns>
+        #public static List createTransListOnProjAdjustment(SMATransactionType  _smaTransactionType,
+        #                                            ProjTransIdBase     _projTransId)
+        #{
+        #    List                    transIdList;
+        #    ProjCostTrans           projCostTrans;
+        #    ProjEmplTrans           projEmplTrans;
+        #    ProjItemTrans           projItemTrans;
+        #    ProjRevenueTrans        projRevenueTrans;
+        #    ProjEmplTransSale       projEmplTransSale;
+        #    ProjCostTransSale       projCostTransSale;
+        #    ProjRevenueTransSale    projRevenueTransSale;
+        #    ProjItemTransSale       projItemTransSale;
+        #
+        #    transIdList = new List(Types::Record);
+        #
+        #    switch (_smaTransactionType)
+        #    {
+        #        case SMATransactionType::Hour       :
+        #            while select projEmplTrans
+        #                where       projEmplTrans.TransIdRef      == _projTransId
+        #                exists join projEmplTransSale
+        #                    where   projEmplTrans.TransId         == projEmplTransSale.TransId
+        #                        && (projEmplTransSale.TransStatus == ProjTransStatus::Posted
+        #                        ||  projEmplTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #            {
+        #                transIdList.addEnd(projEmplTrans);
+        #            }
+        #            break;
+        #
+        #        case SMATransactionType::Expense    :
+        #            while select projCostTrans
+        #                where       projCostTrans.TransIdRef      == _projTransId
+        #                exists join projCostTransSale
+        #                    where   projCostTrans.TransId         == projCostTransSale.TransId
+        #                        && (projCostTransSale.TransStatus == ProjTransStatus::Posted
+        #                        ||  projCostTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #            {
+        #                transIdList.addEnd(projCostTrans);
+        #            }
+        #            break;
+        #
+        #        case SMATransactionType::Fee        :
+        #            while select projRevenueTrans
+        #                where       projRevenueTrans.TransIdRef      == _projTransId
+        #                exists join projRevenueTransSale
+        #                    where   projRevenueTrans.TransId         == projRevenueTransSale.TransId
+        #                        && (projRevenueTransSale.TransStatus == ProjTransStatus::Posted
+        #                        ||  projRevenueTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #            {
+        #                transIdList.addEnd(projRevenueTrans);
+        #            }
+        #            break;
+        #
+        #        case SMATransactionType::Item       :
+        #            while select projItemTrans
+        #                where       projItemTrans.ProjTransIdRef  == _projTransId
+        #                exists join projItemTransSale
+        #                    where   projItemTrans.ProjTransId     == projItemTransSale.ProjTransId
+        #                        && (projItemTransSale.TransStatus == ProjTransStatus::Posted
+        #                        ||  projItemTransSale.TransStatus == ProjTransStatus::MarkedCreditnote)
+        #            {
+        #                transIdList.addEnd(projItemTrans);
+        #            }
+        #            break;
+        #    }
+        #
+        #    return transIdList;
+        #}
+      ENDSOURCE
+      SOURCE #description
+        #protected static ClassDescription description()
+        #{
+        #    return strFmt("@SYS18885",funcName());
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args args)
+        #{
+        #    ProjInvoiceProjId       projInvoiceProjId;
+        #    ProjId                  projId;
+        #    List                    transIdList;
+        #    ProjChoose              projChoose;
+        #
+        #    ProjProposalJour        projProposalJour;
+        #    ProjInvoiceChoose       projInvoiceChoose;
+        #    Args                    argsTrans   = new Args();
+        #    // <GEEPL>
+        #    ProjInvoiceTable        projInvoiceTable;
+        #    // </GEEPL>
+        #
+        #    PSAContractLineNum      contractLineNum = '';
+        #
+        #    if (args && args.caller())
+        #    {
+        #        projInvoiceProjId   = args.caller().projInvoiceProjId();
+        #        projId              = args.caller().projId();
+        #        if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #        {
+        #            contractLineNum = args.caller().contractLineNum();
+        #        }
+        #    }
+        #
+        #    if (args.caller() && args.caller().callerDataRecord())
+        #    {
+        #        argsTrans.caller(args.caller());
+        #        argsTrans.record(args.caller().callerDataRecord());
+        #        transIdList = ProjInvoiceChoose::createTransIdList(argsTrans);
+        #    }
+        #
+        #    projChoose  = args.parmEnum();
+        #
+        #    if (projChoose == ProjChoose::UpdateProposal)
+        #    {
+        #        if (args.record().TableId == tableNum(ProjProposalJour))
+        #        {
+        #            projProposalJour = args.record();
+        #        }
+        #    }
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(Project3)))
+        #    {
+        #        projInvoiceChoose   = ProjInvoiceChoose::new_InvoiceChoose(projChoose,projInvoiceProjId,projId,projProposalJour, true, contractLineNum);
+        #    }
+        #    else
+        #    {
+        #        projInvoiceChoose   = ProjInvoiceChoose::new_InvoiceChoose(projChoose,projInvoiceProjId,projId,projProposalJour);
+        #    }
+        #
+        #    if (transIdList && transIdList.elements())
+        #    {
+        #        projInvoiceChoose.parmTransIdList(transIdList.pack());
+        #        projInvoiceChoose.parmCalledFromTrans(true);
+        #    }
+        #
+        #    if (args.caller() && args.caller().calledFromInvControl())
+        #    {
+        #            projInvoiceChoose.parmQueryCostTrans(args.caller().projTransTypeCost());
+        #            projInvoiceChoose.parmQueryEmplTrans(args.caller().projTransTypeEmpl());
+        #            projInvoiceChoose.parmQueryItemTrans(args.caller().projTransTypeItem());
+        #            projInvoiceChoose.parmQueryRevenueTrans(args.caller().projTransTypeRevenue());
+        #            projInvoiceChoose.parmQuerySubscriptionTrans(args.caller().projTransTypeSubscription());
+        #            projInvoiceChoose.parmQueryOnAccTrans(args.caller().projTransTypeOnAcc());
+        #            projInvoiceChoose.parmQuerySalesLine(args.caller().projTransTypeSales());
+        #            projInvoiceChoose.parmFromDate(args.caller().fromDate());
+        #            projInvoiceChoose.parmToDate(args.caller().toDate());
+        #            if (args.caller().toDate())
+        #            {
+        #                projInvoiceChoose.parmInvoiceDate(args.caller().toDate());
+        #            }
+        #            else
+        #            {
+        #                projInvoiceChoose.parmInvoiceDate(systemDateGet());
+        #            }
+        #    }
+        #
+        #    // <GEEPL>
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]) &&
+        #        args.caller() && args.caller().projInvoiceTable())
+        #    {
+        #        projInvoiceTable = args.caller().projInvoiceTable();
+        #        projInvoiceChoose.parmTaxPeriodPaymentCode_PL(projInvoiceTable.TaxPeriodPaymentCode_PL);
+        #    }
+        #    // </GEEPL>
+        #
+        #    if (projInvoiceChoose.prompt())
+        #    {
+        #        projInvoiceChoose.run();
+        #    }
+        #}
+        #
+        #
+        #
+      ENDSOURCE
+      SOURCE #new_InvoiceChoose
+        #public static ProjInvoiceChoose new_InvoiceChoose(
+        #    ProjChoose          _projChoose,
+        #    ProjInvoiceProjId   _projInvoiceProjId  = '',
+        #    ProjId              _projId             = '',
+        #    ProjProposalJour    _projProposalJour   = null,
+        #    boolean             _showMessages       = true,
+        #    PSAContractLineNum  _contractLineNum    = '')
+        #
+        #{
+        #    ProjInvoiceChoose projInvoiceChoose;
+        #
+        #    projInvoiceChoose = ProjInvoiceChoose::construct(_projChoose, _projProposalJour);
+        #
+        #    projInvoiceChoose.getLast();
+        #    projInvoiceChoose.parmCalledFromTrans(false);
+        #
+        #    projInvoiceChoose.parmprojInvoiceProjId(_projInvoiceProjId);
+        #    projInvoiceChoose.parmProjId(_projId);
+        #
+        #    projInvoiceChoose.setQueryRange();
+        #    projInvoiceChoose.parmShowMessages(_showMessages);
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PSAContractLine)))
+        #    {
+        #        projInvoiceChoose.parmContLineNum(_contractLineNum);
+        #    }
+        #
+        #    return projInvoiceChoose;
+        #}
+      ENDSOURCE
+      SOURCE #psaNew_InvoiceChoose
+        #
+        #// Change to Server Static
+        #server static ProjInvoiceChoose psaNew_InvoiceChoose(str            _sProjInvoiceProjId     = '',
+        #                                                     str            _sProjId                = '',
+        #                                                     TransDate      _dFrom                  = dateNull(),
+        #                                                     TransDate      _dTo                    = dateNull(),
+        #                                                     boolean              _salesOrderLine    = false,
+        #                                                     SalesUpdate          _salesUpdate       = SalesUpdate::DeliverNow,
+        #                                                     ProjFundingSourceId  _fundingSourceId   = '',
+        #                                                     InvoiceDate          _invoiceDate       = dateNull(),
+        #                                                     boolean              _queryCost         = true,
+        #                                                     boolean              _queryEmpl         = true,
+        #                                                     boolean              _queryItem         = true,
+        #                                                     boolean              _queryRevenue      = true,
+        #                                                     boolean              _queryOnAcc        = true,
+        #                                                     boolean              _querySubscription = false,
+        #                                                     boolean              _queryAdvances     = true,
+        #                                                     boolean              _queryRetention    = false,
+        #                                                     SMAServiceOrderTable _smaServiceOrderTable = null,
+        #                                                     boolean              _filterOnAccTrans  = true,
+        #                                                     ProjInvoiceTypeSelection
+        #                                                                          _projInvoiceTypeSelection = ProjInvoiceTypeSelection::Both)
+        #{
+        #    ProjInvoiceChoose projInvoiceChoose;
+        #
+        #    projInvoiceChoose = ProjInvoiceChoose::construct(ProjChoose::CreateProposalNormal);
+        #    projInvoiceChoose.parmprojInvoiceProjId(_sProjInvoiceProjId);
+        #    projInvoiceChoose.parmQueryCostTrans(_queryCost);
+        #    projInvoiceChoose.parmQueryEmplTrans(_queryEmpl);
+        #    projInvoiceChoose.parmQueryItemTrans(_queryItem);
+        #    projInvoiceChoose.parmQueryRevenueTrans(_queryRevenue);
+        #    projInvoiceChoose.psaParmQueryOnAcc(_queryOnAcc);
+        #    projInvoiceChoose.parmQuerySubscriptionTrans(_querySubscription);
+        #    projInvoiceChoose.psaParmQuerySalesLine(_salesOrderLine);
+        #    projInvoiceChoose.parmQueryAdvanceTrans(_queryAdvances);
+        #    projInvoiceChoose.parmQueryRetentionTrans(_queryRetention);
+        #    projInvoiceChoose.parmFundingSource(_fundingSourceId);
+        #    projInvoiceChoose.parmInvoiceDate(_invoiceDate);
+        #    projInvoiceChoose.parmSmaServiceOrderTable(_smaServiceOrderTable);
+        #    projInvoiceChoose.parmFilterOnAccTrans(_filterOnAccTrans);
+        #    projInvoiceChoose.parmQueryInvoiceType(_projInvoiceTypeSelection);
+        #
+        #    projInvoiceChoose.psaBuildQuery();
+        #    projInvoiceChoose.psaParmQueryValues(_sProjInvoiceProjId, _sProjId, _dFrom, _dTo);
+        #    projInvoiceChoose.psaParmSkipQueryOffset(true);
+        #    projInvoiceChoose.psaParmSalesUpdate(PSAParameters::find().ProjProposalSalesUpdate);
+        #    projInvoiceChoose.parmSalesUpdate(_salesUpdate);
+        #
+        #    projInvoiceChoose.setQueryRange();
+        #    projInvoiceChoose.initQuery();
+        #
+        #    return projInvoiceChoose;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #psaPreBilling_InvoiceChoose
+        #
+        #// Change to Server Static
+        #server static ProjInvoiceChoose psaPreBilling_InvoiceChoose(str _sProjInvoiceProjId = '', str _sProjId = '', TransDate _dFrom = dateNull(), TransDate _dTo = dateNull())
+        #{
+        #    ProjInvoiceChoose projInvoiceChoose;
+        #
+        #    projInvoiceChoose = ProjInvoiceChoose::construct(ProjChoose::CreateProposalOnAccount);
+        #    projInvoiceChoose.parmQueryCostTrans(false);
+        #    projInvoiceChoose.parmQueryEmplTrans(false);
+        #    projInvoiceChoose.parmQueryItemTrans(false);
+        #    projInvoiceChoose.parmQueryRevenueTrans(false);
+        #    projInvoiceChoose.psaParmQueryOnAcc(true);
+        #    projInvoiceChoose.psaParmQuerySalesLine(false);
+        #
+        #    projInvoiceChoose.psaBuildQuery();
+        #
+        #    projInvoiceChoose.psaParmQueryValues(_sProjInvoiceProjId, _sProjId, _dFrom, _dTo);
+        #    projInvoiceChoose.psaParmSkipQueryOffset(true);
+        #
+        #    projInvoiceChoose.setQueryRange();
+        #    projInvoiceChoose.initQuery();
+        #    return projInvoiceChoose;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #setProjProposalTotals
+        #protected static server void setProjProposalTotals(ProjProposalId _projProposalId)
+        #{
+        #        //Function is deprecated
+        #    throw error(Error::wrongUseOfFunction(funcName()));
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

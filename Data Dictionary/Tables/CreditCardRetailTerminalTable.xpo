@@ -1,0 +1,203 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardRetailTerminalTable
+    EnforceFKRelation 1
+    PROPERTIES
+      Name                #CreditCardRetailTerminalTable
+      Label               #@ACC592
+      TitleField1         #TerminalId
+      TitleField2         #Processor
+      ConfigurationKey    #CreditCardAdv
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #SurrogateKey
+      ClusterIndex        #SurrogateKey
+      DeveloperDocumentation  #@ACC1866
+      Origin              #{EC1AB5E8-B471-44E7-B2D7-61D387C30E58}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #GiftCard
+        ENUM
+        PROPERTIES
+          Name                #GiftCard
+          Label               #@RET4497
+          HelpText            #@ACC1867
+          Table               #CreditCardRetailTerminalTable
+          Origin              #{64914485-845C-4ACB-AA82-D21DE61F9DFB}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #HostAddress
+        STRING
+        PROPERTIES
+          Name                #HostAddress
+          Label               #@ACC44
+          HelpText            #@ACC45
+          Table               #CreditCardRetailTerminalTable
+          Origin              #{5A6F5ACC-5AC6-45C5-9B91-0856EF318F52}
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #Key1
+        STRING
+        PROPERTIES
+          Name                #Key1
+          Label               #@SYS1232
+          HelpText            #@ACC1868
+          Table               #CreditCardRetailTerminalTable
+          Origin              #{A3097EC9-3C02-43A9-9DDD-FA23EDBD0FE9}
+          ExtendedDataType    #CreditCardComment
+          StringSize          #256
+        ENDPROPERTIES
+        
+      FIELD #LoginId
+        STRING
+        PROPERTIES
+          Name                #LoginId
+          Table               #CreditCardRetailTerminalTable
+          Origin              #{4F4AFDBB-11AE-47CE-B50A-76913E153A32}
+          ExtendedDataType    #CreditCardLoginId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #MerchantId
+        STRING
+        PROPERTIES
+          Name                #MerchantId
+          Label               #@RET2999
+          Table               #CreditCardRetailTerminalTable
+          Origin              #{DD8ADF8C-8FDD-4135-B74A-027C2B1F264B}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #Processor
+        ENUM
+        PROPERTIES
+          Name                #Processor
+          Table               #CreditCardRetailTerminalTable
+          Origin              #{BCD642D1-A875-4B75-BBAB-1F9B7C824B77}
+          EnumType            #CreditCardProcessor
+        ENDPROPERTIES
+        
+      FIELD #Pwd
+        STRING
+        PROPERTIES
+          Name                #Pwd
+          Table               #CreditCardRetailTerminalTable
+          Origin              #{27C1618A-ED0A-4292-BE62-1836BB32B0A6}
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardRetailTerminalTable
+          Origin              #{CAD8955C-0EEF-4339-B49A-3375BDBDEEC0}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #Processor
+          #HostAddress
+          #GiftCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #Processor
+          #HostAddress
+          #GiftCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS53631
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #GiftCard
+          #HostAddress
+          #Key1
+          #LoginId
+          #MerchantId
+          #Processor
+          #Pwd
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdx
+      PROPERTIES
+        Name                #TerminalIdx
+        AllowDuplicates     #No
+        Origin              #{0C77D8A0-7541-4AF0-9D33-F713E5EE4B8E}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

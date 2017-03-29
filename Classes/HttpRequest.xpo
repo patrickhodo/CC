@@ -1,0 +1,133 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #HttpRequest
+    PROPERTIES
+      Name                #HttpRequest
+      Origin              #{2EE5BFF0-B8C1-4E83-9539-ACC113766859}
+      LegacyId            #20028
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #// A client computer can use the WinHttpRequest object WinHttp.WinHttpRequest.5.1) to
+        #// send an arbitrary HTTP request, receive the response, and have the Microsoft
+        #// XML Document Object Model (WinHttp.WinHttpRequest.5.1) parse that response.
+        #//
+        #// This object is integrated with MSXML to support sending the request body
+        #// directly from, and parsing the response directly into, the MSXML Document
+        #// Object Model objects.
+        #//
+        #// The usual sequence is to call Open, set any custom header information via
+        #// setRequestHeader, followed by Send, and then checking one of the four different
+        #// response properties.
+        #
+        #class HttpRequest
+        #{
+        #    COM myself;
+        #}
+      ENDSOURCE
+      SOURCE #getAllResponseHeaders
+        #// Returns: A string containing the resulting header information.
+        #// Remarks
+        #//  Each header name/value pair is separated by a combination carriage return-linefeed character
+        #str getAllResponseHeaders()
+        #{
+        #    return myself.getAllResponseHeaders();
+        #}
+      ENDSOURCE
+      SOURCE #getResponseHeader
+        #// Retrieves the value of an HTTP header from the response body.
+        #// Parameters
+        #// header:  String containing the case-insensitive header name.
+        #// Returns: String containing the resulting header information.
+        #// Remarks:
+        #//      The results of this method are valid only after the send method
+        #//      has been successfully completed.
+        #// Example: getResponseHeader("Content-Type");
+        #// returns "text/xml" if that was set as content type by the server.
+        #str getResponseHeader(str header)
+        #{
+        #    return myself.getResponseHeader(header);
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #void new()
+        #{
+        #    //myself = new COM('WinHttp.WinHttpRequest.5.1');
+        #    //myself = new COM('MSXML2.XMLHTTP.3.0');
+        #    myself = new COM('Microsoft.XMLHTTP');
+        #}
+      ENDSOURCE
+      SOURCE #open
+        #// Initializes a Microsoft.XMLHTTP request, and specifies the method, URL,
+        #// and authentication information for the request. After calling this method
+        #// you must call send to send the request and data (if any) to the server.
+        #// Parameters:
+        #// method:  "GET", "PUT", "POST" or "PROPFIND"
+        #// url:     Requested URL. This can be an absolute URL (such as
+        #//          "http://Myserver/Mypath/")  or a relative one (such as "/Mypath/xml/").
+        #// user:    Name of the user for authentication. If this parameter is NULL ("")
+        #//          or missing and the site requires authentication, the component
+        #//          displays a logon window.
+        #// password:Password for authentication. This parameter is ignored if the user
+        #//          parameter is NULL ("") or missing.
+        #void open(str method, str url)
+        #{
+        #    myself.open(method, url, FALSE);
+        #}
+      ENDSOURCE
+      SOURCE #responseText
+        #str responseText()
+        #{
+        #    return myself.responseText();
+        #}
+      ENDSOURCE
+      SOURCE #responseXML
+        #str responseXML()
+        #{
+        #    return myself.responseXML();
+        #}
+      ENDSOURCE
+      SOURCE #send
+        #void send(str s)
+        #{
+        #    myself.send(s);
+        #}
+      ENDSOURCE
+      SOURCE #setRequestHeader
+        #// Specifies the name of an HTTP header
+        #// Parameters
+        #// header:  Header name to set; for example, "depth". This parameter should not
+        #//          contain a colon and should be the actual text of the HTTP header.
+        #// value:   Value of the header; for example, "infinity".
+        #void setRequestHeader(str header, str value)
+        #{
+        #    myself.setRequestHeader(header, value);
+        #}
+      ENDSOURCE
+      SOURCE #status
+        #// Returns a status code. This value is valid only after the send method returns successfully
+        #int status()
+        #{
+        #    return myself.status();
+        #}
+      ENDSOURCE
+      SOURCE #statusText
+        #// Represents the HTTP response. This value is valid only after the send
+        #// method returns successfully.
+        #str statusText()
+        #{
+        #    return myself.statusText();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

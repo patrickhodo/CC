@@ -1,0 +1,265 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardTrack
+    PROPERTIES
+      Name                #CreditCardTrack
+      Origin              #{5C705CF4-3D8B-4127-A481-BB89BE6FFD2B}
+      LegacyId            #20023
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardTrack
+        #{
+        #    CreditCardSwipe             ccSwipe;
+        #    CreditCardTrack1            ccTrack1;
+        #    CreditCardTrack2            ccTrack2;
+        #
+        #    str 1                       ccFormatCode;
+        #    CreditCardNum               ccNum;
+        #    str                         ccSurname;
+        #    str                         ccSuffix;
+        #    str                         ccFirstName;
+        #    str                         ccMiddleInitial;
+        #    str                         ccFullName;
+        #    str                         ccTitle;
+        #    CreditCardExpirationDate    ccExpDate;
+        #    str                         ccServiceCode;
+        #    str                         ccPVKI;
+        #    str                         ccPVV;
+        #    CreditCardType              ccType;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getCCType
+        #void getCCType(str num)
+        #{
+        #    //_sentinal must be two digits
+        #    ;
+        #    switch (num)
+        #    {
+        #        case "34","37"   :
+        #            ccType = CreditCardTYpe::AmericanExpress;
+        #            break;
+        #        case '30','36','38' :
+        #            ccType = CreditCardType::Diners;
+        #            break;
+        #        case '60'       :
+        #            ccType = CreditCardType::Discover;
+        #            break;
+        #        case '51','52','53','54','55'   :
+        #            ccType = CreditCardType::MasterCard;
+        #            break;
+        #        case '40','41','42','43','44','45','46','47','48','49'    :
+        #            ccType = CreditCardType::Visa;
+        #            break;
+        #        case '30','31','32','33','35'   :
+        #            ccType = CreditCardType::JCB;
+        #            break;
+        #        default     :
+        #            throw error("@ACC584");
+        #
+        #
+        #    }
+        #
+        #    this.parmCCType(ccType);
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #void new()
+        #{
+        #    ;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmCCNum
+        #CreditCardNum parmCCNum(CreditCardNum _ccNum = ccNum)
+        #{
+        #    ;
+        #    ccNum = _ccNum;
+        #    return ccNum;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCType
+        #CreditCardType parmCCType(CreditCardType _ccType = ccType)
+        #{
+        #    ;
+        #    ccType = _ccType;
+        #    return ccType;
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardNum
+        #CreditCardNum parmCreditCardNum(CreditCardNum _ccNum = ccNum)
+        #{
+        #    ;
+        #    ccNum = _ccNum;
+        #    return ccNum;
+        #}
+      ENDSOURCE
+      SOURCE #parmExpDate
+        #CreditCardExpirationDate parmExpDate(CreditCardExpirationDate _ccExpDate = ccExpDate)
+        #{
+        #    ;
+        #    ccExpDate = _ccExpDate;
+        #    return ccExpDate;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #Name parmFirstName(Name _firstName = ccFirstName)
+        #{
+        #    ;
+        #    ccFirstName = _firstName;
+        #    return ccFirstName;
+        #}
+      ENDSOURCE
+      SOURCE #parmFullName
+        #Name parmFullName(Name _ccFullName = ccFullname)
+        #{
+        #    ;
+        #    ccFullname = _ccFullname;
+        #    return ccFullname;
+        #}
+      ENDSOURCE
+      SOURCE #parmSurname
+        #Name parmSurname(Name _Surname = ccSurname)
+        #{
+        #    ;
+        #    ccSurname = _Surname;
+        #    return ccSurname;
+        #}
+      ENDSOURCE
+      SOURCE #parmTitle
+        #Name parmTitle(Name _ccTitle = ccTitle)
+        #{
+        #    ;
+        #    ccTitle = _ccTitle;
+        #    return ccTitle;
+        #}
+      ENDSOURCE
+      SOURCE #parmTrack1
+        #CreditCardTrack1 parmTrack1(CreditCardTrack1 _ccTrack1 = ccTrack1)
+        #{
+        #    ;
+        #    ccTrack1 = _ccTrack1;
+        #    return ccTrack1;
+        #}
+      ENDSOURCE
+      SOURCE #parmTrack2
+        #CreditCardTrack2 parmTrack2(CreditCardTrack2 _ccTrack2 = ccTrack2)
+        #{
+        #    ;
+        #    ccTrack2 = _ccTrack2;
+        #    return ccTrack2;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #void run(CreditCardSwipe _ccSwipe)
+        #{
+        #    int                 totLength;
+        #    int                 locBegTrack1;
+        #    int                 locEndSentinal;
+        #    int                 locBegTrack2;
+        #    int                 locCCNumEnd;
+        #    int                 locSurnameEnd;
+        #    int                 locNameEnd;
+        #    int                 locTitleSentinal;
+        #    int                 marker;
+        #    boolean             Track2Exist;
+        #    str                 locExpDateMonth;
+        #    str                 locExpDateYear;
+        #    date                locExpDate;
+        #    ;
+        #    totLength = strLen(_ccSwipe);
+        #
+        #    locBegTrack1    = strFind(_ccSwipe,'%',0,totLength);
+        #    locEndSentinal = strFind(_ccSwipe,'?',0,totLength);
+        #    locBegTrack2    = strFind(_ccSwipe,';',locEndSentinal,totLength);
+        #    locCCNumEnd     = strFind(_ccSwipe,'^',0,totLength);
+        #    locSurnameEnd   = strFind(_ccSwipe,'/',locCCNumEnd,totLength);
+        #    locNameEnd      = strFind(_ccSwipe,'^',locCCNumEnd+1,totLength-locCCNumEnd);
+        #    locTitleSentinal= strFind(_ccSwipe,'.',locCCNumEnd+1,totLength-locCCNumEnd);
+        #    marker = locBegTrack1+1;
+        #
+        #    //--> Check for problems
+        #    if (locBegTrack1 == 0 || locEndSentinal == 0)
+        #        throw error("@ACC583");
+        #
+        #
+        #    //--> Format Code and increase in marker
+        #    ccFormatCode = subStr(_ccSwipe,marker,1);
+        #    marker += 1;
+        #
+        #    //--> Check if there is a Track 2
+        #    if (locBegTrack2 != 0)
+        #        Track2Exist = true;
+        #
+        #    //--> Store Track 1
+        #    this.parmTrack1(subStr(_ccSwipe,0,locEndSentinal));
+        #
+        #    //--> Store Track 2
+        #    if (Track2Exist)
+        #        this.parmTrack2(subStr(_ccSwipe,locBegTrack2,totLength));
+        #
+        #    //--> Track1 has the most information.  We will use it for sake of data collection
+        #    this.parmCCNum(subStr(_ccSwipe,marker,locCCNumEnd-marker));
+        #
+        #    //--> Credit card type
+        #    this.getCCType(substr(this.parmCCNum(),1,2));
+        #    this.parmCCType();
+        #
+        #    //--> Name information
+        #
+        #    marker = locCCNumEnd + 1;
+        #
+        #    if (locSurnameEnd > 0)
+        #    {
+        #        this.parmSurname(subStr(_ccSwipe,marker,locSurnameEnd-marker));
+        #        this.parmFirstName(strRTrim(subStr(_ccSwipe,locSurnameEnd+1,locNameEnd-locSurnameEnd-1)));
+        #
+        #        marker = locNameEnd;
+        #
+        #        this.parmFullName(this.parmFirstName() + ' ' + this.parmSurname());
+        #
+        #    }
+        #    else
+        #    {
+        #        this.parmFullName(subStr(_ccSwipe,marker, locNameEnd-marker));
+        #        marker = locNameEnd;
+        #    }
+        #
+        #    /*if (locTitleSentinal > 0)
+        #        //Title
+        #    {
+        #    } */
+        #
+        #    marker = locNameEnd +1;
+        #
+        #    //--> Expiration Date
+        #    locExpDateYear = subStr(_ccSwipe,marker,2);
+        #    locExpDateMonth= subStr(_ccSwipe,marker+2,2);
+        #    locExpDate = str2date(locExpDateMonth + '/1/' + locExpDateYear,213);
+        #    this.parmExpDate(locExpDate);
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static void construct(CreditCardSwipe ccSwipe)
+        #{
+        #    CreditCardTrack     ccTrack;
+        #    ;
+        #    ccTrack = new CreditCardTrack();
+        #
+        #    ccTrack.run(ccSwipe);
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

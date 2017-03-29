@@ -1,0 +1,283 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #SalesParmUpdateCC
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #SalesParmUpdateCC
+      Label               #@ACC1405
+      TitleField1         #ParmId
+      TitleField2         #DocumentStatus
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #RecId
+      ClusterIndex        #SalesParmIdx
+      DeveloperDocumentation  #@ACC1452
+      Origin              #{F5F8BA13-9DF2-4A5C-8EE5-769657D68CD4}
+      LegacyId            #20040
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AmountCur
+        REAL
+        PROPERTIES
+          Name                #AmountCur
+          Table               #SalesParmUpdateCC
+          Origin              #{4F6D2D6D-A95C-4A17-AE8E-584DD09561CF}
+          LegacyId            #20005
+          ExtendedDataType    #AmountMST
+        ENDPROPERTIES
+        
+      FIELD #CurrencyCode
+        STRING
+        PROPERTIES
+          Name                #CurrencyCode
+          Table               #SalesParmUpdateCC
+          Origin              #{A3AAAE04-2D0B-4030-BCD3-BCF7F5DBE059}
+          LegacyId            #20004
+          ExtendedDataType    #CurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #DocumentStatus
+        ENUM
+        PROPERTIES
+          Name                #DocumentStatus
+          Table               #SalesParmUpdateCC
+          Origin              #{317D804D-A113-4DC5-B76D-C40EC936844B}
+          LegacyId            #20002
+          EnumType            #DocumentStatus
+        ENDPROPERTIES
+        
+      FIELD #ParmId
+        STRING
+        PROPERTIES
+          Name                #ParmId
+          Table               #SalesParmUpdateCC
+          Origin              #{2530D74E-163C-494B-A5D3-71F4353C5B36}
+          LegacyId            #20001
+          ExtendedDataType    #ParmId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #SalesId
+        STRING
+        PROPERTIES
+          Name                #SalesId
+          Table               #SalesParmUpdateCC
+          Origin              #{97F8E8A4-9C32-49A7-BD66-7EA2C38EBA57}
+          LegacyId            #20007
+          ExtendedDataType    #SalesId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #TransID
+        STRING
+        PROPERTIES
+          Name                #TransID
+          Table               #SalesParmUpdateCC
+          Origin              #{765D6479-AE1B-4AA3-B17D-7756C493FEB7}
+          LegacyId            #20006
+          ExtendedDataType    #CreditCardTransID
+          StringSize          #20
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ParmId
+          #DocumentStatus
+          #AmountCur
+          #CurrencyCode
+          #TransID
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ParmId
+          #DocumentStatus
+          #TransID
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Transaction
+        PROPERTIES
+          Name                #Transaction
+          Label               #@SYS15191
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ParmId
+          #DocumentStatus
+          #TransID
+          #SalesId
+          #AmountCur
+          #CurrencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #SalesParmIdx
+      PROPERTIES
+        Name                #SalesParmIdx
+        Origin              #{065A9962-DD48-47D6-99BB-15BA6A60DD5F}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #ParmId
+        #TransID
+        #DocumentStatus
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CurrencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesParmUpdate
+        PROPERTIES
+          Name                #SalesParmUpdate
+          Table               #SalesParmUpdate
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #DocumentStatus
+            RelatedField        #DocumentStatus
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #ParmId
+            RelatedField        #ParmId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesTable
+        PROPERTIES
+          Name                #SalesTable
+          Table               #SalesTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #SalesId
+            RelatedField        #SalesId
+            SourceEDT           #SalesId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #amountRemaining
+        #display amountMST amountRemaining()
+        #{
+        #    SalesParmUpdate         salesParmUpdate = SalesParmUpdate::find(this.ParmId);
+        #    SalesParmTable          salesParmTable = SalesParmTable::findSalesId(this.SalesId,this.ParmId);
+        #    SalesTotals             salesTotals;
+        #    container               c;
+        #    amountCur               salesTotal;
+        #    SalesParmUpdateCC       salesParmUpdateCC;
+        #    ;
+        #    salesTotals = SalesTotals::construct(salesParmTable,
+        #        SalesUpdate::All,
+        #        AccountOrder::None,
+        #        salesParmTable.ParmId,
+        #        '',
+        #        salesParmTable.Ordering);
+        #
+        #    salesTotals.calcMarkupForTable(salesParmTable.ParmId, salesParmTable.SalesId);
+        #    salesTotals.calc();
+        #    c = salesTotals.displayFields();
+        #    select sum(amountCur) from salesParmUpdateCC
+        #        where salesParmUpdateCC.ParmId == this.ParmId;
+        #
+        #    salesTotal = conPeek(c,TradeTotals::posTotalAmount());
+        #    return salesTotal - salesParmUpdateCC.AmountCur;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #amountTotal
+        #display amountMST amountTotal()
+        #{
+        #    SalesParmUpdate         salesParmUpdate = SalesParmUpdate::find(this.ParmId);
+        #    SalesParmTable          salesParmTable = SalesParmTable::findSalesId(this.SalesId,this.ParmId);
+        #    SalesTotals             salesTotals;
+        #    container               c;
+        #    amountCur               salesTotal;
+        #    ;
+        #    salesTotals = SalesTotals::construct(salesParmTable,
+        #        SalesUpdate::All,
+        #        AccountOrder::None,
+        #        salesParmTable.ParmId,
+        #        '',
+        #        salesParmTable.Ordering);
+        #
+        #    salesTotals.calcMarkupForTable(salesParmTable.ParmId, salesParmTable.SalesId);
+        #    salesTotals.calc();
+        #    c = salesTotals.displayFields();
+        #
+        #    salesTotal = conPeek(c,TradeTotals::posTotalAmount());
+        #    return salesTotal;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

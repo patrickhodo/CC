@@ -1,0 +1,41 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardTableListPageInteraction
+    PROPERTIES
+      Name                #CreditCardTableListPageInteraction
+      Extends             #SysListPageInteractionBase
+      Origin              #{C64EF873-7D76-4BFD-8F45-BD364DE8446B}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #/// <summary>
+        #/// The interaction class for model driven <c>EPCustInvoiceListPageInteraction</c> form.
+        #/// </summary>
+        #public class CreditCardTableListPageInteraction extends SysListPageInteractionBase
+        #{
+        #    CustInvoiceJour custInvoiceJour;
+        #}
+      ENDSOURCE
+      SOURCE #initializeQuery
+        #public void initializeQuery(Query _query)
+        #{
+        #    super(_query);
+        #
+        #    if(EP::isCustomer())
+        #    {
+        #        _query = EPQuery::makeMyCustomerSelfServiceQuery(_query,tableNum(CreditCardTable));
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

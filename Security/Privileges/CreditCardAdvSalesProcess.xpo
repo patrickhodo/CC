@@ -1,0 +1,98 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: SPV
+
+; 
+; --------------------------------------------------------------------------------
+  VERSION 1
+  
+  PRIVILEGE #CreditCardAdvSalesProcess
+    PROPERTIES
+      Name                #CreditCardAdvSalesProcess
+      Label               #@ACC1637
+      Description         #@ACC1638
+      Origin              #{DB04B86E-056E-49FD-A700-7BBBCEF11626}
+    ENDPROPERTIES
+    
+    ENTRYPOINTS #Entry Points
+      ENTRYPOINT #CreditCardTableSecureLookup
+        PROPERTIES
+          Name                #CreditCardTableSecureLookup
+          ObjectType          #MenuItemDisplay
+          ObjectName          #CreditCardTableSecureLookup
+          AccessLevel         #Read
+        ENDPROPERTIES
+        
+      ENDENTRYPOINT
+      
+    ENTRYPOINT #CreditCardTrans
+      PROPERTIES
+        Name                #CreditCardTrans
+        ObjectType          #MenuItemDisplay
+        ObjectName          #CreditCardTrans
+        AccessLevel         #Create
+      ENDPROPERTIES
+      
+    ENDENTRYPOINT
+    
+  ENTRYPOINT #CreditCardTransAuthLookup
+    PROPERTIES
+      Name                #CreditCardTransAuthLookup
+      ObjectType          #MenuItemDisplay
+      ObjectName          #CreditCardTransAuthLookup
+      AccessLevel         #Read
+    ENDPROPERTIES
+    
+  ENDENTRYPOINT
+  
+ENTRYPOINT #CreditCardTransLookup
+  PROPERTIES
+    Name                #CreditCardTransLookup
+    ObjectType          #MenuItemDisplay
+    ObjectName          #CreditCardTransLookup
+    AccessLevel         #Read
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENTRYPOINT #SalesTableCC
+  PROPERTIES
+    Name                #SalesTableCC
+    ObjectType          #MenuItemDisplay
+    ObjectName          #SalesTableCC
+    AccessLevel         #Create
+  ENDPROPERTIES
+  
+ENDENTRYPOINT
+
+ENDENTRYPOINTS
+
+PERMISSIONSET #Permissions
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+    TABLE #SalesParmUpdateCC
+      PROPERTIES
+        Table               #SalesParmUpdateCC
+        EffectiveAccess     #Read
+        ManagedBy           #Manual
+      ENDPROPERTIES
+      
+    ENDTABLE
+    
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+FORMS #Forms
+ENDFORMS
+
+ENDPERMISSIONSET
+
+ENDPRIVILEGE
+
+
+***Element: END

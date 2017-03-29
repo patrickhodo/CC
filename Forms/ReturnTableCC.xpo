@@ -1,0 +1,2526 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #ReturnTableCC
+  PROPERTIES
+    Name                #ReturnTableCC
+    Origin              #{3C3E8967-627A-4835-B7E0-DD1CC826A7F7}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    SalesTotals             salesTotals;
+      #    SalesUpdate             salesUpdate;
+      #    SalesTable              salesTable;
+      #    CreditCardParameters    ccParams;
+      #    NoYes                   oneTimeCustomer;
+      #    NoYes                   manualEntry;
+      #    NoYes                   swiped;
+      #    CreditCardSwipe         ccSwipe;
+      #    NoYes                   ccSwipeHold;
+      #    NoYes                   ccTrack1End;
+      #    int                     text;
+      #    str                     ccTrack1Text;
+      #    SysFormSplitter_X       m_vSplitter;
+      #    LogisticsPostalAddressFormHandler addressController;
+      #}
+    ENDSOURCE
+    SOURCE #activate
+      #public void activate(boolean _active)
+      #{
+      #    super(_active);
+      #
+      #    if ( salesTableCC.Processed == NoYes::Yes || salesTableCC.Registered == NoYes::Yes)
+      #    {
+      #        process.enabled(false);
+      #    }
+      #    else
+      #    {
+      #        process.enabled(true);
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #cancelAuth
+      #void cancelAuth()
+      #{
+      #    CreditCardTerminalTable        ccTerminals = CreditCardTerminalTable::find();
+      #    ;
+      #    if (ccTerminals.Processor == CreditCardProcessor::PayPal)
+      #    {
+      #        if (salesTableCC.CreditCardTrxType == CreditCardTrxType::A)
+      #        {
+      #            if (Box::yesNo("@ACC1022",DialogButton::No,"@SYS53120") == DialogButton::Yes)
+      #            {
+      #                element.voidTransaction();
+      #            }
+      #        }
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #checkCVD
+      #void checkCVD()
+      #{
+      #    if (ccParams.CVD == NoYes::Yes)
+      #    {
+      #        CVD.visible(true);
+      #    }
+      #    else
+      #    {
+      #       CVD.visible(false);
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #checkForReturnedItemParameter
+      #boolean checkForReturnedItemParameter()
+      #{
+      #    //->>If Parameter "Credit note required for Credit" is checked
+      #    //->>make sure that if user selects Credit, this is not checked.
+      #    //->>Otherwise, error!
+      #    ;
+      #    if (salesTableCC.CreditCardTrxType == CreditCardTrxType::C)
+      #    {
+      #        if (ccParams.CreditRequired == NoYes::Yes && salesTable.SalesType != SalesType::ReturnItem)
+      #        {
+      #            throw error("@ACC576");
+      #        }
+      #    }
+      #
+      #    return true;
+      #}
+    ENDSOURCE
+    SOURCE #getAddressController
+      #public LogisticsPostalAddressFormHandler getAddressController()
+      #{
+      #    return addressController;
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    if (!element.args().record())
+      #        throw error("@ACC575");
+      #
+      #    super();
+      #
+      #    m_vSplitter = new SysFormSplitter_X(vSplitter, gridContainer, element);
+      #
+      #    addressController = LogisticsPostalAddressFormHandler::newParameters(salesTableCC_ds,
+      #        logisticsPostalAddress_ds);
+      #    addressController.callerUpdateQuery(fieldNum(SalesTableCC,Location));
+      #
+      #    if (element.args().record())
+      #    {
+      #        salesUpdate = SalesUpdate::All;
+      #        salesTable = element.args().record();
+      #    }
+      #
+      #    if (element.args().record())
+      #    {
+      #        salesUpdate = SalesUpdate::All;
+      #        salesTable = element.args().record();
+      #    }
+      #
+      #    if (salesTable)
+      #    {
+      #        salesTotals = SalesTotals::construct(salesTable, salesUpdate);
+      #        salesTotals.calc();
+      #
+      #    }
+      #
+      #    salesTableCC_ds.object(fieldNum(SalesTableCC,AuthCode)).enabled(false);
+      #
+      #    //<--Grab CC Parameters for later use
+      #    ccParams = CreditCardParameters::findParameter();
+      #
+      #    //--> CVD Parameter
+      #    this.checkCVD();
+      #
+      #    //<-- If Parameter "Credit on Invoice" is selected, we change the "Process" button
+      #    //<-- label to "Register"
+      #    if (ccParams.CreditCapture == NoYes::Yes && salesTable.SalesType == salesType::ReturnItem)
+      #        Process.text("@SYS32121");
+      #}
+    ENDSOURCE
+    SOURCE #lockButtons
+      #void lockButtons()
+      #{
+      #    ;
+      #    CaptureTrans.enabled(false);
+      #    CreditTrans.enabled(false);
+      #    VoidTrans.enabled(false);
+      #
+      #    if (salesTableCC.Processed == NoYes::Yes && salesTableCC.CreditCardTrxType == CreditCardTrxType::S)
+      #    {
+      #        VoidTrans.enabled(true);
+      #
+      #        //--> See if Credit Note is Required for Credit
+      #        if (ccParams.CreditRequired == NoYes::No)
+      #        {
+      #            CreditTrans.enabled(true);
+      #        }
+      #    }
+      #
+      #    if ( salesTableCC.Processed == NoYes::Yes && salesTableCC.CreditCardTrxType == CreditCardTrxType::A)
+      #    {
+      #        VoidTrans.enabled(true);
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #lockProcess
+      #void lockProcess()
+      #{
+      #    ;
+      #    Process.enabled(false);
+      #    FillTotal.enabled(false);
+      #
+      #
+      #}
+    ENDSOURCE
+    SOURCE #lockRecord
+      #void lockRecord()
+      #{
+      #    ;
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,Processed)).enabled(false);
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,CreditCardTrxType)).enabled(false);
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,AmountCur)).enabled(false);
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,CreditCardId)).enabled(false);
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,PNRef)).enabled(false);
+      #    salesTableCC_ds.object(fieldNum(SalesTableCC,AuthCode)).enabled(false);
+      #
+      #    //--> Unhinged fields
+      #    StripeEntry.enabled(false);
+      #    CreditCardType.enabled(false);
+      #    CreditCardnum.enabled(false);
+      #    ExpirationDate.enabled(false);
+      #    NameOnCard.enabled(false);
+      #    Save.enabled(false);
+      #}
+    ENDSOURCE
+    SOURCE #parmSalesTableCC
+      #SalesTableCC parmSalesTableCC()
+      #{
+      #    return salesTableCC;
+      #}
+    ENDSOURCE
+    SOURCE #parseSwipedCard
+      #void parseSwipedCard(CreditCardSwipe    _ccSwipe)
+      #{
+      #    CreditCardTrack     creditCardTrack;
+      #    ;
+      #
+      #    creditCardTrack = new CreditCardTrack();
+      #    creditCardTrack.run(_ccSwipe);
+      #
+      #    ccSwipe = creditCardTrack.parmTrack1();
+      #    creditCardType.selection(creditCardTrack.parmCCType());
+      #    creditCardNum.text(creditCardTrack.parmCCNum());
+      #    expirationDate.dateValue(creditCardTrack.parmExpDate());
+      #    nameOnCard.text(creditCardTrack.parmFullName());
+      #
+      #
+      #
+      #}
+    ENDSOURCE
+    SOURCE #placeTotals
+      #void placeTotals()
+      #{
+      #    container           displayFields = salesTotals.displayFields();
+      #    SalesTableCC        locSalesTableCC;
+      #    ;
+      #    select sum(amountCur),sum(amountMST) from locSalesTableCC
+      #        where locSalesTableCC.SalesId == salesTable.SalesId;
+      #
+      #    salesTableCC.AmountCur =     conPeek(displayFields, TradeTotals::posBalance()      ) - locSalesTableCC.AmountCur;
+      #    salesTableCC.AmountMST =     Currency::amountCur2MST(salesTableCC.AmountCur,salesTable.CurrencyCode) - locSalesTableCC.AmountMST;
+      #
+      #    if (salesTableCC.AmountCur < 0)
+      #    {
+      #        salesTableCC.CreditCardTrxType = CreditCardTrxType::C;
+      #        //<-- If Parameter "Credit on Invoice" is selected, we change the "Process" button
+      #        //<-- label to "Register"
+      #        if (ccParams.CreditCapture == NoYes::Yes && salesTable.SalesType == salesType::ReturnItem)
+      #            Process.text("@SYS32121");
+      #    }
+      #
+      #    if (salesTableCC.RecId != 0)
+      #    {
+      #        salesTableCC.update();
+      #
+      #        salesTableCC_ds.reread();
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #processOneTime
+      #void processOneTime()
+      #{
+      #    CreditCardTrans         ccTrans;
+      #    DictEnum                dictEnum = new DictEnum(enumnum(CreditCardTrxType));
+      #    ;
+      #
+      #    //--> Save credit card if checked.
+      #    if (save.value() == NoYes::Yes)
+      #    {
+      #        element.saveSwipedCard();
+      #    }
+      #
+      #    //<--Check for problems
+      #    salesTableCC::checkForOneTimeErrors(creditCardNum.text(),ExpirationDate.dateValue(),NameonCard.text());
+      #    salesTableCC::checkForErrors(salesTableCC,salesTable);
+      #
+      #    //<-- Create the Transaction record
+      #    ccTrans.clear();
+      #    ccTrans.AmountCur       = salesTableCC.AmountCur;
+      #    ccTrans.AmountMST       = Currency::amountCur2MST(salesTableCC.AmountCur,salesTable.CurrencyCode);
+      #    ccTrans.AuthCode        = salesTableCC.AuthCode;
+      #    ccTrans.CreditCardType  = creditCardType.selection();
+      #    ccTrans.CurrencyCode    = salesTable.CurrencyCode;
+      #    ccTrans.TransCurrencyCode    = companyInfo::standardCurrency();
+      #    ccTrans.CustAccount     = salesTable.CustAccount;
+      #    ccTrans.CID             = CID.text();
+      #    ccTrans.CVDSent         = CVDValue.selection();
+      #    ccTrans.WorkerProcessor = currentWorker();
+      #    ccTrans.NameOnCard      = nameonCard.text();
+      #    ccTrans.OrigID          = '';
+      #    ccTrans.RecurringToken  = salesTableCC.RecurringToken;
+      #    ccTrans.RefRecId        = salesTableCC.RecId;
+      #    ccTrans.SalesId         = salesTable.SalesId;
+      #    ccTrans.SoloIssueNum    = soloIssueNum.text();
+      #    ccTrans.SoloStartDate   = startDate.dateValue();
+      #    ccTrans.TransDate       = today();
+      #    ccTrans.TransID         = NumberSeq::newGetNum(CreditCardParameters::numRefCCTransId()).num();
+      #    ccTrans.TransType       = salesTableCC.CreditCardTrxType;
+      #    ccTrans.TrxType         = dictEnum.index2Symbol(salesTableCC.CreditCardTrxType);
+      #    ccTrans.OneTimeTrans    = NoYes::Yes;
+      #    ccTrans.OrigDateTime    = DateTimeUtil::applyTimeZoneOffset(
+      #                                    DateTimeUtil::getSystemDateTime(),
+      #                                    DateTimeUtil::getCompanyTimeZone());
+      #    ccTrans.CreditCardNumSecure = '************' +
+      #            subStr(CreditCardNum.text(),strlen(CreditCardNum.text())-3,4);
+      #    ccTrans.CreditCardNumEncrypt= CreditCardTrans::storeValue(creditCardNum.text());
+      #    ccTrans.OneTimeDateExp  = expirationDate.dateValue();
+      #    ccTrans.VoiceAuth       = salesTableCC.VoiceAuth;
+      #
+      #    //--> Entry source
+      #    if (ccSwipe)
+      #        ccTrans.EntrySource     = CreditCardEntrySource::Track1;
+      #    else
+      #        ccTrans.EntrySource     = CreditCardEntrySource::Manual;
+      #
+      #    //--> Is this a commercial card?
+      #    if (CreditCardTable::isCorporateCard(CreditCardNum.text()))
+      #    {
+      #        //--> Retrieve Sales Tax Amounts
+      #        salesTotals = SalesTotals::construct(salesTable, salesUpdate);
+      #        salesTotals.calc();
+      #
+      #        ccTrans.CommercialCard = NoYes::Yes;
+      #        ccTrans.CommercialSalesTax = salesTotals.totalTaxAmount();
+      #
+      #        //--> If Sales tax code is empty then we set the local tax flag to zero
+      #        if (!salesTable.TaxGroup)
+      #            ccTrans.CommercialLocalTax = CreditCardCommercialTaxFlag::TaxNotProvided;
+      #        //--> If there is a VATNum, then they have a tax certificate
+      #        if (salesTable.VATNum)
+      #            ccTrans.CommercialLocalTax = CreditCardCommercialTaxFlag::NonTaxable;
+      #        else if (!salesTable.VATNum && salesTable.TaxGroup)
+      #            ccTrans.CommercialLocalTax = CreditCardCommercialTaxFlag::TaxIncluded;
+      #    }
+      #
+      #    if (SalesTableCC.Location)
+      #    {
+      #        ccTrans.Location = salesTableCC.Location;
+      #    }
+      #    else
+      #    {
+      #        ccTrans = ccTrans.getAddress(ccTrans);
+      #    }
+      #    ccTrans.TerminalId      = ccTrans.resolveTerminalforSalesTableCC(salesTableCC,salesTable,ccTrans).TerminalId;
+      #    ccTrans.CustomerRef     = ccTrans.getMerchantRef(ccTrans);
+      #
+      #    ccTrans.insert();
+      #
+      #    ttsbegin;
+      #
+      #    if (!ccSwipe && !manualEntry)
+      #        throw error("@ACC651");
+      #
+      #    if (ccSwipe)
+      #    {
+      #        ccTrans = CreditCardAdv::processCreditCard(ccTrans,ccSwipe);
+      #    }
+      #    else if (manualEntry)
+      #    {
+      #        ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+      #    }
+      #
+      #    if (CreditCardAdv::checkReturn(ccTrans,ccTrans.Result))
+      #    {
+      #        salesTableCC.PNRef     = ccTrans.pNRef;
+      #        salesTableCC.Processed = NoYes::Yes;
+      #        salesTableCC.TransID   = ccTrans.TransID;
+      #
+      #        salesTableCC.update();
+      #
+      #        info(strFmt("@ACC144",ccTrans.pnRef ? ccTrans.PNRef : ccTrans.OrbitalTxRefNum));
+      #        //element.autoCreateProfile();
+      #
+      #    }
+      #    else
+      #    {
+      #        salesTableCC.TransID = ccTrans.TransID;
+      #        salesTableCC.update();
+      #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+      #    }
+      #
+      #
+      #    salesTableCC_ds.reread();
+      #    salesTableCC_ds.active();
+      #
+      #    ttscommit;
+      #    element.close();
+      #}
+    ENDSOURCE
+    SOURCE #processPartialCredit
+      #void processPartialCredit()
+      #{
+      #    CreditCardTrans         ccTrans;
+      #    ;
+      #    ttsbegin;
+      #    //<-- Create the Transaction record
+      #    ccTrans = CreditCardTrans::createTransforRefCredit(salesTableCC);
+      #
+      #    //<-- create Credit Card Transaction
+      #    ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+      #
+      #    if (CreditCardAdv::checkReturn(ccTrans,ccTrans.result) == False)
+      #    {
+      #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+      #    }
+      #    else
+      #    {
+      #
+      #        salesTableCC.PNRef     = ccTrans.pNRef;
+      #        salesTableCC.Processed = NoYes::Yes;
+      #        salesTableCC.TransID   = ccTrans.TransID;
+      #        salesTableCC.update();
+      #
+      #        info(strFmt("@ACC144",ccTrans.pnRef));
+      #    }
+      #
+      #    salesTableCC_ds.reread();
+      #    salesTableCC_ds.active();
+      #
+      #    ttscommit;
+      #}
+    ENDSOURCE
+    SOURCE #processPayPalAuth
+      #void processPayPalAuth()
+      #{
+      #    CreditCardTrans         ccTrans;
+      #    CreditCardTrans         oldCCTrans;
+      #    DictEnum                dictEnum = new DictEnum(enumnum(CreditCardTrxType));
+      #    ;
+      #    select oldCCTrans
+      #        where oldCCTrans.PNRef == salesTableCC.PNRef
+      #        && oldCCTrans.Result == '0'
+      #        && oldCCTrans.TransType == CreditCardTrxType::A;
+      #
+      #    if (!oldCCTRans)
+      #    {
+      #        throw error("@ACC1364");
+      #    }
+      #
+      #    //<-- Create the Transaction record
+      #    ccTrans.clear();
+      #    ccTrans.AmountCur       = salesTableCC.AmountCur;
+      #    ccTrans.AmountMST       = Currency::amountCur2MST(salesTableCC.AmountCur,salesTable.CurrencyCode);
+      #    ccTrans.AuthCode        = salesTableCC.AuthCode;
+      #    ccTrans.CreditCardType  = creditCardType.selection();
+      #    ccTrans.CurrencyCode    = salesTable.CurrencyCode;
+      #    ccTrans.TransCurrencyCode    = companyInfo::standardCurrency();
+      #    ccTrans.CustAccount     = salesTable.CustAccount;
+      #
+      #    ccTrans.WorkerProcessor = currentWorker();
+      #    ccTrans.OrigID          = '';
+      #    ccTrans.RefRecId        = salesTableCC.RecId;
+      #    ccTrans.SalesId         = salesTable.SalesId;
+      #    ccTrans.TransDate       = today();
+      #    ccTrans.TransID         = NumberSeq::newGetNum(CreditCardParameters::numRefCCTransId()).num();
+      #    ccTrans.TransType       = salesTableCC.CreditCardTrxType;
+      #    ccTrans.TrxType         = dictEnum.index2Symbol(salesTableCC.CreditCardTrxType);
+      #    ccTrans.OneTimeTrans    = NoYes::Yes;
+      #    ccTrans.OrigDateTime    = DateTimeUtil::applyTimeZoneOffset(
+      #                                    DateTimeUtil::getSystemDateTime(),
+      #                                    DateTimeUtil::getCompanyTimeZone());
+      #
+      #    ccTrans.PayPalReferenceId   = oldCCTrans.PayPalReferenceId;
+      #    ccTrans = ccTrans.getAddress(ccTrans);
+      #    ccTrans.TerminalId      = oldCCTrans.TerminalId;
+      #    ccTrans.CustomerRef     = ccTrans.getMerchantRef(ccTrans);
+      #
+      #    ccTrans.insert();
+      #
+      #    ttsbegin;
+      #
+      #    ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+      #
+      #
+      #    if (CreditCardAdv::checkReturn(ccTrans,ccTrans.Result))
+      #    {
+      #        salesTableCC.PNRef     = ccTrans.pNRef;
+      #        salesTableCC.Processed = NoYes::Yes;
+      #        salesTableCC.TransID   = ccTrans.TransID;
+      #
+      #        salesTableCC.update();
+      #
+      #        info(strFmt("@ACC144",ccTrans.pnRef ? ccTrans.PNRef : ccTrans.OrbitalTxRefNum));
+      #    }
+      #    else
+      #    {
+      #        salesTableCC.TransID = ccTrans.TransID;
+      #        salesTableCC.update();
+      #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+      #    }
+      #
+      #
+      #    salesTableCC_ds.reread();
+      #    salesTableCC_ds.active();
+      #
+      #    ttscommit;
+      #}
+    ENDSOURCE
+    SOURCE #processStandard
+      #void processStandard()
+      #{
+      #    CreditCardTrans         ccTrans;
+      #    CreditCard              cc = new CreditCard();
+      #    ;
+      #    ttsbegin;
+      #    //<--Check for problems
+      #    salesTableCC::checkForErrors(salesTableCC,salesTable);
+      #
+      #    //<-- Create the Transaction record
+      #    ccTrans = CreditCardTrans::createTransfromSalesCC(salesTableCC,salesTable);
+      #    ccTrans.CID = CID.text();
+      #    ccTrans.CVDSent = CVDValue.selection();
+      #    ttsCommit;
+      #
+      #    //<-- create Credit Card Transaction
+      #    ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+      #
+      #    ttsbegin;
+      #    if (CreditCardAdv::checkReturn(ccTrans,ccTrans.Result))
+      #    {
+      #        salesTableCC.PNRef     = ccTrans.pNRef;
+      #        salesTableCC.Processed = NoYes::Yes;
+      #        salesTableCC.TransID   = ccTrans.TransID;
+      #
+      #        salesTableCC.update();
+      #
+      #        info(strFmt("@ACC144",ccTrans.pnRef ? ccTrans.PNRef : ccTrans.OrbitalTxRefNum));
+      #    }
+      #    else
+      #    {
+      #        salesTableCC.TransID = ccTrans.TransID;
+      #        salesTableCC.update();
+      #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+      #    }
+      #
+      #    salesTableCC_ds.reread();
+      #    salesTableCC_ds.active();
+      #
+      #    ttscommit;
+      #}
+    ENDSOURCE
+    SOURCE #refreshCCID
+      #public void refreshCCID(CreditCardId       creditCardId)
+      #{
+      #    CreditCardTable         ccTable = CreditCardTable::find(creditCardId);
+      #    ;
+      #    SalesTableCC.CreditCardId = creditCardId;
+      #    salesTableCC.NameOnCard =   ccTable.NameOnCard;
+      #    SalesTableCC.Location   =   ccTable.Location;
+      #    SalesTableCC.write();
+      #    salesTableCC_ds.refresh();
+      #    LogisticsPostalAddress.data(LogisticsPostalAddress::findRecId(ccTable.Location));
+      #    LogisticsPostalAddress_ds.research(true);
+      #    LogisticsPostalAddress_ds.refresh();
+      #    SalesTableCC.write();
+      #    SalesTableCC_ds.refresh();
+      #
+      #
+      #}
+    ENDSOURCE
+    SOURCE #saveSwipedCard
+      #void saveSwipedCard()
+      #{
+      #    CreditCardTable     ccTable;
+      #    ;
+      #    ccTable.clear();
+      #    ccTable.CustAccount =   salesTable.InvoiceAccount;
+      #    ccTable.Location    =   salesTable.deliveryLocation();
+      #    ccTable.CreditCardId=   NumberSeq::newGetNum(CreditCardParameters::numRefCCId()).num();
+      #    ccTable.CreditCardNum = CreditCardNum.text();
+      #    ccTable.CreditCardType= CreditCardType.selection();
+      #    ccTable.ExpirationDate= ExpirationDate.dateValue();
+      #    ccTable.Name        =   NameOnCard.text();
+      #    ccTable.NameOnCard  =   NameOnCard.text();
+      #    ccTable.insert();
+      #}
+    ENDSOURCE
+    SOURCE #setDebit
+      #void setDebit()
+      #{
+      #    ;
+      #    if (salesTableCC.Debit == NoYes::Yes)
+      #    {
+      #        salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardId)).enabled(false);
+      #        salesTableCC_ds.object(fieldNum(SalesTableCC,VoiceAuth)).enabled(false);
+      #        Enter.enableChilds(false);
+      #        Save.enabled(false);
+      #
+      #    }
+      #    else
+      #    {
+      #        salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardId)).enabled(true);
+      #        salesTableCC_ds.object(fieldNum(SalesTableCC,VoiceAuth)).enabled(true);
+      #        Enter.enableChilds(true);
+      #        Save.enabled(true);
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #setManual
+      #void setManual()
+      #{
+      #    ;
+      #    SalesTableCC_CreditCardId.visible(false);
+      #    SalesTableCC_ds.object(fieldnum(SalesTableCC,CreditCardId)).visible(false);
+      #
+      #    manualEntry = true;
+      #
+      #}
+    ENDSOURCE
+    SOURCE #setOneTimeCustomer
+      #void setOneTimeCustomer()
+      #{
+      #    ;
+      #    SalesTableCC_CreditCardId.visible(false);
+      #    SalesTableCC_ds.object(fieldnum(SalesTableCC,CreditCardId)).visible(false);
+      #
+      #    salesTableCC.CreditCardTrxType = CreditCardTrxType::S;
+      #    salesTableCC_ds.object(fieldnum(SalesTableCC,CreditCardTrxType)).enabled(false);
+      #
+      #    save.enabled(false);
+      #    oneTimeCustomer = true;
+      #
+      #}
+    ENDSOURCE
+    SOURCE #unlockButtons
+      #void unlockButtons()
+      #{
+      #    ;
+      #    switch (salesTableCC.CreditCardTrxType)
+      #    {
+      #        case CreditCardTrxType::A   :
+      #            CaptureTrans.enabled(true);
+      #            break;
+      #        case CreditCardTrxType::D   :
+      #            if (ccParams.CreditRequired == NoYes::No)
+      #            {
+      #                CreditTrans.enabled(true);
+      #            }
+      #            VoidTrans.enabled(true);
+      #            break;
+      #        case CreditCardTrxType::S   :
+      #            VoidTrans.enabled(true);
+      #            CreditTrans.enabled(true);
+      #            break;
+      #
+      #        case CreditCardTrxType::C   :
+      #            VoidTrans.enabled(true);
+      #            break;
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #unlockProcess
+      #void unlockProcess()
+      #{
+      #    ;
+      #    Process.enabled(true);
+      #    FillTotal.enabled(true);
+      #
+      #}
+    ENDSOURCE
+    SOURCE #unlockRecord
+      #void unlockRecord()
+      #{
+      #    ;
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,Cancelled)).enabled(true);
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,CreditCardTrxType)).enabled(true);
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,AmountCur)).enabled(true);
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,CreditCardId)).enabled(true);
+      #    SalesTableCC_ds.object(fieldNum(salesTableCC,PNRef)).enabled(true);
+      #
+      #    //--> Unhinged fields
+      #    StripeEntry.enabled(true);
+      #    CreditCardType.enabled(true);
+      #    CreditCardnum.enabled(true);
+      #    ExpirationDate.enabled(true);
+      #    NameOnCard.enabled(true);
+      #    Save.enabled(true);
+      #}
+    ENDSOURCE
+    SOURCE #voidTransaction
+      #void voidTransaction()
+      #{
+      #    CreditCard              cc = new CreditCard();
+      #    CreditCardTrans         ccTrans;
+      #    CreditCardTrans         oldccTrans;
+      #
+      #    ;
+      #    select count(recId) from oldccTrans where oldccTrans.TransID == salesTableCC.TransID
+      #        && oldccTrans.Result == '0'
+      #        && (oldccTrans.TransType == CreditCardTrxType::S ||
+      #        oldccTrans.TransType == CreditCardTrxType::D ||
+      #        oldccTrans.TransType == CreditCardTrxType::C ||
+      #        oldccTrans.TransType == CreditCardTrxType::A);
+      #
+      #    if (oldccTrans.RecId > 1)
+      #        throw error("@ACC744");
+      #
+      #    select oldccTrans
+      #        where oldccTrans.TransID == salesTableCC.TransID
+      #        && oldccTrans.Result == '0'
+      #        && (oldccTrans.TransType == CreditCardTrxType::S ||
+      #        oldccTrans.TransType == CreditCardTrxType::D ||
+      #        oldccTrans.TransType == CreditCardTrxType::C ||
+      #        oldccTrans.TransType == CreditCardTrxType::A);
+      #
+      #    ttsbegin;
+      #    //<-- Create the Transaction record
+      #    ccTrans = CreditCardTrans::createTransforVoid(salesTableCC,salesTable,oldccTrans,salesTableCC.AmountCur);
+      #
+      #    //<-- create Credit Card Transaction
+      #    ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+      #
+      #
+      #    if (CreditCardAdv::checkReturn(ccTrans,ccTrans.result) == False)
+      #    {
+      #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+      #    }
+      #    else
+      #    {
+      #
+      #        salesTableCC.PNRef     = ccTrans.pNRef;
+      #        salesTableCC.Processed = NoYes::Yes;
+      #        salesTableCC.TransID   = ccTrans.TransID;
+      #        salesTableCC.update();
+      #
+      #        info(strFmt("@ACC144",ccTrans.pnRef));
+      #    }
+      #
+      #
+      #    ttscommit;
+      #
+      #}
+      #
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SalesTableCC
+          Table               #SalesTableCC
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD CreditCardId
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    CreditCardTable         ccTable = CreditCardTable::find(salesTableCC.CreditCardId);
+                #
+                #    super();
+                #
+                #    if (ccTable)
+                #    {
+                #        salesTableCC.NameOnCard =   ccTable.NameOnCard;
+                #        SalesTableCC.Location   =   ccTable.Location;
+                #        SalesTableCC.write();
+                #        salesTableCC_ds.refresh();
+                #        LogisticsPostalAddress.data(LogisticsPostalAddress::findRecId(ccTable.Location));
+                #        LogisticsPostalAddress_ds.research(true);
+                #        LogisticsPostalAddress_ds.refresh();
+                #
+                #    }
+                #}
+              ENDSOURCE
+              SOURCE #lookup
+                #public void lookup(FormControl _formControl, str _filterStr)
+                #{
+                #    ;
+                #
+                #    CreditCardTable::lookupCustCreditCard(_formControl,SalesTable.InvoiceAccount);
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD AmountCur
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    salesTableCC.AmountMST = Currency::amountCur2MST(salesTableCC.AmountCur,salesTotals.currencyCode());
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD CreditCardTrxType
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    ;
+                #    if (element.checkForReturnedItemParameter() == true)
+                #    {
+                #        super();
+                #    }
+                #
+                #
+                #
+                #
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD Processed
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD PNRef
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #lookup
+                #public void lookup(FormControl _formControl, str _filterStr)
+                #{
+                #    ;
+                #    if (!SalesTableCC.RecId)
+                #    {
+                #        salesTableCC_ds.write();
+                #    }
+                #
+                #    if (salesTableCC.CreditCardTrxType == CreditCardTrxType::C)
+                #    {
+                #        CreditCardTrans::lookupTransForCredit(_formControl,salesTableCC);
+                #    }
+                #    else if (salesTableCC.CreditCardTrxType == CreditCardTrxType::A)
+                #    {
+                #        CreditCardTrans::lookupTransForPayPalAuth(_formControl,salesTableCC);
+                #        element.setManual();
+                #    }
+                #
+                #    //super(_formControl, _filterStr);
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD Cancelled
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD AuthCode
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    if (salesTableCC.AuthCode != "")
+                #    {
+                #        salesTableCC.CreditCardTrxType = CreditCardTrxType::D;
+                #    }
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD VoiceAuth
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    if (salesTableCC.VoiceAuth == NoYes::Yes)
+                #    {
+                #        salesTableCC_ds.object(fieldNum(SalesTableCC,AuthCode)).enabled(true);
+                #    }
+                #    else
+                #    {
+                #        salesTableCC_ds.object(fieldNum(SalesTableCC,AuthCode)).enabled(false);
+                #    }
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD Debit
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    super();
+                #
+                #    element.setDebit();
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #create
+          #public void create(boolean _append = false)
+          #{
+          #    super(_append);
+          #
+          #    //<-- Set triggers
+          #    swiped                  = false;
+          #    manualEntry             = false;
+          #    StripeEntry.text("");
+          #    CreditCardType.selection(0);
+          #    CreditCardnum.text("");
+          #    ExpirationDate.valueStr();
+          #    NameOnCard.text("");
+          #    Save.value(0);
+          #}
+        ENDSOURCE
+        SOURCE #initValue
+          #public void initValue()
+          #{
+          #    ;
+          #    salesTableCC.CurrencyCode   = salesTotals.currencyCode();
+          #
+          #    super();
+          #
+          #    //<-- Look for parameters
+          #
+          #    if (ccParams)
+          #    {
+          #        //<-- Returned Items only allow a credit to be processed
+          #        if (salesTable.SalesType == SalesType::ReturnItem)
+          #        {
+          #            salesTableCC.CreditCardTrxType = CreditCardTrxType::C;
+          #            salesTableCC_TrxType.selection( CreditCardTrxType::C);
+          #            salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardTrxType)).enabled(false);
+          #        }
+          #        //<-- Auth/Capture Parameter will only allow authorizations
+          #        else if (ccParams.EnforceCapture == NoYes::Yes)
+          #        {
+          #            salesTableCC.CreditCardTrxType = CreditCardTrxType::A;
+          #            salesTableCC_TrxType.enabled(false);
+          #            salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardTrxType)).enabled(false);
+          #            element.unlockRecord();
+          #        }
+          #        else
+          #        {
+          #            salesTableCC_TrxType.enabled(true);
+          #            salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardTrxType)).enabled(true);
+          #        }
+          #    }
+          #
+          #    //<--Check for SalesStatus for Transaction type
+          #    if (salesTable.SalesType == SalesType::Journal)
+          #    {
+          #        salesTableCC.CreditCardTrxType = CreditCardTrxType::A;
+          #        SalesTableCC_TrxType.enabled(false);
+          #        salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardTrxType)).enabled(false);
+          #
+          #    }
+          #
+          #    salesTableCC_ds.object(fieldnum(SalesTableCC,Processed)).enabled(false);
+          #    salesTableCC_ds.object(fieldnum(SalesTableCC,Cancelled)).enabled(false);
+          #
+          #    element.unlockRecord();
+          #}
+        ENDSOURCE
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    element.lockButtons();
+          #
+          #    if (ret)
+          #    {
+          #        addressController.callerActive();
+          #        addressController.callerUpdateButtons(newAddress, editAddress, clearAddress, mapButton);
+          #    }
+          #
+          #    //<--If record is processed, lock down choices
+          #    if (salesTableCC.Processed == NoYes::Yes)
+          #    {
+          #        salesTableCC_ds.allowEdit(true);
+          #        salesTableCC_ds.allowDelete(false);
+          #        element.lockRecord();
+          #        element.lockProcess();
+          #        element.unlockButtons();
+          #    }
+          #    else
+          #    {
+          #        salesTableCC_ds.allowEdit(true);
+          #        salesTableCC_ds.allowDelete(true);
+          #        element.unlockProcess();
+          #        element.unlockRecord();
+          #    }
+          #
+          #    if (salesTableCC.Registered == NoYes::Yes)
+          #        element.lockProcess();
+          #
+          #
+          #    if (ccParams)
+          #    {
+          #        if (salesTable.SalesType == SalesType::ReturnItem)
+          #        {
+          #            salesTableCC.CreditCardTrxType = CreditCardTrxType::C;
+          #            salesTableCC_TrxType.selection(CreditCardTrxType::C);
+          #            salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardTrxType)).enabled(false);
+          #
+          #        }
+          #        else if (ccParams.EnforceCapture == NoYes::Yes && salesTableCC.Processed == NoYes::No
+          #            && salesTableCC.AmountCur > 0 && salesTableCC.AuthCode == "")
+          #        {
+          #            salesTableCC.CreditCardTrxType = CreditCardTrxType::A;
+          #            salesTableCC_TrxType.enabled(false);
+          #            salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardTrxType)).enabled(false);
+          #        }
+          #        else
+          #        {
+          #            salesTableCC_TrxType.enabled(true);
+          #            salesTableCC_ds.object(fieldNum(SalesTableCC,CreditCardTrxType)).enabled(true);
+          #        }
+          #    }
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #LogisticsPostalAddress
+          Table               #LogisticsPostalAddress
+          AllowCheck          #No
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          JoinSource          #SalesTableCC
+          LinkType            #OuterJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #write
+          #public void write()
+          #{
+          #    //super();
+          #}
+        ENDSOURCE
+        SOURCE #validateWrite
+          #public boolean validateWrite()
+          #{
+          #    return true;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+    LogisticsPostalAddress SalesTableCC
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@SYS109570
+      TitleDatasource     #SalesTableCC
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          ElementPosition     #715827882
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #AddressActionPane
+          ElementPosition     #1073741822
+          HierarchyParent     #AddressTab
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #CopyOfActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #AddressActionPane
+          DataSource          #LogisticsPostalAddress
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ActionsButtonGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #CopyOfActionPaneTab
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #ActionPaneTab
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #NewDeleteGroup
+          ElementPosition     #1073741822
+          HierarchyParent     #ActionPaneTab
+          DataSource          #SalesTableCC
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          AllowEdit           #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #GridContainer
+          MultiSelect         #No
+          ShowRowLabels       #No
+          DataSource          #SalesTableCC
+          GridLinesStyle      #Vertical
+          AlternateRowShading #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #AddressDisplay
+          ElementPosition     #1610612733
+          HierarchyParent     #AddressTab
+          FrameType           #None
+          DataSource          #LogisticsPostalAddress
+          DataGroup           #AddressDisplay
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Amount
+          AllowEdit           #No
+          ElementPosition     #1431655764
+          HierarchyParent     #Trans
+          DataSource          #SalesTableCC
+          DataGroup           #Amount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Body
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          Style               #MarginlessContainer
+          Columns             #3
+          Columnspace         #0
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CaptureRestricted
+          ElementPosition     #1789569705
+          HierarchyParent     #Trans
+          DataSource          #SalesTableCC
+          DataGroup           #CaptureRestricted
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CVD
+          AutoDeclaration     #Yes
+          ElementPosition     #858993458
+          HierarchyParent     #TabCustomer
+          Caption             #@ACC632
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Debit
+          ElementPosition     #1073741823
+          HierarchyParent     #Trans
+          DataSource          #SalesTableCC
+          DataGroup           #Debit
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DetailsHeader
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1717986916
+          HierarchyParent     #Body
+          FrameType           #None
+          Style               #MarginlessContainer
+          TopMargin           #5
+          RightMargin         #5
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Enter
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #Manual
+          Caption             #@ACC555
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GridContainer
+          AutoDeclaration     #Yes
+          Width               #300
+          Height              #Column height
+          ElementPosition     #858993458
+          HierarchyParent     #Body
+          Style               #BorderlessGridContainer
+          RightMargin         #0
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Overview
+          ElementPosition     #1073741822
+          HierarchyParent     #DetailsHeader
+          FrameType           #None
+          BackgroundColor     #Window background
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Solo
+          AutoDeclaration     #Yes
+          ConfigurationKey    #Solo
+          ElementPosition     #1288490187
+          HierarchyParent     #TabCustomer
+          Caption             #@ACC1254
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Swipe
+          Visible             #No
+          ElementPosition     #1431655764
+          HierarchyParent     #TabSwipe
+          Caption             #@ACC563
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Telecheck2
+          ElementPosition     #1431655764
+          HierarchyParent     #TeleCheck
+          Caption             #@ACC251
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Transaction
+          ElementPosition     #715827882
+          HierarchyParent     #Trans
+          Caption             #@ACC536
+          DataSource          #SalesTableCC
+          DataGroup           #Transaction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Verbal
+          ElementPosition     #1717986916
+          HierarchyParent     #TabCustomer
+          DataSource          #SalesTableCC
+          DataGroup           #Verbal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #VSplitter
+          AutoDeclaration     #Yes
+          ElementPosition     #1288490187
+          HierarchyParent     #Body
+          Style               #SplitterVerticalContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #Functions
+          HelpText            #@ACC1613
+          ElementPosition     #1533916890
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS10340
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUBUTTON
+        PROPERTIES
+          Name                #Inquiries
+          HelpText            #@ACC1655
+          ElementPosition     #1840700268
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS3850
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #Tab
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          HierarchyParent     #DetailsHeader
+          Tabs                #4
+          Style               #FastTabs
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #AddressTab
+          ElementPosition     #805306365
+          HierarchyParent     #Tab
+          Caption             #@SYS9362
+          DataSource          #CreditCardTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Manual
+          AutoDeclaration     #Yes
+          Visible             #No
+          ElementPosition     #536870910
+          HierarchyParent     #Tab
+          Caption             #@SYS9232
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #TabCustomer
+          ElementPosition     #1073741820
+          HierarchyParent     #Tab
+          Caption             #@SYS302
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #TabSwipe
+          ElementPosition     #1342177275
+          HierarchyParent     #Tab
+          Caption             #@ACC556
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #TeleCheck
+          Visible             #No
+          ElementPosition     #1879048188
+          HierarchyParent     #Tab
+          Caption             #@ACC251
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Trans
+          ElementPosition     #1610612730
+          HierarchyParent     #Tab
+          Caption             #@SYS15191
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #SalesTableCC_Cancelled
+          ElementPosition     #1879048185
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          LabelAlignment      #Right
+          DataSource          #SalesTableCC
+          DataField           #Cancelled
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #SalesTableCC_Debit
+          ElementPosition     #536870910
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          LabelAlignment      #Right
+          DataSource          #SalesTableCC
+          DataField           #Debit
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #SalesTableCC_Processed
+          ElementPosition     #1610612730
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          LabelAlignment      #Right
+          DataSource          #SalesTableCC
+          DataField           #Processed
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #Save
+          AutoDeclaration     #Yes
+          ElementPosition     #1610612733
+          HierarchyParent     #Manual
+          Label               #@ACC585
+          LabelAlignment      #Right
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTrxType
+          ElementPosition     #1717986916
+          HierarchyParent     #Overview
+          DataSource          #SalesTableCC
+          DataField           #CreditCardTrxType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardType
+          AutoDeclaration     #Yes
+          ElementPosition     #715827882
+          HierarchyParent     #Enter
+          LabelAlignment      #Right
+          EnumType            #CreditCardType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CVDValue
+          AutoDeclaration     #Yes
+          ElementPosition     #1610612733
+          HierarchyParent     #CVD
+          EnumType            #CreditCardCVDValues
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #SalesTableCC_TrxType
+          AutoDeclaration     #Yes
+          ElementPosition     #1342177275
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #SalesTableCC
+          DataField           #CreditCardTrxType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #CaptureTrans
+          AutoDeclaration     #Yes
+          Enabled             #No
+          HelpText            #@ACC1044
+          ElementPosition     #1717986916
+          HierarchyParent     #Functions
+          Text                #@ACC196
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    CreditCard              cc = new CreditCard();
+            #    CreditCardTrans         ccTrans;
+            #    CreditCardTrans         newCCTrans;
+            #    SalesTableCC            newSalesTableCC;
+            #    container               Msg;
+            #    ;
+            #    super();
+            #
+            #    ttsbegin;
+            #
+            #    if (salesTableCC.Captured && CreditCardParameters::findParameter().CaptureRestricted)
+            #    {
+            #        throw error("@ACC1194");
+            #    }
+            #
+            #    //<-- Create the Transaction record
+            #    ccTrans = CreditCardTrans::createTransforCapture(salesTableCC,salesTable,salesTableCC.AmountCur);
+            #
+            #    ccTrans.TransType = CreditCardTrxType::D;
+            #    ccTrans.OrigID  = salesTableCC.PNRef;
+            #
+            #    //<-- create Credit Card Transaction
+            #    ccTrans = CreditCardADV::processCreditCard(ccTrans);
+            #
+            #    if (ccTrans.result == '-999')
+            #    {
+            #        info(strFmt(conpeek(Msg,2)));
+            #    }
+            #    else if (CreditCardADV::checkReturn(ccTrans,ccTrans.result) == false)
+            #    {
+            #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+            #    }
+            #    else
+            #    {
+            #        select firstonly newCCTrans where newCCTrans.RecId == ccTrans.RecId;
+            #
+            #        salesTableCC.PNRef     = ccTrans.pNRef;
+            #        salesTableCC.Processed = NoYes::Yes;
+            #        salesTableCC.TransID   = ccTrans.TransID;
+            #        salesTableCC.Captured  = NoYes::Yes;
+            #        salesTableCC.CaptureRestricted = NoYes::No;
+            #        salesTableCC.update();
+            #
+            #        //--> Create new SalesTableCC record
+            #        newSalesTableCC.clear();
+            #        newSalesTableCC.AmountCur = salesTableCC.AmountCur;
+            #        newSalesTableCC.CreditCardId = salesTableCC.CreditCardId;
+            #        newSalesTableCC.CreditCardTrxType = CreditCardTrxType::D;
+            #        newSalesTableCC.SalesId = salesTableCC.SalesId;
+            #        newSalesTableCC.PNRef = ccTrans.pnRef;
+            #        newSalesTableCC.Processed = NoYEs::Yes;
+            #        newSalesTableCC.TransID = ccTrans.TransId;
+            #        newSalesTableCC.insert();
+            #
+            #        info(strFmt("@ACC144",ccTrans.pnRef));
+            #    }
+            #
+            #
+            #    salesTableCC_ds.reread();
+            #    salesTableCC_ds.active();
+            #
+            #    ttscommit;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #CreditTrans
+          AutoDeclaration     #Yes
+          Enabled             #No
+          HelpText            #@ACC1043
+          ElementPosition     #1288490187
+          HierarchyParent     #Functions
+          Text                #@ACC195
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    CreditCard              cc = new CreditCard();
+            #    CreditCardTrans         ccTrans;
+            #    ;
+            #    super();
+            #
+            #    ttsbegin;
+            #    //<-- Create the Transaction record
+            #    ccTrans = CreditCardTrans::createTransforCredit(salesTableCC,salesTable,-salesTableCC.AmountCur);
+            #
+            #    //<-- create Credit Card Transaction
+            #    ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+            #
+            #    if (CreditCardAdv::checkReturn(ccTrans,ccTrans.result) == False)
+            #    {
+            #        info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+            #    }
+            #    else
+            #    {
+            #
+            #        salesTableCC.PNRef     = ccTrans.pNRef;
+            #        salesTableCC.Processed = NoYes::Yes;
+            #        salesTableCC.TransID   = ccTrans.TransID;
+            #        salesTableCC.update();
+            #
+            #        info(strFmt("@ACC144",ccTrans.pnRef));
+            #    }
+            #
+            #    salesTableCC_ds.reread();
+            #    salesTableCC_ds.active();
+            #
+            #    ttscommit;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DeleteButton
+          ElementPosition     #1610612733
+          HierarchyParent     #NewDeleteGroup
+          Text                #@sys14425
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          Primary             #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #FillTotal
+          AutoDeclaration     #Yes
+          HelpText            #@ACC137
+          ElementPosition     #1227133512
+          HierarchyParent     #ButtonGroup
+          Text                #@ACC136
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    if (salesTable)
+            #    {
+            #        salesTotals = SalesTotals::construct(salesTable, salesUpdate);
+            #        salesTotals.calc();
+            #    }
+            #
+            #    element.placeTotals();
+            #
+            #    salesTableCC_ds.refresh();
+            #
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #NewButton
+          ElementPosition     #1073741822
+          HierarchyParent     #NewDeleteGroup
+          ButtonDisplay       #Text & Image left
+          NormalImage         #11045
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          Command             #260
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #Process
+          AutoDeclaration     #Yes
+          HelpText            #@ACC146
+          ElementPosition     #920350134
+          HierarchyParent     #ButtonGroup
+          Text                #@SYS122441
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    CreditCardTrans     ccTrans;
+            #    ;
+            #    this.enabled(false);
+            #    startLengthyOperation();
+            #
+            #    super();
+            #
+            #    //breakpoint;
+            #    if (salesTableCC.AmountCur >= 0 && salesTableCC.CreditCardTrxType == CreditCardTrxType::C)
+            #    {
+            #        this.enabled(true);
+            #        throw error("@ACC578");
+            #    }
+            #
+            #    if (ccParams.CreditCapture == NoYes::Yes && salesTableCC.CreditCardTrxType == CreditCardTrxType::C)
+            #    {
+            #        if (!salesTableCC.CreditCardId && !creditCardNum.text())
+            #        {
+            #            this.enabled(true);
+            #            throw error("@ACC659");
+            #        }
+            #        if (swiped)
+            #        {
+            #            if (box::okCancel("@ACC742",DialogButton::Ok) == DialogButton::Ok)
+            #            {
+            #                element.processOneTime();
+            #                return;
+            #            }
+            #
+            #        }
+            #
+            #        ccTrans = CreditCardTrans::createTransforCreditRegister(  salesTableCC,
+            #                                                        salesTable,
+            #                                                        salesTableCC.AmountCur,
+            #                                                        CreditCardNum.text(),
+            #                                                        expirationDate.dateValue());
+            #
+            #        salesTableCC.TransID = ccTrans.TransId;
+            #        salesTableCC.Registered = NoYes::Yes;
+            #        salesTableCC.update();
+            #        info("@ACC577");
+            #
+            #        salesTableCC_ds.refresh();
+            #    }
+            #    else
+            #    {
+            #
+            #        if (!oneTimeCustomer && !swiped && !manualEntry)
+            #        {
+            #            if (!salesTableCC.CreditCardId)
+            #            {
+            #                if (!salesTableCC.PNRef)
+            #                {
+            #                    this.enabled(true);
+            #                    throw error("@ACC659");
+            #                }
+            #                else if (salesTableCC.PNRef && salesTableCC.AmountCur < 0)
+            #                {
+            #                    element.processPartialCredit();
+            #                }
+            #                else
+            #                {
+            #                    element.processPayPalAuth();
+            #
+            #                }
+            #            }
+            #            else
+            #            {
+            #                element.processStandard();
+            #            }
+            #        }
+            #        else
+            #        {
+            #            element.processOneTime();
+            #        }
+            #    }
+            #
+            #    endLengthyOperation();
+            #    this.enabled(true);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #VoidTrans
+          AutoDeclaration     #Yes
+          Enabled             #No
+          HelpText            #@ACC1042
+          ElementPosition     #858993458
+          HierarchyParent     #Functions
+          Text                #@ACC194
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    element.voidTransaction();
+            #
+            #    salesTableCC_ds.reread();
+            #    salesTableCC_ds.active();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #DOB
+          ElementPosition     #1533916890
+          HierarchyParent     #Telecheck2
+          Label               #@SYS81356
+          LabelAlignment      #Right
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #ExpirationDate
+          AutoDeclaration     #Yes
+          ElementPosition     #1431655764
+          HierarchyParent     #Enter
+          LabelAlignment      #Right
+          ExtendedDataType    
+            ARRAY 
+              #CreditCardExpirationDate
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #StartDate
+          AutoDeclaration     #Yes
+          ElementPosition     #1610612733
+          HierarchyParent     #Solo
+          ExtendedDataType    
+            ARRAY 
+              #CreditCardSoloStartDate
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DROPDIALOGBUTTON
+        PROPERTIES
+          Name                #NewCreditCard
+          HelpText            #@ACC1880
+          ElementPosition     #613566756
+          HierarchyParent     #ButtonGroup
+          ButtonDisplay       #Text & Image left
+          NormalImage         #12425
+          ImageLocation       #EmbeddedResource
+          NeedsRecord         #Yes
+          DataSource          #SalesTableCC
+          MenuItemName        #creditcardadhocCreate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #ClearAddress
+          AutoDeclaration     #Yes
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionsButtonGroup
+          ButtonDisplay       #Text & Image left
+          DataSource          #LogisticsPostalAddress
+          MenuItemName        #LogisticsPostalAddressClearCustBankAccou
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardTrans
+          HelpText            #@ACC1038
+          ElementPosition     #1431655764
+          HierarchyParent     #Inquiries
+          MenuItemName        #CreditCardTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #EditAddress
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741823
+          HierarchyParent     #ActionsButtonGroup
+          ButtonDisplay       #Text & Image left
+          DataSource          #LogisticsPostalAddress
+          MenuItemName        #LogisticsPostalAddressEditCustBankAccoun
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #    this.formRun().arrange();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #MapButton
+          AutoDeclaration     #Yes
+          ElementPosition     #1789569705
+          HierarchyParent     #ActionsButtonGroup
+          ButtonDisplay       #Text & Image left
+          DataSource          #LogisticsPostalAddress
+          MenuItemName        #LogisticsPostalAddressMap
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #NewAddress
+          AutoDeclaration     #Yes
+          ElementPosition     #715827882
+          HierarchyParent     #ActionsButtonGroup
+          ButtonDisplay       #Text & Image left
+          MenuItemName        #LogisticsPostalAddressNewCustBankAccount
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #    this.formRun().arrange();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #AmountCur
+          ElementPosition     #1288490187
+          HierarchyParent     #Overview
+          DataSource          #SalesTableCC
+          DataField           #AmountCur
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #SalesTableCC_AmountCur
+          ElementPosition     #1073741820
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #SalesTableCC
+          DataField           #AmountCur
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CheckNum
+          AutoDeclaration     #Yes
+          ElementPosition     #920350134
+          HierarchyParent     #Telecheck2
+          LabelAlignment      #Right
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CID
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #CVD
+          ExtendedDataType    
+            ARRAY 
+              #CreditCardCID
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardId
+          ElementPosition     #858993458
+          HierarchyParent     #Overview
+          DataSource          #SalesTableCC
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardNum
+          AutoDeclaration     #Yes
+          HelpText            #@SYS116904
+          ElementPosition     #1073741823
+          HierarchyParent     #Enter
+          Label               #@SYS112023
+          LabelAlignment      #Right
+          ExtendedDataType    
+            ARRAY 
+              #CreditCardNum
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    boolean ret;
+            #
+            #    ret = super();
+            #
+            #    if (!CreditCardTable::validate(CreditCardNum.text()))
+            #        throw error("@ACC77");
+            #
+            #    element.setManual();
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #DriversLicenseNum
+          ElementPosition     #1227133512
+          HierarchyParent     #Telecheck2
+          LabelAlignment      #Right
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #MICR
+          AutoDeclaration     #Yes
+          ElementPosition     #613566756
+          HierarchyParent     #Telecheck2
+          LabelAlignment      #Right
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #NameonCard
+          AutoDeclaration     #Yes
+          ElementPosition     #1789569705
+          HierarchyParent     #Enter
+          Label               #@ACC14
+          LabelAlignment      #Right
+          ExtendedDataType    
+            ARRAY 
+              #Name
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    boolean ret;
+            #
+            #    ret = super();
+            #
+            #    salesTableCC.NameOnCard = nameOnCard.text();
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesTableCC_CreditCardID
+          AutoDeclaration     #Yes
+          ElementPosition     #805306365
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #SalesTableCC
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #lookup
+            #public void lookup()
+            #{
+            #    ;
+            #    CreditCardTable::lookupCustCreditCard(this,SalesTable.InvoiceAccount);
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SoloIssueNum
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #Solo
+          ExtendedDataType    
+            ARRAY 
+              #CreditCardSoloIssueNum
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SSN
+          ElementPosition     #1840700268
+          HierarchyParent     #Telecheck2
+          LabelAlignment      #Right
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #StripeEntry
+          AutoDeclaration     #Yes
+          Height              #20
+          ElementPosition     #1431655764
+          HierarchyParent     #Swipe
+          Label               #@ACC562
+          LabelAlignment      #Right
+          ExtendedDataType    
+            ARRAY 
+              #CreditCardSwipe
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    boolean     ret;
+            #    ;
+            #    ret = super();
+            #
+            #    element.parseSwipedCard(this.text());
+            #
+            #    CreditCardType.allowEdit(false);
+            #    CreditCardNum.allowEdit(false);
+            #    ExpirationDate.allowEdit(false);
+            #    NameonCard.allowEdit(false);
+            #
+            #    swiped = true;
+            #
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

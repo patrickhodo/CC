@@ -1,0 +1,218 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardTransLog
+    EnforceFKRelation 1
+    PROPERTIES
+      Name                #CreditCardTransLog
+      Label               #@SYS80170
+      TitleField1         #SalesId
+      TitleField2         #Log
+      ConfigurationKey    #CreditCardAdv
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #SurrogateKey
+      ClusterIndex        #RefRecIdIdx
+      ReplacementKey      #FK_SalesTable
+      DeveloperDocumentation  #@ACC1865
+      Origin              #{4AADC87A-69EE-4565-8F40-0213380D1AA3}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Log
+        STRING
+        PROPERTIES
+          Name                #Log
+          HelpText            #@SYS1243
+          Table               #CreditCardTransLog
+          Origin              #{9285CF14-2BA4-4337-A1B2-00D481EF2874}
+          ExtendedDataType    #LogText
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #RefRecId
+        INT64
+        PROPERTIES
+          Name                #RefRecId
+          Table               #CreditCardTransLog
+          Origin              #{1CBDAA40-6F49-4D11-ABD6-B6BBE759BE2E}
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #RefTableId
+        INT
+        PROPERTIES
+          Name                #RefTableId
+          Table               #CreditCardTransLog
+          Origin              #{AC413C73-250F-46FE-BF3A-2E0182F61BB3}
+          ExtendedDataType    #RefTableId
+        ENDPROPERTIES
+        
+      FIELD #SalesId
+        STRING
+        PROPERTIES
+          Name                #SalesId
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #CreditCardTransLog
+          IgnoreEDTRelation   #Yes
+          Origin              #{B1218DD6-3C1F-4CA9-998F-223A5D82CA71}
+          ExtendedDataType    #SalesId
+          StringSize          #20
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Log
+          #RefRecId
+          #RefTableId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Log
+          #RefRecId
+          #RefTableId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoIdentification
+        PROPERTIES
+          Name                #AutoIdentification
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Hidden
+        PROPERTIES
+          Name                #Hidden
+          Label               #@SYS54478
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #RefRecId
+          #RefTableId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Log
+        PROPERTIES
+          Name                #Log
+          Label               #@SYS2515
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Log
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Transaction
+        PROPERTIES
+          Name                #Transaction
+          Label               #@SYS15191
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #RefRecIdIdx
+      PROPERTIES
+        Name                #RefRecIdIdx
+        Origin              #{53DB3870-8EDC-4DBC-83CA-247895781316}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #RefRecId
+        #RefTableId
+      ENDINDEXFIELDS
+      
+      #FK_SalesTable
+      PROPERTIES
+        Name                #FK_SalesTable
+        AllowDuplicates     #No
+        AlternateKey        #Yes
+        Origin              #{8B108624-1C11-42D5-9455-EC966E7A5966}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #SalesId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #Common
+        PROPERTIES
+          Name                #Common
+          Table               #Common
+          Validate            #No
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesTable
+        PROPERTIES
+          Name                #SalesTable
+          Table               #SalesTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #SalesId
+            RelatedField        #SalesId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

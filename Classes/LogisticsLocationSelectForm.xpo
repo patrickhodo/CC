@@ -1,0 +1,573 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #LogisticsLocationSelectForm
+    PROPERTIES
+      Name                #LogisticsLocationSelectForm
+      Origin              #{2D1B0000-0000-1000-BC8D-29712580AE5D}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #allowedSources
+        #/// <summary>
+        #///    Indicates the entities from which the addresses can be selected.
+        #/// </summary>
+        #/// <returns>
+        #///    A set of <c>LogisticsLocationSelectSourceType</c> enumeration values from which addresses can be
+        #///    selected.
+        #/// </returns>
+        #public Set allowedSources()
+        #{
+        #    Set allowedItems = new Set(Types::Enum);
+        #
+        #    allowedItems.add(LogisticsLocationSelectSourceType::Customer);
+        #    allowedItems.add(LogisticsLocationSelectSourceType::Vendor);
+        #    allowedItems.add(LogisticsLocationSelectSourceType::Company);
+        #    allowedItems.add(LogisticsLocationSelectSourceType::Site);
+        #    allowedItems.add(LogisticsLocationSelectSourceType::Warehouse);
+        #
+        #    return allowedItems;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class LogisticsLocationSelectForm
+        #{
+        #    FormRun callingForm;
+        #    MCRString50 parmMCR;
+        #}
+      ENDSOURCE
+      SOURCE #copyAddressToCaller
+        #/// <summary>
+        #/// Copies the selected address to the calling record.
+        #/// </summary>
+        #/// <param name="_transferFromTable">
+        #/// The source of the address.
+        #/// </param>
+        #/// <param name="_addressRecId">
+        #/// The selected address.
+        #/// </param>
+        #public void copyAddressToCaller(Common _transferFromTable, LogisticsPostalAddressRecId _addressRecId)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #defaultSource
+        #/// <summary>
+        #///    The initial selected source for addresses on the form.
+        #/// </summary>
+        #/// <returns>
+        #///    The <c>LogisticsLocationSelectSourceType</c> enumeration value that corresponds to the address
+        #///    source.
+        #/// </returns>
+        #public LogisticsLocationSelectSourceType defaultSource()
+        #{
+        #    return LogisticsLocationSelectSourceType::BusinessRelation;
+        #}
+      ENDSOURCE
+      SOURCE #getDefaultCFOP_BR
+        #/// <summary>
+        #/// gets default CFOP recid based on new address
+        #/// </summary>
+        #/// <param name="_common">
+        #/// Based table used to get the cfop required attributes
+        #/// </param>
+        #/// <returns>
+        #/// return the default CFOPTable_BR record id
+        #/// </returns>
+        #// <GBR>
+        #protected RecId getDefaultCFOP_BR(Common _common)
+        #{
+        #    CFOPValidation_BR           cfopValidation;
+        #
+        #    cfopValidation = CFOPValidation_BR::construct(_common);
+        #
+        #    return cfopValidation.getDefaultCFOP();
+        #}
+        #// </GBR>
+      ENDSOURCE
+      SOURCE #getLogisticsPostalAddressRecId
+        #/// <summary>
+        #///   Gets the record ID of the <c>LogisticsPostalAddress</c> that is currently selected.
+        #/// </summary>
+        #/// <returns>
+        #///   The <c>LogisticsPostalAddress</c> record ID.
+        #/// </returns>
+        #public RecId getLogisticsPostalAddressRecId()
+        #{
+        #    return 0;
+        #}
+      ENDSOURCE
+      SOURCE #getLookupRecord
+        #/// <summary>
+        #///   Gets the record the target form's grid should have selected upon openning.
+        #/// </summary>
+        #/// <returns>
+        #///   The record to be selected.
+        #/// </returns>
+        #public Common getLookupRecord()
+        #{
+        #    return null;
+        #}
+      ENDSOURCE
+      SOURCE #parmCallingForm
+        #public FormRun parmCallingForm(FormRun _formRun = callingForm)
+        #{
+        #    callingForm = _formRun;
+        #
+        #    return callingForm;
+        #}
+      ENDSOURCE
+      SOURCE #parmMCRArgsParm
+        #/// <summary>
+        #///     Gets or sets the parm variable.
+        #/// </summary>
+        #/// <param name="_parm">
+        #///     The value being passed in from args.parm(); optional.
+        #/// </param>
+        #/// <returns>
+        #///     A string containing the contents of parm.
+        #/// </returns>
+        #MCRString50 parmMCRArgsParm(MCRString50 _parm = parmMCR)
+        #{
+        #    parmMCR = _parm;
+        #
+        #    return parmMCR;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #/// <summary>
+        #///    Creates a <c>LogisticsLocationSelectForm</c> object.
+        #/// </summary>
+        #/// <param name="_buffer">
+        #///    The record to which to copy the selected address.
+        #/// </param>
+        #/// <param name="_roleType">
+        #///    Location role type that defines the field to copy the selected address reference to.
+        #/// </param>
+        #/// <returns>
+        #///    A new <c>LogisticsLocationSelectForm</c> object.
+        #/// </returns>
+        #/// <exception cref="M:Exception::Error">
+        #///    A buffer is not a supported type.
+        #/// </exception>
+        #public static LogisticsLocationSelectForm construct(Common _buffer
+        #    // <GEERU>
+        #    , LogisticsLocationRoleType _roleType = LogisticsLocationRoleType::None
+        #    // </GEERU>
+        #    )
+        #{
+        #    switch (_buffer.TableId)
+        #    {
+        #        case tableNum(SalesLine) :
+        #            return LogisticsLocationSelectForm_SalesLine::construct(_buffer);
+        #
+        #        case tableNum(SalesTable) :
+        #            return LogisticsLocationSelectForm_SalesTable::construct(_buffer);
+        #
+        #        case tableNum(SalesCreateReleaseOrderTableTmp):
+        #            return LogisticsLocationSelectForm_SalesCROTmp::construct(_buffer);
+        #
+        #        case tableNum(SalesQuotationLine) :
+        #            return LogisticsLocationSelectForm_QuoteLine::construct(_buffer);
+        #
+        #        case tableNum(SalesQuotationTable) :
+        #            return LogisticsLocationSelectForm_QuoteTable::construct(_buffer);
+        #
+        #        case tableNum(LogisticsPostalAddress) :
+        #            return LogisticsLocationSelectForm_InventSupply::construct(_buffer);
+        #
+        #        case tableNum(PurchRFQCaseTable) :
+        #            return LogisticsLocationSelectForm_RFQCaseTable::construct(_buffer);
+        #
+        #        case tableNum(PurchRFQCaseLine) :
+        #            return LogisticsLocationSelectForm_RFQCaseLine::construct(_buffer);
+        #
+        #        case tableNum(PurchRFQTable) :
+        #            return LogisticsLocationSelectForm_RFQTable::construct(_buffer);
+        #
+        #        case tableNum(PurchRFQLine) :
+        #            return LogisticsLocationSelectForm_RFQLine::construct(_buffer);
+        #
+        #        case tableNum(PurchTable) :
+        #            return LogisticsLocationSelectForm_PurchTable::construct(_buffer);
+        #
+        #        case tableNum(TmpPurchTable) :
+        #            return LogisticsLocationSelectForm_TmpPurchTbl::construct(_buffer);
+        #
+        #        case tableNum(PurchLine) :
+        #            return LogisticsLocationSelectForm_PurchLine::construct(_buffer);
+        #
+        #        case tableNum(PurchReqLine) :
+        #            return LogisticsLocationSelectForm_PurchReqLine::construct(_buffer);
+        #
+        #        case tableNum(SMAServiceOrderTable) :
+        #            return LogisticsLocationSelectForm_ServiceOrder::construct(_buffer);
+        #
+        #        case tableNum(CustInvoiceTable) :
+        #            return LogisticsLocationSelectForm_CustFree::construct(_buffer);
+        #
+        #        case tableNum(AgreementHeaderDefault):
+        #            return LogisticsLocationSelectForm_Agreement::construct(_buffer);
+        #
+        #        // <GTH>
+        #        case tableNum(TaxBranch):
+        #            return LogisticsLocationSelectForm_TaxBranch::construct(_buffer);
+        #        // </GTH>
+        #
+        #        // <GEEU>
+        #        case tableNum(CzCustAdvanceInvoiceTable) :
+        #            return LogisticsLocationSelectForm_CustAdvance::construct(_buffer);
+        #
+        #        case tableNum(CzVendAdvanceInvoiceTable) :
+        #            return LogisticsLocationSelectForm_VendAdvance::construct(_buffer);
+        #
+        #        case tableNum(TransportationDocument):
+        #            return LogisticsLocationSelectForm_Transptn::construct(_buffer, _roleType);
+        #        // </GEEU>
+        #
+        #        // <GBR>
+        #        case tableNum(TaxFiscalDocument_BR):
+        #            return LogisticsLocationSelectForm_TaxTransfer::construct(_buffer);
+        #        // </GBR>
+        #
+        #        // <GEERU>
+        #        case tableNum(InventTransferTable):
+        #            return LogisticsLocationSelectForm_InvTransTbl::construct(_buffer, _roleType);
+        #
+        #        case tableNum(SalesParmTable):
+        #            return LogisticsLocationSelectForm_SalesParmTbl::construct(_buffer, _roleType);
+        #
+        #        case tableNum(WMSBillOfLading):
+        #            return LogisticsLocationSelectForm_BOL::construct(_buffer, _roleType);
+        #        case tableNum(RAssetTable):
+        #            return LogisticsLocationSelectForm_RAssetTable::construct(_buffer);
+        #        // </GEERU>
+        #
+        #        //--> <CreditCard>
+        #        case tableNum(CreditCardTable):
+        #            return LogisticsLocationSelectForm_CCTable::construct(_buffer);
+        #
+        #        case tableNum(SalesTableCC):
+        #            return LogisticsLocationSelectForm_SalesTableCC::construct(_buffer);
+        #        //<-- </CreditCard>
+        #    }
+        #
+        #    throw error(Error::missingOverload(funcName()));
+        #}
+      ENDSOURCE
+      SOURCE #findByRecId
+        #/// <summary>
+        #///   Returns a record in the given table matching the given record ID.
+        #/// </summary>
+        #/// <param name="_tableId">
+        #///   The ID of the table to find a record in.
+        #/// </param>
+        #/// <param name="_recId">
+        #///   The record ID of the record to find.
+        #/// </param>
+        #/// <returns>
+        #///   The record found (could be null.)
+        #/// </returns>
+        #public static Common findByRecId(RefTableId _tableId, RefRecId _recId)
+        #{
+        #    Common      result;
+        #    DictTable   dictTable = new SysDictTable(_tableId);
+        #
+        #    if (dictTable)
+        #    {
+        #        result = dictTable.makeRecord();
+        #        select firstonly result where result.RecId == _recId;
+        #    }
+        #
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #/// <summary>
+        #///    Shows the <c>LogisticsLocationSelect</c> form.
+        #/// </summary>
+        #/// <param name="_args">
+        #///    The <c>Args</c> object that is passed from the caller.
+        #/// </param>
+        #/// <param name="_showForm">
+        #///    Indicates whether to show the form.
+        #/// </param>
+        #public static void main(Args _args, boolean _showForm = true)
+        #{
+        #    Args thisArgs, callerArgs;
+        #    FormRun formRun, callerForm;
+        #    LogisticsLocationSelectForm selectForm;
+        #    Common callerBuffer;
+        #    Common lookupRecord;
+        #    FormDataSource formDataSource;
+        #
+        #    callerBuffer = _args.record();
+        #
+        #    if (_args.caller())
+        #    {
+        #        callerForm = _args.caller();
+        #
+        #        if (callerForm.name() == classstr(LogisticsLocationSelectionLookup))
+        #        {
+        #            callerArgs = _args.caller().args();
+        #            callerBuffer = callerArgs.record();
+        #            callerForm = callerArgs.caller();
+        #        }
+        #    }
+        #
+        #    // <GEERU>
+        #    if (! callerArgs)
+        #    {
+        #        callerArgs = _args;
+        #    }
+        #    if (callerArgs.parmEnumType() == enumNum(LogisticsLocationRoleType))
+        #    {
+        #        selectForm = LogisticsLocationSelectForm::construct(callerBuffer, callerArgs.parmEnum());
+        #    }
+        #    else
+        #    {
+        #    // </GEERU>
+        #        selectForm = LogisticsLocationSelectForm::construct(callerBuffer);
+        #    // <GEERU>
+        #    }
+        #    // </GEERU>
+        #    selectForm.parmCallingForm(callerForm);
+        #
+        #    thisArgs = new Args();
+        #    thisArgs.name(formstr(LogisticsLocationSelect));
+        #    thisArgs.record(callerBuffer);
+        #    // we use parm to pass the LogisticsPostalAddress.RecId to callee:
+        #    thisArgs.parm(int642str(selectForm.getLogisticsPostalAddressRecId()));
+        #    thisArgs.parmObject(selectForm);
+        #    // pass the calling form
+        #    thisArgs.caller(callerForm);
+        #    // pass the parm
+        #    thisArgs.parm(_args.parm());
+        #
+        #    formRun = classfactory.formRunClass(thisArgs);
+        #    formRun.init();
+        #    // make the grid of target form open with this record selected:
+        #    lookupRecord = selectForm.getLookupRecord();
+        #    if(lookupRecord)
+        #    {
+        #        // if the record is not a datasource
+        #        // on the form, don't set thisArgs.lookupRecord
+        #        if(formRun && formRun.dataSource(tableId2name(lookupRecord.TableId)))
+        #        {
+        #            formDataSource = formRun.dataSource(tableId2name(lookupRecord.TableId));
+        #            if (!formDataSource.joinSource())
+        #            {
+        #                thisArgs.lookupRecord(lookupRecord);
+        #            }
+        #        }
+        #    }
+        #
+        #    if (formRun)
+        #    {
+        #        if (_showForm)
+        #        {
+        #            formRun.run();
+        #            formRun.wait();
+        #        }
+        #        if (formRun.closedOk())
+        #        {
+        #            // Refresh caller
+        #            formDataSource = callerBuffer.dataSource();
+        #            formDataSource.rereadReferenceDataSources();
+        #        }
+        #        if (_args.caller() && _args.caller().name() == classstr(LogisticsLocationSelectionLookup))
+        #        {
+        #           _args.caller().close();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #resolveTaxGroup
+        #/// <summary>
+        #///    Resolves the tax group based on the table ID of the buffer that is passed to this method.
+        #/// </summary>
+        #/// <param name="_bufferToCopyFrom">
+        #///    The buffer from which to copy.
+        #/// </param>
+        #/// <returns>
+        #///    The tax group.
+        #/// </returns>
+        #public static TaxGroup resolveTaxGroup(Common _bufferToCopyFrom)
+        #{
+        #    TaxGroup            taxGroup;
+        #    smmBusRelTable      smmBusRelTable;
+        #    ProjTable           projTable;
+        #    CustTable           custTable;
+        #    VendTable           vendTable;
+        #    SalesQuotationLine  salesQuotationLine;
+        #    SalesLine           salesLine;
+        #    PurchLine           purchLine;
+        #    SalesTable          salesTable;
+        #    SalesQuotationTable salesQuotationTable;
+        #    PurchTable          purchTable;
+        #    LogisticsLocation   location;
+        #
+        #    switch (_bufferToCopyFrom.TableId)
+        #    {
+        #        case tableNum(smmBusRelTable)       :   smmBusRelTable = _bufferToCopyFrom;
+        #                                                taxGroup = smmBusRelTable.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(CustTable)            :   custTable = _bufferToCopyFrom;
+        #                                                taxGroup = custTable.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(VendTable)            :   vendTable = _bufferToCopyFrom;
+        #                                                taxGroup = vendTable.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(ProjTable)            :   projTable = _bufferToCopyFrom;
+        #                                                taxGroup = projTable.TaxGroupId;
+        #                                                break;
+        #
+        #
+        #        case tableNum(SalesTable)           :   salesTable = _bufferToCopyFrom;
+        #                                                taxGroup = salesTable.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(SalesQuotationTable)  :   salesQuotationTable = _bufferToCopyFrom;
+        #                                                taxGroup = salesQuotationTable.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(PurchTable)           :   purchTable = _bufferToCopyFrom;
+        #                                                taxGroup = purchTable.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(PurchLine)            :   purchLine = _bufferToCopyFrom;
+        #                                                taxGroup = purchLine.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(SalesLine)            :   salesLine = _bufferToCopyFrom;
+        #                                                taxGroup = salesLine.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(SalesQuotationLine)   :   salesQuotationLine = _bufferToCopyFrom;
+        #                                                taxGroup = salesQuotationLine.TaxGroup;
+        #                                                break;
+        #
+        #        case tableNum(LogisticsLocation)    :   location = _bufferToCopyFrom;
+        #                                                taxGroup = LogisticsLocationExt::find(location.RecId).TaxGroup;
+        #                                                break;
+        #
+        #        default                             :   taxGroup = "";
+        #
+        #    }
+        #
+        #    return taxGroup;
+        #}
+      ENDSOURCE
+      SOURCE #sourceTypeToTableId
+        #/// <summary>
+        #///   Returns the table ID for the given <c>LogisticsLocationSelectSourceType</c>.
+        #/// </summary>
+        #/// <param name="_sourceType">
+        #///   The source type to get the table ID for.
+        #/// </param>
+        #/// <returns>
+        #///   The table ID corresponding with the source type.
+        #/// </returns>
+        #public static TableId sourceTypeToTableId(
+        #    LogisticsLocationSelectSourceType _sourceType)
+        #{
+        #    switch (_sourceType)
+        #    {
+        #        case LogisticsLocationSelectSourceType::BusinessRelation :
+        #            return tableNum(smmBusRelTable);
+        #        case LogisticsLocationSelectSourceType::Customer :
+        #            return tableNum(CustTable);
+        #        case LogisticsLocationSelectSourceType::Vendor :
+        #            return tableNum(VendTable);
+        #        case LogisticsLocationSelectSourceType::Company :
+        #            return tableNum(CompanyInfo);
+        #        case LogisticsLocationSelectSourceType::Site :
+        #            return tableNum(InventSite);
+        #        case LogisticsLocationSelectSourceType::Warehouse :
+        #            return tableNum(InventLocation);
+        #        case LogisticsLocationSelectSourceType::SalesQuotation :
+        #            return tableNum(SalesQuotationTable);
+        #        case LogisticsLocationSelectSourceType::SalesQuotationLine :
+        #            return tableNum(SalesQuotationLine);
+        #        case LogisticsLocationSelectSourceType::SalesOrder :
+        #            return tableNum(SalesTable);
+        #        case LogisticsLocationSelectSourceType::SalesLine :
+        #            return tableNum(SalesLine);
+        #        case LogisticsLocationSelectSourceType::RequestForQuote :
+        #            return tableNum(PurchRFQCaseTable);
+        #        case LogisticsLocationSelectSourceType::RequestForQuoteLine :
+        #            return tableNum(PurchRFQCaseLine);
+        #        case LogisticsLocationSelectSourceType::PurchaseOrder :
+        #            return tableNum(PurchTable);
+        #        case LogisticsLocationSelectSourceType::PurchaseOrderLine :
+        #            return tableNum(PurchLine);
+        #        case LogisticsLocationSelectSourceType::PurchReqLine :
+        #            return tableNum(PurchReqLine);
+        #        case LogisticsLocationSelectSourceType::ServiceOrder :
+        #            return tableNum(SMAServiceOrderTable);
+        #        case LogisticsLocationSelectSourceType::Project :
+        #            return tableNum(ProjTable);
+        #        case LogisticsLocationSelectSourceType::PurchReqLineRequsterHCMWorker :
+        #            return tableNum(HcmWorker);
+        #        default :
+        #            return 0;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #tableIdToSourceType
+        #/// <summary>
+        #///   Returns the <c>LogisticsLocationSelectSourceType</c> for the given table ID.
+        #/// </summary>
+        #/// <param name="_tableId">
+        #///   The table ID to get source type for.
+        #/// </param>
+        #/// <param name="_defaultSourceType">
+        #///   The source type to use when to matching value is found for the given table ID.
+        #/// </param>
+        #/// <returns>
+        #///   The source type with the given table as address owner.
+        #/// </returns>
+        #public static LogisticsLocationSelectSourceType tableIdToSourceType(
+        #    TableId                           _tableId,
+        #    LogisticsLocationSelectSourceType _defaultSourceType
+        #)
+        #{
+        #    LogisticsLocationSelectSourceType sourceType = _defaultSourceType;
+        #
+        #    switch (_tableId)
+        #    {
+        #        case tableNum(smmBusRelTable)       : sourceType = LogisticsLocationSelectSourceType::BusinessRelation             ; break;
+        #        case tableNum(CustTable)            : sourceType = LogisticsLocationSelectSourceType::Customer                     ; break;
+        #        case tableNum(VendTable)            : sourceType = LogisticsLocationSelectSourceType::Vendor                       ; break;
+        #        case tableNum(CompanyInfo)          : sourceType = LogisticsLocationSelectSourceType::Company                      ; break;
+        #        case tableNum(InventSite)           : sourceType = LogisticsLocationSelectSourceType::Site                         ; break;
+        #        case tableNum(InventLocation)       : sourceType = LogisticsLocationSelectSourceType::Warehouse                    ; break;
+        #        case tableNum(SalesQuotationTable)  : sourceType = LogisticsLocationSelectSourceType::SalesQuotation               ; break;
+        #        case tableNum(SalesQuotationLine)   : sourceType = LogisticsLocationSelectSourceType::SalesQuotationLine           ; break;
+        #        case tableNum(SalesTable)           : sourceType = LogisticsLocationSelectSourceType::SalesOrder                   ; break;
+        #        case tableNum(SalesLine)            : sourceType = LogisticsLocationSelectSourceType::SalesLine                    ; break;
+        #        case tableNum(PurchRFQCaseTable)    : sourceType = LogisticsLocationSelectSourceType::RequestForQuote              ; break;
+        #        case tableNum(PurchRFQCaseLine)     : sourceType = LogisticsLocationSelectSourceType::RequestForQuoteLine          ; break;
+        #        case tableNum(PurchTable)           : sourceType = LogisticsLocationSelectSourceType::PurchaseOrder                ; break;
+        #        case tableNum(PurchLine)            : sourceType = LogisticsLocationSelectSourceType::PurchaseOrderLine            ; break;
+        #        case tableNum(PurchReqLine)         : sourceType = LogisticsLocationSelectSourceType::PurchReqLine                 ; break;
+        #        case tableNum(SMAServiceOrderTable) : sourceType = LogisticsLocationSelectSourceType::ServiceOrder                 ; break;
+        #        case tableNum(ProjTable)            : sourceType = LogisticsLocationSelectSourceType::Project                      ; break;
+        #        case tableNum(HcmWorker)            : sourceType = LogisticsLocationSelectSourceType::PurchReqLineRequsterHCMWorker; break;
+        #    }
+        #
+        #    return sourceType;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

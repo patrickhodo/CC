@@ -1,0 +1,769 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SalesCopying_CreditNote
+    PROPERTIES
+      Name                #SalesCopying_CreditNote
+      Extends             #SalesCopying
+      RunOn               #Server
+      Origin              #{2D170650-0000-1000-A249-7822F623300B}
+      LegacyId            #1616
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #calcLineDiscFromEndDisc
+        #/// <summary>
+        #///    Calculates credit order line discount for each item, based on the end discount of the original
+        #///    invoice.
+        #/// </summary>
+        #/// <param name="_custInvoiceTrans">
+        #///    The original invoice line.
+        #/// </param>
+        #/// <returns>
+        #///    The calculated line discount.
+        #/// </returns>
+        #/// <remarks>
+        #///    The end discount from the original invoice has to be calculated as a line discount on the credit
+        #///    note.
+        #/// </remarks>
+        #[SysObsoleteAttribute('No longer needed due to refactoring', true)]
+        #protected SalesLineDisc calcLineDiscFromEndDisc(CustInvoiceTrans _custInvoiceTrans)
+        #{
+        #    return 0;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #public class SalesCopying_CreditNote extends SalesCopying
+        #{
+        #    SpecTransManager            specTransManager;
+        #    boolean                     deleteSettlement;
+        #    boolean                     headerTotalDiscountSet;
+        #}
+      ENDSOURCE
+      SOURCE #copy
+        #void copy()
+        #{
+        #    ttsbegin;
+        #
+        #    // clear out any existing tax adjustments for the Sales Order.
+        #    TaxWorkRegulation::clearRegulation(salesTable.TableId, salesTable.RecId);
+        #
+        #    super();
+        #
+        #    if (salesTable.SettleVoucher != salesParameters.SettleVoucher)
+        #    {
+        #        salesTable.SettleVoucher = salesParameters.SettleVoucher;
+        #        if (salesTable.validateWrite())
+        #        {
+        #            salesTable.update();
+        #        }
+        #        else
+        #        {
+        #            salesTable.reread();
+        #            throw error("@SYS18722");
+        #        }
+        #    }
+        #
+        #    // Process any credit card information that is needed.
+        #    this.copyCreditCardTrans();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #copyCreditCardTrans
+        #private void copyCreditCardTrans()
+        #{
+        #    CreditCardAuthTrans chargeAuthTrans;
+        #    CreditCardAuthTrans refundAuthTrans;
+        #    //--> Red Maple Begin
+        #    CreditCardTrans     ccTrans;
+        #    SalesTableCC        salesTableCC;
+        #    MCRCustPaymTotals   custPaymTotals;
+        #    Amount              amount;
+        #    SalesTotals         salesTotals = SalesTotals::construct(salesTable);
+        #    //<-- Red Maple End
+        #
+        #    if (salesTable.isCreditCardPaymentType())
+        #    {
+        #        if (salesTable.SettleVoucher != SettlementType::None)
+        #        {
+        #            Box::infoOnce("@SYS329021", "@SYS329022", funcName());
+        #
+        #            salesTable.SettleVoucher = SettlementType::None;
+        #            if (salesTable.validateWrite())
+        #            {
+        #                salesTable.update();
+        #            }
+        #            else
+        #            {
+        #                salesTable.reread();
+        #                throw error("@SYS18722");
+        #            }
+        #        }
+        #
+        #        chargeAuthTrans = CreditCardAuthTrans::findChargeByInvoice(custInvoiceJour.SalesId, custInvoiceJour.InvoiceId);
+        #
+        #        if (chargeAuthTrans)
+        #        {
+        #            ttsbegin;
+        #
+        #            if (!CreditCard::sameCard(salesTable, chargeAuthTrans))
+        #            {
+        #                salesTable.CreditCardCustRefId = CreditCardCust::findByUniqueCardId(chargeAuthTrans.UniqueCardId).RecId;
+        #                salesTable.update();
+        #            }
+        #
+        #            if (chargeAuthTrans.SalesId == salesTable.SalesId)
+        #            {
+        #                // The original sales order is being udpated.
+        #                chargeAuthTrans.RefundStatus = CreditCardRefundStatus::Marked;
+        #                chargeAuthTrans.selectForUpdate(true);
+        #                chargeAuthTrans.update();
+        #            }
+        #            else
+        #            {
+        #                // The sales order is new.
+        #                // Copy the charge auth trans details to be refunded.
+        #                refundAuthTrans = chargeAuthTrans.data();
+        #                refundAuthTrans.RefundStatus = CreditCardRefundStatus::Marked;
+        #                refundAuthTrans.SalesId = salesTable.SalesId;
+        #                refundAuthTrans.insert();
+        #            }
+        #
+        #            ttscommit;
+        #        }
+        #    }
+        #    //--> Red Maple Begin
+        #    else
+        #    {
+        #        if (!salesTable.ReturnReplacementCreated)
+        #        {
+        #            custPaymTotals = MCRCustPaymTotals::construct(salesTable.TableId,salesTable.RecId);
+        #            amount = custPaymTotals.getTotalSalesAmount();
+        #
+        #            while select AmountCur,CreditCardId,CurrencyCode,PNRef,Result,TransType,Result from ccTrans
+        #                where ccTrans.SalesId == CustInvoiceJour.SalesId
+        #                && ccTrans.Result == "0"
+        #                && (ccTrans.TransType == CreditCardTrxType::D
+        #                || ccTrans.transType == CreditCardTrxType::S)
+        #            {
+        #                salesTableCC.initValue();
+        #                salesTableCC.SalesId = SalesTable.SalesId;
+        #                salesTableCC.CreditCardId = ccTrans.CreditCardId;
+        #                salesTableCC.CreditCardTrxType = CreditCardTrxType::C;
+        #
+        #                amount = -ccTrans.AmountCur;
+        #                if (amount ==0)
+        #                {
+        #                    SalesTotals.calc();
+        #                    amount = conPeek(salesTotals.displayFields(), TradeTotals::posTotalAmount());
+        #                }
+        #                salesTableCC.AmountCur = amount;
+        #                salesTableCC.AmountMST = Currency::amountCur2MST(amount,ccTrans.currencyCode);
+        #                salesTableCC.CurrencyCode = ccTrans.CurrencyCode;
+        #                salesTableCC.TransID = ccTrans.PNRef;
+        #                salesTableCC.PNRef = ccTrans.PNRef;
+        #                salesTableCC.insert();
+        #
+        #                salesTableCC::createMCRCustPaymTable(salesTableCC);
+        #            }
+        #        }
+        #    }
+        #    //<-- REd Maple End
+        #}
+        #
+      ENDSOURCE
+      SOURCE #copyExchRate_W
+        #/// <summary>
+        #/// Copy the original transaction exchange rate to a credit note.
+        #/// </summary>
+        #/// <param name="_exchRate">
+        #/// The original transaction exchange rate.
+        #/// </param>
+        #/// <param name="_sourceTableId">
+        #/// The original transaction table Id.
+        #/// </param>
+        #/// <param name="_sourceRecordId">
+        #/// The original transaction record Id.
+        #/// </param>
+        #// <GEEU>
+        #protected void copyExchRate_W(ExchRate _exchRate
+        #    , RefTableId    _sourceTableId = 0
+        #    , RefRecId      _sourceRecordId = 0
+        #    )
+        #{
+        #    SalesTaxTransactionExchangeRate salesTaxTransactionExchangeRate;
+        #
+        #    if (copyExchRate)
+        #    {
+        #        salesTable.FixedExchRate = _exchRate;
+        #
+        #        if (_sourceTableId && _sourceRecordId)
+        #        {
+        #            salesTaxTransactionExchangeRate = SalesTaxTransactionExchangeRate::findBySourceRecord(_sourceTableId, _sourceRecordId);
+        #
+        #            if (salesTaxTransactionExchangeRate)
+        #            {
+        #                SalesTaxExchangeRateHelper::saveSalesTaxTransactionExchangeRate(salesTable.TableId, salesTable.RecId, salesTable.CurrencyCode,
+        #                    salesTaxTransactionExchangeRate.SalesTaxExchangeRate, salesTaxTransactionExchangeRate.DateOfVATRegister, NoYes::Yes);
+        #            }
+        #        }
+        #    }
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #copyHeader
+        #public void copyHeader()
+        #{
+        #    super();
+        #
+        #    if (!headerTotalDiscountSet && custInvoiceJour.EndDisc)
+        #    {
+        #        this.setHeaderTotalDiscount();
+        #        if (headerTotalDiscountSet)
+        #        {
+        #            salesTable.update();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #copyReasonTableRef
+        #/// <summary>
+        #/// Creates a <c>ReasonTableRef</c> record for a specified cancel reason or cancel reason comment.
+        #/// </summary>
+        #/// <param name="_reasonTableRef">
+        #/// The reference record ID of the record.
+        #/// </param>
+        #/// <returns>
+        #/// The record ID of the created reason table record.
+        #/// </returns>
+        #protected ReasonRefRecID copyReasonTableRef(RefRecId _reasonTableRef)
+        #{
+        #    ReasonTableRef  tmpReasonTableRef = ReasonTableRef::find(_reasonTableRef);
+        #    ReasonRefRecID  reasonRefRecID = _reasonTableRef;
+        #
+        #    if (tmpReasonTableRef)
+        #    {
+        #        reasonRefRecID = ReasonTableRef::createReasonTableRef(tmpReasonTableRef.Reason, tmpReasonTableRef.ReasonComment);
+        #    }
+        #
+        #    return reasonRefRecID;
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #deleteSettlement
+        #void deleteSettlement()
+        #{
+        #    if (deleteSettlement)
+        #    {
+        #        specTransManager.deleteAll();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #handleEndDisc
+        #/// <summary>
+        #///     Try to allocate the total invoice amount to the sales line discount.
+        #/// </summary>
+        #/// <param name="_salesLine">
+        #///     The sales line which will be created.
+        #/// </param>
+        #/// <param name="_fromCustInvoiceTrans">
+        #///     The original invoice line.
+        #/// </param>
+        #/// <remarks>
+        #///     This method is intended for use on credit order lines only.
+        #/// </remarks>
+        #[SysObsoleteAttribute('No longer needed due to refactoring', true)]
+        #protected void handleEndDisc(SalesLine _salesLine, CustInvoiceTrans _fromCustInvoiceTrans)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #headerPreUpdate
+        #protected void headerPreUpdate()
+        #{
+        #    super();
+        #
+        #    if (salesTable.SettleVoucher != salesParameters.SettleVoucher)
+        #    {
+        #        salesTable.SettleVoucher = salesParameters.SettleVoucher;
+        #    }
+        #
+        #    this.setHeaderTotalDiscount();
+        #}
+      ENDSOURCE
+      SOURCE #initFromCustInvoiceTrans_W
+        #/// <summary>
+        #///    Initializes the <c>SalesLine</c> table buffer based on an <c>CustInvoiceTrans</c> table buffer.
+        #/// </summary>
+        #/// <param name="_salesLine">
+        #///    The <c>SalesLine</c> table buffer that is being initialized.
+        #/// </param>
+        #/// <param name="_custInvoiceTrans">
+        #///    The <c>CustInvoiceTrans</c> table buffer that is to be initialized from.
+        #/// </param>
+        #/// <param name="_copyPrecisely">
+        #///    A Boolean value that specifies whether to precisely copy all the account and tax details; optional.
+        #/// </param>
+        #/// <param name="_copyPriceDisc">
+        #///    A Boolean value that specifies whether to copy the price discount fields; optional.
+        #/// </param>
+        #/// <param name="_copyQty">
+        #///    A Boolean value that specifies whether to copy the quantify information; optional.
+        #/// </param>
+        #/// <param name="_qty">
+        #///    A <c>quantity</c> object that sets the <c>SalesQty</c> field value of the new <c>SalesLine</c>
+        #///    table buffer to be different than value of the other table buffer; optional.
+        #/// </param>
+        #// <GEEU>
+        #protected final void initFromCustInvoiceTrans_W(SalesLine           _salesLine,
+        #                                                CustInvoiceTrans    _custInvoiceTrans,
+        #                                                boolean             _copyPrecisely,
+        #                                                boolean             _copyPriceDisc,
+        #                                                boolean             _copyQty,
+        #                                                Qty                 _qty)
+        #{
+        #    if (createCorrectionLine)
+        #    {
+        #        if (_custInvoiceTrans.custInvoiceTrans_W().RefReturnInvoiceTrans_W || _custInvoiceTrans.Qty < 0)
+        #        {
+        #            throw error("@GLS220579");
+        #        }
+        #    }
+        #
+        #    super(_salesLine,
+        #            _custInvoiceTrans,
+        #            _copyPrecisely,
+        #            _copyPriceDisc,
+        #            _copyQty,
+        #            (createCorrectionLine ?
+        #                _custInvoiceTrans.Qty :
+        #                _qty));
+        #
+        #    _salesLine.RefReturnInvoiceTrans_W = _custInvoiceTrans.RecId;
+        #
+        #    if (!createCorrectionLine)
+        #    {
+        #        _salesLine.CreditNoteReasonCode = this.copyReasonTableRef(reasonTableRef);
+        #    }
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #initHeaderFromCustInvoiceJour
+        #protected void initHeaderFromCustInvoiceJour(CustInvoiceJour _custInvoiceJour)
+        #{
+        #    super(_custInvoiceJour);
+        #
+        #    //Remove the total discount on the header as it is also synchronized done to the lines.
+        #    salesTable.DiscPercent = 0;
+        #}
+      ENDSOURCE
+      SOURCE #initParameters
+        #void initParameters(SalesTable     _salesTable,
+        #                    TmpFrmVirtual  _tmpFrmVirtualLines,
+        #                    TmpFrmVirtual  _tmpFrmVirtualHeader,
+        #                    Qty            _qtyFactor           = 1,
+        #                    NoYes          _reverseSign         = NoYes::No,
+        #                    NoYes          _recalculateAmount   = NoYes::No,
+        #                    NoYes          _copyMarkup          = NoYes::No,
+        #                    NoYes          _copyPrecisely       = NoYes::No,
+        #                    // <GEERU>
+        #                    NoYes          _deleteLines          = NoYes::No,
+        #                    // </GEERU>
+        #                    // <GEEU>
+        #                    NoYes          _createCorrectionLine = NoYes::No,
+        #                    // </GEEU>
+        #                    // <GEERU>
+        #                    NoYes          _copyExchRate         = NoYes::No,
+        #                    NoYes          _copyLineDlvAddress  = NoYes::No,
+        #                    NoYes          _copyPersonalization = NoYes::No
+        #)
+        #                    // </GEERU>
+        #{
+        #    super(_salesTable,
+        #          _tmpFrmVirtualLines,
+        #          _tmpFrmVirtualHeader,
+        #          _qtyFactor,
+        #          _reverseSign,
+        #          _recalculateAmount,
+        #          _copyMarkup,
+        #          _copyPrecisely,
+        #          // <GEERU>
+        #          _deleteLines,
+        #          // </GEERU>
+        #          // <GEEU>
+        #          _createCorrectionLine,
+        #          // </GEEU>
+        #          // <GEERU>
+        #          _copyExchRate);
+        #          // </GEERU>
+        #
+        #    if (this.settleInvoiceTrans())
+        #    {
+        #        specTransManager = SpecTransManager::construct(_salesTable);
+        #    }
+        #
+        #    deleteSettlement = false;
+        #}
+      ENDSOURCE
+      SOURCE #initParametersFromContract
+        #/// <summary>
+        #/// Initializes current instance with Credit Note creation parameters from the <c>SalesOrderCreditNoteContract</c> object.
+        #/// </summary>
+        #/// <param name="_salesOrderCopyingContract">
+        #/// An instance of <c>SalesOrderCreditNoteContract</c> class.
+        #/// </param>
+        #public void initParametersFromContract(SalesOrderCopyingContract _salesOrderCopyingContract)
+        #{
+        #    SalesCreditNoteCopyingContract salesCreditNoteCopyingContract = _salesOrderCopyingContract as SalesCreditNoteCopyingContract;
+        #
+        #    if (salesCreditNoteCopyingContract == null)
+        #    {
+        #        throw error(Error::wrongUseOfFunction(funcName()));
+        #    }
+        #
+        #    super(salesCreditNoteCopyingContract);
+        #    deleteSettlement = salesCreditNoteCopyingContract.parmDeleteSettlement();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #makeCorrectionLine
+        #/// <summary>
+        #/// Creates a correction line.
+        #/// </summary>
+        #/// <param name="_salesLine">
+        #/// The sales line to make the correction for.
+        #/// </param>
+        #/// <param name="_qty">
+        #/// The sales quantity for the correction line.
+        #/// </param>
+        #/// <param name="_cwQty">
+        #/// The sales CW quantity for the correction line.
+        #/// </param>
+        #protected void makeCorrectionLine(SalesLine _salesLine, Qty _qty, PdsCWInventQty _cwQty = 0)
+        #{
+        #    SalesLine                       salesLine;
+        #    InventTransOriginId             inventTransOriginId_SalesLine;
+        #    InventTransOriginId             inventTransOriginId_SalesLineCorrection;
+        #    SalesLineForeignTradeCategory   salesLineForeignTradeCategory;
+        #    boolean                         existsCustInvoiceJour = CustAdvanceInvoiceSettlement_W::existsCustInvoiceJour(
+        #                                                                CustInvoiceTrans::findRecId(salesLine.RefReturnInvoiceTrans_W).custInvoiceJour());
+        #
+        #    buf2Buf(_salesLine, salesLine);
+        #
+        #    _salesLine.CreditNoteInternalRef_PL = _salesLine.RecId;
+        #    _salesLine.doUpdate();
+        #
+        #    salesLine.LineNum                  +=   1;
+        #
+        #    salesLine.SalesQty                  =   existsCustInvoiceJour ? 0 : _qty;
+        #    salesLine.PdsCWQty                  =   existsCustInvoiceJour ? 0 : _cwQty;
+        #    salesLine.QtyOrdered                =   salesLine.calcQtyOrdered();
+        #    salesLine.LineDisc                  =   _salesLine.LineDisc;
+        #    salesLine.MultiLnDisc               =   _salesLine.MultiLnDisc;
+        #    salesLine.SalesMarkup               =   _salesLine.SalesMarkup;
+        #
+        #    salesLine.LineAmount                =   _salesLine.SalesQty                         ?
+        #                                            - Currency::amount(_salesLine.LineAmount, _salesLine.CurrencyCode)   :
+        #                                            0;
+        #    salesLine.LineAmount                =   salesLine.calcLineAmount();
+        #
+        #    salesLine.RemainInventPhysical      =   salesLine.QtyOrdered;
+        #    salesLine.PdsCWRemainInventPhysical =   salesLine.PdsCWQty;
+        #    salesLine.RemainSalesPhysical       =   salesLine.SalesQty;
+        #    salesLine.InventTransIdReturn       =   '';
+        #
+        #    // <GEEPL>
+        #    // To have new ProjTransId for corrective line too.
+        #    if ((SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL])))
+        #    {
+        #        salesLine.ProjTransId = '';
+        #    }
+        #    // <GEEPL>
+        #
+        #    salesLine.CostPrice                 =   0;
+        #
+        #    salesLine.CreditNoteInternalRef_PL  =   _salesLine.RecId;
+        #    salesLine.RefReturnInvoiceTrans_W   =   0;
+        #    salesLine.CreditNoteReasonCode      =   this.copyReasonTableRef(reasonTableRef);
+        #
+        #    salesLine.insert();
+        #
+        #    if (salesLine.isCategoryBased() && !SalesLineForeignTradeCategory::findSalesLine(salesLine))
+        #    {
+        #        salesLineForeignTradeCategory.initFromSalesLine(salesLine);
+        #        salesLineForeignTradeCategory.insert();
+        #        salesLine.type().updatePendingRegistrationsNonStocked(false);
+        #    }
+        #
+        #    inventTransOriginId_SalesLine           = InventTransOrigin::findByInventTransId(_salesLine.InventTransId).RecId;
+        #    inventTransOriginId_SalesLineCorrection = InventTransOrigin::findByInventTransId(salesLine.InventTransId).RecId;
+        #
+        #    InventTransOrigin::updateMarking(inventTransOriginId_SalesLineCorrection, inventTransOriginId_SalesLine, -salesLine.calcQtyOrdered());
+        #    InventTransOrigin::updateMarking(inventTransOriginId_SalesLine, inventTransOriginId_SalesLineCorrection, -_salesLine.calcQtyOrdered());
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #markForSettlement
+        #void markForSettlement(CustInvoiceTrans custInvoiceTrans)
+        #{
+        #    CustTrans   custTrans;
+        #    ;
+        #    ttsbegin;
+        #
+        #    custTrans = custInvoiceTrans.custInvoiceJour().custTrans();
+        #    while (custTrans)
+        #    {
+        #        custTrans.transData().markForSettlement(salesTable);
+        #        next custTrans;
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #mcrIsSalesCopying_CreditNote_Object
+        #/// <summary>
+        #///     Indicates from parent class that the object was called from a salesCopying_CreditNote
+        #///     object instantiation.
+        #/// </summary>
+        #/// <returns>
+        #///     true if the object was called from a <c>SalesCopying_CreditNode</c> object; otherwise, false.
+        #/// </returns>
+        #boolean mcrIsSalesCopying_CreditNote_Object()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #mcrSetReturnValues
+        #/// <summary>
+        #///     Sets the return values for the specified <paramref name="_salesLine" />.
+        #/// </summary>
+        #/// <param name="_salesLine">
+        #///     The <c>SalesLine</c> table buffer on which to set the return values.
+        #/// </param>
+        #void mcrSetReturnValues(SalesLine _salesLine)
+        #{
+        #    MCRSalesLine                mcrSalesLine = _salesLine.mcrSalesLine();
+        #    MCRSalesLinePriceOverride   mcrSalesLinePriceOverride = _salesLine.mcrSalesLinePriceOverride();
+        #
+        #    mcrSalesLine.CustInvoiceTransRecId = tmpFrmVirtualLines.RecordNo;
+        #    mcrSalesLinePriceOverride.PriceOverride = NoYes::Yes;
+        #
+        #    _salesLine.mcrPackMCRSalesLine(mcrSalesLine);
+        #    _salesLine.mcrPackMCRSalesLinePriceOverride(mcrSalesLinePriceOverride);
+        #}
+      ENDSOURCE
+      SOURCE #promptRemoveSettlement
+        #public boolean promptRemoveSettlement()
+        #{
+        #    if (this.settleInvoiceTrans() && specTransManager.getSpecTransCount() > 0)
+        #    {
+        #        deleteSettlement = SpecTrans::promptRemoveMarkedTransactions();
+        #    }
+        #    return deleteSettlement;
+        #}
+      ENDSOURCE
+      SOURCE #setHeaderTotalDiscount
+        #/// <summary>
+        #/// Sets the sales order header total discount.
+        #/// </summary>
+        #protected void setHeaderTotalDiscount()
+        #{
+        #    CustInvoiceTrans   custInvoiceTrans_Sum;
+        #
+        #    if (custInvoiceJour.EndDisc)
+        #    {
+        #        select sum(LineAmount) from custInvoiceTrans_Sum
+        #            where custInvoiceTrans_Sum.SalesId              == custInvoiceJour.SalesId
+        #                && custInvoiceTrans_Sum.InvoiceId           == custInvoiceJour.InvoiceId
+        #                && custInvoiceTrans_Sum.InvoiceDate         == custInvoiceJour.InvoiceDate
+        #                && custInvoiceTrans_Sum.NumberSequenceGroup == custInvoiceJour.NumberSequenceGroup;
+        #
+        #        salesTable.DiscPercent  = custInvoiceJour.EndDisc * 100 / minOne(custInvoiceTrans_Sum.LineAmount);
+        #        headerTotalDiscountSet = true;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #setInventTransIdReturn
+        #// <GEERU>
+        #void setInventTransIdReturn(SalesLine salesLine, Common _fromTrans)
+        #{
+        #    CustInvoiceTrans custInvoiceTrans;
+        #    ProjInvoiceItem  projInvoiceItem;
+        #
+        #    // <GEEPL>
+        #    boolean countryRegion_PL = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]);
+        #    // </GEEPL>
+        #
+        #    if (_fromTrans.TableId == tableNum(CustInvoiceTrans))
+        #    {
+        #        custInvoiceTrans = _fromTrans;
+        #        if (custInvoiceTrans.custInvoiceTrans_RU().InventTransIdDelivery_RU)
+        #        {
+        #            salesLine.InventTransIdReturn = custInvoiceTrans.custInvoiceTrans_RU().InventTransIdDelivery_RU;
+        #            return;
+        #        }
+        #    }
+        #    // </GEERU>
+        #
+        #    //<GEEU>
+        #    if ((countryRegion_PL && (salesLine.QtyOrdered <= 0 || salesLine.ExpectedRetQty != 0))
+        #    || (!countryRegion_PL && (salesLine.QtyOrdered < 0 || salesLine.ExpectedRetQty != 0)))
+        #    //</GEEU>
+        #    {
+        #    // <GEERU>
+        #        switch (_fromTrans.TableId)
+        #        {
+        #            case tableNum(CustInvoiceTrans):
+        #                custInvoiceTrans = _fromTrans as CustInvoiceTrans;
+        #    // </GEERU>
+        #                salesLine.InventTransIdReturn     = custInvoiceTrans.InventTransId;
+        #    // <GEERU>
+        #                salesLine.RefReturnInvoiceTrans_W = custInvoiceTrans.RecId;
+        #                break;
+        #
+        #            case tableNum(ProjInvoiceItem):
+        #                projInvoiceItem  = _fromTrans as ProjInvoiceItem;
+        #                salesLine.InventTransIdReturn     = projInvoiceItem.InventTransId;
+        #                salesLine.RefReturnInvoiceTrans_W = projInvoiceItem.RecId;
+        #                break;
+        #        }
+        #    // </GEERU>
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #setPdsCWQty
+        #protected void setPdsCWQty(
+        #    SalesLine   _salesLine,
+        #    boolean     _reverseSign,
+        #    real        _qtyFactor)
+        #{
+        #    _salesLine.PdsCWQty      = _reverseSign ? -_salesLine.PdsCWQty : _salesLine.PdsCWQty;
+        #    _salesLine.PdsCWQty      = decRound(
+        #        _salesLine.PdsCWQty * _qtyFactor,
+        #        UnitOfMeasure::unitOfMeasureDecimalPrecision(
+        #            UnitOfMeasure::unitOfMeasureIdBySymbol(_salesLine.pdsCWUnitId())));
+        #
+        #    _salesLine.SalesQty      = _reverseSign ? -_salesLine.SalesQty : _salesLine.SalesQty;
+        #    _salesLine.QtyOrdered    = _reverseSign ? -_salesLine.QtyOrdered : _salesLine.QtyOrdered;
+        #
+        #    //set the remainders
+        #    _salesLine.PdsCWRemainInventFinancial   = 0;
+        #    _salesLine.PdsCWRemainInventPhysical    = _salesLine.PdsCWQty;
+        #    _salesLine.RemainSalesPhysical          = _salesLine.SalesQty;
+        #    _salesLine.RemainInventPhysical         = _salesLine.QtyOrdered;
+        #}
+      ENDSOURCE
+      SOURCE #setRefInvoice_MY
+        #// <GMY>
+        #protected void setRefInvoice_MY(SalesLine _salesLine, CustVendInvoiceJour _invoiceJour)
+        #{
+        #    SalesLine_W salesLine_W;
+        #
+        #    super(_salesLine, _invoiceJour);
+        #
+        #    salesLine_W                     = _salesLine.salesLine_W();
+        #    salesLine_W.RefInvoiceId_MY     = _invoiceJour.InvoiceId;
+        #    salesLine_W.RefInvoiceDate_MY   = _invoiceJour.InvoiceDate;
+        #
+        #    _salesLine.packSalesLine_W(salesLine_W);
+        #}
+        #// </GMY>
+      ENDSOURCE
+      SOURCE #settleInvoiceTrans
+        #boolean settleInvoiceTrans()
+        #{;
+        #    return salesParameters.SettleVoucher == SettlementType::SelectedTransact;
+        #}
+      ENDSOURCE
+      SOURCE #updateInvoiceCreditCopy
+        #void updateInvoiceCreditCopy(SalesLine _salesLine, CustVendInvoiceTrans _custVendInvoiceTrans)
+        #{
+        #    CustInvoiceJour localCustInvoiceJour;
+        #    CustInvoiceTrans custInvoiceTrans;
+        #
+        #    // <GEERU>
+        #    InventTrans       inventTransFrom;
+        #    InventTrans       inventTransTo;
+        #    InventTransOrigin inventTransOriginFrom;
+        #    InventTransOrigin inventTransOriginTo;
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([ #isoRU ]))
+        #    {
+        #        inventTransOriginFrom = InventTransOrigin::findByInventTransId(_custVendInvoiceTrans.InventTransId);
+        #        inventTransOriginTo   = InventTransOrigin::findByInventTransId(_salesLine.InventTransId);
+        #
+        #        while select RecId from inventTransFrom
+        #            where inventTransFrom.InventTransOrigin       == inventTransOriginFrom.RecId &&
+        #                  inventTransFrom.ReturnInventTransOrigin == inventTransOriginTo.RecId
+        #        join RecId from inventTransTo
+        #            where inventTransTo.InventTransOrigin         == inventTransOriginTo.RecId   &&
+        #                  inventTransTo.InventDimId               == inventTransFrom.InventDimId
+        #        {
+        #            TransLink_RU::create(tableNum(InventTrans), inventTransFrom.RecId, inventTransTo.RecId);
+        #        }
+        #    }
+        #    // </GEERU>
+        #
+        #    if (_salesLine.ReturnStatus == ReturnStatusLine::None)
+        #    {
+        #        if (_salesLine.isStocked())
+        #        {
+        #            InventTransInvoice::updateDimensionsFromInvoice(
+        #                     InventTransOrigin::findByInventTransId(_custVendInvoiceTrans.InventTransId).RecId,
+        #                     _custVendInvoiceTrans.InvoiceNum,
+        #                     _custVendInvoiceTrans.InvoiceDate,
+        #                     InventTransOriginSalesLine::findInventTransOriginId(_salesLine.DataAreaId, _salesLine.InventTransId));
+        #        }
+        #
+        #        if (_custVendInvoiceTrans.TableId == tableNum(CustInvoiceTrans))
+        #        {
+        #            custInvoiceTrans = _custVendInvoiceTrans;
+        #
+        #            localCustInvoiceJour = CustInvoiceJour::findFromCustInvoiceTrans(custInvoiceTrans.SalesId,
+        #                                                                             custInvoiceTrans.InvoiceId,
+        #                                                                             custInvoiceTrans.InvoiceDate,
+        #                                                                             custInvoiceTrans.NumberSequenceGroup);
+        #        }
+        #
+        #        TaxRegulation::adjustTaxInvoice(localCustInvoiceJour.LedgerVoucher,
+        #                                        custInvoiceTrans.InvoiceDate,
+        #                                        custInvoiceTrans.InventTransId,
+        #                                        tableNum(SalesTable),
+        #                                        _salesLine.salesTable().RecId,
+        #                                        _salesLine.QtyOrdered,
+        #                                        custInvoiceTrans.Qty);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #promptRemoveSettlementOnServer
+        #/// <summary>
+        #/// In credit note scenario, displays a prompt to user asking about removing existing settlements.
+        #/// </summary>
+        #/// <param name="_packedSalesCreditNoteCopyingContract">
+        #/// Packed copying contract of type <c>SalesCreditNoteCopyingContract</c>
+        #/// </param>
+        #/// <returns>
+        #/// Return value indicating if selected settlement transactions should be removed.
+        #/// </returns>
+        #public static server boolean promptRemoveSettlementOnServer(container _packedSalesCreditNoteCopyingContract)
+        #{
+        #    SalesCopying salesCopying;
+        #    SalesCreditNoteCopyingContract salesCreditNoteCopyingContract = SalesCreditNoteCopyingContract::construct();
+        #    salesCreditNoteCopyingContract.unpack(_packedSalesCreditNoteCopyingContract);
+        #
+        #    salesCopying = SalesCopying::construct(salesCreditNoteCopyingContract.parmSalesPurchCopy());
+        #    salesCopying.initParametersFromContract(salesCreditNoteCopyingContract);
+        #    return salesCopying.promptRemoveSettlement();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

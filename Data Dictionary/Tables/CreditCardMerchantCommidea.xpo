@@ -1,0 +1,214 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantCommidea
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantCommidea
+      Label               #@ACC1340
+      FormRef             #creditcardterminalTable
+      TitleField1         #TerminalId
+      TitleField2         #URL
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdIdx
+      ClusterIndex        #TerminalIdIdx
+      DeveloperDocumentation  #@ACC1597
+      Origin              #{00FD5018-4C44-4DE7-8DE3-8162DD2587CF}
+      LegacyId            #20038
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AccountId
+        STRING
+        PROPERTIES
+          Name                #AccountId
+          Label               #@SYS111844
+          HelpText            #@ACC1344
+          Table               #CreditCardMerchantCommidea
+          Origin              #{D7BD2785-0F7F-4A8D-AA8D-783136B5F8FF}
+          LegacyId            #20013
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #Passcode
+        STRING
+        PROPERTIES
+          Name                #Passcode
+          Label               #@ACC1345
+          Table               #CreditCardMerchantCommidea
+          Origin              #{D3C89C19-EED5-4EBC-A364-7B78DD53FB3A}
+          LegacyId            #20011
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #SystemGUID
+        GUID
+        PROPERTIES
+          Name                #SystemGUID
+          Table               #CreditCardMerchantCommidea
+          Origin              #{D496B58B-DF32-446F-BCC8-BB313ECA213D}
+          LegacyId            #20009
+          ExtendedDataType    #CreditCardCommideaGUID
+        ENDPROPERTIES
+        
+      FIELD #SystemId
+        STRING
+        PROPERTIES
+          Name                #SystemId
+          Label               #@SYS23543
+          HelpText            #@ACC1342
+          Table               #CreditCardMerchantCommidea
+          Origin              #{E288F525-FBF9-4B11-A4A7-4CFB0F2595F1}
+          LegacyId            #20012
+          ExtendedDataType    #CreditCardTransKey
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantCommidea
+          Origin              #{BF00A8E2-D1D3-4995-9711-F20F576D295E}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #URL
+        STRING
+        PROPERTIES
+          Name                #URL
+          Table               #CreditCardMerchantCommidea
+          Origin              #{04350E58-27CC-4506-A954-F5F6B3F63042}
+          LegacyId            #20002
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Industry
+        PROPERTIES
+          Name                #Industry
+          Label               #@ACC1319
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Interface
+        PROPERTIES
+          Name                #Interface
+          Label               #@SYS69603
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Merchant
+        PROPERTIES
+          Name                #Merchant
+          Label               #@ACC1012
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AccountId
+          #SystemId
+          #Passcode
+          #SystemGUID
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdIdx
+      PROPERTIES
+        Name                #TerminalIdIdx
+        AllowDuplicates     #No
+        Origin              #{56244F70-E006-4F1D-85D2-E157E4A1C316}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

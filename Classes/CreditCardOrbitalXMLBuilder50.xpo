@@ -1,0 +1,3104 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardOrbitalXMLBuilder50
+    PROPERTIES
+      Name                #CreditCardOrbitalXMLBuilder50
+      Extends             #CreditCardOrbitalXMLBuilder
+      Origin              #{D2A7DC61-6655-442D-8EF5-EA1FF987CABD}
+      LegacyId            #20043
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeOrbitalResponse
+        #CreditCardTable analyzeOrbitalResponse(CreditCardStr          msg,
+        #                                 CreditCardTable        ccTable,
+        #                                 NoYes                  update = NoYes::No)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2;
+        #    int                             cnt,childCnt;
+        #    int                             i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   approvalStatus;
+        #    LogisticsPostalAddress          locAddress = LogisticsPostalAddress::findByLocation(ccTable.Location,NoYes::Yes);
+        #    ;
+        #    ttsBegin;
+        #    if (update)
+        #    {
+        #        ccTable.selectForUpdate(true);
+        #    }
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #
+        #                    case    'ProfileProcStatus'  :
+        #                        approvalStatus = elementChild2.innerText();
+        #                        if (approvalStatus == '0')
+        #                        {
+        #                            this.parmResult('0');
+        #                            update = true;
+        #                        }
+        #                        else
+        #                        {
+        #                            this.parmErrorMessage(elementChild2.innerText());
+        #                            update= false;
+        #                        }
+        #                        break;
+        #                    case    'CustomerRefNum'  :
+        #                        this.parmProfileId(elementChild2.innerText());
+        #                        ccTable.ProfileId = this.parmProfileId();
+        #                        ccTable.Profile = NoYes::Yes;
+        #                        break;
+        #                    case    'CustomerAddress1'  :
+        #                        locAddress.Address = elementChild2.innerText();
+        #                        break;
+        #                    case    'CustomerCity'  :
+        #                        locAddress.City = elementChild2.innerText();
+        #                        break;
+        #                    case    'CustomerState'  :
+        #                        locAddress.State = elementChild2.innerText();
+        #                        break;
+        #                    case    'CustomerZip'  :
+        #                        locAddress.ZipCode = elementChild2.innerText();
+        #                        break;
+        #                    case    'CustomerEmail'     :
+        #                        ccTable.Email = elementChild2.innerText();
+        #                        break;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #
+        #    if (update)
+        #    {
+        #        locAddress.validTimeStateUpdateMode(ValidTimeStateUpdate::Correction );
+        #        locAddress.write();
+        #    }
+        #
+        #    ttsCommit;
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeSVOrbitalResponse
+        #CreditCardTable analyzeSVOrbitalResponse(CreditCardStr          msg,
+        #                                 CreditCardTable        ccTable,
+        #                                 NoYes                  update = NoYes::No)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2;
+        #    int                             cnt,childCnt;
+        #    int                             i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   approvalStatus;
+        #    ;
+        #    if (update)
+        #    {
+        #        ccTable.selectForUpdate(true);
+        #    }
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #
+        #                    case    'ProcStatus'  :
+        #                        approvalStatus = elementChild2.innerText();
+        #                        if (approvalStatus == '0')
+        #                        {
+        #                            this.parmResult('0');
+        #                        }
+        #                        else
+        #                        {
+        #                            this.parmResult(elementChild2.innerText());
+        #                        }
+        #                        break;
+        #                    case    'StatusMsg'  :
+        #                        this.parmErrorMessage(elementChild2.innerText());
+        #                        break;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #
+        #    if (update)
+        #    {
+        #        ccTable.update();
+        #    }
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #str build(CreditCardTrans   ccTrans)
+        #{
+        #    CreditCardStr                   parmList;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = this.buildNewOrder(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                parmList = this.buildNewOrderProfile(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = this.buildReturn(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                parmList = this.buildReturnProfile(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D    :
+        #            if (ccTrans.VoiceAuth == NoYes::No)
+        #            {
+        #                parmList = this.buildMarkforCapture(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                parmList = this.buildNewOrder(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = this.buildNewOrder(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                parmList = this.buildNewOrderProfile(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            parmList = this.buildReversal(ccTrans);
+        #            break;
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildAddress
+        #XMLElement buildAddress(CreditCardTrans     ccTrans,
+        #                        XMLElement          newOrder)
+        #{
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> AVS Information
+        #    if (this.parmPostalAddress().ZipCode && creditCardParameters::findParameter().AVS)
+        #    {
+        #        xmlGen = xmlDocument.createElement('AVSzip');
+        #        xmlGen.innerText(this.parmPostalAddress().ZipCode);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        if (creditCardParameters::findParameter().AVSZipOnly == NoYes::No)
+        #        {
+        #            xmlGen = xmlDocument.createElement('AVSaddress1');
+        #            xmlGen.innerText(this.parmPostalAddress().Street);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScity');
+        #            xmlGen.innerText(this.parmPostalAddress().City);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #
+        #            xmlGen = xmlDocument.createElement('AVSstate');
+        #            xmlGen.innerText(this.parmPostalAddress().State);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            if (ccTrans.AVSPhone)
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVSphoneNum');
+        #                xmlGen.innerText(ccTrans.AVSPhone);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #
+        #            xmlGen = xmlDocument.createElement('AVSname');
+        #            xmlGen.innerText(ccTrans.NameOnCard);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScountryCode');
+        #            xmlGen.innerText(this.resolveCountry(this.parmPostalAddress().CountryRegionId));
+        #            newOrder.appendChild(xmlGen);
+        #        }
+        #        else
+        #        {
+        #            if (this.parmPostalAddress().CountryRegionId == 'UK' || this.parmPostalAddress().CountryRegionId == 'GB')
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVScountryCode');
+        #                xmlGen.innerText(this.parmPostalAddress().CountryRegionId);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #        }
+        #    }
+        #
+        #    return newOrder;
+        #}
+      ENDSOURCE
+      SOURCE #buildDeleteProfile
+        #xml buildDeleteProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardStr                   ParmList;
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      xmlGen;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    ;
+        #    select MerchantID,OrbitalCurrency from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('Profile');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #
+        #    BIN = xmlDocument.createElement('CustomerBin');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText("000001");
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText("000002");
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('CustomerMerchantID');
+        #    MerchantId.innerText(this.parmMerchantOrbital().MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerName');
+        #    xmlGen.innerText(CustTable::find(ccTable.CustAccount).Name());
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerRefNum');
+        #    xmlGen.innerText(ccTable.ProfileId);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileAction');
+        #    xmlGen.innerText('D');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileOrderOverrideInd');
+        #    xmlGen.innerText('NO');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    XMLProcessingInstruction        instruction;
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #    instruction = xmlDocument.createProcessingInstruction('xml-stylesheet',
+        #        'type="text/xsl" href="www.redmaple.com"');
+        #
+        #    xmlDocument.appendChild(instruction);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildMarkforCapture
+        #xml buildMarkforCapture(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                         ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                         amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    CreditCardStr                         orderNum;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantID,OrbitalCurrency,UserId,Pwd,ChaseTID from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('MarkForCapture');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    orderNum = strReplace(ccTrans.CustomerRef,'_','');
+        #    orderNum = strReplace(orderNum,'-','');
+        #    xmlGen.innerText(orderNum);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #    xmlAmount.innerText(amount);
+        #
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText(ccPaymentech.ChaseTID);
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('TxRefNum');
+        #    xmlGen.innerText(ccTrans.OrbitalTxRefNum);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildNewOrder
+        #xml buildNewOrder(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      AccountNum;
+        #    XMLElement                      ExpDate;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    CreditCardStr                   orderNum;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantID,OrbitalCurrency,UserId,Pwd,ChaseTID from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('NewOrder');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> Industry type
+        #    xmlGen = xmlDocument.createElement('IndustryType');
+        #    xmlGen.innerText(this.IndustryType(ccTerminal));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('IndustryType',this.IndustryType(ccTerminal));
+        #
+        #    //--> Transaction type
+        #    xmlGen = xmlDocument.createElement('MessageType');
+        #    xmlGen.innerText(this.TransactionType(ccTrans.TransType));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('MessageType',this.TransactionType(ccTrans));
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText(ccPaymentech.ChaseTID);
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Card Brand
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CardBrand');
+        #        xmlGen.innerText('SW');
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> Account information
+        #    AccountNum = xmlDocument.createElement('AccountNum');
+        #    AccountNum.innerText(this.returnAccount(ccTrans));
+        #    newOrder.appendChild(AccountNum);
+        #
+        #    //--> Expiration
+        #    ExpDate = xmlDocument.createElement('Exp');
+        #    ExpDate.innerText(this.returnExpDate(ccTrans));
+        #    newOrder.appendChild(ExpDate);
+        #
+        #    //--> Currency
+        #    xmlGen = xmlDocument.createElement('CurrencyCode');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Currency Exponent
+        #    xmlGen = xmlDocument.createElement('CurrencyExponent');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyExponentISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Card Sec Val INd
+        #    //--> Only used by Visa and Discover
+        #    if ((ccTrans.CreditCardType == CreditCardType::Visa
+        #        || ccTrans.CreditCardType == CreditCardType::Discover)
+        #        //|| ccTrans.CreditCardType == CreditCardType::Solo
+        #        //|| ccTrans.CreditCardType == CreditCardType::MasterCard)
+        #        && CreditCardParameters::findParameter().CVD
+        #        && ccTrans.CID)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CardSecValInd');
+        #        switch (ccTrans.CVDSent)
+        #        {
+        #            case    CreditCardCVDValues::Provided   :
+        #                xmlGen.innerText('1');
+        #                break;
+        #            case    CreditCardCVDValues::NotReadable    :
+        #                xmlGen.innerText('2');
+        #                break;
+        #            default :
+        #                xmlGen.innerText('9');
+        #                break;
+        #        }
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    // Card Sec Val
+        #    if (ccTrans.CID && creditCardParameters::findParameter().CVD)
+        #    {
+        #        switch (ccTrans.CreditCardType)
+        #        {
+        #            case    CreditCardType::Visa,
+        #                CreditCardType::MasterCard,
+        #                CreditCardType::AmericanExpress,
+        #                CreditCardType::Discover,
+        #                CreditCardType::Solo    :
+        #
+        #                xmlGen = xmlDocument.createElement('CardSecVal');
+        #                xmlGen.innerText(ccTrans.CID);
+        #                newOrder.appendChild(xmlGen);
+        #                break;
+        #        }
+        #    }
+        #
+        #    //--> Switch Solo
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        xmlGen = xmlDocument.createElement('DebitCardIssueNum');
+        #        xmlGen.innerText(ccTrans.SoloIssueNum);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        /*The DebitCardStartDate field should be submitted only
+        #        when the card does not have an Issue Number. If the
+        #        card displays ONLY a Start Date and no Issue Number,
+        #        the DebitCardStartDate field should contain a value
+        #        and the DebitCardIssueNum field must be left blank
+        #        [null filled].*/
+        #        xmlGen = xmlDocument.createElement('DebitCardStartDate');
+        #        if (!ccTrans.SoloIssueNum)
+        #        {
+        #            xmlGen.innerText(this.returnStartDate(ccTrans));
+        #        }
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        parmList = newOrder.xml();
+        #    }
+        #
+        #    //--> AVS Information
+        #    newOrder  = this.buildAddress(ccTrans,newOrder);
+        #
+        #    //--Customer prfile
+        #    xmlGen = xmlDocument.createElement('CustomerProfileFromOrderInd');
+        #    xmlGen.innerText('EMPTY');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Is this a Force Capture/Voice Auth
+        #    if (ccTrans.VoiceAuth)
+        #    {
+        #        xmlGen = xmlDocument.createElement('PriorAuthID');
+        #        xmlGen.innerText(ccTrans.AuthCode);
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    orderNum = strReplace(ccTrans.CustomerRef,'_','');
+        #    orderNum = strReplace(orderNum,'-','');
+        #    xmlGen.innerText(orderNum);
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('OrderID',strReplace(ccTrans.SalesId,'_',''));
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #
+        #    /*sLen = strLen(amount);
+        #
+        #    for (sLen=sLen;sLen<=12;sLen++)
+        #    {
+        #        amount = '0'+ amount;
+        #        sLen = strLen(amount);
+        #    } */
+        #
+        #    xmlAmount.innerText(amount);
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildNewOrderProfile
+        #xml buildNewOrderProfile(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      AccountNum;
+        #    XMLElement                      ExpDate;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    CreditCardStr                   orderNum;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantID,OrbitalCurrency,UserId,Pwd,ChaseTID  from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    if (CreditCardMerchantOrbital::find(ccTerminal.TerminalId).ChaseTID != CreditCardMerchantOrbital::find(
+        #        CreditCardTable::find(ccTrans.CreditCardId).ProfileTerminalId).ChaseTID)
+        #    {
+        #        throw error(strFmt("@ACC1692"));
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('NewOrder');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #    //--> Industry type
+        #    xmlGen = xmlDocument.createElement('IndustryType');
+        #    xmlGen.innerText(this.IndustryType(ccTerminal));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('IndustryType',this.IndustryType(ccTerminal));
+        #
+        #    //--> Transaction type
+        #    xmlGen = xmlDocument.createElement('MessageType');
+        #    xmlGen.innerText(this.TransactionType(ccTrans.TransType));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('MessageType',this.TransactionType(ccTrans));
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText(ccPaymentech.ChaseTID);
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Account information
+        #    AccountNum = xmlDocument.createElement('AccountNum');
+        #    AccountNum.innerText('');
+        #    newOrder.appendChild(AccountNum);
+        #
+        #    //--> Expiration
+        #    ExpDate = xmlDocument.createElement('Exp');
+        #    ExpDate.innerText('    ');
+        #    newOrder.appendChild(ExpDate);
+        #
+        #    //--> Currency
+        #    xmlGen = xmlDocument.createElement('CurrencyCode');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Currency Exponent
+        #    xmlGen = xmlDocument.createElement('CurrencyExponent');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyExponentISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Card Sec Val INd
+        #    //--> Only used by Visa and Discover
+        #    if ((ccTrans.CreditCardType == CreditCardType::Visa
+        #        || ccTrans.CreditCardType == CreditCardType::Discover)
+        #        && CreditCardParameters::findParameter().CVD
+        #        && ccTrans.CID)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CardSecValInd');
+        #        switch (ccTrans.CVDSent)
+        #        {
+        #            case    CreditCardCVDValues::Provided   :
+        #                xmlGen.innerText('1');
+        #                break;
+        #            case    CreditCardCVDValues::NotReadable    :
+        #                xmlGen.innerText('2');
+        #                break;
+        #            default :
+        #                 xmlGen.innerText('9');
+        #                break;
+        #        }
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    // Card Sec Val
+        #    if (ccTrans.CID && creditCardParameters::findParameter().CVD)
+        #    {
+        #        switch (ccTrans.CreditCardType)
+        #        {
+        #            case    CreditCardType::Visa,
+        #                CreditCardType::MasterCard,
+        #                CreditCardType::AmericanExpress,
+        #                CreditCardType::Discover    :
+        #
+        #                xmlGen = xmlDocument.createElement('CardSecVal');
+        #                xmlGen.innerText(ccTrans.CID);
+        #                newOrder.appendChild(xmlGen);
+        #                break;
+        #        }
+        #    }
+        #
+        #    //--> Switch Solo
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        xmlGen = xmlDocument.createElement('DebitCardIssueNum');
+        #        xmlGen.innerText(ccTrans.SoloIssueNum);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        /*The DebitCardStartDate field should be submitted only
+        #        when the card does not have an Issue Number. If the
+        #        card displays ONLY a Start Date and no Issue Number,
+        #        the DebitCardStartDate field should contain a value
+        #        and the DebitCardIssueNum field must be left blank
+        #        [null filled].*/
+        #        xmlGen = xmlDocument.createElement('DebitCardStartDate');
+        #        if (!ccTrans.SoloIssueNum)
+        #        {
+        #            xmlGen.innerText(this.returnStartDate(ccTrans));
+        #        }
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        parmList = newOrder.xml();
+        #    }
+        #
+        #    //--> Customer profile
+        #    xmlGen = xmlDocument.createElement('CustomerRefNum');
+        #    xmlGen.innerText(ccTrans.ProfileId);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileOrderOverrideInd');
+        #    xmlGen.innerText('OD');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    orderNum = strReplace(ccTrans.CustomerRef,'_','');
+        #    orderNum = strReplace(orderNum,'-','');
+        #    xmlGen.innerText(orderNum);
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('OrderID',strReplace(ccTrans.SalesId,'_',''));
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #
+        #    /*sLen = strLen(amount);
+        #
+        #    for (sLen=sLen;sLen<=12;sLen++)
+        #    {
+        #        amount = '0'+ amount;
+        #        sLen = strLen(amount);
+        #    } */
+        #
+        #    xmlAmount.innerText(amount);
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildProfile
+        #xml buildProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardStr                   ParmList;
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      AccountNum;
+        #    XMLElement                      ExpDate;
+        #    XMLElement                      xmlGen;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   tempStr;
+        #    ;
+        #    select MerchantID,OrbitalCurrency,UserId,Pwd from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum && ccTable.ProfileId)
+        #    {
+        #        throw error(strFmt("@ACC1396",ccTable.ProfileId));
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum)
+        #    {
+        #        throw error(strFmt("@ACC1400"));
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('Profile');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #
+        #    BIN = xmlDocument.createElement('CustomerBin');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('CustomerMerchantID');
+        #    MerchantId.innerText(this.parmMerchantOrbital().MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerName');
+        #    tempStr = System.Web.HttpUtility::HtmlEncode(subStr(CustTable::find(ccTable.CustAccount).Name(),1,30));
+        #    tempStr = strReplace(tempStr,"&",'');
+        #    xmlGen.innerText(tempStr);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    /*xmlGen = xmlDocument.createElement('CustomerRefNum');
+        #    xmlGen.innerText('EMPTY');
+        #    newOrder.appendChild(xmlGen);*/
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerAddress1');
+        #        tempStr = System.Web.HttpUtility::HtmlEncode(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
+        #        xmlGen.innerText(tempStr);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('CustomerCity');
+        #        xmlGen.innerText(this.parmPostalAddress().City);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('CustomerState');
+        #        xmlGen.innerText(this.parmPostalAddress().State);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('CustomerZIP');
+        #        xmlGen.innerText(this.parmPostalAddress().ZipCode);
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    if (ccTable.Email)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerEmail');
+        #        xmlGen.innerText(ccTable.Email);
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    if (ccTable.Phone)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerPhone');
+        #        xmlGen.innerText(this.getPhone(ccTable.Phone));
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerCountryCode');
+        #        xmlGen.innerText(this.resolveCountry(this.parmPostalAddress().CountryRegionId));
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileAction');
+        #    xmlGen.innerText('C');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileOrderOverrideInd');
+        #    xmlGen.innerText('NO');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileFromOrderInd');
+        #    xmlGen.innerText('A');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Card Brand
+        #    if (ccTable.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerAccountType');
+        #        xmlGen.innerText('SW');
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #    else
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerAccountType');
+        #        xmlGen.innerText('CC');
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> Account information
+        #    AccountNum = xmlDocument.createElement('CCAccountNum');
+        #    AccountNum.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    newOrder.appendChild(AccountNum);
+        #
+        #    //--> Expiration
+        #    ExpDate = xmlDocument.createElement('CCExpireDate');
+        #    ExpDate.innerText(this.returnExpDateCC(ccTable));
+        #    newOrder.appendChild(ExpDate);
+        #
+        #    //--> Switch Solo
+        #    if (ccTable.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        /*The DebitCardStartDate field should be submitted only
+        #        when the card does not have an Issue Number. If the
+        #        card displays ONLY a Start Date and no Issue Number,
+        #        the DebitCardStartDate field should contain a value
+        #        and the DebitCardIssueNum field must be left blank
+        #        [null filled].*/
+        #        xmlGen = xmlDocument.createElement('SwitchSoloStartDate');
+        #        if (!ccTable.SoloIssueNum)
+        #        {
+        #            xmlGen.innerText(this.returnStartDateCC(ccTable));
+        #        }
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('SwitchSoloIssueNum');
+        #        xmlGen.innerText(ccTable.SoloIssueNum);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        parmList = newOrder.xml();
+        #    }
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildReadProfile
+        #xml buildReadProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardStr                   ParmList;
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #
+        #    XMLElement                      xmlGen;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    ;
+        #    select MerchantID,OrbitalCurrency,UserId,Pwd from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('Profile');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #    BIN = xmlDocument.createElement('CustomerBin');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('CustomerMerchantID');
+        #    MerchantId.innerText(this.parmMerchantOrbital().MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerRefNum');
+        #    xmlGen.innerText(ccTable.ProfileId);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileAction');
+        #    xmlGen.innerText('R');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildReturn
+        #xml buildReturn(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      AccountNum;
+        #    XMLElement                      ExpDate;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    CreditCardStr                   orderNum;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantID,OrbitalCurrency,UserId,Pwd,ChaseTID  from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('NewOrder');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #    //--> Industry type
+        #    xmlGen = xmlDocument.createElement('IndustryType');
+        #    xmlGen.innerText(this.IndustryType(ccTerminal));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('IndustryType',this.IndustryType(ccTerminal));
+        #
+        #    //--> Transaction type
+        #    xmlGen = xmlDocument.createElement('MessageType');
+        #    xmlGen.innerText(this.TransactionType(ccTrans.TransType));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('MessageType',this.TransactionType(ccTrans));
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText(TerminalId.innerText(ccPaymentech.ChaseTID));
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Card Brand
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CardBrand');
+        #        xmlGen.innerText('SW');
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    if (ccTrans.OrbitalTxRefNum)
+        #    {
+        #        //--> Account information
+        #        AccountNum = xmlDocument.createElement('AccountNum');
+        #        newOrder.appendChild(AccountNum);
+        #
+        #        //--> Expiration
+        #        ExpDate = xmlDocument.createElement('Exp');
+        #        newOrder.appendChild(ExpDate);
+        #    }
+        #    else
+        #    {
+        #        //--> Account information
+        #        AccountNum = xmlDocument.createElement('AccountNum');
+        #        AccountNum.innerText(this.returnAccount(ccTrans));
+        #        newOrder.appendChild(AccountNum);
+        #
+        #        //--> Expiration
+        #        ExpDate = xmlDocument.createElement('Exp');
+        #        ExpDate.innerText(this.returnExpDate(ccTrans));
+        #        newOrder.appendChild(ExpDate);
+        #    }
+        #
+        #
+        #    //--> Currency
+        #    xmlGen = xmlDocument.createElement('CurrencyCode');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Currency Exponent
+        #    xmlGen = xmlDocument.createElement('CurrencyExponent');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyExponentISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Switch Solo
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        xmlGen = xmlDocument.createElement('DebitCardIssueNum');
+        #        xmlGen.innerText(ccTrans.SoloIssueNum);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        /*The DebitCardStartDate field should be submitted only
+        #        when the card does not have an Issue Number. If the
+        #        card displays ONLY a Start Date and no Issue Number,
+        #        the DebitCardStartDate field should contain a value
+        #        and the DebitCardIssueNum field must be left blank
+        #        [null filled].*/
+        #        xmlGen = xmlDocument.createElement('DebitCardStartDate');
+        #        if (!ccTrans.SoloIssueNum)
+        #        {
+        #            xmlGen.innerText(this.returnStartDate(ccTrans));
+        #        }
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        parmList = newOrder.xml();
+        #    }
+        #
+        #
+        #    //--Customer prfile
+        #    xmlGen = xmlDocument.createElement('CustomerProfileFromOrderInd');
+        #    xmlGen.innerText('EMPTY');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    orderNum = strReplace(ccTrans.CustomerRef,'_','');
+        #    orderNum = strReplace(orderNum,'-','');
+        #    xmlGen.innerText(orderNum);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #
+        #    xmlAmount.innerText(amount);
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    if (ccTrans.OrbitalTxRefNum)
+        #    {
+        #        AccountNum = xmlDocument.createElement('TxRefNum');
+        #        AccountNum.innerText(ccTrans.OrbitalTxRefNum);
+        #        newOrder.appendChild(AccountNum);
+        #    }
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildReturnProfile
+        #xml buildReturnProfile(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      AccountNum;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    CreditCardStr                   orderNum;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantID,OrbitalCurrency,UserId,Pwd,ChaseTID from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    if (CreditCardMerchantOrbital::find(ccTerminal.TerminalId).ChaseTID != CreditCardMerchantOrbital::find(
+        #        CreditCardTable::find(ccTrans.CreditCardId).ProfileTerminalId).ChaseTID)
+        #    {
+        #        throw error(strFmt("@ACC1692"));
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('NewOrder');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #    //--> Industry type
+        #    xmlGen = xmlDocument.createElement('IndustryType');
+        #    xmlGen.innerText(this.IndustryType(ccTerminal));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('IndustryType',this.IndustryType(ccTerminal));
+        #
+        #    //--> Transaction type
+        #    xmlGen = xmlDocument.createElement('MessageType');
+        #    xmlGen.innerText(this.TransactionType(ccTrans.TransType));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('MessageType',this.TransactionType(ccTrans));
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText(TerminalId.innerText(ccPaymentech.ChaseTID));
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Currency
+        #    xmlGen = xmlDocument.createElement('CurrencyCode');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Currency Exponent
+        #    xmlGen = xmlDocument.createElement('CurrencyExponent');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyExponentISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--Customer prfile
+        #    xmlGen = xmlDocument.createElement('CustomerProfileFromOrderInd');
+        #    xmlGen.innerText('EMPTY');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Customer profile
+        #    xmlGen = xmlDocument.createElement('CustomerRefNum');
+        #    xmlGen.innerText(ccTrans.ProfileId);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileOrderOverrideInd');
+        #    xmlGen.innerText('OD');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    orderNum = strReplace(ccTrans.CustomerRef,'_','');
+        #    orderNum = strReplace(orderNum,'-','');
+        #    xmlGen.innerText(orderNum);
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('OrderID',strReplace(ccTrans.SalesId,'_',''));
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #
+        #    xmlAmount.innerText(amount);
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    if (ccTrans.OrbitalTxRefNum)
+        #    {
+        #        AccountNum = xmlDocument.createElement('TxRefNum');
+        #        AccountNum.innerText(ccTrans.OrbitalTxRefNum);
+        #        newOrder.appendChild(AccountNum);
+        #    }
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildReversal
+        #xml buildReversal(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    CreditCardStr                   orderNum;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantID,OrbitalCurrency,UserId,Pwd,ChaseTID from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('Reversal');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #    xmlGen = xmlDocument.createElement('TxRefNum');
+        #    xmlGen.innerText(ccTrans.OrbitalTxRefNum);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('TxRefIdx');
+        #    xmlGen.innerText(ccTrans.OrbitalTxRefIdx);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('AdjustedAmt');
+        #    amount = strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #
+        #    xmlAmount.innerText(amount);
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    orderNum = strReplace(ccTrans.CustomerRef,'_','');
+        #    orderNum = strReplace(ccTrans.CustomerRef,'-','');
+        #    xmlGen.innerText(orderNum);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText(ccPaymentech.ChaseTID);
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    xmlGen = xmlDocument.createElement('OnlineReversalInd');
+        #    xmlGen.innerText('Y');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildSVActivation
+        #xml buildSVActivation(CreditCardTable     ccTable)
+        #{
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum && ccTable.ProfileId)
+        #    {
+        #        throw error(strFmt("@ACC1396",ccTable.ProfileId));
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum)
+        #    {
+        #        throw error(strFmt("@ACC1400"));
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('FlexCache');
+        #
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(this.parmMerchantOrbital().MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    xmlGen = xmlDocument.createElement('TerminalID');
+        #    xmlGen.innerText(this.parmMerchantOrbital().ChaseTID);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('AccountNum');
+        #    xmlGen.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    xmlGen.innerText(int642str(ccTable.RecId));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Amount
+        #    xmlGen = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(1.00),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #    xmlGen.innerText(amount);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('IndustryType');
+        #    xmlGen.innerText(this.IndustryType(
+        #        CreditCardTerminalTable::findTerminalWithId(this.parmMerchantOrbital().TerminalId)));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('FlexAutoAuthInd');
+        #    xmlGen.innerText('N');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('FlexPartialRedemptionInd');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        if (ccPaymentech.svPartialRedemption)
+        #        {
+        #            xmlGen.innerText('Y');
+        #        }
+        #        else
+        #        {
+        #            xmlGen.innerText('N');
+        #        }
+        #    }
+        #    else
+        #    {
+        #        //--> Tampa does not allow
+        #        xmlGen.innerText('N');
+        #    }
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('FlexAction');
+        #    xmlGen.innerText('ACTIVATE');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildSVDeActivation
+        #xml buildSVDeActivation(CreditCardTable     ccTable)
+        #{
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum && ccTable.ProfileId)
+        #    {
+        #        throw error(strFmt("@ACC1396",ccTable.ProfileId));
+        #    }
+        #
+        #    if (!ccTable.CreditCardNum)
+        #    {
+        #        throw error(strFmt("@ACC1400"));
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('FlexCache');
+        #
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(this.parmMerchantOrbital().MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    xmlGen = xmlDocument.createElement('TerminalID');
+        #    xmlGen.innerText(this.parmMerchantOrbital().ChaseTID);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('AccountNum');
+        #    xmlGen.innerText(CreditCardTable::retrieveValue(ccTable));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    xmlGen.innerText(int642str(ccTable.RecId));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Amount
+        #    xmlGen = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(1.00),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #    xmlGen.innerText(amount);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('IndustryType');
+        #    xmlGen.innerText(this.IndustryType(
+        #        CreditCardTerminalTable::findTerminalWithId(this.parmMerchantOrbital().TerminalId)));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('FlexAutoAuthInd');
+        #    xmlGen.innerText('N');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('FlexPartialRedemptionInd');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        if (ccPaymentech.svPartialRedemption)
+        #        {
+        #            xmlGen.innerText('Y');
+        #        }
+        #        else
+        #        {
+        #            xmlGen.innerText('N');
+        #        }
+        #    }
+        #    else
+        #    {
+        #        //--> Tampa does not allow
+        #        xmlGen.innerText('N');
+        #    }
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('FlexAction');
+        #    xmlGen.innerText('DEACTIVATE');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildUpdateProfile
+        #xml buildUpdateProfile(CreditCardTable     ccTable)
+        #{
+        #    TempStr                         ParmList;
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      ExpDate;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    CreditCardStr                   tempStr;
+        #    ;
+        #    select MerchantID,OrbitalCurrency from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTable.ProfileTerminalId;
+        #
+        #    if (!ccTable.CustAccount)
+        #    {
+        #        throw error("@SYS59637");
+        #    }
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('Profile');
+        #
+        #    if (ccPaymentech.UsePassword)
+        #    {
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionUsername');
+        #        xmlGen.innerText(ccPaymentech.UserId);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('OrbitalConnectionPassword');
+        #        xmlGen.innerText(ccPaymentech.Pwd);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #    }
+        #
+        #
+        #    BIN = xmlDocument.createElement('CustomerBin');
+        #    if (ccPaymentech.Platform == CreditCardPaymentechPlatform::Salem)
+        #    {
+        #        BIN.innerText('000001');
+        #    }
+        #    else
+        #    {
+        #        BIN.innerText('000002');
+        #    }
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('CustomerMerchantID');
+        #    MerchantId.innerText(this.parmMerchantOrbital().MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerName');
+        #    tempStr = System.Web.HttpUtility::HtmlEncode(subStr(CustTable::find(ccTable.CustAccount).Name(),1,30));
+        #    xmlGen.innerText(tempStr);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerRefNum');
+        #    xmlGen.innerText(ccTable.ProfileId);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerAddress1');
+        #        tempStr = System.Web.HttpUtility::HtmlEncode(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
+        #        xmlGen.innerText(tempStr);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('CustomerCity');
+        #        xmlGen.innerText(this.parmPostalAddress().City);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('CustomerState');
+        #        xmlGen.innerText(this.parmPostalAddress().State);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        xmlGen = xmlDocument.createElement('CustomerZIP');
+        #        xmlGen.innerText(this.parmPostalAddress().ZipCode);
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    if (ccTable.Email)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerEmail');
+        #        xmlGen.innerText(ccTable.Email);
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    if (ccTable.Phone)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerPhone');
+        #        xmlGen.innerText(this.getPhone(ccTable.Phone));
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CustomerCountryCode');
+        #        xmlGen.innerText(this.resolveCountry(this.parmPostalAddress().ZipCode));
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileAction');
+        #    xmlGen.innerText('U');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('CustomerProfileOrderOverrideInd');
+        #    xmlGen.innerText('NO');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Expiration
+        #    ExpDate = xmlDocument.createElement('CCExpireDate');
+        #    ExpDate.innerText(this.returnExpDateCC(ccTable));
+        #    newOrder.appendChild(ExpDate);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantOrbital
+        #boolean checkMerchantOrbital(CreditCardMerchantOrbital ccMerchantOrbital)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantOrbital.MerchantId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantOrbital.HostAddress)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardOrbitalXMLBuilder50 extends CreditCardOrbitalXMLBuilder
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardMerchantOrbital       merchantOrbital;
+        #    CreditCardProfileId             profileId;
+        #    CreditCardProfileiD             payProfileId;
+        #    CreditCardStr                   result;
+        #    CreditCardStr                   errorMessage;
+        #    LogisticsPostalAddress          postalAddress;
+        #    Amount                          processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #getPhone
+        #str getPhone(Phone      phone)
+        #{
+        #    TempStr         ret;
+        #    ;
+        #    ret = strReplace(phone,' ','');
+        #    ret = strReplace(ret,'(','');
+        #    ret = strReplace(ret,')','');
+        #    ret = strReplace(ret,'x','');
+        #    ret = strReplace(ret,'ext','');
+        #    ret = strReplace(ret,'-','');
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #IndustryType
+        #TempStr IndustryType(CreditCardTerminalTable   terminalTable)
+        #{
+        #    TempStr                      industry;
+        #    CreditCardMerchantOrbital    ccOrbital;
+        #    ;
+        #    select IndustryOrbital from ccOrbital
+        #        where ccOrbital.TerminalId == terminalTable.TerminalId;
+        #
+        #    switch  (ccOrbital.IndustryOrbital)
+        #    {
+        #        case CreditCardIndustryOrbital::EC  :
+        #            industry = 'EC';
+        #            break;
+        #        case CreditCardIndustryOrbital::Mail    :
+        #            industry = 'MO';
+        #            break;
+        #    }
+        #
+        #    return industry;
+        #}
+      ENDSOURCE
+      SOURCE #parmErrorMessage
+        #str parmErrorMessage(str    _errorMessage = errorMessage)
+        #{
+        #    ;
+        #    errorMessage = _errorMessage;
+        #    return errorMessage;
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantOrbital
+        #CreditCardMerchantOrbital parmMerchantOrbital(CreditCardMerchantOrbital _merchantOrbital = merchantOrbital)
+        #{
+        #    ;
+        #    merchantOrbital = _merchantOrbital;
+        #    return merchantOrbital;
+        #}
+      ENDSOURCE
+      SOURCE #parmPayProfileId
+        #CreditCardProfileId parmPayProfileId(CreditCardProfileId   _payProfileId = payProfileId)
+        #{
+        #    ;
+        #    payProfileId = _payProfileId;
+        #    return payProfileId;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmProcessAmt
+        #public Amount parmProcessAmt(Amount     _processAmt = processAmt)
+        #{
+        #    ;
+        #    processAmt = _processAmt;
+        #    return processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #parmProfileId
+        #CreditCardProfileId parmProfileId(CreditCardProfileId   _profileId = profileId)
+        #{
+        #    ;
+        #    profileId = _profileId;
+        #    return profileId;
+        #}
+      ENDSOURCE
+      SOURCE #parmResult
+        #str parmResult(str     _result  = result)
+        #{
+        #    ;
+        #    result = _result;
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #resolveCountry
+        #TempStr resolveCountry(AddressZipcodeId   zipCodeId)
+        #{
+        #    AddressCountryRegionId       countryId;
+        #    ;
+        #    countryId = LogisticsAddressZipCode::find(zipCodeId).CountryRegionId;
+        #
+        #    if (countryId == 'USA')
+        #    {
+        #        countryId = 'US';
+        #    }
+        #
+        #    return countryId;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #TempStr retrieveValue(CreditCardTrans ccTrans)
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccTrans.CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #TempStr returnAccount(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(ccTrans);
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumEncrypt)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(ccTrans);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnBankAccountType
+        #TempStr returnBankAccountType(CustBankAccount       custBankAccount)
+        #{
+        #    TempStr     parmList;
+        #    ;
+        #    switch (custBankAccount.BankAccountType)
+        #    {
+        #        case BankAccountType::CheckingAccount     :
+        #            parmList = 'C';
+        #            break;
+        #        case BankAccountType::SavingsAccount      :
+        #            parmList = 'S';
+        #            break;
+        #        case BankAccountType::CommercialChecking  :
+        #            parmList = 'X';
+        #            break;
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnExpDate
+        #TempStr returnExpDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnExpDateCC
+        #TempStr returnExpDateCC(CreditCardTable      ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,2);
+        #    }
+        #
+        #    ParmList =  month + ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartDate
+        #TempStr returnStartDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.SoloStartDate));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.SoloStartDate));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.SoloStartDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartDateCC
+        #str returnStartDateCC(CreditCardTable      ccTable)
+        #{
+        #    str                     ParmList;
+        #    str                     month;
+        #    str                     ccYear;
+        #    ;
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2str(Year(ccTable.SoloStartDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,2);
+        #    }
+        #
+        #    ParmList =  month + ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #TransactionType
+        #TempStr TransactionType(CreditCardTrxType     ccTransType)
+        #{
+        #    TempStr       transType;
+        #    ;
+        #    switch (cctransType)
+        #    {
+        #        case CreditCardTrxType::A   :
+        #            transType = 'A';
+        #            break;
+        #        case CreditCardTrxType::S   :
+        #            transType = 'AC';
+        #            break;
+        #        case CreditCardTrxType::D   :
+        #            transType = 'FC';
+        #            break;
+        #        case CreditCardTrxType::C   :
+        #            transType  = 'R';
+        #            break;
+        #    }
+        #
+        #    return transType;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static TempStr construct(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital       ccMerchantOrbital;
+        #    CreditCardParameters            ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #
+        #    //--> Obital Specific variables
+        #    CreditCardOrbitalXMLBuilder50   xmlBuilder = new CreditCardOrbitalXMLBuilder50();
+        #    //InteropPermission               clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    //-->
+        #    CreditCardStr                   response;
+        #    CreditCardStr                   parmList;
+        #
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    //System.Net.ServicePointManager   service
+        #    System.Net.WebHeaderCollection  headerCollection;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId == ccTrans.TerminalId;
+        #
+        #    if (ccParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Specified)
+        #    {
+        #        if (!ccParameters.ProcessCurrencyCode)
+        #        {
+        #            throw error(strFmt("@ACC1835",ccTrans.TerminalId));
+        #        }
+        #
+        #        if (ccParameters.ProcessCurrencyCode != CompanyInfo::standardCurrency())
+        #        {
+        #            if (ccTrans.CurrencyCode != ccParameters.ProcessCurrencyCode)
+        #            {
+        #                throw error(strFmt("@ACC1836",
+        #                    ccTrans.TerminalId,
+        #                    ccParameters.ProcessCurrencyCode,
+        #                    ccTrans.CurrencyCode));
+        #            }
+        #
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountCur);
+        #        }
+        #        else
+        #        {
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #    }
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #
+        #    try
+        #    {
+        #        //--> Build <Request> Node
+        #        ParmList += xmlBuilder.build(ccTrans);
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('MIME-VERSION','1.0');
+        #        headerCollection.Add('Content-transfer-encoding','text');
+        #        headerCollection.Add('Document-type','Request');
+        #
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantOrbital.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('application/PTI50');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    /*request = new HTTPRequest();
+        #
+        #    //--> Build <Request> Node
+        #    ParmList += xmlBuilder.build(ccTrans);
+        #
+        #    request.open('POST', ccMerchantOrbital.HostAddress);
+        #    request.setRequestHeader('CONTENT-TYPE','application/PTI50');
+        #    request.setRequestHeader('MIME-Version','1.0');
+        #
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.setRequestHeader('Content-transfer-encoding','text');
+        #    request.setRequestHeader('Request-number','1');
+        #    request.setRequestHeader('Document-type','Request');
+        #    request.setRequestHeader('Interface-Version','Version 5.1');
+        #
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();*/
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #static void createProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital           ccMerchantOrbital;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     locCCTable;
+        #    //--> Orbital Specific variables
+        #    CreditCardOrbitalXMLBuilder50       xmlBuilder = new CreditCardOrbitalXMLBuilder50();
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    System.Net.WebHeaderCollection      headerCollection;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantOrbital)
+        #    {
+        #        throw error("@ACC1752");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantOrbital(ccMerchantOrbital);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #
+        #    //--> Do we already have a profile for this customer?
+        #    select locCCTable where locCCTable.CustAccount == ccTable.CustAccount
+        #        && locCCTable.Profile == NoYes::Yes;
+        #
+        #    if (!locCCTable)
+        #    {
+        #        //--> Build  Node
+        #        parmList  = xmlBuilder.buildProfile(ccTable);
+        #    }
+        #    else
+        #    {
+        #        //--> Build  Node.  No chaining of records
+        #        parmList  = xmlBuilder.buildProfile(ccTable);
+        #    }
+        #
+        #    try
+        #    {
+        #        //--> TLS 1.2
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('MIME-VERSION','1.0');
+        #        headerCollection.Add('Content-transfer-encoding','text');
+        #        headerCollection.Add('Document-type','Request');
+        #
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantOrbital.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('application/PTI50');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeOrbitalResponse(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.ProfileId = xmlBuilder.parmProfileId();
+        #        ccTable.PaymentProfileId = xmlBuilder.parmPayProfileId();
+        #        ccTable.CreditCardNum = '';
+        #        ttscommit;
+        #
+        #        info("@ACC1408");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",xmlBuilder.parmErrorMessage()));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #deleteProfile
+        #static void deleteProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital           ccMerchantOrbital;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    //--> Orbital Specific variables
+        #    CreditCardOrbitalXMLBuilder50       xmlBuilder = new CreditCardOrbitalXMLBuilder50();
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    System.Net.WebHeaderCollection      headerCollection;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantOrbital)
+        #    {
+        #        throw error("@ACC1752");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantOrbital(ccMerchantOrbital);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildDeleteProfile(ccTable);
+        #    try
+        #    {
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('MIME-VERSION','1.0');
+        #        headerCollection.Add('Content-transfer-encoding','text');
+        #        headerCollection.Add('Document-type','Request');
+        #
+        #        //--> TLS 1.2
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantOrbital.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('application/PTI50');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeOrbitalResponse(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.ProfileId = xmlBuilder.parmProfileId();
+        #        ccTable.PaymentProfileId = xmlBuilder.parmPayProfileId();
+        #        ccTable.CreditCardNum = '';
+        #        ccTAble.update();
+        #        ttscommit;
+        #
+        #        info("@ACC1408");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",xmlBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #readProfile
+        #static void readProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital           ccMerchantOrbital;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    //--> Orbital Specific variables
+        #    CreditCardOrbitalXMLBuilder50       xmlBuilder = new CreditCardOrbitalXMLBuilder50();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    HttpRequest                         request;
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantOrbital)
+        #    {
+        #        throw error("@ACC1752");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantOrbital(ccMerchantOrbital);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildReadProfile(ccTable);
+        #
+        #
+        #    try
+        #    {
+        #        request = new HTTPRequest();
+        #        request.open('POST', ccMerchantOrbital.HostAddress);
+        #        request.setRequestHeader('CONTENT-TYPE','application/PTI50');
+        #        request.setRequestHeader('MIME-Version','1.0');
+        #
+        #        request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #        request.setRequestHeader('Content-transfer-encoding','text');
+        #        request.setRequestHeader('Request-number','1');
+        #        request.setRequestHeader('Document-type','Request');
+        #        request.setRequestHeader('Interface-Version','Version 5.1');
+        #
+        #        request.send(ParmList);
+        #
+        #        response = request.responseText();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeOrbitalResponse(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        if (xmlBuilder.parmProfileId())
+        #        {
+        #            ccTable.ProfileId = xmlBuilder.parmProfileId();
+        #        }
+        #
+        #        if (xmlBuilder.parmPayProfileId())
+        #        {
+        #            ccTable.PaymentProfileId = xmlBuilder.parmPayProfileId();
+        #        }
+        #        ccTable.CreditCardNum = '';
+        #        ccTAble.update();
+        #        ttscommit;
+        #
+        #        info("@ACC1408");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",xmlBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #svCreateActivation
+        #static void svCreateActivation(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital           ccMerchantOrbital;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    //--> Orbital Specific variables
+        #    CreditCardOrbitalXMLBuilder50       xmlBuilder = new CreditCardOrbitalXMLBuilder50();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    HttpRequest                         request;
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantOrbital)
+        #    {
+        #        throw error("@ACC1752");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantOrbital(ccMerchantOrbital);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #
+        #    parmList  = xmlBuilder.buildSVActivation(ccTable);
+        #
+        #
+        #    try
+        #    {
+        #        request = new HTTPRequest();
+        #        request.open('POST', ccMerchantOrbital.HostAddress);
+        #        request.setRequestHeader('CONTENT-TYPE','application/PTI50');
+        #        request.setRequestHeader('MIME-Version','1.0');
+        #
+        #        request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #        request.setRequestHeader('Content-transfer-encoding','text');
+        #        request.setRequestHeader('Request-number','1');
+        #        request.setRequestHeader('Document-type','Request');
+        #        request.setRequestHeader('Interface-Version','Version 5.1');
+        #
+        #        request.send(ParmList);
+        #
+        #        response = request.responseText();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeSVOrbitalResponse(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.svActivated = NoYes::Yes;
+        #        ccTable.Inactive = NoYes::No;
+        #        ccTable.update();
+        #        ttscommit;
+        #
+        #        info("@ACC1386");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1542",xmlBuilder.parmResult() + ':' + xmlBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #svCreateDeActivation
+        #static void svCreateDeActivation(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital           ccMerchantOrbital;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    //--> Orbital Specific variables
+        #    CreditCardOrbitalXMLBuilder50       xmlBuilder = new CreditCardOrbitalXMLBuilder50();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    HttpRequest                         request;
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantOrbital)
+        #    {
+        #        throw error("@ACC1752");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantOrbital(ccMerchantOrbital);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #
+        #    parmList  = xmlBuilder.buildSVDeActivation(ccTable);
+        #
+        #
+        #    try
+        #    {
+        #        request = new HTTPRequest();
+        #        request.open('POST', ccMerchantOrbital.HostAddress);
+        #        request.setRequestHeader('CONTENT-TYPE','application/PTI50');
+        #        request.setRequestHeader('MIME-Version','1.0');
+        #
+        #        request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #        request.setRequestHeader('Content-transfer-encoding','text');
+        #        request.setRequestHeader('Request-number','1');
+        #        request.setRequestHeader('Document-type','Request');
+        #        request.setRequestHeader('Interface-Version','Version 5.1');
+        #
+        #        request.send(ParmList);
+        #
+        #        response = request.responseText();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeSVOrbitalResponse(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.svActivated = NoYes::Yes;
+        #        ccTable.Inactive = NoYes::Yes;
+        #        ccTable.update();
+        #        ttscommit;
+        #
+        #        info("@ACC1386");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1542",xmlBuilder.parmResult() + ':' + xmlBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #svCreateReActivation
+        #static void svCreateReActivation(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital           ccMerchantOrbital;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    //--> Orbital Specific variables
+        #    CreditCardOrbitalXMLBuilder50       xmlBuilder = new CreditCardOrbitalXMLBuilder50();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    HttpRequest                         request;
+        #
+        #    TempStr                             response;
+        #    TempStr                             parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantOrbital)
+        #    {
+        #        throw error("@ACC1752");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantOrbital(ccMerchantOrbital);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #
+        #    parmList  = xmlBuilder.buildSVActivation(ccTable);
+        #
+        #
+        #    try
+        #    {
+        #        request = new HTTPRequest();
+        #        request.open('POST', ccMerchantOrbital.HostAddress);
+        #        request.setRequestHeader('CONTENT-TYPE','application/PTI50');
+        #        request.setRequestHeader('MIME-Version','1.0');
+        #
+        #        request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #        request.setRequestHeader('Content-transfer-encoding','text');
+        #        request.setRequestHeader('Request-number','1');
+        #        request.setRequestHeader('Document-type','Request');
+        #        request.setRequestHeader('Interface-Version','Version 5.1');
+        #
+        #        request.send(ParmList);
+        #
+        #        response = request.responseText();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeSVOrbitalResponse(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.svActivated = NoYes::Yes;
+        #        ccTable.Inactive = NoYes::No;
+        #        ccTable.update();
+        #        ttscommit;
+        #
+        #        info("@ACC1386");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1542",xmlBuilder.parmResult() + ':' + xmlBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #updateProfile
+        #static void updateProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital           ccMerchantOrbital;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    //--> Orbital Specific variables
+        #    CreditCardOrbitalXMLBuilder50       xmlBuilder = new CreditCardOrbitalXMLBuilder50();
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    System.Net.WebHeaderCollection      headerCollection;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantOrbital)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantOrbital(ccMerchantOrbital);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildUpdateProfile(ccTable);
+        #    try
+        #    {
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('MIME-VERSION','1.0');
+        #        headerCollection.Add('Content-transfer-encoding','text');
+        #        headerCollection.Add('Document-type','Request');
+        #
+        #        //--> TLS 1.2
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantOrbital.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('application/PTI50');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    ccTable = xmlBuilder.analyzeOrbitalResponse(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.ProfileId = xmlBuilder.parmProfileId();
+        #        ccTable.PaymentProfileId = xmlBuilder.parmPayProfileId();
+        #        ccTable.CreditCardNum = '';
+        #        ttscommit;
+        #
+        #        info("@ACC1408");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",xmlBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

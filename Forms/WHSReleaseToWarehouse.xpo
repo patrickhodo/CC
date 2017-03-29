@@ -1,0 +1,2359 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #WHSReleaseToWarehouse
+  PROPERTIES
+    Name                #WHSReleaseToWarehouse
+    Origin              #{D925071D-BB37-410E-903F-4BF0E1AE89ED}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    QueryBuildRange                  qbrReleaseToWarehouseId;
+      #
+      #    SysFormSplitter_Y                formSplitterVertical;
+      #
+      #    boolean                          showUnreservedDemand;
+      #
+      #    WHSReleaseToWarehouseForm        whsReleaseToWarehouseForm;
+      #    InventDimCtrl_Frm_WHS            inventDimFormSetupSO;
+      #    InventDimCtrl_Frm_WHS            inventDimFormSetupTO;
+      #
+      #    #define.CurrentVersion(1)
+      #    #localmacro.CurrentList
+      #        showUnreservedDemand
+      #    #endmacro
+      #}
+    ENDSOURCE
+    SOURCE #close
+      #public void close()
+      #{
+      #    whsReleaseToWarehouseForm.removeRelease(whsTmpReleaseToWarehouse_ds, whsTmpReleaseToWarehouse, false);
+      #
+      #    super();
+      #
+      #    xSysLastValue::saveLast(element);
+      #}
+    ENDSOURCE
+    SOURCE #displayTotalAmount
+      #// BP Deviation Documented
+      #public display AmountMST displayTotalAmount()
+      #{
+      #    return whsReleaseToWarehouseForm.parmTotalAmount();
+      #}
+    ENDSOURCE
+    SOURCE #displayTotalOrderLines
+      #// BP Deviation Documented
+      #public display Integer displayTotalOrderLines()
+      #{
+      #    return whsReleaseToWarehouseForm.parmTotalOrderLines();
+      #}
+    ENDSOURCE
+    SOURCE #displayTotalOrders
+      #// BP Deviation Documented
+      #public display Integer displayTotalOrders()
+      #{
+      #    return whsReleaseToWarehouseForm.parmTotalOrders();
+      #}
+    ENDSOURCE
+    SOURCE #enableButtonReleaseToWarehouse
+      #public void enableButtonReleaseToWarehouse()
+      #{
+      #    boolean    enabled = true;
+      #    SalesTable salesTableLocal;
+      #
+      #    if (WHSTmpReleaseToWarehouse.Module == WHSModule::Sales)
+      #    {
+      #        salesTableLocal = SalesTable::find(WHSTmpReleaseToWarehouse.OrderNum);
+      #        enabled = salesTableLocal.canReleaseToWarehouse();
+      #    }
+      #
+      #    ButtonRelease_Release.enabled(enabled);
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    whsReleaseToWarehouseForm = new WHSReleaseToWarehouseForm();
+      #
+      #    super();
+      #
+      #    xSysLastValue::getLast(this);
+      #
+      #    whsReleaseToWarehouseForm.parmReleaseToWarehouseId(WHSTmpReleaseToWarehouse::getNextReleaseToWarehouseId());
+      #
+      #    formSplitterVertical = new SysFormSplitter_Y(ctrlSplitHorizontal, groupOrders, this);
+      #}
+    ENDSOURCE
+    SOURCE #initParmDefault
+      #void initParmDefault()
+      #{
+      #}
+    ENDSOURCE
+    SOURCE #inventDimSetupObject
+      #/// <summary>
+      #/// Returns the dimensions display object.
+      #/// </summary>
+      #/// <returns>
+      #/// The dimensions display object
+      #/// </returns>
+      #public InventDimCtrl_Frm_WHS inventDimSetupObject()
+      #{
+      #    InventDimCtrl_Frm_WHS ret;
+      #
+      #    if (tabPageTransferOrders.isActivePage())
+      #    {
+      #        ret = inventDimFormSetupTO;
+      #    }
+      #
+      #    else if (tabPageSalesOrders.isActivePage())
+      #    {
+      #        ret = inventDimFormSetupSO;
+      #    }
+      #
+      #    return ret;
+      #}
+    ENDSOURCE
+    SOURCE #lastValueDataAreaId
+      #DataAreaId lastValueDataAreaId()
+      #{
+      #    return curext();
+      #}
+      #
+    ENDSOURCE
+    SOURCE #lastValueDesignName
+      #private IdentifierName lastValueDesignName()
+      #{
+      #    return '';
+      #}
+      #
+    ENDSOURCE
+    SOURCE #lastValueElementName
+      #IdentifierName lastValueElementName()
+      #{
+      #    return formStr(WHSReleaseToWarehouse);
+      #}
+      #
+    ENDSOURCE
+    SOURCE #lastValueType
+      #private UtilElementType lastValueType()
+      #{
+      #    return UtilElementType::Form;
+      #}
+      #
+    ENDSOURCE
+    SOURCE #lastValueUserId
+      #private UserId lastValueUserId()
+      #{
+      #    return curUserId();
+      #}
+      #
+    ENDSOURCE
+    SOURCE #pack
+      #public container pack()
+      #{
+      #    return [#CurrentVersion, #CurrentList];
+      #}
+      #
+    ENDSOURCE
+    SOURCE #unpack
+      #public boolean unpack(container _packedClass)
+      #{
+      #    boolean     ret;
+      #    int         version;
+      #
+      #    version = conPeek(_packedClass, 1);
+      #
+      #    switch (version)
+      #    {
+      #        case #CurrentVersion:
+      #            [version, #CurrentList] = _packedClass;
+      #            ret = true;
+      #            break;
+      #    }
+      #
+      #    return ret;
+      #}
+    ENDSOURCE
+    SOURCE #updateDesign_SO
+      #/// <summary>
+      #/// Updates the dimensions display object for the Sales orders grid.
+      #/// </summary>
+      #/// <param name="_mode">
+      #/// The state of the dimensions display form.
+      #/// </param>
+      #/// <exception cref="Exception::Error">
+      #/// Incorrect parameter for the function.
+      #/// </exception>
+      #public void updateDesign_SO(InventDimFormDesignUpdate _mode)
+      #{
+      #    InventDimParm inventDimParmLocal;
+      #
+      #    switch (_mode)
+      #    {
+      #        case InventDimFormDesignUpdate::Init:
+      #            if (!inventDimFormSetupSO)
+      #            {
+      #                inventDimFormSetupSO  = InventDimCtrl::newFromFormValidDataSource(element, inventDimSO_ds.name());
+      #            }
+      #
+      #            inventDimParmLocal.setAllInventDim();
+      #            inventDimParmLocal.clearProductDimensions();
+      #            inventDimFormSetupSO.parmDimParmVisibleGrid(inventDimParmLocal);
+      #            // do continue
+      #        case InventDimFormDesignUpdate::Active:
+      #            inventDimFormSetupSO.formActiveSetup();
+      #            inventDimFormSetupSO.formSetControls(true);
+      #            break;
+      #
+      #        default:
+      #            throw error(strFmt("@SYS54195",funcName()));
+      #    }
+      #
+      #}
+    ENDSOURCE
+    SOURCE #updateDesign_TO
+      #/// <summary>
+      #/// Updates the dimensions display object for the Transfer orders grid.
+      #/// </summary>
+      #/// <param name="_mode">
+      #/// The state of the dimensions display form.
+      #/// </param>
+      #/// <exception cref="Exception::Error">
+      #/// Incorrect parameter for the function.
+      #/// </exception>
+      #public void updateDesign_TO(InventDimFormDesignUpdate _mode)
+      #{
+      #    switch (_mode)
+      #    {
+      #        case InventDimFormDesignUpdate::Init:
+      #            if (!inventDimFormSetupTO)
+      #            {
+      #                inventDimFormSetupTO  = InventDimCtrl::newFromFormValidDataSource(element, inventDimTO_ds.name());
+      #            }
+      #            // do continue
+      #        case InventDimFormDesignUpdate::Active:
+      #            inventDimFormSetupTO.formActiveSetup();
+      #            inventDimFormSetupTO.formSetControls(true);
+      #            break;
+      #
+      #        default:
+      #            throw error(strFmt("@SYS54195",funcName()));
+      #    }
+      #
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #WHSTmpReleaseToWarehouse
+          Table               #WHSTmpReleaseToWarehouse
+          AllowCreate         #No
+          AllowDelete         #No
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD ReleaseToWarehouseId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD InventTransId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD Module
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD OrderNum
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD ShipmentId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD AutoReserved
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD ReservationStatus
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD modifiedDateTime
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD modifiedBy
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD dataAreaId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD RecId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD TableId
+            PROPERTIES
+              AllowEdit           #No
+            ENDPROPERTIES
+            
+            METHODS
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    element.enableButtonReleaseToWarehouse();
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+        SOURCE #research
+          #public void research(boolean _retainPosition = false)
+          #{
+          #    whsReleaseToWarehouseForm.calculateTotals(whsTmpReleaseToWarehouse);
+          #
+          #    super(_retainPosition);
+          #}
+        ENDSOURCE
+        SOURCE #write
+          #public void write()
+          #{
+          #    whsReleaseToWarehouseForm.whsTmpReleaseToWarehouse_write(whsTmpReleaseToWarehouse);
+          #
+          #    super();
+          #
+          #    whsInventTransSumDimSO_ds.executeQuery();
+          #    inventTransferLine_ds.executeQuery();
+          #
+          #    whsTmpReleaseToWarehouse_ds.research(true);
+          #}
+        ENDSOURCE
+        SOURCE #executeQuery
+          #public void executeQuery()
+          #{
+          #    qbrReleaseToWarehouseId.value(whsReleaseToWarehouseForm.parmReleaseToWarehouseId());
+          #
+          #    whsReleaseToWarehouseForm.calculateTotals(whsTmpReleaseToWarehouse);
+          #
+          #    super();
+          #}
+        ENDSOURCE
+        SOURCE #init
+          #public void init()
+          #{
+          #    super();
+          #
+          #    qbrReleaseToWarehouseId = whsTmpReleaseToWarehouse_ds.query().dataSourceTable(tableNum(WHSTmpReleaseToWarehouse)).addRange(fieldNum(WHSTmpReleaseToWarehouse, ReleaseToWarehouseId));
+          #
+          #    this.cacheAddMethod(tableMethodStr(WHSTmpReleaseToWarehouse, displayRequestedQty));
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SalesLine
+          Table               #SalesLine
+          Index               #SalesLineIdx
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          StartPosition       #Last
+          JoinSource          #WHSInventTransSumDimSO
+          LinkType            #InnerJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    QueryBuildDataSource    salesLineQbds;
+          #
+          #    super();
+          #
+          #    salesLineQbds = whsInventTransSumDimSO_ds.query().dataSourceTable(tableNum(SalesLine));
+          #    salesLineQbds.addRange(fieldNum(SalesLine, InventTransId));
+          #    salesLineQbds.addRange(fieldNum(SalesLine, RemainInventPhysical)).value('>0');
+          #
+          #    salesLineQbds.addLink(fieldNum(WHSInventTransSumDim, InventTransId), fieldNum(SalesLine, InventTransId), whsInventTransSumDimSO_ds.name());
+          #
+          #    this.cacheAddMethod(tableMethodStr(SalesLine, whsDisplaySalesOrgin));
+          #    this.cacheAddMethod(tableMethodStr(SalesLine, whsDisplayCustName));
+          #    this.cacheAddMethod(tableMethodStr(SalesLine, whsDisplayCustAvailCredit));
+          #    this.cacheAddMethod(tableMethodStr(SalesLine, whsDisplayItemName));
+          #}
+        ENDSOURCE
+        SOURCE #displayOption
+          #public void displayOption(Common _record, FormRowDisplayOption _options)
+          #{
+          #    SalesLine   locSalesLine;
+          #    InventQty   onOrderQty;
+          #
+          #    if (showUnreservedDemand)
+          #    {
+          #        locSalesLine = _record;
+          #
+          #        onOrderQty = locSalesLine.onOrder();
+          #
+          #        if (onOrderQty == 0)    // Fully Reserved
+          #        {
+          #            _options.backColor(WinAPI::RGB2int(#WHSPastelGreen));
+          #        }
+          #        else if (onOrderQty != locSalesLine.QtyOrdered)  // Partially Reserved
+          #        {
+          #            _options.backColor(WinAPI::RGB2int(#WHSPastelBlue));
+          #        }
+          #    }
+          #
+          #    super(_record, _options);
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #InventTransferLine
+          Table               #InventTransferLine
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          StartPosition       #Last
+          JoinSource          #WHSInventTransSumDimTO
+          LinkType            #InnerJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    QueryBuildDataSource    transferLineQbds;
+          #
+          #    super();
+          #
+          #    transferLineQbds = whsInventTransSumDimTO_q.dataSourceTable(tableNum(InventTransferLine));
+          #    transferLineQbds.addRange(fieldNum(InventTransferLine, QtyRemainShip)).value('>0');
+          #
+          #    transferLineQbds.addLink(fieldNum(WHSInventTransSumDim, InventTransId), fieldNum(InventTransferLine, InventTransId), whsInventTransSumDimTO_ds.name());
+          #
+          #    this.cacheAddMethod(tableMethodStr(InventTransferLine, whsDisplayItemName));
+          #    this.cacheAddMethod(tableMethodStr(InventTransferLine, whsDisplayToWarehouse));
+          #}
+        ENDSOURCE
+        SOURCE #displayOption
+          #public void displayOption(Common _record, FormRowDisplayOption _options)
+          #{
+          #    InventTransferLine  locInventTransferLine;
+          #    InventQty           onOrderQty;
+          #    InventQty           qtyReservedPhysical;
+          #    InventQty           pdsCWQtyReservPhysical;
+          #
+          #    if (showUnreservedDemand)
+          #    {
+          #        locInventTransferLine = _record;
+          #
+          #        [qtyReservedPhysical, pdsCWQtyReservPhysical] = locInventTransferLine.qtyReservedPhysical();
+          #
+          #        onOrderQty = locInventTransferLine.QtyTransfer - qtyReservedPhysical;
+          #
+          #        if (onOrderQty == 0)    // Fully Reserved
+          #        {
+          #            _options.backColor(WinAPI::RGB2int(#WHSPastelGreen));
+          #        }
+          #        else if (onOrderQty != locInventTransferLine.QtyTransfer)   // Partially Reserved
+          #        {
+          #            _options.backColor(WinAPI::RGB2int(#WHSPastelBlue));
+          #        }
+          #    }
+          #
+          #    super(_record, _options);
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #InventDimSO
+          Table               #InventDim
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          JoinSource          #WHSInventTransSumDimSO
+          LinkType            #InnerJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #InventDimTO
+          Table               #InventDim
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          JoinSource          #WHSInventTransSumDimTO
+          LinkType            #InnerJoin
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #WHSInventEnabledSO
+          Table               #WHSInventEnabled
+          JoinSource          #InventTableSO
+          LinkType            #ExistJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #WHSInventEnabledTO
+          Table               #WHSInventEnabled
+          JoinSource          #InventTableTO
+          LinkType            #ExistJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #InventTableSO
+          Table               #InventTable
+          JoinSource          #SalesLine
+          LinkType            #ExistJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #InventTableTO
+          Table               #InventTable
+          JoinSource          #InventTransferLine
+          LinkType            #ExistJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #SalesAddress
+          Table               #LogisticsPostalAddress
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          JoinSource          #SalesLine
+          LinkType            #InnerJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #WHSInventTransSumDimSO
+          Table               #WHSInventTransSumDim
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    super();
+          #
+          #    element.updateDesign_SO(InventDimFormDesignUpdate::Init);
+          #}
+        ENDSOURCE
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    element.updateDesign_SO(InventDimFormDesignUpdate::Active);
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+        SOURCE #displayQtyLeftToReleaseDelta
+          #// BP Deviation Documented
+          #display Qty displayQtyLeftToReleaseDelta(WHSInventTransSumDim _inventTransSumDim)
+          #{
+          #    return WHSTmpReleaseToWarehouse::calcQtyLeftToReleaseDelta(whsTmpReleaseToWarehouse, _inventTransSumDim);
+          #}
+        ENDSOURCE
+        SOURCE #reread
+          #public void reread()
+          #{
+          #    int position;
+          #
+          #    position = this.getPosition();
+          #
+          #    super();
+          #    this.executeQuery();
+          #    this.setPosition(position);
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #WHSInventTransSumDimTO
+          Table               #WHSInventTransSumDim
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    super();
+          #
+          #    element.updateDesign_TO(InventDimFormDesignUpdate::Init);
+          #}
+        ENDSOURCE
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    ret = super();
+          #
+          #    element.updateDesign_TO(InventDimFormDesignUpdate::Active);
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+        SOURCE #reread
+          #public void reread()
+          #{
+          #    int position;
+          #
+          #    position = this.getPosition();
+          #
+          #    super();
+          #    this.executeQuery();
+          #    this.setPosition(position);
+          #}
+        ENDSOURCE
+        SOURCE #displayQtyLeftToReleaseDelta
+          #// BP Deviation Documented
+          #display Qty displayQtyLeftToReleaseDelta(WHSInventTransSumDim _inventTransSumDim)
+          #{
+          #    return WHSTmpReleaseToWarehouse::calcQtyLeftToReleaseDelta(whsTmpReleaseToWarehouse, _inventTransSumDim);
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #WHSReleasedQtyViewSO
+          Table               #WHSReleasedQtyView
+          JoinSource          #WHSInventTransSumDimSO
+          LinkType            #NotExistJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    QueryBuildDataSource    qbds;
+          #
+          #    super();
+          #
+          #    qbds = whsInventTransSumDimSO_q.dataSourceTable(tableNum(WHSReleasedQtyView));
+          #
+          #    // Filter out lines that have already been fully released.
+          #    qbds.addLink(fieldNum(WHSInventTransSumDim, InventTransId), fieldNum(WHSReleasedQtyView, InventTransId), whsInventTransSumDimSO_ds.name());
+          #    qbds.addLink(fieldNum(WHSInventTransSumDim, InventDimId), fieldNum(WHSReleasedQtyView, InventDimId), whsInventTransSumDimSO_ds.name());
+          #    qbds.addRange(fieldNum(WHSReleasedQtyView, RecId)).value(strFmt('(%1.%2 * -1 == (%3 - %4))',
+          #                                                                     whsInventTransSumDimSO_ds.name(),
+          #                                                                     fieldStr(WHSInventTransSumDim, SumOfQty),
+          #                                                                     fieldStr(WHSReleasedQtyView, SumOfInventQty),
+          #                                                                     fieldStr(WHSReleasedQtyView, SumOfPickedQty)));
+          #}
+          #
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #WHSReleasedQtyVeiwTO
+          Table               #WHSReleasedQtyView
+          JoinSource          #WHSInventTransSumDimTO
+          LinkType            #NotExistJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    QueryBuildDataSource    qbds;
+          #
+          #    super();
+          #
+          #    qbds = whsInventTransSumDimTO_q.dataSourceTable(tableNum(WHSReleasedQtyView));
+          #
+          #    // Filter out lines that have already been fully released.
+          #    qbds.addLink(fieldNum(WHSInventTransSumDim, InventTransId), fieldNum(WHSReleasedQtyView, InventTransId), whsInventTransSumDimTO_ds.name());
+          #    qbds.addLink(fieldNum(WHSInventTransSumDim, InventDimId), fieldNum(WHSReleasedQtyView, InventDimId), whsInventTransSumDimTO_ds.name());
+          #    qbds.addRange(fieldNum(WHSReleasedQtyView, RecId)).value(strFmt('(%1.%2 * -1 == (%3 - %4))',
+          #                                                                     whsInventTransSumDimTO_ds.name(),
+          #                                                                     fieldStr(WHSInventTransSumDim, SumOfQty),
+          #                                                                     fieldStr(WHSReleasedQtyView, SumOfInventQty),
+          #                                                                     fieldStr(WHSReleasedQtyView, SumOfPickedQty)));
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+    SalesLine WHSInventTransSumDimSO
+    InventTransferLine WHSInventTransSumDimTO
+    InventDimSO WHSInventTransSumDimSO
+    InventDimTO WHSInventTransSumDimTO
+    WHSInventEnabledSO InventTableSO
+    WHSInventEnabledTO InventTableTO
+    InventTableSO SalesLine
+    InventTableTO InventTransferLine
+    SalesAddress SalesLine
+    WHSReleasedQtyViewSO WHSInventTransSumDimSO
+    WHSReleasedQtyVeiwTO WHSInventTransSumDimTO
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@WAX1884
+      Style               #SimpleList
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane_Release
+          ElementPosition     #858993458
+          HierarchyParent     #GroupRelease
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane_Sales
+          ElementPosition     #954437176
+          HierarchyParent     #TabPageSalesOrders
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane_Transfers
+          ElementPosition     #954437176
+          HierarchyParent     #TabPageTransferOrders
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab_Release
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane_Release
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab_Sales
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane_Sales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab_Transfers
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane_Transfers
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #RecordBasics_Release
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab_Release
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #RecordBasics_Sales
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab_Sales
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #RecordBasics_Transfers
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab_Transfers
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #GridRelease
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1288490187
+          HierarchyParent     #GroupRelease
+          ShowRowLabels       #No
+          DataSource          #WHSTmpReleaseToWarehouse
+          AlternateRowShading #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #GridSalesOrders
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1550960411
+          HierarchyParent     #TabPageSalesOrders
+          DataSource          #WHSInventTransSumDimSO
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #GridTransferOrders
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #TabPageTransferOrders
+          DataSource          #WHSInventTransSumDimTO
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CtrlSplitHorizontal
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          Style               #SplitterHorizontalContainer
+          HideIfEmpty         #No
+          AlignChild          #No
+          ViewEditMode        #View
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupOrders
+          AutoDeclaration     #Yes
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #536870911
+          FrameType           #None
+          Style               #DetailTitleContainer
+          AlignChild          #No
+          ViewEditMode        #Edit
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GroupRelease
+          AutoDeclaration     #Yes
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          FrameType           #None
+          Style               #BorderlessGridContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #InventDimensions
+          ElementPosition     #1342177275
+          HierarchyParent     #GridSalesOrders
+          BackgroundColor     #Window background
+          DataSource          #InventDimSO
+          DataGroup           #InventoryDimensions
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #InventoryDimensions
+          ElementPosition     #2017333122
+          HierarchyParent     #GridTransferOrders
+          BackgroundColor     #Window background
+          DataSource          #InventDimTO
+          DataGroup           #InventoryDimensions
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #WaveTotals
+          Width               #Column width
+          ElementPosition     #1717986916
+          HierarchyParent     #GroupRelease
+          FrameType           #Raised 3D
+          Columns             #4
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #Tab
+          AutoDeclaration     #Yes
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #GroupOrders
+          Tabs                #2
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #TabPageSalesOrders
+          AutoDeclaration     #Yes
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741822
+          HierarchyParent     #Tab
+          Caption             #@WAX1531
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #TabPageTransferOrders
+          AutoDeclaration     #Yes
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          HierarchyParent     #Tab
+          Caption             #@WAX1532
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #AddOrder_Sales
+          HelpText            #@WAX2893
+          ElementPosition     #1717986916
+          HierarchyParent     #RecordBasics_Sales
+          Text                #@WAX1577
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    if (tabPageSalesOrders.isActivePage())
+            #    {
+            #        whsReleaseToWarehouseForm.addOrder(salesLine.SalesId, whsTmpReleaseToWarehouse, WHSModule::Sales);
+            #
+            #        whsInventTransSumDimSO_ds.executeQuery();
+            #    }
+            #    else if (tabPageTransferOrders.isActivePage())
+            #    {
+            #        whsReleaseToWarehouseForm.addOrder(inventTransferLine.TransferId, whsTmpReleaseToWarehouse, WHSModule::Transfer);
+            #
+            #        whsInventTransSumDimTO_ds.executeQuery();
+            #    }
+            #
+            #    whsTmpReleaseToWarehouse_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #AddOrder_Transfers
+          HelpText            #@WAX2893
+          ElementPosition     #1717986916
+          HierarchyParent     #RecordBasics_Transfers
+          Text                #@WAX1577
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    super();
+            #
+            #    if (tabPageSalesOrders.isActivePage())
+            #    {
+            #        whsReleaseToWarehouseForm.addOrder(salesLine.SalesId, whsTmpReleaseToWarehouse, WHSModule::Sales);
+            #
+            #        whsInventTransSumDimSO_ds.executeQuery();
+            #    }
+            #    else if (tabPageTransferOrders.isActivePage())
+            #    {
+            #        whsReleaseToWarehouseForm.addOrder(inventTransferLine.TransferId, whsTmpReleaseToWarehouse, WHSModule::Transfer);
+            #
+            #        whsInventTransSumDimTO_ds.executeQuery();
+            #    }
+            #
+            #    whsTmpReleaseToWarehouse_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ButtonAdd_Sales
+          HelpText            #@WAX2895
+          ElementPosition     #858993458
+          HierarchyParent     #RecordBasics_Sales
+          Text                #@SYS35402
+          MultiSelect         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    WHSReservation          reservation = new WHSReservation();
+            #    WHSInventTransSumDim    inventTransSumDim;
+            #
+            #    super();
+            #
+            #    if (tabPageSalesOrders.isActivePage())
+            #    {
+            #        for (inventTransSumDim = whsInventTransSumDimSO_ds.getFirst(true) ? whsInventTransSumDimSO_ds.getFirst(true) : whsInventTransSumDimSO_ds.cursor();
+            #             inventTransSumDim;
+            #             inventTransSumDim = whsInventTransSumDimSO_ds.getNext())
+            #        {
+            #            whsReleaseToWarehouseForm.addInventSumDim(inventTransSumDim, whsTmpReleaseToWarehouse, WHSModule::Sales);
+            #        }
+            #
+            #        whsInventTransSumDimSO_ds.executeQuery();
+            #    }
+            #    else if (tabPageTransferOrders.isActivePage())
+            #    {
+            #        for (inventTransSumDim = whsInventTransSumDimTO_ds.getFirst(true) ? whsInventTransSumDimTO_ds.getFirst(true) : whsInventTransSumDimTO_ds.cursor();
+            #             inventTransSumDim;
+            #             inventTransSumDim = whsInventTransSumDimTO_ds.getNext())
+            #        {
+            #            whsReleaseToWarehouseForm.addInventSumDim(inventTransSumDim, whsTmpReleaseToWarehouse, WHSModule::Transfer);
+            #        }
+            #
+            #        whsInventTransSumDimTO_ds.executeQuery();
+            #    }
+            #
+            #    whsTmpReleaseToWarehouse_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ButtonAdd_Transfers
+          HelpText            #@WAX2895
+          ElementPosition     #858993458
+          HierarchyParent     #RecordBasics_Transfers
+          Text                #@SYS35402
+          MultiSelect         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    WHSReservation          reservation = new WHSReservation();
+            #    WHSInventTransSumDim    inventTransSumDim;
+            #
+            #    super();
+            #
+            #    if (tabPageSalesOrders.isActivePage())
+            #    {
+            #        for (inventTransSumDim = whsInventTransSumDimSO_ds.getFirst(true) ? whsInventTransSumDimSO_ds.getFirst(true) : whsInventTransSumDimSO_ds.cursor();
+            #             inventTransSumDim;
+            #             inventTransSumDim = whsInventTransSumDimSO_ds.getNext())
+            #        {
+            #            whsReleaseToWarehouseForm.addInventSumDim(inventTransSumDim, whsTmpReleaseToWarehouse, WHSModule::Sales);
+            #        }
+            #
+            #        whsInventTransSumDimSO_ds.executeQuery();
+            #    }
+            #    else if (tabPageTransferOrders.isActivePage())
+            #    {
+            #        for (inventTransSumDim = whsInventTransSumDimTO_ds.getFirst(true) ? whsInventTransSumDimTO_ds.getFirst(true) : whsInventTransSumDimTO_ds.cursor();
+            #             inventTransSumDim;
+            #             inventTransSumDim = whsInventTransSumDimTO_ds.getNext())
+            #        {
+            #            whsReleaseToWarehouseForm.addInventSumDim(inventTransSumDim, whsTmpReleaseToWarehouse, WHSModule::Transfer);
+            #        }
+            #
+            #        whsInventTransSumDimTO_ds.executeQuery();
+            #    }
+            #
+            #    whsTmpReleaseToWarehouse_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ButtonAddAll_Sales
+          HelpText            #@WAX2894
+          ElementPosition     #1288490187
+          HierarchyParent     #RecordBasics_Sales
+          Text                #@WAX1578
+          MultiSelect         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    QueryRun                qr;
+            #    WHSInventTransSumDim    inventTransSumDim;
+            #
+            #    super();
+            #
+            #    if (tabPageSalesOrders.isActivePage())
+            #    {
+            #        whsInventTransSumDimSO_ds.executeQuery();
+            #        qr = whsInventTransSumDimSO_ds.queryRun();
+            #
+            #        do
+            #        {
+            #            inventTransSumDim = qr.get(tableNum(WHSInventTransSumDim));
+            #
+            #            whsReleaseToWarehouseForm.addInventSumDim(inventTransSumDim, whsTmpReleaseToWarehouse, WHSModule::Sales);
+            #        }
+            #        while (qr.next());
+            #
+            #        whsInventTransSUmDimSO_ds.executeQuery();
+            #    }
+            #    else if (tabPageTransferOrders.isActivePage())
+            #    {
+            #        whsInventTransSumDimTO_ds.executeQuery();
+            #        qr = whsInventTransSumDimTO_ds.queryRun();
+            #
+            #        do
+            #        {
+            #            inventTransSumDim = qr.get(tableNum(WHSInventTransSumDim));
+            #
+            #            whsReleaseToWarehouseForm.addInventSumDim(inventTransSumDim, whsTmpReleaseToWarehouse, WHSModule::Transfer);
+            #        }
+            #        while (qr.next());
+            #
+            #        whsInventTransSumDimTO_ds.executeQuery();
+            #    }
+            #
+            #    whsTmpReleaseToWarehouse_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ButtonAddAll_Transfers
+          HelpText            #@WAX2894
+          ElementPosition     #1288490187
+          HierarchyParent     #RecordBasics_Transfers
+          Text                #@WAX1578
+          MultiSelect         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    QueryRun                qr;
+            #    WHSInventTransSumDim    inventTransSumDim;
+            #
+            #    super();
+            #
+            #    if (tabPageSalesOrders.isActivePage())
+            #    {
+            #        whsInventTransSumDimSO_ds.executeQuery();
+            #        qr = whsInventTransSumDimSO_ds.queryRun();
+            #
+            #        do
+            #        {
+            #            inventTransSumDim = qr.get(tableNum(WHSInventTransSumDim));
+            #
+            #            whsReleaseToWarehouseForm.addInventSumDim(inventTransSumDim, whsTmpReleaseToWarehouse, WHSModule::Sales);
+            #        }
+            #        while (qr.next());
+            #
+            #        whsInventTransSUmDimSO_ds.executeQuery();
+            #    }
+            #    else if (tabPageTransferOrders.isActivePage())
+            #    {
+            #        whsInventTransSumDimTO_ds.executeQuery();
+            #        qr = whsInventTransSumDimTO_ds.queryRun();
+            #
+            #        do
+            #        {
+            #            inventTransSumDim = qr.get(tableNum(WHSInventTransSumDim));
+            #
+            #            whsReleaseToWarehouseForm.addInventSumDim(inventTransSumDim, whsTmpReleaseToWarehouse, WHSModule::Transfer);
+            #        }
+            #        while (qr.next());
+            #
+            #        whsInventTransSumDimTO_ds.executeQuery();
+            #    }
+            #
+            #    whsTmpReleaseToWarehouse_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ButtonRelease_Release
+          AutoDeclaration     #Yes
+          HelpText            #@WAX2892
+          ElementPosition     #1717986916
+          HierarchyParent     #RecordBasics_Release
+          Text                #@WAX1884
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    WHSTmpReleaseToWarehouse    releaseToWarehouse,ccReleaseToWarehouse;
+            #
+            #    super();
+            #
+            #    releaseToWarehouse.linkPhysicalTableInstance(whsTmpReleaseToWarehouse);
+            #
+            #    while select releaseToWarehouse
+            #        group by ordernum
+            #    {
+            #        ccReleaseToWarehouse.linkPhysicalTableInstance(whsTmpReleaseToWarehouse);
+            #        select ccReleaseToWarehouse
+            #            where ccReleaseToWarehouse.OrderNum == releaseToWarehouse.OrderNum;
+            #
+            #        whsReleaseToWarehouseForm.buttonRelease_clicked(ccReleaseToWarehouse);
+            #    }
+            #
+            #    //whsReleaseToWarehouseForm.buttonRelease_clicked(whsTmpReleaseToWarehouse);
+            #
+            #    salesLine_ds.executeQuery();
+            #    inventTransferLine_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ButtonRemove_Release
+          HelpText            #@WAX2891
+          ElementPosition     #858993458
+          HierarchyParent     #RecordBasics_Release
+          Text                #@WAX1580
+          MultiSelect         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    whsReleaseToWarehouseForm.removeRelease(whsTmpReleaseToWarehouse_ds, whsTmpReleaseToWarehouse, true);
+            #
+            #    whsTmpReleaseToWarehouse_ds.executeQuery();
+            #
+            #    whsInventTransSumDimSO_ds.executeQuery();
+            #    whsInventTransSumDimTO_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTON
+        PROPERTIES
+          Name                #ButtonRemoveAll_Release
+          HelpText            #@WAX2890
+          ElementPosition     #1288490187
+          HierarchyParent     #RecordBasics_Release
+          Text                #@WAX1579
+          ShowShortCut        #No
+          MultiSelect         #Yes
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #clicked
+            #void clicked()
+            #{
+            #    whsReleaseToWarehouseForm.removeRelease(whsTmpReleaseToWarehouse_ds, whsTmpReleaseToWarehouse, false);
+            #
+            #    whsReleaseToWarehouseForm.parmTotalAmount(0);
+            #
+            #    whsTmpReleaseToWarehouse_ds.executeQuery();
+            #
+            #    whsInventTransSumDimSO_ds.executeQuery();
+            #    whsInventTransSumDimTO_ds.executeQuery();
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #SalesLine_SalesStatus
+          ElementPosition     #805306365
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #SalesStatus
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #WHSTmpReleaseToWarehouse_Module
+          ElementPosition     #805306365
+          HierarchyParent     #GridRelease
+          DataSource          #WHSTmpReleaseToWarehouse
+          DataField           #Module
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #SalesLine_ReceiptDateRequested
+          ElementPosition     #1968526670
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #ReceiptDateRequested
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #SalesLine_ShippingDateRequested
+          ElementPosition     #1879048185
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #ShippingDateRequested
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL INTEDIT
+        PROPERTIES
+          Name                #TotalOrderLines
+          AllowEdit           #No
+          ElementPosition     #1431655764
+          HierarchyParent     #WaveTotals
+          Label               #@WAX1953
+          DataMethod          #displayTotalOrderLines
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL INTEDIT
+        PROPERTIES
+          Name                #TotalOrders
+          AllowEdit           #No
+          ElementPosition     #1073741823
+          HierarchyParent     #WaveTotals
+          Label               #@WAX1952
+          DataMethod          #displayTotalOrders
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DimensionsDisplaySO
+          ElementPosition     #1932735281
+          HierarchyParent     #RecordBasics_Sales
+          MenuItemName        #InventDimParmFixed
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #DisplayDimensionsTO
+          ElementPosition     #1932735281
+          HierarchyParent     #RecordBasics_Transfers
+          MenuItemName        #InventDimParmFixed
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #displayCustAvailCredit
+          AllowEdit           #No
+          ElementPosition     #536870910
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataMethod          #whsDisplayCustAvailCredit
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #displayQtyLeftToReleaseDelta
+          AllowEdit           #No
+          ElementPosition     #894784850
+          HierarchyParent     #GridSalesOrders
+          Label               #@WAX2876
+          DataSource          #WHSInventTransSumDimSO
+          DataMethod          #displayQtyLeftToReleaseDelta
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #displayQtyLeftToReleaseDelta1
+          ElementPosition     #1171354716
+          HierarchyParent     #GridTransferOrders
+          Label               #@WAX2876
+          DataSource          #WHSInventTransSumDimTO
+          DataMethod          #displayQtyLeftToReleaseDelta
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #InventTransferLine_QtyTransfer
+          ElementPosition     #1561806288
+          HierarchyParent     #GridTransferOrders
+          Label               #@SYS26378
+          DataSource          #InventTransferLine
+          DataField           #QtyTransfer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #RequestedQty
+          ElementPosition     #536870910
+          HierarchyParent     #GridRelease
+          Label               #@WAX3936
+          DataSource          #WHSTmpReleaseToWarehouse
+          DataMethod          #displayRequestedQty
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #SalesLine_QtyOrdered
+          ElementPosition     #1163220305
+          HierarchyParent     #GridSalesOrders
+          Label               #@SYS11990
+          DataSource          #SalesLine
+          DataField           #SalesQty
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #TotalAmount
+          AllowEdit           #No
+          ElementPosition     #1789569705
+          HierarchyParent     #WaveTotals
+          Label               #@WAX1954
+          DataMethod          #displayTotalAmount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #WHSInventTransSumDimSO_SumOfQty
+          ElementPosition     #984263335
+          HierarchyParent     #GridSalesOrders
+          SignDisplay         #None
+          DataSource          #WHSInventTransSumDimSO
+          DataField           #SumOfQty
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #WHSInventTransSumDimTO_SumOfQty
+          ElementPosition     #1366580502
+          HierarchyParent     #GridTransferOrders
+          SignDisplay         #None
+          DataSource          #WHSInventTransSumDimTO
+          DataField           #SumOfQty
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #WHSTmpReleaseToWarehouse_ReleasedQty
+          ElementPosition     #1879048185
+          HierarchyParent     #GridRelease
+          DataSource          #WHSTmpReleaseToWarehouse
+          DataField           #ReleasedQty
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #displayCustName
+          AllowEdit           #No
+          ElementPosition     #447392425
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataMethod          #whsDisplayCustName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #displayInventUOM
+          ElementPosition     #1073741820
+          HierarchyParent     #GridSalesOrders
+          DataSource          #WHSInventTransSumDimSO
+          DataMethod          #displayInventUOM
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #displayItemName
+          AllowEdit           #No
+          ElementPosition     #715827880
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataMethod          #whsDisplayItemName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #displaySalesOrgin
+          AllowEdit           #No
+          ElementPosition     #268435455
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataMethod          #whsDisplaySalesOrgin
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_configId
+          ElementPosition     #1010580536
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #configId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_inventBatchId
+          ElementPosition     #505290268
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #inventBatchId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventColorId
+          ElementPosition     #1263225670
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventColorId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventGtdId_RU
+          ElementPosition     #2021161072
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventGtdId_RU
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventLocationId
+          ElementPosition     #378967701
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventLocationId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventOwnerId_RU
+          ElementPosition     #1768515938
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventOwnerId_RU
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventProfileId_RU
+          ElementPosition     #1894838505
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventProfileId_RU
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_inventSerialId
+          ElementPosition     #884257969
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #inventSerialId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventSiteId
+          ElementPosition     #252645134
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventSiteId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventSizeId
+          ElementPosition     #1136903103
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventSizeId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventStatusId
+          ElementPosition     #1515870804
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventStatusId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_InventStyleId
+          ElementPosition     #1389548237
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #InventStyleId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_LicensePlateId
+          ElementPosition     #1642193371
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #LicensePlateId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_wMSLocationId
+          ElementPosition     #631612835
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #wMSLocationId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventDimensions_wMSPalletId
+          ElementPosition     #757935402
+          HierarchyParent     #InventDimensions
+          DataSource          #InventDimSO
+          DataField           #wMSPalletId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventoryDimensions_InventLocationId
+          ElementPosition     #884257969
+          HierarchyParent     #InventoryDimensions
+          Label               #@SYS25253
+          DataSource          #InventDimTO
+          DataField           #InventLocationId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventTransferLine_ItemId
+          ElementPosition     #780903144
+          HierarchyParent     #GridTransferOrders
+          DataSource          #InventTransferLine
+          DataField           #ItemId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventTransferLine_ToWarehouse
+          ElementPosition     #390451572
+          HierarchyParent     #GridTransferOrders
+          Label               #@SYS8519
+          DataSource          #InventTransferLine
+          DataMethod          #whsDisplayToWarehouse
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventTransferLine_TransferId
+          ElementPosition     #585677358
+          HierarchyParent     #GridTransferOrders
+          DataSource          #InventTransferLine
+          DataField           #TransferId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #InventTransferLine_UnitId
+          ElementPosition     #1757032074
+          HierarchyParent     #GridTransferOrders
+          DataSource          #InventTransferLine
+          DataField           #UnitId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #ItemName
+          ElementPosition     #976128930
+          HierarchyParent     #GridTransferOrders
+          DataSource          #InventTransferLine
+          DataMethod          #whsDisplayItemName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesAddress_City
+          ElementPosition     #1521134245
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesAddress
+          DataField           #City
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesAddress_CountryRegionId
+          ElementPosition     #1789569700
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesAddress
+          DataField           #CountryRegionId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesAddress_State
+          ElementPosition     #1610612730
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesAddress
+          DataField           #State
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesAddress_ZipCode
+          ElementPosition     #1700091215
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesAddress
+          DataField           #ZipCode
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesLine_CustAccount
+          ElementPosition     #357913940
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #CustAccount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesLine_DeliveryName
+          ElementPosition     #1431655760
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #DeliveryName
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesLine_ItemId
+          ElementPosition     #626349395
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #ItemId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesLine_SalesId
+          ElementPosition     #178956970
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #SalesId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesLine_SalesUnit
+          ElementPosition     #1252698790
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #SalesUnit
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #SalesLine_ShipCarrierId
+          ElementPosition     #2058005155
+          HierarchyParent     #GridSalesOrders
+          DataSource          #SalesLine
+          DataField           #ShipCarrierId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #WHSTmpReleaseToWarehouse_InventTransId
+          ElementPosition     #1342177275
+          HierarchyParent     #GridRelease
+          DataSource          #WHSTmpReleaseToWarehouse
+          DataField           #InventTransId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #WHSTmpReleaseToWarehouse_OrderNum
+          ElementPosition     #1073741820
+          HierarchyParent     #GridRelease
+          DataSource          #WHSTmpReleaseToWarehouse
+          DataField           #OrderNum
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

@@ -1,0 +1,64 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SysCheckListItem_CreditCardAdv
+    PROPERTIES
+      Name                #SysCheckListItem_CreditCardAdv
+      Extends             #SysCheckListItem
+      Origin              #{9D620336-FC30-4161-90DC-59FD5413184F}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #/// <summary>
+        #/// Checklist for Credit card upgrade.
+        #/// </summary>
+        #// This is a framework class. Customizing this class may cause problems with future upgrades to the software.
+        #class SysCheckListItem_CreditCardAdv extends SysCheckListItem
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getCheckListGroup
+        #public str getCheckListGroup()
+        #{
+        #    return "@ACC29";
+        #}
+      ENDSOURCE
+      SOURCE #getHelpLink
+        #public str getHelpLink()
+        #{
+        #    #define.TopicId('Dynamics://DynamicsHelp/Topic?Id=7b533e0b-f64d-410e-99ae-0296ace50900')
+        #
+        #    return #TopicId;
+        #}
+      ENDSOURCE
+      SOURCE #getMenuItemName
+        #public MenuItemName getMenuItemName()
+        #{
+        #    return menuitemactionstr(SysCheckListItem_CreditCardAdv);
+        #}
+      ENDSOURCE
+      SOURCE #getMenuItemType
+        #public MenuItemType getMenuItemType()
+        #{
+        #    return MenuItemType::Action;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #public void new()
+        #{
+        #    super();
+        #    this.addDependency(classnum(SysCheckListItem_ApplicationUpgrade));
+        #    this.placeAfter(classnum(SysCheckListItem_CreateTablesUpgrade));
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

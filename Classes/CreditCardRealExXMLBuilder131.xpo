@@ -1,0 +1,1262 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardRealExXMLBuilder131
+    PROPERTIES
+      Name                #CreditCardRealExXMLBuilder131
+      Extends             #CreditCardRealExXMLBuilder
+      Origin              #{4B147ECE-280B-4F80-BA8F-C2BA83AB5A3F}
+      LegacyId            #20039
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #build
+        #xml build(CreditCardTrans   ccTrans)
+        #{
+        #    xml                     xml;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            xml= this.buildNewAuth(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.OrigID)
+        #            {
+        #                xml = this.buildFollowOnCredit(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                xml = this.buildNewReturn(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D     :
+        #            xml = this.buildCapture(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            xml = this.buildSale(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            xml = this.buildVoid(ccTrans);
+        #            break;
+        #    }
+        #
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #buildAddress
+        #XMLElement buildAddress(CreditCardTrans     ccTrans,
+        #                        XMLElement          newOrder)
+        #{
+        #
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> AVS Information
+        #    if (this.parmPostalAddress() && creditCardParameters::findParameter().AVS)
+        #    {
+        #        if (this.parmPostalAddress().CountryRegionId == 'UK' || this.parmPostalAddress().CountryRegionId == 'GB')
+        #        {
+        #            xmlGen = xmlDocument.createElement('AVSzip');
+        #            xmlGen.innerText(strReplace(' ','|',this.parmPostalAddress().ZipCode));
+        #            newOrder.appendChild(xmlGen);
+        #        }
+        #        else
+        #        {
+        #            xmlGen = xmlDocument.createElement('AVSzip');
+        #            xmlGen.innerText(this.parmPostalAddress().ZipCode);
+        #            newOrder.appendChild(xmlGen);
+        #        }
+        #
+        #        if (creditCardParameters::findParameter().AVSZipOnly == NoYes::No)
+        #        {
+        #            xmlGen = xmlDocument.createElement('AVSaddress1');
+        #            xmlGen.innerText(this.parmPostalAddress().Street);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScity');
+        #            xmlGen.innerText(this.parmPostalAddress().City);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #
+        #            xmlGen = xmlDocument.createElement('AVSstate');
+        #            xmlGen.innerText(this.parmPostalAddress().State);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            if (ccTrans.AVSPhone)
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVSphoneNum');
+        #                xmlGen.innerText(ccTrans.AVSPhone);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #
+        #            xmlGen = xmlDocument.createElement('AVSname');
+        #            xmlGen.innerText(ccTrans.NameOnCard);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScountryCode');
+        #            xmlGen.innerText(this.parmPostalAddress().CountryRegionId);
+        #            newOrder.appendChild(xmlGen);
+        #        }
+        #        else
+        #        {
+        #            if (this.parmPostalAddress().CountryRegionId == 'UK' || this.parmPostalAddress().CountryRegionId == 'GB')
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVScountryCode');
+        #                xmlGen.innerText(this.parmPostalAddress().CountryRegionId);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #        }
+        #    }
+        #
+        #    return newOrder;
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #xml buildCapture(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantRealEx        ccRealEx;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    TempStr                         timeStamp;
+        #    TempStr                         hash;
+        #    DictEnum                        dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #    CreditCardADNUtilities          ccUtilities = new CreditCardADNUtilities();
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select Account,Merchantid from ccRealEx
+        #        where ccRealEx.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('requestTimestamp');
+        #    timeStamp = this.getTimestamp();
+        #    request.setAttribute('timestamp',timestamp);
+        #    request.setAttribute('type','settle');
+        #    //request.innerText(timeStamp);
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantid');
+        #    xmlGen.innerText(ccRealEx.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant account
+        #    if (ccRealEx.Account)
+        #    {
+        #        xmlGen = xmlDocument.createElement('account');
+        #        xmlGen.innerText(ccRealEx.Account);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> OrderId
+        #    xmlGen = xmlDocument.createElement('orderid');
+        #    xmlGen.innerText(strReplace(ccTrans.RetrevalRefNum,'_',''));
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Pasref
+        #    xmlGen = xmlDocument.createElement('pasref');
+        #    xmlGen.innerText(ccTrans.OrigID);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Authcode
+        #    xmlGen = xmlDocument.createElement('authcode');
+        #    xmlGen.innerText(ccTrans.AuthCode);
+        #    request.appendChild(xmlGen);
+        #
+        #
+        #    parmAll = timestamp + '.' + ccRealEx.MerchantId
+        #        + '.' + ccTrans.RetrevalRefNum
+        #        + '...';
+        #
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #    parmAll = hash + '.' + ccRealEx.PartnerPwd;
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #
+        #    xmlGen = xmlDocument.createElement('md5hash');
+        #    xmlGen.innerText(hash);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmAll = request.xml();
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #    //instruction = xmlDocument.createProcessingInstruction('xml-stylesheet',
+        #        //'type="text/xsl" href="www.redmaple.com"');
+        #
+        #    //xmlDocument.appendChild(instruction);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildFollowOnCredit
+        #xml buildFollowOnCredit(CreditCardTrans     ccTrans)
+        #{
+        #    System.Web.Security.FormsAuthentication         sysWeb;
+        #    TempStr                         parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantRealEx        ccRealEx;
+        #    CreditCardADNUtilities          ccUtilities = new CreditCardADNUtilities();
+        #    TempStr                         amount;
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    TempStr                         timeStamp;
+        #    TempStr                         hash;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    sysWeb = new System.Web.Security.FormsAuthentication();
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select Account,Merchantid from ccRealEx
+        #        where ccRealEx.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('requestTimestamp');
+        #    timeStamp = this.getTimestamp();
+        #    request.setAttribute('timestamp',timestamp);
+        #    request.setAttribute('type','rebate');
+        #    //request.innerText(timeStamp);
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantid');
+        #    xmlGen.innerText(ccRealEx.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant account
+        #    if (ccRealEx.Account)
+        #    {
+        #        xmlGen = xmlDocument.createElement('account');
+        #        xmlGen.innerText(ccRealEx.Account);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> OrderId
+        #    xmlGen = xmlDocument.createElement('orderid');
+        #    xmlGen.innerText(strReplace(ccTrans.RetrevalRefNum,'_',''));
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Pasref
+        #    xmlGen = xmlDocument.createElement('pasref');
+        #    xmlGen.innerText(ccTrans.OrigID);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Authcode
+        #    xmlGen = xmlDocument.createElement('authcode');
+        #    xmlGen.innerText(ccTrans.AuthCode);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> amount
+        #    xmlGen = xmlDocument.createElement('amount');
+        #    xmlGen.setAttribute('currency',ccTrans.TransCurrencyCode);
+        #    amount = strReplace(num2str(abs(this.parmProcessAmt()),-1,-1,-1,-1),'.','');
+        #
+        #    amount = strReplace(amount,',','');
+        #    xmlGen.innerText(amount);
+        #    request.appendChild(xmlGen);
+        #    parmAll = request.xml();
+        #
+        #    //-->refund hash
+        #    xmlGen = xmlDocument.createElement('refundhash');
+        #
+        #    parmAll = timestamp + '.' + ccRealEx.MerchantId
+        #        + '.' + ccTrans.RetrevalRefNum
+        #        + '.' + amount
+        #        + '.' + ccTrans.TransCurrencyCode;
+        #
+        #    hash = System.Web.Security.FormsAuthentication::HashPasswordForStoringInConfigFile(parmAll,'SHA1');
+        #    parmAll = hash + '.' + ccRealEx.RefundPwd;
+        #    hash = System.Web.Security.FormsAuthentication::HashPasswordForStoringInConfigFile(parmAll,'SHA1');
+        #    xmlGen.innerText(hash);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmAll = request.xml();
+        #
+        #    //--> settlement
+        #    xmlGen = xmlDocument.createElement('autosettle');
+        #    xmlGen.setAttribute('flag','1');
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Encryption
+        #    parmAll = timestamp + '.' + ccRealEx.MerchantId
+        #        + '.' + ccTrans.RetrevalRefNum
+        #        + '.' + amount
+        #        + '.' + ccTrans.TransCurrencyCode;
+        #
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #    parmAll = hash + '.' + ccRealEx.PartnerPwd;
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #
+        #    xmlGen = xmlDocument.createElement('md5hash');
+        #    xmlGen.innerText(hash);
+        #    request.appendChild(xmlGen);
+        #    parmAll = request.xml();
+        #
+        #
+        #    return parmAll;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuth
+        #xml buildNewAuth(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantRealEx        ccRealEx;
+        #    TempStr                         amount;
+        #    XMLElement                      request;
+        #    XMLElement                      cvn;
+        #    XMLElement                      body;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    TempStr                         timeStamp;
+        #    TempStr                         hash;
+        #    DictEnum                        dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #    CreditCardADNUtilities          ccUtilities = new CreditCardADNUtilities();
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select Account,MerchantId from ccRealEx
+        #        where ccRealEx.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('requestTimestamp');
+        #    timeStamp = this.getTimestamp();
+        #    request.setAttribute('timestamp',timestamp);
+        #    request.setAttribute('type','auth');
+        #    //request.innerText(timeStamp);
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantid');
+        #    xmlGen.innerText(ccRealEx.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant account
+        #    if (ccRealEx.Account)
+        #    {
+        #        xmlGen = xmlDocument.createElement('account');
+        #        xmlGen.innerText(ccRealEx.Account);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> OrderId
+        #    xmlGen = xmlDocument.createElement('orderid');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> amount
+        #    xmlGen = xmlDocument.createElement('amount');
+        #    xmlGen.setAttribute('currency',ccTrans.TransCurrencyCode);
+        #    amount = strReplace(num2str(abs(this.parmProcessAmt()),-1,-1,-1,-1),'.','');
+        #    amount = strReplace(amount,',','');
+        #    xmlGen.innerText(amount);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Card
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('number');
+        #    billTo.innerText(this.returnAccount(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expdate');
+        #    billTo.innerText(this.returnExpDate(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('chname');
+        #    billTo.innerText(ccTrans.NameOnCard);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('type');
+        #    billTo.innerText(this.returnCardType(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        billTo = xmlDocument.createElement('issueno');
+        #        billTo.innerText(ccTrans.SoloIssueNum);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        cvn = xmlDocument.createElement('cvn');
+        #        billTo = xmlDocument.createElement('number');
+        #        billTo.innerText(ccTrans.CID);
+        #        cvn.appendChild(billTo);
+        #
+        #        billTo = xmlDocument.createElement('presind');
+        #        billTo.innerText(int2str(dictEnum.index2Value(ccTrans.CVDSent)));
+        #        cvn.appendChild(billTo);
+        #        xmlGen.appendChild(cvn);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('autosettle');
+        #    xmlGen.setAttribute('flag','0');
+        #    request.appendChild(xmlGen);
+        #
+        #    //-->tts info
+        #    xmlGen = xmlDocument.createElement('ttsinfo');
+        #    billTo = xmlDocument.createElement('custnum');
+        #    billTo.innerText(ccTrans.CustAccount);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('varref');
+        #    billTo.innerText(ccTrans.SalesId);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('address');
+        #    billTo.setAttribute('type','billing');
+        #    body = xmlDocument.createElement('code');
+        #
+        #    body.innerText(this.resolvePostalCode(ccTrans));
+        #    billTo.appendChild(body);
+        #
+        #    body = xmlDocument.createElement('country');
+        #    body.innerText(this.parmPostalAddress().CountryRegionId);
+        #    billTo.appendChild(body);
+        #
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmAll = timestamp + '.' + ccRealEx.MerchantId
+        #        + '.' + int642str(ccTrans.RecId)
+        #        + '.' + amount
+        #        + '.' + ccTrans.TransCurrencyCode
+        #        + '.' + this.returnAccount(ccTrans);
+        #
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #    parmAll = hash + '.' + ccRealEx.PartnerPwd;
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #
+        #    xmlGen = xmlDocument.createElement('md5hash');
+        #    xmlGen.innerText(hash);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmAll = request.xml();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewReturn
+        #xml buildNewReturn(CreditCardTrans     ccTrans)
+        #{
+        #
+        #    ;
+        #    throw error("@ACC1278");
+        #
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #buildSale
+        #xml buildSale(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantRealEx        ccRealEx;
+        #    TempStr                         amount;
+        #    XMLElement                      request;
+        #    XMLElement                      cvn;
+        #    XMLElement                      body;
+        #    XMLElement                      billTo;
+        #    XMLElement                      xmlGen;
+        #    TempStr                         timeStamp;
+        #    TempStr                         hash;
+        #    DictEnum                        dictEnum = new DictEnum(enumnum(CreditCardCVDValues));
+        #    CreditCardADNUtilities          ccUtilities = new CreditCardADNUtilities();
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantId,Account,PartnerPwd from ccRealEx
+        #        where ccRealEx.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('requestTimestamp');
+        #    timeStamp = this.getTimestamp();
+        #    request.setAttribute('timestamp',timestamp);
+        #    request.setAttribute('type','auth');
+        #    //request.innerText(timeStamp);
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantid');
+        #    xmlGen.innerText(ccRealEx.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant account
+        #    if (ccRealEx.Account)
+        #    {
+        #        xmlGen = xmlDocument.createElement('account');
+        #        xmlGen.innerText(ccRealEx.Account);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> OrderId
+        #    xmlGen = xmlDocument.createElement('orderid');
+        #    xmlGen.innerText(int642str(ccTrans.RecId));
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> amount
+        #    xmlGen = xmlDocument.createElement('amount');
+        #    xmlGen.setAttribute('currency',ccTrans.TransCurrencyCode);
+        #    amount = strReplace(num2str(ccTrans.AmountCur,-1,-1,-1,-1),'.','');
+        #    amount = strReplace(amount,',','');
+        #    xmlGen.innerText(amount);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Card
+        #    xmlGen = xmlDocument.createElement('card');
+        #    billTo = xmlDocument.createElement('number');
+        #    billTo.innerText(this.returnAccount(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('expdate');
+        #    billTo.innerText(this.returnExpDate(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('chname');
+        #    billTo.innerText(ccTrans.NameOnCard);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('type');
+        #    billTo.innerText(this.returnCardType(ccTrans));
+        #    xmlGen.appendChild(billTo);
+        #
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        billTo = xmlDocument.createElement('issueno');
+        #        billTo.innerText(ccTrans.SoloIssueNum);
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        cvn = xmlDocument.createElement('cvn');
+        #        billTo = xmlDocument.createElement('number');
+        #        billTo.innerText(ccTrans.CID);
+        #        cvn.appendChild(billTo);
+        #
+        #        billTo = xmlDocument.createElement('presind');
+        #        billTo.innerText(int2str(dictEnum.index2Value(ccTrans.CVDSent)));
+        #        cvn.appendChild(billTo);
+        #        xmlGen.appendChild(cvn);
+        #    }
+        #
+        #    request.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('autosettle');
+        #    xmlGen.setAttribute('flag','1');
+        #    request.appendChild(xmlGen);
+        #
+        #    //-->tts info
+        #    xmlGen = xmlDocument.createElement('ttsinfo');
+        #    billTo = xmlDocument.createElement('custnum');
+        #    billTo.innerText(ccTrans.CustAccount);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('varref');
+        #    billTo.innerText(ccTrans.SalesId);
+        #    xmlGen.appendChild(billTo);
+        #
+        #    billTo = xmlDocument.createElement('address');
+        #    billTo.setAttribute('type','billing');
+        #    body = xmlDocument.createElement('code');
+        #    body.innerText(this.parmPostalAddress().ZipCode);
+        #    billTo.appendChild(body);
+        #
+        #    body = xmlDocument.createElement('country');
+        #    body.innerText(this.parmPostalAddress().CountryRegionId);
+        #    billTo.appendChild(body);
+        #
+        #    xmlGen.appendChild(billTo);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmAll = timestamp + '.' + ccRealEx.MerchantId
+        #        + '.' + int642str(ccTrans.RecId)
+        #        + '.' + amount
+        #        + '.' + ccTrans.TransCurrencyCode
+        #        + '.' + this.returnAccount(ccTrans);
+        #
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #    parmAll = hash + '.' + ccRealEx.PartnerPwd;
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #
+        #    xmlGen = xmlDocument.createElement('md5hash');
+        #    xmlGen.innerText(hash);
+        #    request.appendChild(xmlGen);
+        #
+        #    parmAll = request.xml();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #xml buildVoid(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantRealEx        ccRealEx;
+        #    CreditCardADNUtilities          ccUtilities = new CreditCardADNUtilities();
+        #    XMLElement                      request;
+        #    XMLElement                      xmlGen;
+        #    TempStr                         timeStamp;
+        #    TempStr                         hash;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select Account,MerchantId,PartnerPwd from ccRealEx
+        #        where ccRealEx.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('requestTimestamp');
+        #    timeStamp = this.getTimestamp();
+        #    request.setAttribute('timestamp',timestamp);
+        #    request.setAttribute('type','void');
+        #    //request.innerText(timeStamp);
+        #
+        #    //--> Merchant information
+        #    xmlGen =xmlDocument.createElement('merchantid');
+        #    xmlGen.innerText(ccRealEx.MerchantId);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Merchant account
+        #    if (ccRealEx.Account)
+        #    {
+        #        xmlGen = xmlDocument.createElement('account');
+        #        xmlGen.innerText(ccRealEx.Account);
+        #        request.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> OrderId
+        #    xmlGen = xmlDocument.createElement('orderid');
+        #    xmlGen.innerText(strReplace(ccTrans.RetrevalRefNum,'_',''));
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Pasref
+        #    xmlGen = xmlDocument.createElement('pasref');
+        #    xmlGen.innerText(ccTrans.OrigID);
+        #    request.appendChild(xmlGen);
+        #
+        #    //--> Authcode
+        #    xmlGen = xmlDocument.createElement('authcode');
+        #    xmlGen.innerText(ccTrans.AuthCode);
+        #    request.appendChild(xmlGen);
+        #
+        #
+        #    parmAll = timestamp + '.' + ccRealEx.MerchantId
+        #        + '.' + ccTrans.RetrevalRefNum
+        #        + '...';
+        #
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #    parmAll = hash + '.' + ccRealEx.PartnerPwd;
+        #    hash = ccUtilities.calcMD5(parmAll);
+        #
+        #    xmlGen = xmlDocument.createElement('md5hash');
+        #    xmlGen.innerText(hash);
+        #    request.appendChild(xmlGen);
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardRealExXMLBuilder131 extends CreditCardRealExXMLBuilder
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardMerchantRealEx        c;
+        #    LogisticsPostalAddress          postalAddress;
+        #    Amount                          processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #getTimestamp
+        #str getTimestamp()
+        #{
+        #    #winapi
+        #    #TimeConstants
+        #    TempStr     timestamp;
+        #
+        #    Binary      systemTime;
+        #    timeHour24  tmAdjustment = timeNow();
+        #    timeOfDay   time = tmAdjustment mod #secondsPerDay;
+        #    Counter     dd = tmAdjustment div #secondsperday;
+        #    TransDate   d = today() + dd;
+        #    ;
+        #    systemTime = WinAPI::dateTime2SystemTime(d,time);
+        #
+        #    timestamp = int2str(systemTime.word(0));
+        #    timestamp += this.lengthCheck(int2str(systemTime.word(2)));
+        #    timestamp += this.lengthCheck(int2str(systemTime.word(6)));
+        #    timestamp += this.lengthCheck(int2str(systemTime.word(8)));
+        #    timestamp += this.lengthCheck(int2str(systemTime.word(10)));
+        #    timestamp += this.lengthCheck(int2str(systemTime.word(12)));
+        #
+        #    return timestamp;
+        #}
+      ENDSOURCE
+      SOURCE #IndustryType
+        #TempStr IndustryType(CreditCardTerminalTable   terminalTable)
+        #{
+        #    TempStr                       industry;
+        #    CreditCardMerchantRealEx    ccRealEx;
+        #    ;
+        #    select industry from ccRealEx
+        #        where ccRealEx.TerminalId == terminalTable.TerminalId;
+        #
+        #    switch  (ccRealEx.Industry)
+        #    {
+        #        case CreditCardIndustryCybersource::EC  :
+        #            industry = 'EC';
+        #            break;
+        #        case CreditCardIndustryCybersource::Mail    :
+        #            industry = 'MO';
+        #            break;
+        #    }
+        #
+        #    return industry;
+        #}
+      ENDSOURCE
+      SOURCE #lengthCheck
+        #TempStr lengthCheck(TempStr    val)
+        #{
+        #    ;
+        #    if (strLen(val) == 1)
+        #    {
+        #        val = '0'+val;
+        #    }
+        #
+        #    return val;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #firstName parmFirstName(Name     _name)
+        #{
+        #    TempStr     tmpStr;
+        #    Counter     marker;
+        #    Counter         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmLastName
+        #firstName parmLastName(Name     _name)
+        #{
+        #    TempStr     tmpStr;
+        #    TempStr     reduction;
+        #    Counter     marker;
+        #    Counter     len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker);
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantRealEx
+        #CreditCardMerchantRealEx parmMerchantRealEx(CreditCardMerchantRealEx _c = c)
+        #{
+        #    ;
+        #    c = _c;
+        #    return c;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmProcessAmt
+        #public Amount parmProcessAmt(Amount     _processAmt = processAmt)
+        #{
+        #    ;
+        #    processAmt = _processAmt;
+        #    return processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #resolveCountry
+        #TempStr resolveCountry(AddressZipcodeId   zipCodeId)
+        #{
+        #    AddressCountryRegionId       countryId;
+        #    ;
+        #    countryId = LogisticsAddressZipCode::find(zipCodeId).CountryRegionId;
+        #
+        #    if (countryId == 'USA')
+        #    {
+        #        countryId = 'US';
+        #    }
+        #
+        #    return countryId;
+        #}
+      ENDSOURCE
+      SOURCE #resolvePostalCode
+        #TempStr resolvePostalCode(CreditCardTrans       _ccTrans)
+        #{
+        #    TempStr             ret;
+        #    ;
+        #    switch (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        case 'GBP','UK'   :
+        #            ret = strReplace(this.parmPostalAddress().ZipCode,' ','|');
+        #            break;
+        #        default :
+        #            ret =  this.parmPostalAddress().ZipCode;
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #TempStr retrieveValue(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccTrans.CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #TempStr returnAccount(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(ccTrans);
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumEncrypt)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(ccTrans);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnBankAccountType
+        #TempStr returnBankAccountType(CustBankAccount       custBankAccount)
+        #{
+        #    TempStr     parmList;
+        #    ;
+        #    switch (custBankAccount.BankAccountType)
+        #    {
+        #        case BankAccountType::CheckingAccount     :
+        #            parmList = 'C';
+        #            break;
+        #        case BankAccountType::SavingsAccount      :
+        #            parmList = 'S';
+        #            break;
+        #        case BankAccountType::CommercialChecking  :
+        #            parmList = 'X';
+        #            break;
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnCardType
+        #TempStr returnCardType(CreditCardTrans      ccTrans)
+        #{
+        #    TempStr         ret;
+        #    ;
+        #    switch (ccTrans.CreditCardType)
+        #    {
+        #        case CreditCardType::AmericanExpress       :
+        #            ret = 'AMEX';
+        #            break;
+        #        case CreditCardType::Visa       :
+        #            ret = 'VISA';
+        #            break;
+        #        case CreditCardType::Diners       :
+        #            ret = 'DINERS';
+        #            break;
+        #        case CreditCardType::Solo       :
+        #            ret = 'SWITCH';
+        #            break;
+        #        case CreditCardType::MasterCard       :
+        #            ret = 'MC';
+        #            break;
+        #        default:
+        #            throw error("@ACC1273");
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #returnExpDate
+        #TempStr returnExpDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonth
+        #TempStr returnMonth(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnPaymSchedule
+        #TempStr returnPaymSchedule(CustPaymSched        custPaymSched)
+        #{
+        #    TempStr         ret;
+        #    ;
+        #    switch (custPaymSched.PeriodUnit)
+        #    {
+        #        case PeriodUnit::Month  :
+        #            switch (custPaymSched.NumOfPayment)
+        #            {
+        #                case    1   :
+        #                    ret = 'monthly';
+        #                    break;
+        #            }
+        #            break;
+        #
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartDate
+        #TempStr returnStartDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.SoloStartDate));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.SoloStartDate));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.SoloStartDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear
+        #TempStr returnYear(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #TransactionType
+        #TempStr TransactionType(CreditCardTrxType     ccTransType)
+        #{
+        #    TempStr       transType;
+        #    ;
+        #    switch (cctransType)
+        #    {
+        #        case CreditCardTrxType::A   :
+        #            transType = 'A';
+        #            break;
+        #        case CreditCardTrxType::S   :
+        #            transType = 'AC';
+        #            break;
+        #        case CreditCardTrxType::D   :
+        #            transType = 'FC';
+        #            break;
+        #        case CreditCardTrxType::C   :
+        #            transType  = 'R';
+        #            break;
+        #    }
+        #
+        #    return transType;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static str construct(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantRealEx            ccMerchantRealEx;
+        #    CreditCardParameters                ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #
+        #    //--> RealEx Specific variables
+        #    HttpRequest                         request;
+        #    CreditCardRealExXMLBuilder131       xmlBuilder = new CreditCardRealExXMLBuilder131();
+        #
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #
+        #    TempStr                             response;
+        #    TempStr                             parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantRealEx
+        #        where ccMerchantRealEx.TerminalId == ccTrans.TerminalId;
+        #
+        #    xmlBuilder.parmMerchantRealEx(ccMerchantRealEx);
+        #
+        #    if (ccParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Specified)
+        #    {
+        #        if (!ccParameters.ProcessCurrencyCode)
+        #        {
+        #            throw error(strFmt("@ACC1835",ccTrans.TerminalId));
+        #        }
+        #
+        #        if (ccParameters.ProcessCurrencyCode != CompanyInfo::standardCurrency())
+        #        {
+        #            if (ccTrans.CurrencyCode != ccParameters.ProcessCurrencyCode)
+        #            {
+        #                throw error(strFmt("@ACC1836",
+        #                    ccTrans.TerminalId,
+        #                    ccParameters.ProcessCurrencyCode,
+        #                    ccTrans.CurrencyCode));
+        #            }
+        #
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountCur);
+        #        }
+        #        else
+        #        {
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #        }
+        #
+        #    }
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantRealEx(ccMerchantRealEx);
+        #
+        #    request = new HTTPRequest();
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build(ccTrans);
+        #
+        #    request.open('POST',ccMerchantRealEx.URL);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

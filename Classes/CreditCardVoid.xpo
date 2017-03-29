@@ -1,0 +1,505 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardVoid
+    PROPERTIES
+      Name                #CreditCardVoid
+      Extends             #CreditCardAdv
+      RunOn               #Server
+      Origin              #{917E6C90-CFDF-4B74-BB0F-87DCEBB9DDAE}
+      LegacyId            #20027
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #buildParmListPaymentech
+        #str buildParmListPaymentech()
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    str                     ParmList;
+        #    CreditCardParameters    ccParameters;
+        #    str                     tst;
+        #    str                     sysConfig;
+        #    ;
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #    //------------------------------------------
+        #    //--> Format from UTF197 -HCS 7.7 document//
+        #    //------------------------------------------
+        #    //--> STX
+        #    ParmList = num2char(#STX);
+        #
+        #    //--> System Indicator
+        #    ParmList += 'L.';
+        #
+        #    //--> Routing Indicator
+        #    ParmList += 'A02000';
+        #
+        #    //--> Client Number
+        #    ParmList += ccMerchantPaymentech.ClientNum;
+        #
+        #    //--> Merchant Number
+        #    ParmList += ccMerchantPaymentech.MerchantId;
+        #
+        #    //--> Terminal Number
+        #    ParmList += ccTrans.TerminalId;
+        #
+        #    //--> Transaction sequence flag
+        #    //--> Indicates whether single transaction or batch
+        #    //--> 1 = Single Transaction
+        #    //--> 2 = Multi Transaction
+        #    if (!this.parmccTrans().BatchNumber || this.parmccTrans().BatchLastTrans)
+        #    {
+        #        ParmList += '1';  //<--single transaction for now.
+        #    }
+        #    else
+        #    {
+        #        ParmList += '2';
+        #    }
+        #
+        #    if (!this.parmccTrans().BatchNumber)
+        #    {
+        #        ParmList += '000001';  //<-- Single transaction for now
+        #
+        #    }
+        #    else
+        #    {
+        #        ParmList += this.parmccTrans().BatchTransNumber;
+        #    }
+        #
+        #    //--> Transaction Class
+        #    ParmList += 'F';  //<-- This should always be 'F' for now
+        #
+        #    //--> Transaction Code
+        #    ParmList += '41'; //<-- Transaction code for VOID
+        #
+        #    if (this.parmTerminalTable().IndustryHCS == CreditCardIndustryHCS::Direct
+        #            && this.parmTerminalTable().Processor == CreditCardProcessor::Paymentech)
+        #    {
+        #        //--> Voids need the last reference used prior to this transaction
+        #        tst = this.findLastRetrieval();
+        #        ParmList += tst;
+        #    }
+        #    else
+        #    {
+        #        //--> Sequence number
+        #
+        #        ParmList += this.parmOrigId();
+        #    }
+        #
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    ParmList += this.parmOrigId();
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #
+        #    sysConfig = xSysConfig::find(ConfigType::SerialNo,0).value;
+        #
+        #    ParmList  += CreditCardUtility::decrypt(this.parmccTrans().CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(this.parmccTrans().TransDate));
+        #
+        #    //--> FS
+        #    ParmList += num2char(#FS);
+        #
+        #    //--> K End of Packet
+        #
+        #    ParmList += num2char(#ETX);
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #public class CreditCardVoid extends CreditCardAdv
+        #{
+        #    /*
+        #    COPYRIGHT 2004,2005-2006 Red Maple Press, Inc.
+        #    ALL RIGHTS RESERVED
+        #
+        #    For information on the license or copyright of this software, please
+        #    contact our offices at +1 972 980 6963
+        #    or at www.redmaple.com
+        #
+        #    */
+        #
+        #    AddressZipCodeId    zipCodeId;
+        #    CreditCardComment   ccComment;
+        #    CreditCardTransId   creditCardTransId;
+        #}
+      ENDSOURCE
+      SOURCE #createTrans
+        #CreditCardTrans createTrans(CreditCardTrans    _ccTrans)
+        #{
+        #    CreditCardTrans         newCCTrans;
+        #    ;
+        #    if (result)
+        #    {
+        #        ttsbegin;
+        #
+        #        select forupdate newCCTrans where newCCTrans.RecId == _ccTrans.RecId;
+        #
+        #        if (!newCCTrans)
+        #            throw error(strFmt("@ACC142"));
+        #
+        #        newccTrans.Result               =   Result;
+        #        newccTrans.AuthCode             =   AuthCode;
+        #        newccTrans.AvsAddr              =   AvsAddr;
+        #        newccTrans.IAvs                 =   IAvs;
+        #        newccTrans.PNRef                =   pnRef;
+        #        newccTrans.RepMsg               =   RepMsg;
+        #        newccTrans.Comment1             =   Comment;
+        #        newccTrans.Comment2             =   Comment2;
+        #        newccTrans.RetrevalRefNum       =   retrievalNum;
+        #        newccTrans.BatchTransNumber     =   sequenceId;
+        #        newccTrans.BatchPaymentechNum   =   batch;
+        #        newccTrans.CVDResponse          =   cvdResponse;
+        #        newccTrans.OrbitalTxRefNum     =   txtRef;
+        #
+        #        if (!newCCTrans.Voucher)
+        #        {
+        #            newCCTrans.Voucher         =   this.parmccVoucher();
+        #        }
+        #
+        #        newCCTrans.update();
+        #
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        newCCTrans = this.parmccTrans();
+        #    }
+        #
+        #    return newCCTrans;
+        #}
+      ENDSOURCE
+      SOURCE #findLastRetrieval
+        #str findLastRetrieval()
+        #{
+        #    CreditCardTrans     lastccTrans;
+        #    ;
+        #    while select reverse TransDate,RecId from lastCCTrans
+        #        where lastCCTrans.TransDate == today()
+        #    {
+        #        if (lastCCTrans.RecId != this.parmccTrans().RecId)
+        #        {
+        #            return lastCCTrans.RetrevalRefNum;
+        #        }
+        #    }
+        #
+        #    return lastCCTrans.RetrevalRefNum;
+        #}
+      ENDSOURCE
+      SOURCE #parmOrigId
+        #CreditCardPNRef parmOrigId(CreditCardPNRef _origID = origId)
+        #{
+        #    ;
+        #    origId = _origId;
+        #
+        #    return origId;
+        #}
+      ENDSOURCE
+      SOURCE #processPaymentech
+        #str processPaymentech()
+        #{
+        #    #define.STX(2)
+        #    #define.FS(28)
+        #    #define.ETX(3)
+        #
+        #    COM                     cc;
+        #    COMVariant              var;
+        #    COMVariant              in;
+        #
+        #    array                   input       = New array(types::String);
+        #    int                     strLength;
+        #    int                     i;
+        #    array                   output      = New array(types::String);
+        #    str                     peek;
+        #    int                     numpeek;
+        #    Object                  send         = New Object();
+        #
+        #    str                     ParmList;
+        #    str                     errorMsg;
+        #    int                     errorCode;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantPaymentech
+        #        where ccMerchantPaymentech.TerminalId ==  ccTrans.TerminalId;
+        #    //<--Check for all required fields
+        #    this.checkMerchantPaymentech();
+        #
+        #    //<--Instatiate COM Object
+        #    cc = New COM('Paymentech.IPOSTransaction');
+        #    var = New COMVariant(COMVariantInOut::In,COMVariantType::VT_SAFEARRAY);
+        #    in = New COMVariant(COMVariantInOut::Out_retVal,COMVariantType::VT_SAFEARRAY);
+        #
+        #    cc.TerminalID(ccTrans.TerminalId);
+        #    cc.MerchantID(ccMerchantPaymentech.MerchantId);
+        #
+        #    cc.TransactionType('1');
+        #    cc.Method('DefaultMethod');
+        #    cc.Username(ccMerchantPaymentech.UserId);
+        #    cc.Password(ccMerchantPaymentech.Pwd);
+        #
+        #
+        #    if (!this.parmccTrans().BatchNumber || this.parmccTrans().BatchLastTrans)
+        #    {
+        #        cc.FirstInBatch('1');
+        #    }
+        #    else
+        #    {
+        #        cc.FirstInBatch('1');
+        #    }
+        #
+        #
+        #    //--> A and B Information
+        #    ParmList = this.buildParmListPaymentech();
+        #
+        #    //-->  Begin Converting to Hex
+        #    strLength = strLen(ParmList);
+        #
+        #    for (i=1;i<=strLength;i++)
+        #    {
+        #        peek = subStr(ParmList,i,1);
+        #        numpeek = char2num((subStr(ParmList,i,1)),1);
+        #        output.value(i,int2str(numpeek));
+        #    }
+        #
+        #    var.safeArray(output,COMVariantType::VT_VARIANT);
+        #
+        #    //------------------------------------------------
+        #    //  Try/Catch information to Paymentech
+        #    //------------------------------------------------
+        #
+        #    try
+        #    {
+        #        send = cc.process(var);
+        #
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    in = send.data();
+        #
+        #    if (send.errorString() != '')
+        #    {
+        #        errorMsg = send.errorString();
+        #        errorCode = send.errorCode();
+        #        //gatewayError = send.GatewayError();
+        #        //httpError = send.HTTPError();
+        #    }
+        #    else
+        #    {
+        #        input = in.safeArray();
+        #
+        #        for (i=1;i<=input.lastIndex();i++)
+        #        {
+        #            errorMsg += num2char(input.value(i));
+        #        }
+        #    }
+        #
+        #    return errorMsg;
+        #}
+      ENDSOURCE
+      SOURCE #processPayPal
+        #str processPayPal()
+        #{
+        #    COM                     cc;
+        #    str                     ParmList;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantVerisign
+        #        where ccMerchantVerisign.TerminalId ==  ccTrans.TerminalId;
+        #
+        #
+        #    if (ccMerchantVerisign.InterfaceType == CreditCardPayPalInterfaceType::SDK)
+        #    {
+        #        //<--Check for all required fields
+        #        this.checkMerchantPayPal();
+        #
+        #        //<--Instatiate COM Object
+        #        //cc = New COM('PFProCOMControl.PFProCOMControl.1');
+        #        cc = New COM('PayPal.Payments.Communication.PayflowNETAPI');
+        #
+        #        //<--Create Context line
+        #        //ccLong = cc.createContext(  ccMerchantVerisign.HostAddress,
+        #        cc.setParameters(  ccMerchantVerisign.HostAddress,
+        #                                    ccMerchantVerisign.HostPort,
+        #                                    ccMerchantVerisign.Timeout ? 30 : ccMerchantVerisign.Timeout,
+        #                                    ccMerchantVerisign.ProxyAddress,
+        #                                    ccMerchantVerisign.ProxyPort,
+        #                                    ccMerchantVerisign.ProxyLogin,
+        #                                    ccMerchantVerisign.ProxyPwd,
+        #                                    '',
+        #                                    '',
+        #                                    '',
+        #                                    '',
+        #                                    true);
+        #
+        #        if (!this.parmReferenceId())
+        #        {
+        #            this.parmReferenceId(cc.GenerateRequestId());
+        #        }
+        #        //<--Retrieve Basic ParmList
+        #        ParmList = this.BuildParmListPayPal();
+        #
+        #        ParmList += 'TRXTYPE=' + this.parmTrxType() + '&';
+        #        ParmList += 'TENDER=V&';
+        #        ParmList += 'ORIGID=' + this.parmOrigId();
+        #
+        #        //Process Transaction
+        #        response = cc.SubmitTransaction(ParmList,this.parmReferenceId());
+        #    }
+        #    else if (ccMerchantVerisign.InterfaceType == CreditCardPayPalInterfaceType::HTTPS)
+        #    {
+        #        response = this.processPayPalHTTPS();
+        #    }
+        #    else
+        #    {
+        #        response = CreditCardBraintreeXMLBuilder::processBraintree(ccTrans);
+        #    }
+        #
+        #    return Response;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #processPayPalHTTPS
+        #str processPayPalHTTPS()
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #
+        #    str                     ParmList;
+        #    InteropPermission       clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    HttpRequest                         request;
+        #    ;
+        #    clrPermission.assert();
+        #    //<--Retrieve Merchant Information
+        #    select ccMerchantVerisign
+        #        where ccMerchantVerisign.TerminalId == ccTrans.TerminalId;
+        #    //<--Check for all required fields
+        #    this.checkMerchantPayPal();
+        #
+        #    if (!this.parmReferenceId())
+        #    {
+        #        this.parmReferenceId(WinAPI::createGUID());
+        #    }
+        #
+        #    //<--Retrieve Basic ParmList
+        #    ParmList = this.BuildParmListPayPal();
+        #
+        #    ParmList += 'TRXTYPE=' + this.parmTrxType() + '&';
+        #    ParmList += 'TENDER=V&';
+        #    ParmList += 'ORIGID=' + this.parmOrigId();
+        #
+        #
+        #    request = new HTTPRequest();
+        #    request.open('POST',ccMerchantVerisign.HostAddress);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.setRequestHeader('Content-Type','namevalue');
+        #    request.setRequestHeader('X-VPS-REQUEST-ID',this.parmReferenceId());
+        #    request.setRequestHeader('X-VPS-CLIENTTIMEOUT',int2str(ccMerchantVerisign.Timeout));
+        #    request.setRequestHeader('X-VPS-VITINTEGRATION-PRODUCT','RedMaple');
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #    return Response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #server static CreditCardTrans construct(CreditCardTrans ccTrans)
+        #
+        #{
+        #    CreditCardVoid         ccVoid;
+        #    CreditCardParameters   ccParameters;
+        #    CreditCardTrans        prevCCTrans;
+        #    str                    total;
+        #    str                    response;
+        #    CreditCardTrans        updateCCTrans;
+        #
+        #    Voucher                voucher;
+        #    ;
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #
+        #    if (!ccParameters)
+        #        //<--Error Reported
+        #        throw error("@ACC140");
+        #
+        #    total   = num2str(ccTrans.AmountMST,10,2,1,2);
+        #
+        #    ccVoid = new CreditCardVoid();
+        #    ccVoid.parmCCId(ccTrans.CreditCardId);
+        #    ccVoid.parmTrxType(ccTrans.TrxType);
+        #
+        #    //--> Currency is determined by process group in creditCardTrans.resolveTerminalforSalesTableCC
+        #    if (ccTrans.TransCurrencyCode != companyinfo::standardCurrency())
+        #    {
+        #        ccVoid.parmccAmount(ccTrans.AmountCur);
+        #    }
+        #    else
+        #    {
+        #        ccVoid.parmccAmount(ccTrans.AmountMST);
+        #    }
+        #
+        #    ccVoid.parmOrigId(ccTrans.OrigID);
+        #    ccVoid.parmYearType(ccParameters.DateType);
+        #    ccVoid.parmccTrans(ccTrans);
+        #    ccVoid.parmTerminalTable(CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId));
+        #
+        #    //<-- Test Mode
+        #    if (ccParameters.Testing == NoYes::No)
+        #    {
+        #        response = ccVoid.run();
+        #        ccVoid.analyzeResponse(response);
+        #    }
+        #    else
+        #    {
+        #        ccVoid.updateForDemo(ccTrans);
+        #    }
+        #
+        #    //<--Check on Original Sales Transaction
+        #    select firstonly PNRef,TransType from prevCCTrans where prevCCTrans.PNRef == ccTrans.OrigID;
+        #
+        #    //<-- Customer Journal
+        #    if (ccParameters.CreateLedger == NoYes::Yes
+        #        && ccVoid.parmResult() == '0'
+        #        && ccTrans.JournalOrig == CreditCardJournalOrig::System
+        #        && prevCCTrans.TransType == CreditCardTrxType::S)
+        #    {
+        #        voucher = creditCardCustLedger::construct(ccTrans.CustAccount,
+        #            ccTrans.AmountMST,
+        #            ccTrans.TransID);
+        #
+        #        ccVoid.parmccVoucher(voucher);
+        #    }
+        #
+        #    //<--Update the Transaction record
+        #    updateCCTrans = ccVoid.createTrans(ccTrans);
+        #
+        #    return updateCCTrans;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

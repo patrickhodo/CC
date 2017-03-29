@@ -1,0 +1,113 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardAccService
+    PROPERTIES
+      Name                #CreditCardAccService
+      Extends             #AifDocumentService
+      RunOn               #Server
+      Origin              #{E8070F8D-6946-4C9F-8623-407A5B40D440}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///    The <c>CreditCardAccService</c> class serves as the document service for the <c>CreditCardAcc</c> document type.
+        #/// </summary>
+        #class CreditCardAccService extends AifDocumentService
+        #{
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #create
+        #/// <summary>
+        #///    Creates one or more data objects that are contained in a <c>CreditCardAcc</c> document.
+        #/// </summary>
+        #/// <param name="_creditCardAcc">
+        #///    The <c>CreditCardAcc</c> document that contains the data objects to create.
+        #/// </param>
+        #/// <returns>
+        #///    A list of entity keys that identify the newly created objects. The entity keys appear in the order that the created objects are specified in the <c>CreditCardAcc</c> document.
+        #/// </returns>
+        #[AifDocumentCreateAttribute, SysEntryPointAttribute(true)]
+        #public AifEntityKeyList create(CreditCardAcc _creditCardAcc)
+        #{
+        #    return this.createList(_creditCardAcc);
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #/// <summary>
+        #///    Finds data objects.
+        #/// </summary>
+        #/// <param name="_queryCriteria">
+        #///    The query criteria to use to find the data objects.
+        #/// </param>
+        #/// <returns>
+        #///    A <c>CreditCardAcc</c> document that contains the specified data objects.
+        #/// </returns>
+        #[AifDocumentFindAttribute, SysEntryPointAttribute(true)]
+        #public CreditCardAcc find(AifQueryCriteria _queryCriteria)
+        #{
+        #    CreditCardAcc creditCardAcc = new CreditCardAcc();
+        #    this.findList(_queryCriteria, creditCardAcc);
+        #    return creditCardAcc;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #protected void new()
+        #{
+        #    ;
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #read
+        #/// <summary>
+        #///    Reads a <c>CreditCardAcc</c> document that contains one or more data objects.
+        #/// </summary>
+        #/// <param name="_entityKeyList">
+        #///    A list of entity keys that identify the data objects to read.
+        #/// </param>
+        #/// <returns>
+        #///    A <c>CreditCardAcc</c> document that contains list of read data objects.
+        #/// </returns>
+        #[AifDocumentReadAttribute, SysEntryPointAttribute(true)]
+        #public CreditCardAcc read(AifEntityKeyList _entityKeyList)
+        #{
+        #    CreditCardAcc creditCardAcc = new CreditCardAcc();
+        #    this.readList(_entityKeyList, creditCardAcc);
+        #    return creditCardAcc;
+        #}
+      ENDSOURCE
+      SOURCE #update
+        #/// <summary>
+        #///    Updates a <c>CreditCardAcc</c> document that contains one or more data objects.
+        #/// </summary>
+        #/// <param name="_entityKeyList">
+        #///    A list of entity keys that identify the data objects to update.
+        #/// </param>
+        #/// <param name="_creditCardAcc">
+        #///    A <c>CreditCardAcc</c> document that contains the data objects to update.
+        #/// </param>
+        #[AifDocumentUpdateAttribute, SysEntryPointAttribute(true)]
+        #public void update(AifEntityKeyList _entityKeyList, CreditCardAcc _creditCardAcc)
+        #{
+        #    this.updateList(_entityKeyList, _creditCardAcc);
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static CreditCardAccService construct()
+        #{
+        #    return new CreditCardAccService();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

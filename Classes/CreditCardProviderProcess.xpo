@@ -1,0 +1,2093 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardProviderProcess
+    PROPERTIES
+      Name                #CreditCardProviderProcess
+      Extends             #CreditCardProcess
+      RunOn               #Server
+      Origin              #{9634F1F1-52F1-43AB-96AC-C2FFB2A33467}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #calcTaxRate
+        #private TaxValue calcTaxRate(TaxAmountCur _tax, AmountCur _amountWithTax)
+        #{
+        #    return _amountWithTax <= _tax ? 0 : (100.0 * _tax / (_amountWithTax - _tax));
+        #}
+      ENDSOURCE
+      SOURCE #checkForAddressVerification
+        #/// <summary>
+        #/// Determines if AVS is needed.
+        #/// </summary>
+        #/// <returns>
+        #/// true if AVS is needed.
+        #/// </returns>
+        #protected boolean checkForAddressVerification()
+        #{
+        #    boolean checkAVS = false;
+        #    CreditCardAddressVerification addressVerification;
+        #
+        #    // Address verification check is only done when preauthorization is enabled.
+        #    if(creditCardPreAuthorization)
+        #    {
+        #        addressVerification = CustTable::find(salesTable.CustAccount).CreditCardAddressVerification;
+        #
+        #        if(addressVerification == CreditCardAddressVerification::Yes)
+        #        {
+        #            checkAVS = true;
+        #        }
+        #        else if(addressVerification == CreditCardAddressVerification::None)
+        #        {
+        #            checkAVS = accountSetup.AddressVerification;
+        #        }
+        #    }
+        #
+        #    return checkAVS;
+        #}
+      ENDSOURCE
+      SOURCE #checkForCardVerificationValue
+        #/// <summary>
+        #/// Determines if CVV is needed.
+        #/// </summary>
+        #/// <returns>
+        #/// true if CVV is needed.
+        #/// </returns>
+        #protected boolean checkForCardVerificationValue()
+        #{
+        #    boolean checkCvc = false;
+        #    CreditCardCVC cardVerificaitonCheck;
+        #
+        #    // Credit card verification check is only done when preauthorization is enabled.
+        #    if(creditCardPreAuthorization && this.parmGetCardVerificationValue())
+        #    {
+        #        cardVerificaitonCheck = CustTable::find(salesTable.CustAccount).CreditCardCVC;
+        #
+        #        if(cardVerificaitonCheck == CreditCardCVC::Yes)
+        #        {
+        #            checkCvc = true;
+        #        }
+        #        else if(cardVerificaitonCheck == CreditCardCVC::None)
+        #        {
+        #            checkCvc = accountSetup.CardVerificationCheck;
+        #        }
+        #    }
+        #
+        #    return checkCvc;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #/// <summary>
+        #/// The CreditCardProviderProcess class implements credit card processing for a connector.
+        #/// </summary>
+        #class CreditCardProviderProcess extends CreditCardProcess
+        #{
+        #    CreditCardCust creditCardCust;
+        #    CreditCardProcessors creditCardProcessors;
+        #    CreditCardAccountSetup accountSetup;
+        #    CreditCardTypeSetup creditCardTypeSetup;
+        #    CompanyInfo companyInfo;
+        #    CreditCardPreAuthorization creditCardPreAuthorization;
+        #
+        #    CreditCardProviderResult providerResult;
+        #
+        #    // values from the current request, saved for use in processing the response
+        #    str cardTokenRequest;
+        #    CreditCardNumber creditCardNumber;
+        #
+        #    boolean processSucceed;
+        #    str displayedMessage;
+        #    str responseMessage;
+        #
+        ##define.WebSource('AX')
+        ##define.MaxMiscCharges(5)
+        ##define.PurchaseCardTypeUnknown('U')
+        ##define.TaxDescription("Total Tax")
+        ##define.TaxTypeIdentifier("AlternateTax")
+        ##define.isTaxableYes('true')
+        ##define.isTaxableNo('false')
+        ##define.isSupportCardTokenizationYes('true')
+        ##DOCommon
+        ##CreditCard
+        #}
+      ENDSOURCE
+      SOURCE #createProcessResponse
+        #/// <summary>
+        #/// Creates a process response.
+        #/// </summary>
+        #/// <param name="_successDescriptionOverride">
+        #/// Transaction description on success.
+        #/// </param>
+        #/// <returns>
+        #/// true if the process executes successfully; otherwise false.
+        #/// </returns>
+        #boolean createProcessResponse(str _successDescriptionOverride = '')
+        #{
+        #    CreditCardApprovalRejectReason description;
+        #
+        #    if(this.processSucceed())
+        #    {
+        #        if (salesTable)
+        #        {
+        #            description = strLen(_successDescriptionOverride) ? _successDescriptionOverride : strFmt("@SYS327114", salesTable.SalesId);
+        #        }
+        #        else if (RetailMCRChannelTable::findForCurrentUser().MCREnableOrderCompletion)
+        #        {
+        #            if (custInvoiceTable)
+        #            {
+        #                description = strLen(_successDescriptionOverride) ? _successDescriptionOverride : strFmt("@MCR40436", custInvoiceTable.InvoiceId);
+        #            }
+        #            else if (ledgerJournalTrans)
+        #            {
+        #                description = strLen(_successDescriptionOverride) ? _successDescriptionOverride : strFmt("@MCR40415", ledgerJournalTrans.JournalNum, ledgerJournalTrans.LineNum);
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        description = this.failedDescription();
+        #    }
+        #
+        #    switch(this.parmOperation())
+        #    {
+        #    case CreditCardOperation::Authorize:
+        #        CreditCard::recordAuthorization(providerResult,
+        #                                        salesTable,
+        #                                        this.parmCreditCardProcessor(),
+        #                                        this.processSucceed(),
+        #                                        description,
+        #                                        cardTokenRequest,
+        #                                        true,
+        #                                        mcrCustPaymTable);
+        #        break;
+        #    case CreditCardOperation::CaptureAfterAuthorize:
+        #        CreditCard::recordCapture(providerResult,
+        #                                  salesTable,
+        #                                  this.parmSalesInvoiceId(),
+        #                                  this.parmCreditCardProcessor(),
+        #                                  false,
+        #                                  this.processSucceed(),
+        #                                  description,
+        #                                  cardTokenRequest,
+        #                                  true,
+        #                                  mcrCustPaymTable);
+        #        break;
+        #    case CreditCardOperation::AuthorizeAndCapture:
+        #        CreditCard::recordCapture(providerResult,
+        #                                  salesTable,
+        #                                  this.parmSalesInvoiceId(),
+        #                                  this.parmCreditCardProcessor(),
+        #                                  true,
+        #                                  this.processSucceed(),
+        #                                  description,
+        #                                  cardTokenRequest,
+        #                                  true,
+        #                                  mcrCustPaymTable);
+        #        break;
+        #    case CreditCardOperation::Refund:
+        #        CreditCard::recordRefund(providerResult,
+        #                                 salesTable,
+        #                                 this.parmCreditCardProcessor(),
+        #                                 this.processSucceed(),
+        #                                 description,
+        #                                 cardTokenRequest,
+        #                                 true);
+        #        break;
+        #    case CreditCardOperation::Void:
+        #        CreditCard::recordVoid(providerResult,
+        #                               salesTable,
+        #                               this.parmCreditCardProcessor(),
+        #                               this.processSucceed(),
+        #                               description,
+        #                               cardTokenRequest,
+        #                               true);
+        #        break;
+        #    default:
+        #        throw error(Error::wrongUseOfFunction(funcName()));
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #createRequest
+        #private Microsoft.Dynamics.Retail.PaymentSDK.Request createRequest(CreditCardPaymentProperties _properties)
+        #{
+        #    Microsoft.Dynamics.Retail.PaymentSDK.Request request = new Microsoft.Dynamics.Retail.PaymentSDK.Request();
+        #
+        #    request.set_Locale(currentUserLanguage());
+        #    request.set_Properties(_properties.toArray());
+        #
+        #    return request;
+        #}
+      ENDSOURCE
+      SOURCE #createTaxDetail
+        #/// <summary>
+        #/// Creates the tax detail for level 2 or 3.
+        #/// </summary>
+        #/// <param name="_id">
+        #/// A tax identifier.
+        #/// </param>
+        #/// <param name="_description">
+        #/// The description of the tax.
+        #/// </param>
+        #/// <param name="_rate">
+        #/// The tax rate.
+        #/// </param>
+        #/// <param name="_tax">
+        #/// The value of the tax.
+        #/// </param>
+        #/// <returns>
+        #/// A property.
+        #/// </returns>
+        #protected CreditCardPaymentProperty createTaxDetail(str _id, str _description, TaxValue _rate, TaxAmountCur _tax)
+        #{
+        #    CreditCardPaymentProperty taxDetail = CreditCardPaymentProperty::newName(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_TaxDetails(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.TaxDetailProperties::get_TaxDetail());
+        #    CreditCardPaymentProperties taxProperties = CreditCardPaymentProperties::construct();
+        #    str ns = Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_TaxDetail();
+        #
+        #    taxProperties.add(CreditCardPaymentProperty::newValue(ns, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TaxDetailProperties::get_TaxTypeIdentifier(), _id));
+        #    taxProperties.add(CreditCardPaymentProperty::newValue(ns, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TaxDetailProperties::get_TaxDescription(), _description));
+        #    if(_rate)
+        #    {
+        #        taxProperties.add(CreditCardPaymentProperty::newValue(ns, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TaxDetailProperties::get_TaxRate(), _rate));
+        #    }
+        #    taxProperties.add(CreditCardPaymentProperty::newValue(ns, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TaxDetailProperties::get_TaxAmount(), _tax));
+        #
+        #    taxDetail.parmPropertyListValue(taxProperties);
+        #
+        #    return taxDetail;
+        #}
+      ENDSOURCE
+      SOURCE #failedDescription
+        #/// <summary>
+        #///    Gets the detailed exception with the response message.
+        #/// </summary>
+        #/// <returns>
+        #///    The detailed exception message that has the response message.
+        #/// </returns>
+        #protected str failedDescription()
+        #{
+        #    return this.processSucceed() ? '' : responseMessage;
+        #}
+      ENDSOURCE
+      SOURCE #failedDOLAPI
+        #/// <summary>
+        #/// Returns a message identifying the API causing an error.
+        #/// </summary>
+        #/// <param name="_api">
+        #/// The name of the API.
+        #/// </param>
+        #/// <param name="_msg">
+        #/// An error message.
+        #/// </param>
+        #/// <returns>
+        #/// The formatted message.
+        #/// </returns>
+        #protected str failedDOLAPI(str _api, str _msg)
+        #{
+        #    return strFmt("@SYS329019", _api, _msg);
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #failedReason
+        #/// <summary>
+        #///    Gets the user visible response message.
+        #/// </summary>
+        #/// <returns>
+        #///    An message.
+        #/// </returns>
+        #public str failedReason()
+        #{
+        #    return displayedMessage;
+        #}
+      ENDSOURCE
+      SOURCE #failedStatus
+        #/// <summary>
+        #/// Sets the text of the failure description.
+        #/// </summary>
+        #/// <param name="_status">
+        #/// The reason for a failure.
+        #/// </param>
+        #/// <remarks>
+        #/// The text is only set if the process failed.
+        #/// </remarks>
+        #public void failedStatus(str _status)
+        #{
+        #    if(!this.processSucceed())
+        #    {
+        #        responseMessage = strFmt("@SYS327137", _status);
+        #        displayedMessage = responseMessage;
+        #    }
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #fmtDate
+        #private str fmtDate(date _date)
+        #{
+        #    return date2str(_date, 321, DateDay::Digits2, DateSeparator::Hyphen, DateMonth::Digits2, DateSeparator::Hyphen, DateYear::Digits4, DateFlags::None);
+        #}
+      ENDSOURCE
+      SOURCE #fmtDateTime
+        #private str fmtDateTime(utcdatetime _datetime)
+        #{
+        #    return DateTimeUtil::toStr(_datetime);
+        #}
+      ENDSOURCE
+      SOURCE #fmtNum
+        #private str fmtNum(real _num, int _decimalPlaces = 2)
+        #{
+        #    return num2str(_num, 0, _decimalPlaces, 1, 0);
+        #}
+      ENDSOURCE
+      SOURCE #getAuthRequest
+        #/// <summary>
+        #/// Returns the properties needed for an authorization request.
+        #/// </summary>
+        #/// <returns>
+        #/// The properties needed.
+        #/// </returns>
+        #protected CreditCardPaymentProperties getAuthRequest()
+        #{
+        #    CustAccount                 invoiceAccount;
+        #    CurrencyCode                currencyCodeLocal;
+        #    Num                         transactionId;
+        #    CreditCardPaymentProperties properties = this.getCardToken(creditCardTrans, true);
+        #    str                         transNamespace = Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_TransactionData();
+        #
+        #    if (salesTable)
+        #    {
+        #        invoiceAccount      = salesTable.CustAccount;
+        #        currencyCodeLocal   = salesTable.CurrencyCode;
+        #        transactionId       = salesTable.SalesId;
+        #    }
+        #    else if (RetailMCRChannelTable::findForCurrentUser().MCREnableOrderCompletion)
+        #    {
+        #        // set the variables based on transaction to add to the properties
+        #        invoiceAccount      = this.mcrGetInvoiceAccount();
+        #        currencyCodeLocal   = this.mcrGetCurrencyCode();
+        #        transactionId       = this.mcrGetTransactionId();
+        #    }
+        #
+        #    this.setSalesTotals();
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_CurrencyCode(),CreditCardProviderProcess::getIsoCurrency(
+        #                                                        currencyCodeLocal)));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_Description(), xInfo::productName()));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalCustomerId(),
+        #                                                        invoiceAccount));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalInvoiceNumber(),
+        #                                                        transactionId));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalReferenceId(), CreditCardPaymentProperty::clrString2Str(System.Guid::NewGuid().ToString())));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_IsTestMode(), accountSetup.IsTest));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_SupportCardTokenization(), #isSupportCardTokenizationYes));
+        #
+        #    if(this.parmCardVerificationValue())
+        #    {
+        #        properties.add(CreditCardPaymentProperty::newValue(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_PaymentCard(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.PaymentCardProperties::get_CardVerificationValue(), this.parmCardVerificationValue()));
+        #    }
+        #
+        #    this.setPurchaseLevelTypeAndDetails(properties, Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level1);
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_Amount(), this.parmTotalAmountCur()));
+        #
+        #    return properties;
+        #}
+      ENDSOURCE
+      SOURCE #getCaptureRequest
+        #/// <summary>
+        #/// Returns the properties needed for a capture request.
+        #/// </summary>
+        #/// <param name="_properties">
+        #/// Properties from an authorization result to use in the request.
+        #/// </param>
+        #/// <returns>
+        #/// The properties needed.
+        #/// </returns>
+        #protected CreditCardPaymentProperties getCaptureRequest(CreditCardPaymentProperties _properties)
+        #{
+        #    CustAccount                 invoiceAccount;
+        #    CurrencyCode                currencyCodeLocal;
+        #    Num                         transactionId;
+        #    CreditCardPaymentProperties properties = CreditCardPaymentProperties::fromProperties(_properties.toArray());
+        #    str                         transNamespace = Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_TransactionData();
+        #
+        #    if (salesTable)
+        #    {
+        #        invoiceAccount      = salesTable.CustAccount;
+        #        currencyCodeLocal   = salesTable.CurrencyCode;
+        #        transactionId       = salesTable.SalesId;
+        #    }
+        #    else if (RetailMCRChannelTable::findForCurrentUser().MCREnableOrderCompletion)
+        #    {
+        #        // set the variables based on transaction to add to the properties
+        #        invoiceAccount = this.mcrGetInvoiceAccount();
+        #        currencyCodeLocal = this.mcrGetCurrencyCode();
+        #        transactionId = this.mcrGetTransactionId();
+        #    }
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_CurrencyCode(), CreditCardProviderProcess::getIsoCurrency(
+        #                                                        currencyCodeLocal)));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_Description(), xInfo::productName()));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalCustomerId(),
+        #                                                        invoiceAccount));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalInvoiceNumber(),
+        #                                                        transactionId));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalReferenceId(), CreditCardPaymentProperty::clrString2Str(System.Guid::NewGuid().ToString())));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_IsTestMode(), accountSetup.IsTest));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_SupportCardTokenization(), #isSupportCardTokenizationYes));
+        #
+        #    this.setPurchaseLevelTypeAndDetails(properties);
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_Amount(), this.parmTotalAmountCur()));
+        #
+        #    return properties;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #getCardToken
+        #/// <summary>
+        #/// Return the appropriate payment card properties.
+        #/// </summary>
+        #/// <param name="_creditCardAuthTrans">
+        #/// A <c>CreditCardAuthTrans</c> table record.
+        #/// </param>
+        #/// <param name="_useCard">
+        #/// Forces use of the card token from the <c>CreditCardCust</c> table.
+        #/// </param>
+        #/// <returns>
+        #/// The credit card properties.
+        #/// </returns>
+        #protected CreditCardPaymentProperties getCardToken(CreditCardAuthTrans _creditCardAuthTrans, boolean _useCard)
+        #{
+        #    CreditCardPaymentProperties properties;
+        #    CreditCardPaymentProperty   property;
+        #    str                         cardToken;
+        #
+        #    if(!creditCardNumber && _creditCardAuthTrans.CreditCardNumber)
+        #    {
+        #        creditCardNumber = _creditCardAuthTrans.CreditCardNumber;
+        #    }
+        #
+        #    // Always use the last card token from credit card history table if available
+        #    if(_creditCardAuthTrans && _creditCardAuthTrans.CardTokenResult && !_useCard)
+        #    {
+        #        cardToken = _creditCardAuthTrans.CardTokenResult;
+        #    }
+        #    else
+        #    {
+        #        if (salesTable.CreditCardCustRefId
+        #                && !mcrCustPaymTable)
+        #        {
+        #            cardToken = CreditCardCust::find(salesTable.CreditCardCustRefId).CardToken;
+        #        }
+        #        // If MCRCustPaymTable exists the sales table CreditCardCustRefId will not be filled
+        #        else if (mcrCustPaymTable)
+        #        {
+        #            cardToken = creditCardCust::find(mcrCustPaymTable.PaymInfoRecId).CardToken;
+        #        }
+        #    }
+        #
+        #    properties = CreditCardPaymentProperties::fromXmlString(cardToken);
+        #
+        #    property = properties.find(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_PaymentCard(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.PaymentCardProperties::get_Last4Digits());
+        #    if(property && property.parmStringValue())
+        #    {
+        #        creditCardNumber = property.parmStringValue();
+        #    }
+        #
+        #    return properties;
+        #}
+      ENDSOURCE
+      SOURCE #getCardVerificationValue
+        #/// <summary>
+        #/// Obtains the CVV value from the user.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the user entered a CVV value.
+        #/// </returns>
+        #/// <remarks>
+        #/// The CVV value is available from parmCardVerificationValue.
+        #/// </remarks>
+        #protected boolean getCardVerificationValue()
+        #{
+        #    CreditCardCVVEntry cvvEntry;
+        #    boolean cvvEntered = true;
+        #
+        #    if(this.parmOperation() == CreditCardOperation::Authorize && this.checkForCardVerificationValue())
+        #    {
+        #        cvvEntry = new CreditCardCVVEntry(accountSetup);
+        #
+        #        cvvEntry.parmSalesTable(salesTable);
+        #        cvvEntry.parmCreditCardNumber(creditCardNumber);
+        #
+        #        if(cvvEntry.prompt())
+        #        {
+        #            this.parmCardVerificationValue(cvvEntry.getCVV());
+        #        }
+        #        else
+        #        {
+        #            cvvEntered = false;
+        #        }
+        #    }
+        #
+        #    return cvvEntered;
+        #}
+      ENDSOURCE
+      SOURCE #getClrExceptionMessage
+        #/// <summary>
+        #/// Gets the exception message of the last exception thrown.
+        #/// </summary>
+        #/// <returns>
+        #/// The text of the last thrown exception.
+        #/// </returns>
+        #str getClrExceptionMessage()
+        #{
+        #    str exceptionMessage;
+        #    System.Exception    exception;
+        #    System.Exception    innerException;
+        #    InteropPermission   perm = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    perm.assert();
+        #
+        #    //BP Deviation Documented
+        #    exception = CLRInterop::getLastException();
+        #    if (exception)
+        #    {
+        #        exceptionMessage = exception.get_Message();
+        #
+        #        innerException = exception.get_InnerException();
+        #        if (innerException)
+        #        {
+        #            exceptionMessage = innerException.get_Message();
+        #        }
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    processSucceed = false;
+        #
+        #    return exceptionMessage;
+        #}
+      ENDSOURCE
+      SOURCE #getMiscCharges
+        #/// <summary>
+        #/// Creates the miscellaneous charge details for level 2 or 3.
+        #/// </summary>
+        #/// <param name="_list">
+        #/// A list of miscellaneous charge details.
+        #/// </param>
+        #/// <param name="_source">
+        #/// Source of the miscellaneous charge.
+        #/// </param>
+        #/// <param name="_qty">
+        #/// Quantity of the miscellaneous charge.
+        #/// </param>
+        #/// <param name="_amountCur">
+        #/// Amount of the miscellaneous charge.
+        #/// </param>
+        #/// <param name="_header">
+        #/// true if the miscellaneous charge is for level 2; otherwise, level 3.
+        #/// </param>
+        #/// <returns>
+        #/// The total freight and handling charges.
+        #/// </returns>
+        #private container getMiscCharges(Map _list, Common _source, Qty _qty, AmountCur _amountCur, boolean _header)
+        #{
+        #    Set freightMarkupCodes = new Set(Types::String);
+        #    Set handlingMarkupCodes = new Set(Types::String);
+        #    MarkupTrans markupTrans;
+        #    MarkupAmount amountFreight;
+        #    MarkupAmount amountHandling;
+        #    int n = 1;
+        #
+        #    void getShippingMarkupCodes(Set _freightMarkupCodes, Set _handlingMarkupCodes)
+        #    {
+        #        SourceDocumentLine custInvoiceTransSDL;
+        #        CustInvoicePackingSlipQuantityMatch custInvoicePackingSlipQuantityMatch;
+        #        SourceDocumentLine custPackingSlipTransSDL;
+        #        CustPackingSlipJour custPackingSlipJour;
+        #        ShipCarrierPackage shipCarrierPackage;
+        #        ShipCarrierCompany shipCarrierCompany;
+        #
+        #        while select CoreCharge, AncillaryCharge, FuelSurchage, HandlingCharge
+        #            from shipCarrierCompany
+        #            exists join shipCarrierPackage
+        #                where
+        #                    shipCarrierPackage.CarrierName == shipCarrierCompany.CarrierName
+        #            exists join custPackingSlipJour
+        #                where
+        #                    custPackingSlipJour.SalesId == shipCarrierPackage.SalesId &&
+        #                    custPackingSlipJour.PackingSlipId == shipCarrierPackage.PackingSlipId &&
+        #                    custPackingSlipJour.ShipCarrierId == shipCarrierPackage.CarrierId
+        #            exists join custPackingSlipTransSDL
+        #                where
+        #                    custPackingSlipTransSDL.SourceRelationType == tableNum(CustPackingSlipTrans) &&
+        #                    custPackingSlipTransSDL.SourceDocumentHeader == custPackingSlipJour.SourceDocumentHeader
+        #            exists join custInvoicePackingSlipQuantityMatch
+        #                where
+        #                    custInvoicePackingSlipQuantityMatch.PackingSlipSourceDocumentLine == custPackingSlipTransSDL.RecId
+        #                exists join custInvoiceTransSDL
+        #                where
+        #                    custInvoiceTransSDL.RecId == custInvoicePackingSlipQuantityMatch.InvoiceSourceDocumentLine &&
+        #                    custInvoiceTransSDL.SourceRelationType == tableNum(CustInvoiceTrans) &&
+        #                    custInvoiceTransSDL.SourceDocumentHeader == custInvoiceJour.SourceDocumentHeader
+        #        {
+        #            _freightMarkupCodes.add(shipCarrierCompany.CoreCharge);
+        #            _handlingMarkupCodes.add(shipCarrierCompany.AncillaryCharge);
+        #            _handlingMarkupCodes.add(shipCarrierCompany.FuelSurchage);
+        #            _handlingMarkupCodes.add(shipCarrierCompany.HandlingCharge);
+        #        }
+        #    }
+        #
+        #    void insertMiscCharge(TransTxt _txt, MarkupAmount _amount, int _n)
+        #    {
+        #        CreditCardPaymentProperty miscCharge;
+        #        CreditCardPaymentProperties miscChargeProperties;
+        #
+        #        if(_amount != 0)
+        #        {
+        #            miscCharge = CreditCardPaymentProperty::newName(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_MiscellaneousCharge(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.MiscellaneousChargeProperties::get_MiscellaneousCharge());
+        #            miscChargeProperties = CreditCardPaymentProperties::construct();
+        #            miscChargeProperties.add(CreditCardPaymentProperty::newValue(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_MiscellaneousCharge(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.MiscellaneousChargeProperties::get_ChargeType(), _txt));
+        #            miscChargeProperties.add(CreditCardPaymentProperty::newValue(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_MiscellaneousCharge(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.MiscellaneousChargeProperties::get_ChargeAmount(), _amount));
+        #            miscCharge.parmPropertyListValue(miscChargeProperties);
+        #            _list.insert(num2str(_amount, 12, 5, 1, 0) + num2str(_n, 6, 0, 1, 0), miscCharge);
+        #        }
+        #    }
+        #
+        #
+        #    if(_header)
+        #    {
+        #        getShippingMarkupCodes(freightMarkupCodes, handlingMarkupCodes);
+        #    }
+        #
+        #    // Add misc charges to the list except those
+        #    // that are for Freight and Handling charges.
+        #    while select markupTrans
+        #        order by
+        #            markupTrans.RecId
+        #        where
+        #            markupTrans.TransTableId == _source.TableId &&
+        #            markupTrans.TransRecId == _source.RecId
+        #    {
+        #        if(freightMarkupCodes.in(markupTrans.MarkupCode))
+        #        {
+        #            amountFreight += markupTrans.CalculatedAmount;
+        #        }
+        #        else if(handlingMarkupCodes.in(markupTrans.MarkupCode))
+        #        {
+        #            amountHandling += markupTrans.CalculatedAmount;
+        #        }
+        #        else
+        #        {
+        #            insertMiscCharge(markupTrans.Txt, markupTrans.CalculatedAmount, n);
+        #            n++;
+        #        }
+        #    }
+        #
+        #    return [amountFreight, amountHandling];
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #getProcessor
+        #private Microsoft.Dynamics.Retail.PaymentSDK.IPaymentProcessor getProcessor(CreditCardConnectorName _connectorName)
+        #{
+        #    InteropPermission perm = new InteropPermission(InteropKind::ClrInterop);
+        #    Microsoft.Dynamics.Retail.PaymentSDK.IPaymentProcessor processor;
+        #
+        #    perm.assert();
+        #
+        #    try
+        #    {
+        #        processor = Microsoft.Dynamics.Retail.SDKManager.PaymentProcessorManager::GetPaymentProcessor(_connectorName);
+        #    }
+        #    catch(Exception::CLRError)
+        #    {
+        #        processSucceed = false;
+        #        responseMessage = this.getClrExceptionMessage();
+        #        displayedMessage = "@SYS116968";
+        #    }
+        #    catch
+        #    {
+        #        processSucceed = false;
+        #        displayedMessage = "@SYS116968";
+        #        if(!responseMessage)
+        #        {
+        #            responseMessage = displayedMessage;
+        #        }
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return processor;
+        #}
+      ENDSOURCE
+      SOURCE #getRefundRequest
+        #/// <summary>
+        #/// Returns the properties needed for an refund request.
+        #/// </summary>
+        #/// <returns>
+        #/// The properties needed.
+        #/// </returns>
+        #protected CreditCardPaymentProperties getRefundRequest()
+        #{
+        #    CustAccount                 invoiceAccount;
+        #    CurrencyCode                currencyCodeLocal;
+        #    Num                         transactionId;
+        #    CreditCardPaymentProperties properties = this.getCardToken(creditCardTrans, false);
+        #    str                         transNamespace = Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_TransactionData();
+        #
+        #    if (salesTable)
+        #    {
+        #        invoiceAccount      = salesTable.CustAccount;
+        #        currencyCodeLocal   = salesTable.CurrencyCode;
+        #        transactionId       = salesTable.SalesId;
+        #    }
+        #    else if (RetailMCRChannelTable::findForCurrentUser().MCREnableOrderCompletion)
+        #    {
+        #        // set the variables based on transaction to add to the properties
+        #        invoiceAccount = this.mcrGetInvoiceAccount();
+        #        currencyCodeLocal = this.mcrGetCurrencyCode();
+        #        transactionId = this.mcrGetTransactionId();
+        #    }
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_CurrencyCode(), CreditCardProviderProcess::getIsoCurrency(
+        #                                                        currencyCodeLocal)));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_Description(), xInfo::productName()));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalCustomerId(),
+        #                                                       invoiceAccount));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalInvoiceNumber(),
+        #                                                       transactionId));
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalReferenceId(), CreditCardPaymentProperty::clrString2Str(System.Guid::NewGuid().ToString())));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_IsTestMode(), accountSetup.IsTest));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_SupportCardTokenization(), #isSupportCardTokenizationYes));
+        #
+        #    this.setPurchaseLevelTypeAndDetails(properties);
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_Amount(), this.parmTotalAmountCur()));
+        #
+        #    return properties;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #getTopMiscCharges
+        #private CreditCardPaymentProperties getTopMiscCharges(Map _list)
+        #{
+        #    CreditCardPaymentProperties miscCharges = CreditCardPaymentProperties::construct();
+        #    MapEnumerator listEnumerator;
+        #    int n = _list.elements();
+        #    int i;
+        #
+        #    // Take the top #MaxMiscCharges misc charges
+        #
+        #    // Skip the misc charges we don't want
+        #    listEnumerator = _list.getEnumerator();
+        #    while(n > #MaxMiscCharges)
+        #    {
+        #        listEnumerator.moveNext();
+        #        n--;
+        #    }
+        #
+        #    // Add the misc charges we want
+        #    for(i = 0; listEnumerator.moveNext(); i++)
+        #    {
+        #        miscCharges.add(listEnumerator.currentValue());
+        #    }
+        #
+        #    return miscCharges;
+        #}
+      ENDSOURCE
+      SOURCE #getVoidRequest
+        #/// <summary>
+        #/// Returns the propeties needed for a void request.
+        #/// </summary>
+        #/// <returns>
+        #/// The properties needed.
+        #/// </returns>
+        #protected CreditCardPaymentProperties getVoidRequest()
+        #{
+        #    CreditCardPaymentProperties properties = this.getCardToken(creditCardTrans, false);
+        #    str transNamespace = Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_TransactionData();
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_CurrencyCode(), CreditCardProviderProcess::getIsoCurrency(salesTable.CurrencyCode)));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_Description(), xInfo::productName()));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalCustomerId(), salesTable.CustAccount));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalInvoiceNumber(), salesTable.SalesId));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_ExternalReferenceId(), CreditCardPaymentProperty::clrString2Str(System.Guid::NewGuid().ToString())));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_IsTestMode(), accountSetup.IsTest));
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_SupportCardTokenization(), #isSupportCardTokenizationYes));
+        #
+        #    this.setPurchaseLevelTypeAndDetails(properties, Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level1);
+        #
+        #    properties.add(CreditCardPaymentProperty::newValue(transNamespace, Microsoft.Dynamics.Retail.PaymentSDK.Constants.TransactionDataProperties::get_Amount(), this.parmTotalAmountCur()));
+        #
+        #    return properties;
+        #}
+      ENDSOURCE
+      SOURCE #handleAuthResponse
+        #/// <summary>
+        #/// Process the results of an authorization operation.
+        #/// </summary>
+        #/// <param name="_response">
+        #/// A response.
+        #/// </param>
+        #protected void handleAuthResponse(Microsoft.Dynamics.Retail.PaymentSDK.Response _response)
+        #{
+        #    CreditCardProviderResultOK resultOK = this.handleResponse(_response, 'Authorize');
+        #    CreditCardProviderAuthorizationResult authResult = _response ? CreditCardProviderAuthorizationResult::constructFromResponse(_response) : null;
+        #
+        #    providerResult = authResult;
+        #
+        #    if(resultOK && authResult && authResult.parmAuthorizationResult() != CreditCardAuthorizationResult::Success)
+        #    {
+        #        processSucceed = false;
+        #        this.failedStatus(enum2str(authResult.parmAuthorizationResult()));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #handleCaptureResponse
+        #/// <summary>
+        #/// Process the results of a capture operation.
+        #/// </summary>
+        #/// <param name="_response">
+        #/// A response.
+        #/// </param>
+        #/// <param name="_authorization">
+        #/// An authorization.
+        #/// </param>
+        #protected void handleCaptureResponse(Microsoft.Dynamics.Retail.PaymentSDK.Response _response, CreditCardAuthorization _authorization)
+        #{
+        #    CreditCardProviderResultOK resultOK = this.handleResponse(_response, 'Capture');
+        #    CreditCardProviderCaptureResult captureResult = _response ? CreditCardProviderCaptureResult::constructFromResponse(_response, this.parmTotalAmountCur(), _authorization) : null;
+        #
+        #    providerResult = captureResult;
+        #
+        #    if(resultOK && captureResult && captureResult.parmCaptureResult() != CreditCardCaptureResult::Success)
+        #    {
+        #        processSucceed = false;
+        #        this.failedStatus(enum2str(captureResult.parmCaptureResult()));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #handleRefundResponse
+        #/// <summary>
+        #/// Process the results of a refund operation.
+        #/// </summary>
+        #/// <param name="_response">
+        #/// A response.
+        #/// </param>
+        #protected void handleRefundResponse(Microsoft.Dynamics.Retail.PaymentSDK.Response _response)
+        #{
+        #    CreditCardProviderResultOK resultOK = this.handleResponse(_response, 'Refund');
+        #    CreditCardProviderRefundResult refundResult = _response ? CreditCardProviderRefundResult::constructFromResponse(_response, this.parmTotalAmountCur()) : null;
+        #
+        #    providerResult = refundResult;
+        #
+        #    if(resultOK && refundResult && refundResult.parmRefundResult() != CreditCardRefundResult::Success)
+        #    {
+        #        processSucceed = false;
+        #        this.failedStatus(enum2str(refundResult.parmRefundResult()));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #handleRequest
+        #/// <summary>
+        #/// Setup the standard properties needed to request a credit card operation.
+        #/// </summary>
+        #/// <param name="_requestProperties">
+        #/// The request properties.
+        #/// </param>
+        #/// <returns>
+        #/// A connector name.
+        #/// </returns>
+        #private CreditCardConnectorName handleRequest(CreditCardPaymentProperties _requestProperties)
+        #{
+        #    Microsoft.Dynamics.Retail.PaymentSDK.Request request = new Microsoft.Dynamics.Retail.PaymentSDK.Request();
+        #
+        #    cardTokenRequest = _requestProperties.toXmlString();
+        #
+        #    return CreditCard::addMerchantAccountProperties(_requestProperties);
+        #}
+      ENDSOURCE
+      SOURCE #handleResponse
+        #/// <summary>
+        #/// Process the results of a credit card operation.
+        #/// </summary>
+        #/// <param name="_response">
+        #/// A response.
+        #/// </param>
+        #/// <param name="_operation">
+        #/// Name of the operation.
+        #/// </param>
+        #/// <returns>
+        #/// true if the operation was successful.
+        #/// </returns>
+        #protected CreditCardProviderResultOK handleResponse(Microsoft.Dynamics.Retail.PaymentSDK.Response _response, str _operation)
+        #{
+        #    CreditCardPaymentErrors errors = CreditCardPaymentErrors::fromPaymentErrors(_response.get_Errors());
+        #    CreditCardProviderResultOK resultOK = true;
+        #
+        #    if(accountSetup.IsTest)
+        #    {
+        #        info("@SYS329938");
+        #    }
+        #
+        #    if(errors.count() > 0)
+        #    {
+        #        processSucceed = false;
+        #        displayedMessage = "@SYS34720";
+        #        responseMessage = this.failedDOLAPI(_operation, strReplace(errors.toString(), '\n', '; '));
+        #        resultOK = false;
+        #    }
+        #
+        #    RetailEventNotificationAction::CreditCardProcessCompletion(
+        #                                        this.processSucceed(),
+        #                                        errors,
+        #                                        this.parmOperation(),
+        #                                        _operation == 'Authorize',
+        #                                        salesTable);
+        #
+        #    return resultOK;
+        #}
+      ENDSOURCE
+      SOURCE #handleVoidResponse
+        #/// <summary>
+        #/// Process the results of a void operation.
+        #/// </summary>
+        #/// <param name="_response">
+        #/// A response.
+        #/// </param>
+        #protected void handleVoidResponse(Microsoft.Dynamics.Retail.PaymentSDK.Response _response)
+        #{
+        #    CreditCardProviderResultOK resultOK = this.handleResponse(_response, 'Void');
+        #    CreditCardProviderVoidResult voidResult = _response ? CreditCardProviderVoidResult::constructFromResponse(_response) : null;
+        #
+        #    providerResult = voidResult;
+        #
+        #    if(resultOK && voidResult && voidResult.parmVoidResult() != CreditCardVoidResult::Success)
+        #    {
+        #        processSucceed = false;
+        #        this.failedStatus(enum2str(voidResult.parmVoidResult()));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #/// <summary>
+        #/// Initialize internal state.
+        #/// </summary>
+        #/// <param name="_record">
+        #/// A record.
+        #/// </param>
+        #/// <exception cref="Exception::Error">
+        #/// The record is not related to a sales order using a credit card for payment.
+        #/// </exception>
+        #protected void init(Common _record)
+        #{
+        #    super(_record);
+        #
+        #    if (salesTable.CreditCardCustRefId)
+        #    {
+        #        creditCardCust = CreditCardCust::find(salesTable.CreditCardCustRefId);
+        #    }
+        #    else if (mcrCustPaymTable)
+        #    {
+        #        if (MCRCustPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #        {
+        #            return;
+        #        }
+        #        else
+        #        {
+        #            creditCardCust = creditCardCust::find(mcrCustPaymTable.PaymInfoRecId);
+        #        }
+        #    }
+        #
+        #    if (!creditCardCust)
+        #    {
+        #        throw error(Error::wrongUseOfFunction(funcName()));
+        #    }
+        #
+        #    if(creditCardTrans && creditCardTrans.CreditCardProcessors)
+        #    {
+        #        this.initProcessor(creditCardTrans.CreditCardProcessors);
+        #    }
+        #    else
+        #    {
+        #        this.initProcessor(creditCardCust.CreditCardProcessors);
+        #    }
+        #
+        #    if(creditCardTrans && creditCardTrans.CreditCardTypeName)
+        #    {
+        #        this.initCardType(creditCardTrans.CreditCardTypeName);
+        #    }
+        #    else
+        #    {
+        #        this.initCardType(creditCardCust.CreditCardTypeName);
+        #    }
+        #
+        #    if(creditCardTrans && creditCardTrans.CreditCardNumber)
+        #    {
+        #        creditCardNumber = creditCardTrans.CreditCardNumber;
+        #    }
+        #    else
+        #    {
+        #        if (!salesTable.mcrIsCallCenter() || salesTable.CreditCardCustRefId )
+        #        {
+        #            creditCardNumber = CreditCardCust::find(salesTable.CreditCardCustRefId).CardNumber;
+        #        }
+        #        else
+        #        {
+        #            creditCardNumber = CreditCardCust::find(mcrCustPaymTable.PaymInfoRecId).CardNumber;
+        #        }
+        #    }
+        #
+        #    companyInfo = CompanyInfo::find();
+        #    creditCardPreAuthorization = CustParameters::find().CreditCardPreAuthorization;
+        #    processSucceed = true;
+        #}
+      ENDSOURCE
+      SOURCE #initCardType
+        #/// <summary>
+        #/// Sets the card type to use.
+        #/// </summary>
+        #/// <param name="_name">
+        #/// The card type name.
+        #/// </param>
+        #protected void initCardType(CreditCardTypeName _name)
+        #{
+        #    creditCardTypeSetup = CreditCardTypeSetup::find(creditCardProcessors, _name);
+        #}
+      ENDSOURCE
+      SOURCE #initProcessor
+        #/// <summary>
+        #/// Sets the processor to use.
+        #/// </summary>
+        #/// <param name="_processor">
+        #/// The processor.
+        #/// </param>
+        #protected void initProcessor(CreditCardProcessorsId _processor)
+        #{
+        #    creditCardProcessors = CreditCardProcessors::find(_processor);
+        #    accountSetup = CreditCardAccountSetup::find(creditCardProcessors.RecId);
+        #}
+      ENDSOURCE
+      SOURCE #mcrGetCurrencyCode
+        #/// <summary>
+        #/// Retrieves the currency code from the transaction
+        #/// </summary>
+        #/// <returns>
+        #/// <c>CurrencyCode</c> based on the transaction that is passed in.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// Method requires a transaction table; throw error if one is not available.
+        #/// </exception>
+        #protected CurrencyCode mcrGetCurrencyCode()
+        #{
+        #    anytype currencyCodeLocal;
+        #
+        #    if (SalesTable)
+        #    {
+        #        currencyCodeLocal = salesTable.CurrencyCode;
+        #    }
+        #    else if (custInvoiceTable)
+        #    {
+        #        currencyCodeLocal = custInvoiceTable.CurrencyCode;
+        #    }
+        #    else if (ledgerJournalTrans)
+        #    {
+        #        currencyCodeLocal = ledgerJournalTrans.CurrencyCode;
+        #    }
+        #    else if (creditCardTrans)
+        #    {
+        #        currencyCodeLocal = creditCardTrans.CurrencyCode;
+        #    }
+        #    else if (custPaymSchedLine)
+        #    {
+        #        currencyCodeLocal = mcrCustPaymTable.CurrencyCode;
+        #    }
+        #    else
+        #    {
+        #        throw error("@SYS89176");
+        #    }
+        #    return currencyCodeLocal;
+        #}
+      ENDSOURCE
+      SOURCE #mcrGetInvoiceAccount
+        #/// <summary>
+        #/// Retrieves the invoice account related to the transaction.
+        #/// </summary>
+        #/// <returns>
+        #/// <c>CustAccount</c> based on the transaction that is passed in.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// Method requires a transaction table; throw error if one is not available.
+        #/// </exception>
+        #protected CustAccount mcrGetInvoiceAccount()
+        #{
+        #    CustAccount invoiceAccount;
+        #
+        #    if (SalesTable)
+        #    {
+        #        invoiceAccount = salesTable.InvoiceAccount;
+        #    }
+        #    else if (custInvoiceTable)
+        #    {
+        #        invoiceAccount = custInvoiceTable.InvoiceAccount;
+        #    }
+        #    else if (ledgerJournalTrans)
+        #    {
+        #        invoiceAccount = DimensionStorage::getMainAccountNumFromLedgerDimension(ledgerJournalTrans.LedgerDimension);
+        #    }
+        #    else if (CustPaymSchedLine)
+        #    {
+        #        invoiceAccount = mcrCustPaymTable.CustAccount;
+        #    }
+        #    else
+        #    {
+        #        throw error("@SYS89176");
+        #    }
+        #    return invoiceAccount;
+        #}
+      ENDSOURCE
+      SOURCE #mcrGetTransactionId
+        #/// <summary>
+        #/// Retrieves the transaction ID.
+        #/// </summary>
+        #/// <returns>
+        #/// <c>SalesId</c>, <c>InvoiceId</c>, or <c>JournalNum</c> based on the transaction that is passed in.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// Method requires a transaction table; throw error if one is not available.
+        #/// </exception>
+        #protected Num mcrGetTransactionId()
+        #{
+        #    Num                             transactionId;
+        #    MCRInstallmentPlanSalesTable    mcrInstallmentPlanSalesTable;
+        #    CustPaymSched                   custPaymSched;
+        #    MCRContinuityCustHeader         mcrContinuityCustHeader;
+        #
+        #    if (SalesTable)
+        #    {
+        #        transactionId = salesTable.SalesId;
+        #    }
+        #    else if (custInvoiceTable)
+        #    {
+        #        transactionId = custInvoiceTable.InvoiceId;
+        #    }
+        #    else if (ledgerJournalTrans)
+        #    {
+        #        transactionId = ledgerJournalTrans.JournalNum;
+        #    }
+        #    else if (CustPaymSchedLine)
+        #    {
+        #        custPaymSched = CustPaymSched::mcrFindRecID(custPaymSchedLine.ParentRecID);
+        #        if (CustPaymSched.MCRRefTableID == tableNum(MCRInstallmentPlanSalesTable))
+        #        {
+        #            mcrInstallmentPlanSalesTable = MCRInstallmentPlanSalesTable::findRecId(CustPaymSched.MCRRefRecID);
+        #            if (mcrInstallmentPlanSalesTable)
+        #            {
+        #                transactionId = mcrInstallmentPlanSalesTable.SalesId;
+        #            }
+        #        }
+        #        else if (CustPaymSched.ExtTableId == tableNum(MCRContinuityCustHeader))
+        #        {
+        #            mcrContinuityCustHeader = MCRContinuityCustHeader::findRecId(custPaymSched.ExtRecId);
+        #            if (mcrContinuityCustHeader)
+        #            {
+        #                transactionId = mcrContinuityCustHeader.SalesId;
+        #            }
+        #        }
+        #        else
+        #        {
+        #             throw error("@SYS89176");
+        #        }
+        #    }
+        #    else
+        #    {
+        #        throw error("@SYS89176");
+        #    }
+        #    return transactionId;
+        #}
+      ENDSOURCE
+      SOURCE #nameAndSeq
+        #protected str nameAndSeq(str _name, int _seq)
+        #{
+        #    return _name + int2str(_seq);
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #protected void new()
+        #{
+        #    str connectorsDirectory = xInfo::directory(DirectoryType::Bin) + #CreditCardConnectorsFolder;
+        #
+        #    super();
+        #
+        #    try
+        #    {
+        #        Microsoft.Dynamics.Retail.SDKManager.PaymentProcessorManager::Create(connectorsDirectory);
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        processSucceed = false;
+        #        responseMessage = this.getClrExceptionMessage();
+        #        displayedMessage = "@SYP4910242" + " " + responseMessage;
+        #        error(displayedMessage);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #onError
+        #/// <summary>
+        #/// Handles error formatting.
+        #/// </summary>
+        #/// <param name="_errorInfo">
+        #/// The errors.
+        #/// </param>
+        #/// <returns>
+        #/// Formatted error text.
+        #/// </returns>
+        #protected str onError(Microsoft.DynamicsOnline.DOClientProxy.IErrorInfo[] _errorInfo)
+        #{
+        #    Microsoft.DynamicsOnline.DOClientProxy.IErrorInfo error;
+        #    int errorCode;
+        #    str errorMessage;
+        #    container errorStr;
+        #    int n = _errorInfo.get_Length();
+        #    int i;
+        #
+        #    for(i = 0; i < n; i++)
+        #    {
+        #        error = _errorInfo.GetValue(i);
+        #        errorCode = error.get_ErrorCode();
+        #        errorMessage = error.get_ErrorMessage();
+        #        errorStr += strFmt("%1=%2", errorCode, errorMessage);
+        #    }
+        #    return con2Str(errorStr, '. ');
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #parmCreditCardProcessor
+        #public CreditCardProcessorsId parmCreditCardProcessor()
+        #{
+        #    return creditCardProcessors.RecId;
+        #}
+      ENDSOURCE
+      SOURCE #prepareSubmission
+        #/// <summary>
+        #/// Establishes the connection to the processor.
+        #/// </summary>
+        #/// <returns>
+        #/// true if successful.
+        #/// </returns>
+        #public boolean prepareSubmission()
+        #{
+        #    return this.processSucceed();
+        #}
+      ENDSOURCE
+      SOURCE #processSucceed
+        #/// <summary>
+        #/// Reports the overall success of the credit card operation.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the operation is successful.
+        #/// </returns>
+        #public boolean processSucceed()
+        #{
+        #    return processSucceed;
+        #}
+      ENDSOURCE
+      SOURCE #setLevel2Data
+        #private CreditCardPaymentProperty setLevel2Data()
+        #{
+        #    CustTable custTable = CustTable::find(salesTable.InvoiceAccount);
+        #    InventLocation inventLocation = InventLocation::find(custInvoiceJour.InventLocationId);
+        #    LogisticsPostalAddress logisticsPostalAddress;
+        #    CreditCardPaymentProperties properties = CreditCardPaymentProperties::construct();
+        #    MarkupAmount amountFreight;
+        #    MarkupAmount amountHandling;
+        #
+        #    void addHeaderProperty(CreditCardPaymentProperties _properties, str _name, anytype _value)
+        #    {
+        #        if(_value)
+        #        {
+        #            _properties.add(CreditCardPaymentProperty::newValue(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_L2Data(), _name, _value));
+        #        }
+        #    }
+        #
+        #    container addHeaderMiscCharges(CustInvoiceJour _source, Qty _qty, AmountCur _amountCur)
+        #    {
+        #        Map list = new Map(Types::String, Types::Class);
+        #        CreditCardPaymentProperties miscCharges;
+        #        MarkupAmount amountFreightMC;
+        #        MarkupAmount amountHandlingMC;
+        #
+        #        [amountFreightMC, amountHandlingMC] = this.getMiscCharges(list, _source, _qty, _amountCur, true);
+        #
+        #        miscCharges = this.getTopMiscCharges(list);
+        #
+        #        if(miscCharges.count() > 0)
+        #        {
+        #            addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MiscellaneousCharges(), miscCharges);
+        #        }
+        #
+        #        return [amountFreightMC, amountHandlingMC];
+        #    }
+        #
+        #    void addHeaderTaxDetail(CreditCardPaymentProperty _taxDetail)
+        #    {
+        #        CreditCardPaymentProperties taxDetails = CreditCardPaymentProperties::construct();
+        #
+        #        taxDetails.add(_taxDetail);
+        #
+        #        addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_TaxDetails(), taxDetails);
+        #    }
+        #
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_OrderDateTime(), salesTable.CreatedDateTime);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_OrderNumber(), salesTable.SalesId);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_InvoiceNumber(), this.parmSalesInvoiceId());
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_OrderDescription(), salesTable.CustomerRef);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantContact(), HcmWorker::worker2Name(custTable.MainContactWorker));
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantTaxId(), companyInfo.CoRegNum);
+        #    if(custInvoiceJour)
+        #    {
+        #        addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_InvoiceDateTime(), custInvoiceJour.InvoiceDate);
+        #        addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_PurchaserId(), custInvoiceJour.InvoiceAccount);
+        #    }
+        #    else
+        #    {
+        #        addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_PurchaserId(), custInvoiceJour.InvoiceAccount);
+        #    }
+        #    logisticsPostalAddress = LogisticsPostalAddress::findRecId(custInvoiceJour.DeliveryPostalAddress);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_PurchaserTaxId(), custTable.vatNum);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipToCity(), logisticsPostalAddress.City);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipToCounty(), logisticsPostalAddress.County);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipToState_ProvinceCode(), logisticsPostalAddress.State);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipToPostalCode(), logisticsPostalAddress.ZipCode);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipToCountryCode(), logisticsPostalAddress.CountryRegionId);
+        #
+        #    // Ship From: Use Warehouse address else use Company address
+        #    if(InventParameters::find().ShipCarrierReturnTo == ShipCarrierReturnTo::Warehouse && inventLocation)
+        #    {
+        #        logisticsPostalAddress = LogisticsPostalAddress::findRecId(inventLocation.RecId);
+        #    }
+        #    else
+        #    {
+        #        logisticsPostalAddress = companyInfo.postalAddress();
+        #    }
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipFromCity(), logisticsPostalAddress.City);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipFromCounty(), logisticsPostalAddress.County);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipFromState_ProvinceCode(), logisticsPostalAddress.State);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipFromCountryCode(), logisticsPostalAddress.CountryRegionId);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_ShipFromPostalCode(), logisticsPostalAddress.ZipCode);
+        #
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_DiscountAmount(), custInvoiceJour.EndDisc);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_TotalTaxAmount(), custInvoiceJour.SumTax);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_IsTaxable(), custInvoiceJour.SumTax != 0 ? #isTaxableYes : #isTaxableNo);
+        #
+        #    if(custInvoiceJour.InvoiceAmount != 0)
+        #    {
+        #        addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_TotalTaxRate(), 100.0 * custInvoiceJour.SumTax / custInvoiceJour.InvoiceAmount);
+        #    }
+        #
+        #    logisticsPostalAddress = companyInfo.postalAddress();
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantName(), companyInfo.Name);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantStreet(), logisticsPostalAddress.Street);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantCity(), logisticsPostalAddress.City);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantCounty(), logisticsPostalAddress.County);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantState(), logisticsPostalAddress.State);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantCountryCode(), logisticsPostalAddress.CountryRegionId);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MerchantZip(), logisticsPostalAddress.ZipCode);
+        #
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_RequesterName(), CreditCardCust::find(salesTable.CreditCardCustRefId).Name);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_TotalAmount(), this.parmTotalAmountCur());
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_PurchaseCardType(), #PurchaseCardTypeUnknown);
+        #
+        #    // Add tax details (just one)
+        #    addHeaderTaxDetail(this.createTaxDetail(#TaxTypeIdentifier, #TaxDescription, custInvoiceJour.InvoiceAmount == 0 ? 0.0 : this.calcTaxRate(custInvoiceJour.SumTax, custInvoiceJour.InvoiceAmount), custInvoiceJour.SumTax));
+        #
+        #    // Add Misc charges and related properties
+        #    [amountFreight, amountHandling] = addHeaderMiscCharges(custInvoiceJour, 1, custInvoiceJour.InvoiceAmount);
+        #
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_FreightAmount(), amountFreight);
+        #    addHeaderProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_HandlingCharge(), amountHandling);
+        #
+        #    return CreditCardPaymentProperty::newValue(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_PurchaseLevelData(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.PurchaseLevelDataProperties::get_L2Data(), properties);
+        #}
+      ENDSOURCE
+      SOURCE #setLevel3Data
+        #private CreditCardPaymentProperty setLevel3Data()
+        #{
+        #    // BP deviation documented
+        #    CreditCardPaymentProperties lines;
+        #    CustInvoiceTrans invoiceTrans;
+        #
+        #    void addLineProperty(CreditCardPaymentProperties _properties, str _name, anytype _value)
+        #    {
+        #        if(_value)
+        #        {
+        #            _properties.add(CreditCardPaymentProperty::newValue(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_L3Data(), _name, _value));
+        #        }
+        #    }
+        #
+        #    void addLineMiscCharges(CreditCardPaymentProperties _lineProperties, CustInvoiceTrans _source, Qty _qty, AmountCur _amountCur)
+        #    {
+        #        Map list = new Map(Types::String, Types::Class);
+        #        CreditCardPaymentProperties miscCharges;
+        #
+        #        this.getMiscCharges(list, _source, _qty, _amountCur, false);
+        #
+        #        miscCharges = this.getTopMiscCharges(list);
+        #
+        #        if(miscCharges.count() > 0)
+        #        {
+        #            addLineProperty(_lineProperties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L2DataProperties::get_MiscellaneousCharges(), miscCharges);
+        #        }
+        #    }
+        #
+        #    void addShippingLineInfo(CreditCardPaymentProperties _properties, CustInvoiceTrans _invoiceTrans)
+        #    {
+        #        SourceDocumentLine custInvoiceTransSDL;
+        #        CustInvoicePackingSlipQuantityMatch custInvoicePackingSlipQuantityMatch;
+        #        SourceDocumentLine custPackingSlipTransSDL;
+        #
+        #        CustPackingSlipJour custPackingSlipJour;
+        #        ShipCarrierPackage shipCarrierPackage;
+        #        ShipCarrierTracking shipCarrierTracking;
+        #        utcdatetime pickupDateTime;
+        #        str trackingNumbers;
+        #
+        #        select firstonly custPackingSlipJour
+        #            order by custPackingSlipJour.PackingSlipId, custPackingSlipJour.DeliveryDate
+        #            exists join custPackingSlipTransSDL
+        #                where
+        #                    custPackingSlipTransSDL.SourceRelationType == tableNum(CustPackingSlipTrans) &&
+        #                    custPackingSlipTransSDL.SourceDocumentHeader == custPackingSlipJour.SourceDocumentHeader
+        #            exists join custInvoicePackingSlipQuantityMatch
+        #                where
+        #                    custInvoicePackingSlipQuantityMatch.PackingSlipSourceDocumentLine == custPackingSlipTransSDL.RecId
+        #            exists join custInvoiceTransSDL
+        #                where
+        #                    custInvoiceTransSDL.RecId == custInvoicePackingSlipQuantityMatch.InvoiceSourceDocumentLine &&
+        #                    custInvoiceTransSDL.SourceRelationType == tableNum(CustInvoiceTrans) &&
+        #                    custInvoiceTransSDL.RecId == _invoiceTrans.SourceDocumentLine;
+        #
+        #        select firstonly shipCarrierPackage
+        #            order by shipCarrierPackage.RecId
+        #            where
+        #                shipCarrierPackage.SalesId == custPackingSlipJour.SalesId &&
+        #                shipCarrierPackage.PackingSlipId == custPackingSlipJour.PackingSlipId;
+        #        if(shipCarrierPackage)
+        #        {
+        #            pickupDateTime = DateTimeUtil::newDateTime(shipCarrierPackage.ShipDate, shipCarrierPackage.ShipTime);
+        #            addLineProperty(_properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_PickupDateTime(), pickupDateTime);
+        #        }
+        #
+        #        while select TrackingNumber from shipCarrierTracking
+        #            order by shipCarrierTracking.RecId
+        #            where
+        #                shipCarrierTracking.SalesId == custPackingSlipJour.SalesId &&
+        #                shipCarrierTracking.PackingSlipId == custPackingSlipJour.PackingSlipId
+        #        {
+        #            trackingNumbers += (trackingNumbers ? ";" : "") + shipCarrierTracking.TrackingNumber;
+        #        }
+        #        if(trackingNumbers)
+        #        {
+        #           addLineProperty(_properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_CarrierShipmentNumber(), trackingNumbers);
+        #        }
+        #    }
+        #
+        #    CreditCardPaymentProperty addLevel3DataByLine(CustInvoiceTrans _invoiceTrans)
+        #    {
+        #        InventLocation inventLocation = InventLocation::find(_invoiceTrans.inventDim().InventLocationId);
+        #        LogisticsPostalAddress logisticsPostalAddress;
+        #        // BP deviation documented
+        #        CreditCardPaymentProperties taxDetails = CreditCardPaymentProperties::construct();
+        #        CreditCardPaymentProperties properties = CreditCardPaymentProperties::construct();
+        #        CreditCardPaymentProperty line;
+        #        MarkupTrans markupTrans;
+        #        TaxTrans taxTrans;
+        #        int i;
+        #        int n;
+        #
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_ProductCode(), _invoiceTrans.ItemId);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_SequenceNumber(), _invoiceTrans.ItemId);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_ProductName(), _invoiceTrans.Name);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_ProductSKU(), _invoiceTrans.ExternalItemId);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_Descriptor(), _invoiceTrans.Name);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_UnitOfMeasure(), _invoiceTrans.SalesUnit);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_UnitPrice(), this.fmtNum(_invoiceTrans.SalesPrice));
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_Discount(), this.fmtNum(_invoiceTrans.LineDisc));
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_DiscountRate(), this.fmtNum(_invoiceTrans.LinePercent));
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_Quantity(), this.fmtNum(_invoiceTrans.Qty));
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_NetTotal(), this.fmtNum(_invoiceTrans.LineAmount));
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_TaxAmount(), this.fmtNum(_invoiceTrans.TaxAmount));
+        #
+        #        select sum(CalculatedAmount)
+        #            from markupTrans
+        #            where
+        #                markupTrans.TransTableId == _invoiceTrans.TableId &&
+        #                markupTrans.TransRecId == _invoiceTrans.RecId;
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_TotalAmount(),
+        #                _invoiceTrans.LineAmount + _invoiceTrans.LineAmountTax + markupTrans.CalculatedAmount);
+        #
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_MerchantCatalogNumber(), _invoiceTrans.ItemId);
+        #
+        #
+        #        // Ship From: Use Warehouse address else use Company address
+        #        if(InventParameters::find().ShipCarrierReturnTo == ShipCarrierReturnTo::Warehouse && inventLocation)
+        #        {
+        #            logisticsPostalAddress = LogisticsPostalAddress::findRecId(inventLocation.RecId);
+        #        }
+        #        else
+        #        {
+        #            logisticsPostalAddress = companyInfo.postalAddress();
+        #        }
+        #
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_PickupAddress(), logisticsPostalAddress.Street);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_PickupCity(), logisticsPostalAddress.City);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_PickupState(), logisticsPostalAddress.State);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_PickupZip(), logisticsPostalAddress.ZipCode);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_PickupCountry(), logisticsPostalAddress.CountryRegionId);
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_PickupCounty(), logisticsPostalAddress.County);
+        #
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_CostCenter(),
+        #                DimensionAttributeValueSetStorage::find(_invoiceTrans.DefaultDimension).getDisplayValueByDimensionAttribute(CustParameters::find().CreditCardCostCenterDimensionAttribute));
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_MerchantTaxID(), companyInfo.CoRegNum);
+        #
+        #        addLineMiscCharges(properties, _invoiceTrans, _invoiceTrans.Qty, _invoiceTrans.LineAmount);
+        #
+        #        addShippingLineInfo(properties, _invoiceTrans);
+        #
+        #        while select taxTrans
+        #            order by taxTrans.TaxCode, taxTrans.RecId
+        #            where
+        #                taxTrans.Voucher == custInvoiceJour.LedgerVoucher &&
+        #                taxTrans.TransDate == custInvoiceJour.InvoiceDate &&
+        #                taxTrans.InventTransId == _invoiceTrans.InventTransId
+        #        {
+        #            // NOTE: In AX6, the next line will change to be simply use the taxTrans.SourceRegulateAmountCur field
+        #            //taxDetail.set_TaxAmount(this.fmtNum((taxTrans.TaxAutogenerated ? taxTrans.SourceTaxAmountCur : taxTrans.SourceRegulateAmountCur) * - 1));
+        #            taxDetails.add(this.createTaxDetail(#TaxTypeIdentifier, taxTrans.taxName(), taxTrans.TaxValue, taxTrans.SourceRegulateAmountCur * - 1));
+        #        }
+        #        addLineProperty(properties, Microsoft.Dynamics.Retail.PaymentSDK.Constants.L3DataProperties::get_TaxDetails(), taxDetails);
+        #
+        #        return CreditCardPaymentProperty::newValue(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_PurchaseLevelData(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.PurchaseLevelDataProperties::get_L3DataItems(), properties);
+        #    }
+        #
+        #    while select invoiceTrans
+        #        order by
+        #            invoiceTrans.LineNum, invoiceTrans.RecId
+        #        where
+        #            invoiceTrans.SalesId == custInvoiceJour.SalesId &&
+        #            invoiceTrans.InvoiceId == custInvoiceJour.InvoiceId &&
+        #            invoiceTrans.InvoiceDate == custInvoiceJour.InvoiceDate &&
+        #            invoiceTrans.NumberSequenceGroup == custInvoiceJour.NumberSequenceGroup
+        #    {
+        #        lines.add(addLevel3DataByLine(invoiceTrans));
+        #    }
+        #
+        #    return CreditCardPaymentProperty::newValue(Microsoft.Dynamics.Retail.PaymentSDK.Constants.GenericNamespace::get_PurchaseLevelData(), Microsoft.Dynamics.Retail.PaymentSDK.Constants.PurchaseLevelDataProperties::get_L3Data(), lines);
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #setPurchaseLevelTypeAndDetails
+        #private void setPurchaseLevelTypeAndDetails(
+        #        CreditCardPaymentProperties _properties,
+        #        Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel _purchaseLevel =
+        #                CreditCardProviderProcess::getPurchaseLevel(creditCardTypeSetup, custInvoiceJour.CurrencyCode))
+        #{
+        #    CreditCardPaymentProperties properties = CreditCardPaymentProperties::construct();
+        #
+        #    if(_purchaseLevel == Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level2)
+        #    {
+        #        _properties.add(this.setLevel2Data());
+        #    }
+        #    else if(_purchaseLevel == Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level3)
+        #    {
+        #        _properties.add(this.setLevel2Data());
+        #        _properties.add(this.setLevel3Data());
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #setSalesTotals
+        #/// <summary>
+        #/// Sets the total sales amount.
+        #/// </summary>
+        #void setSalesTotals()
+        #{
+        #    AmountCur freightEstimate;
+        #
+        #    if (this.parmOperation() == CreditCardOperation::Authorize)
+        #    {
+        #        freightEstimate = roundUp(this.checkFreight(this.parmTotalAmountCur()), 0.01);
+        #    }
+        #
+        #    this.parmTotalAmountCur(this.parmTotalAmountCur() + freightEstimate);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #submit
+        #/// <summary>
+        #/// Performs the actual credit card operation.
+        #/// </summary>
+        #/// <returns>
+        #/// true on success.
+        #/// </returns>
+        #public boolean submit()
+        #{
+        #    InteropPermission perm = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    void processAuthorize()
+        #    {
+        #        CreditCardPaymentProperties properties = this.getAuthRequest();
+        #        Microsoft.Dynamics.Retail.PaymentSDK.IPaymentProcessor processor = this.getProcessor(this.handleRequest(properties));
+        #
+        #        this.handleAuthResponse(processor.Authorize(this.createRequest(properties), null));
+        #    }
+        #
+        #    void processCapture(CreditCardPaymentProperties _properties, CreditCardAuthorization _authorization)
+        #    {
+        #        CreditCardPaymentProperties properties = this.getCaptureRequest(_properties);
+        #        Microsoft.Dynamics.Retail.PaymentSDK.IPaymentProcessor processor = this.getProcessor(this.handleRequest(properties));
+        #
+        #        this.handleCaptureResponse(processor.Capture(this.createRequest(properties)), _authorization);
+        #    }
+        #
+        #    void processRefund()
+        #    {
+        #        CreditCardPaymentProperties properties;
+        #        Microsoft.Dynamics.Retail.PaymentSDK.IPaymentProcessor processor;
+        #
+        #        if(!creditCardTrans)
+        #        {
+        #            processSucceed = false;
+        #            responseMessage = "@SYS327119";
+        #        }
+        #        else if(!CreditCard::sameCard(salesTable, creditCardTrans))
+        #        {
+        #            processSucceed = false;
+        #            responseMessage = "@SYS327136"; // Credit card refunds can be processed only for the same card as the original sales order.
+        #            displayedMessage = responseMessage;
+        #        }
+        #        else
+        #        {
+        #            properties = this.getRefundRequest();
+        #            processor = this.getProcessor(this.handleRequest(properties));
+        #
+        #            this.handleRefundResponse(processor.Refund(this.createRequest(properties), null));
+        #        }
+        #    }
+        #
+        #    void processVoid()
+        #    {
+        #        CreditCardPaymentProperties properties = this.getVoidRequest();
+        #        Microsoft.Dynamics.Retail.PaymentSDK.IPaymentProcessor processor = this.getProcessor(this.handleRequest(properties));
+        #
+        #        this.handleVoidResponse(processor.Void(this.createRequest(properties)));
+        #    }
+        #
+        #    if(this.parmOperation() != CreditCardOperation::Refund && this.parmTotalAmountCur() < 0)
+        #    {
+        #        processSucceed = false;
+        #        responseMessage = "@SYS327120";
+        #        return true;
+        #    }
+        #
+        #    perm.assert();
+        #
+        #    try
+        #    {
+        #        switch(this.parmOperation())
+        #        {
+        #        case CreditCardOperation::Authorize:
+        #            processAuthorize();
+        #            break;
+        #        case CreditCardOperation::CaptureAfterAuthorize:
+        #            processCapture(this.getCardToken(creditCardTrans, false), creditCardTrans.Authorization);
+        #            break;
+        #        case CreditCardOperation::Refund:
+        #            processRefund();
+        #            break;
+        #        case CreditCardOperation::Void:
+        #            processVoid();
+        #            break;
+        #        case CreditCardOperation::AuthorizeAndCapture:
+        #            processAuthorize();
+        #            if(processSucceed)
+        #            {
+        #                processCapture(providerResult.parmProperties(), providerResult.parmAuthorization());
+        #            }
+        #            break;
+        #        default:
+        #            processSucceed = false;
+        #            responseMessage = strFmt("@SYS122465", this.parmOperation());   // "Current version doesn't handle credit card '%1'."
+        #            break;
+        #        }
+        #    }
+        #    catch(Exception::CLRError)
+        #    {
+        #        processSucceed = false;
+        #        responseMessage = this.getClrExceptionMessage();
+        #        displayedMessage = "@SYS116968";
+        #    }
+        #    catch
+        #    {
+        #        processSucceed = false;
+        #        displayedMessage = "@SYS34720";
+        #        if(!responseMessage)
+        #        {
+        #            responseMessage = displayedMessage;
+        #        }
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #updateFailedDescription
+        #private void updateFailedDescription(RefRecId _creditCardAuthTransRecId, str _additionalDescription)
+        #{
+        #    CreditCardAuthTrans ccAuthTransUpdate = CreditCardAuthTrans::find(_creditCardAuthTransRecId, true);
+        #
+        #    if(_additionalDescription)
+        #    {
+        #        ttsbegin;
+        #
+        #        ccAuthTransUpdate.Description += ' ' + _additionalDescription;
+        #        ccAuthTransUpdate.update();
+        #
+        #        ttscommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSalesTable
+        #/// <summary>
+        #///    Updates the sales table.
+        #/// </summary>
+        #/// <returns>
+        #///    true if the sales table is updated successfully; otherwise, false.
+        #/// </returns>
+        #public boolean updateSalesTable()
+        #{
+        #    return CreditCard::updateSalesTable(salesTable.RecId, providerResult, this.processSucceed());
+        #}
+      ENDSOURCE
+      SOURCE #validateAVS
+        #/// <summary>
+        #/// Ensure AVS reached the requested level.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the AVS was successful.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// An unknown AVS level was encountered.
+        #/// </exception>
+        #protected boolean validateAVS()
+        #{
+        #    CreditCardAuthTrans creditCardAuthTransAVS;
+        #    CustTable custTable;
+        #    CreditCardMSAVSDetailCode avsLevelNeeded;
+        #    boolean voidPreAuth = false;
+        #    str avsDescription = "@SYS327115";
+        #    InteropPermission perm = new InteropPermission(InteropKind::ClrInterop);
+        #    CreditCardMSAVSDetailCode avsDetailValue;
+        #
+        #    CreditCardMSAVSDetailCode getAVSLevelNeeded(CustTable _custTable)
+        #    {
+        #        if(_custTable.CreditCardAddressVerification == CreditCardAddressVerification::Yes)
+        #        {
+        #            switch(_custTable.CreditCardAddressVerificationLevel)
+        #            {
+        #            case CreditCardAddressVerificationLevel::Accept:
+        #                return CreditCardMSAVSDetailCode::None;
+        #            case CreditCardAddressVerificationLevel::AccountHolderName:
+        #                return CreditCardMSAVSDetailCode::AccountHolderName;
+        #            case CreditCardAddressVerificationLevel::BillingAddress:
+        #                return CreditCardMSAVSDetailCode::BillingAddress;
+        #            case CreditCardAddressVerificationLevel::BillingPostalCode:
+        #                return CreditCardMSAVSDetailCode::BillingPostalCode;
+        #            }
+        #            throw error(Error::wrongUseOfFunction(funcName()));
+        #        }
+        #        else
+        #        {
+        #            return accountSetup.AddressVerificationLevel;
+        #        }
+        #    }
+        #
+        #    if(processSucceed && this.parmOperation() == CreditCardOperation::Authorize && this.checkForAddressVerification())
+        #    {
+        #        // Get the successful preauth.
+        #        creditCardAuthTransAVS = CreditCardAuthTrans::findValidPreApproval(salesTable.SalesId);
+        #        custTable = CustTable::find(salesTable.CustAccount);
+        #
+        #        if(creditCardAuthTransAVS.AddressVerificationResult == CreditCardAddressVerificationResult::Returned)
+        #        {
+        #            avsLevelNeeded = getAVSLevelNeeded(custTable);
+        #
+        #            avsDetailValue = providerResult.parmAvsDetail();
+        #
+        #            voidPreAuth = avsDetailValue < avsLevelNeeded;
+        #
+        #            // Set the AVS description.
+        #            switch (avsDetailValue)
+        #            {
+        #                case CreditCardMSAVSDetailCode::None:
+        #                    avsDescription = strFmt(avsDescription, "@SYS327139");
+        #                    break;
+        #                case CreditCardMSAVSDetailCode::AccountHolderName:
+        #                    avsDescription = strFmt(avsDescription, "@SYS327116");
+        #                    break;
+        #                case CreditCardMSAVSDetailCode::BillingAddress:
+        #                    avsDescription = strFmt(avsDescription, "@SYS327117");
+        #                    break;
+        #                case CreditCardMSAVSDetailCode::BillingPostalCode:
+        #                    avsDescription = strFmt(avsDescription, "@SYS327118");
+        #                    break;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            if(custTable.CreditCardAddressVerification == CreditCardAddressVerification::Yes)
+        #            {
+        #                voidPreAuth = custTable.CreditCardAddressVerificationVoid;
+        #            }
+        #            else
+        #            {
+        #                voidPreAuth = accountSetup.AddressVerificationVoidUnknown;
+        #            }
+        #
+        #            // Set the AVS description.
+        #            switch(creditCardAuthTransAVS.AddressVerificationResult)
+        #            {
+        #                case CreditCardAddressVerificationResult::NotReturned:
+        #                    avsDescription = strFmt(avsDescription, "@SYS327121");
+        #                    break;
+        #                case CreditCardAddressVerificationResult::None:
+        #                    avsDescription = strFmt(avsDescription, "@SYS327122");
+        #                    break;
+        #                case CreditCardAddressVerificationResult::VerificationNotSupported:
+        #                    avsDescription = strFmt(avsDescription, "@SYS327123");
+        #                    break;
+        #                case CreditCardAddressVerificationResult::SystemUnavailable:
+        #                    avsDescription = strFmt(avsDescription, "@SYS327124");
+        #                    break;
+        #            }
+        #        }
+        #
+        #        if(voidPreAuth)
+        #        {
+        #            // The preauth was processed successfully but AVS failed.
+        #            // The processor settings were setup to void on AVS failure.
+        #            CreditCardProcess::doVoidAuth(creditCardAuthTransAVS, false, avsDescription);
+        #
+        #            processSucceed = false;
+        #
+        #            perm.assert();
+        #
+        #            responseMessage = "@SYS327125";
+        #
+        #            displayedMessage = responseMessage;
+        #
+        #            CodeAccessPermission::revertAssert();
+        #        }
+        #
+        #        // Update the description with the AVS details.
+        #        this.updateFailedDescription(creditCardAuthTransAVS.RecId, avsDescription);
+        #
+        #        return false;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #validateCvc
+        #/// <summary>
+        #/// Ensure the CVV value was correct.
+        #/// </summary>
+        #/// <returns>
+        #/// true if successful.
+        #/// </returns>
+        #protected boolean validateCvc()
+        #{
+        #    CreditCardMSCVCResultCode cvcResult;
+        #    CreditCardAuthTrans authTrans;
+        #    str description;
+        #
+        #    if(!processSucceed || this.parmOperation() != CreditCardOperation::Authorize || !this.checkForCardVerificationValue())
+        #    {
+        #        return true;
+        #    }
+        #
+        #    cvcResult = providerResult.parmCvcResult();
+        #    if(cvcResult == CreditCardMSCVCResultCode::Success)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    // If CVV is blank and blank is allow, consider it success
+        #    if(strLen(strRTrim(this.parmCardVerificationValue())) == 0 && accountSetup.CardVerificationCheckAllowBlank)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    authTrans = CreditCardAuthTrans::findValidPreApproval(salesTable.SalesId);
+        #
+        #    processSucceed = false;
+        #
+        #    description = strFmt("@SYS327113", new DictEnum(enumNum(CreditCardMSCVCResultCode)).value2Label(cvcResult));
+        #
+        #    // The preauth was processed successfully but CVV failed.
+        #    CreditCardProcess::doVoidAuth(authTrans, false, description);
+        #
+        #    responseMessage = "@SYS327138";
+        #    displayedMessage = description;
+        #
+        #    // Update the description with the CVC details
+        #    this.updateFailedDescription(authTrans.RecId, description);
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #validateTransaction
+        #/// <summary>
+        #/// Check AVS and CVV values if needed.
+        #/// </summary>
+        #/// <returns>
+        #/// true if successful.
+        #/// </returns>
+        #protected boolean validateTransaction()
+        #{
+        #    InteropPermission perm = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    perm.assert();
+        #
+        #    if(this.validateCvc())
+        #    {
+        #        this.validateAVS();
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static CreditCardProviderProcess construct()
+        #{
+        #    return new CreditCardProviderProcess();
+        #}
+      ENDSOURCE
+      SOURCE #convertSystemDecimalToAmount
+        #/// <summary>
+        #///    Converts a decimal value to type amount.
+        #/// </summary>
+        #/// <param name="_value">
+        #///    The decimal value that must be converted.
+        #/// </param>
+        #/// <returns>
+        #///    The decimal number converted to amount type.
+        #/// </returns>
+        #public static Amount convertSystemDecimalToAmount(System.Decimal _value)
+        #{
+        #    str string;
+        #
+        #    if(_value)
+        #    {
+        #        string = _value.ToString();
+        #        return any2real(string);
+        #    }
+        #
+        #    return 0;
+        #}
+      ENDSOURCE
+      SOURCE #getIsoCurrency
+        #/// <summary>
+        #/// Convert an AX currency code to an ISO currency code.
+        #/// </summary>
+        #/// <param name="_currencyCode">
+        #/// A currency code.
+        #/// </param>
+        #/// <returns>
+        #/// An ISO currency code.
+        #/// </returns>
+        #public static CurrencyCodeISO getIsoCurrency(CurrencyCode _currencyCode)
+        #{
+        #    return (select CurrencyCodeISO from currency where currency.CurrencyCode == _currencyCode).CurrencyCodeISO;
+        #}
+      ENDSOURCE
+      SOURCE #getPurchaseLevel
+        #/// <summary>
+        #/// Determine the required purchase detail level.
+        #/// </summary>
+        #/// <param name="_creditCardTypeSetup">
+        #/// A <c>CreditCardTypeSetup</c> table record.
+        #/// </param>
+        #/// <param name="_currencyCode">
+        #/// A currency code.
+        #/// </param>
+        #/// <returns>
+        #/// The purchase detail level.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// An unknown purchase detail level was encountered.
+        #/// </exception>
+        #public static Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel getPurchaseLevel(CreditCardTypeSetup _creditCardTypeSetup, CurrencyCode _currencyCode)
+        #{
+        #    CreditCardTypeCurrency creditCardTypeCurrency = CreditCardTypeCurrency::find(_creditCardTypeSetup, _currencyCode);
+        #
+        #    if(creditCardTypeCurrency.DataSupport == CreditCardCurrencyDataSupport::None)
+        #    {
+        #        switch(_creditCardTypeSetup.DataSupport)
+        #        {
+        #        case CreditCardDataSupport::Level1:
+        #            return Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level1;
+        #        case CreditCardDataSupport::Level2:
+        #            return Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level2;
+        #        case CreditCardDataSupport::Level3:
+        #            return Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level3;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        switch(creditCardTypeCurrency.DataSupport)
+        #        {
+        #        case CreditCardCurrencyDataSupport::Level1:
+        #            return Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level1;
+        #        case CreditCardCurrencyDataSupport::Level2:
+        #            return Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level2;
+        #        case CreditCardCurrencyDataSupport::Level3:
+        #            return Microsoft.Dynamics.Retail.PaymentSDK.PurchaseLevel::Level3;
+        #        }
+        #    }
+        #
+        #    throw error(Error::wrongUseOfFunction(funcName()));
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

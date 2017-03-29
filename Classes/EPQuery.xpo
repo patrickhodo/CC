@@ -1,0 +1,325 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #EPQuery
+    PROPERTIES
+      Name                #EPQuery
+      Origin              #{2D071881-0000-1000-4550-517565727900}
+      LegacyId            #6273
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #// This is a framework class. Customizing this class may cause problems with future upgrades to the software.
+        #class EpQuery
+        #{
+        #    Query   query;
+        #}
+      ENDSOURCE
+      SOURCE #parmQuery
+        #Query parmQuery(Query _query = query)
+        #{
+        #    ;
+        #    query = _query;
+        #    return query;
+        #}
+      ENDSOURCE
+      SOURCE #checkCustomerSelfServiceRecord
+        #static boolean checkCustomerSelfServiceRecord(Common rec)
+        #{
+        #    fieldId             fieldId = EPQuery::customerSelfServiceQueryFieldId(rec.TableId);
+        #    Common              refRecord;
+        #    CustInvoiceTrans    custInvoiceTrans;
+        #
+        #    if (fieldId && rec.(fieldId) != DirPersonUser::current().custAccount())
+        #        return false;
+        #
+        #    switch (rec.TableId)
+        #    {
+        #        case tableNum(CustInvoiceTrans) :   custInvoiceTrans = rec as CustInvoiceTrans;
+        #                                            refRecord = custInvoiceTrans.custInvoiceJour();
+        #                                            fieldId = EPQuery::customerSelfServiceQueryFieldId(tableNum(CustInvoiceJour)); break;
+        #    }
+        #
+        #    if (fieldId && refRecord && refRecord.(fieldId) != DirPersonUser::current().custAccount())
+        #        return false;
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #checkVendorSelfServiceRecord
+        #static boolean checkVendorSelfServiceRecord(Common rec)
+        #{
+        #    fieldId                 fieldId = EPQuery::vendorSelfServiceQueryFieldId(rec.TableId);
+        #    Common                  refRecord;
+        #    VendInvoiceTrans        vendInvoiceTrans;
+        #    VendPackingSlipTrans    vendPackingSlipTrans;
+        #    PurchLineAllVersions    purchLineAllVersions;
+        #
+        #    if (fieldId && rec.(fieldId) != DirPersonUser::current().vendAccount())
+        #        return false;
+        #
+        #    switch (rec.TableId)
+        #    {
+        #        case tableNum(VendInvoiceTrans) :       vendInvoiceTrans = rec as VendInvoiceTrans;
+        #                                                refRecord = vendInvoiceTrans.vendInvoiceJour();
+        #                                                fieldId = EPQuery::vendorSelfServiceQueryFieldId(tableNum(VendInvoiceJour));
+        #                                                break;
+        #        case tableNum(VendPackingSlipTrans) :   vendPackingSlipTrans = rec as VendPackingSlipTrans;
+        #                                                refRecord = vendPackingSlipTrans.vendPackingslipJour();
+        #                                                fieldId = EPQuery::vendorSelfServiceQueryFieldId(tableNum(VendPackingSlipJour));
+        #                                                break;
+        #        case tableNum(PurchLineAllVersions) :   purchLineAllVersions = rec as PurchLineAllVersions;
+        #                                                refRecord = PurchTable::find(purchLineAllVersions.PurchId);
+        #                                                fieldId = EPQuery::vendorSelfServiceQueryFieldId(tableNum(PurchTable));
+        #                                                break;
+        #    }
+        #
+        #    if (fieldId && refRecord && refRecord.(fieldId) != DirPersonUser::current().vendAccount())
+        #        return false;
+        #
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #checkVSSItem
+        #static boolean checkVSSItem(ItemId _itemId)
+        #{
+        #    return (InventTable::find(_itemId).PrimaryVendorId == DirPersonUser::current().vendAccount());
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static EPQuery construct(Query _query)
+        #{
+        #    EPQuery epQuery = new EPQuery();
+        #    ;
+        #
+        #    epQuery.parmQuery(new Query(_query));
+        #
+        #    return epQuery;
+        #}
+      ENDSOURCE
+      SOURCE #customerSelfServiceQueryFieldId
+        #static fieldId customerSelfServiceQueryFieldId(tableId _tableId)
+        #{
+        #    fieldId fieldId;
+        #
+        #    switch (_tableId)
+        #    {
+        #        case tableNum(CustTable)        :   fieldId = fieldNum(CustTable,AccountNum); break;
+        #        case tableNum(CustInvoiceJour)  :   fieldId = fieldNum(CustInvoiceJour,InvoiceAccount); break;
+        #        case tableNum(SalesTable)       :   fieldId = fieldNum(SalesTable,CustAccount); break;
+        #        case tableNum(smmBusRelTable)   :   fieldId = fieldNum(smmBusRelTable,BusRelAccount); break;
+        #        case tableNum(CustUserRequest)  :   fieldId = fieldNum(CustUserRequest, CustomerAccountNumber); break;
+        #        //--> <Credit Card>
+        #        case tableNum(CustTrans)        :   fieldId = fieldNum(CustTrans,AccountNum); break;
+        #        case tableNum(CreditCardTable)  :   fieldId = fieldNum(CreditCardTable,CustAccount); break;
+        #        //case tableNum(CreditCardEPInvoiceTable)  :   fieldId = fieldNum(CreditCardEPInvoiceTable,CustAccount); break;
+        #        //<-- </Credit Card>
+        #    }
+        #
+        #    return fieldId;
+        #}
+      ENDSOURCE
+      SOURCE #makeMyBusinessRelationSelfServiceQuery
+        #static Query makeMyBusinessRelationSelfServiceQuery(Query _query, tableId _tableId)
+        #{
+        #    Query                   query;
+        #    QueryBuildDataSource    qBds;
+        #    DirPersonUser      dirPersonUser = DirPersonUser::current();
+        #    QueryBuildRange         range;
+        #    str                     queryValueStr;
+        #    ;
+        #
+        #    if (dirPersonUser.busRelAccount())
+        #        queryValueStr = queryValue(dirPersonUser.busRelAccount());
+        #    else
+        #        queryValueStr = SysQuery::valueEmptyString();
+        #
+        #    query = _query;
+        #
+        #    qBds = query.dataSourceTable(_tableId);
+        #
+        #    if (EPQuery::customerSelfServiceQueryFieldId(_tableId))
+        #    {
+        #        range = qBds.addRange(EPQuery::customerSelfServiceQueryFieldId(_tableId));
+        #        range.value(queryValueStr);
+        #        range.status(RangeStatus::Hidden);
+        #    }
+        #
+        #    return query;
+        #}
+      ENDSOURCE
+      SOURCE #makeMyCustomerSelfServiceQuery
+        #static Query makeMyCustomerSelfServiceQuery(Query _query, tableId _tableId)
+        #{
+        #    Query                   query;
+        #    QueryBuildDataSource    qBds;
+        #    DirPersonUser           dirPersonUser = DirPersonUser::current();
+        #    QueryBuildRange         range;
+        #    str                     queryValueStr;
+        #    QueryBuildRange         dataAreaRange;
+        #
+        #    if (dirPersonUser.custAccount())
+        #    {
+        #        queryValueStr = queryValue(dirPersonUser.custAccount());
+        #    }
+        #    else if (dirPersonUser.busRelAccount())
+        #    {
+        #        queryValueStr = queryValue(dirPersonUser.busRelAccount());
+        #    }
+        #    else
+        #    {
+        #        queryValueStr = SysQuery::valueUnlimited();
+        #    }
+        #
+        #    query = _query;
+        #
+        #    if (_tableId == tableNum(CustUserRequest))
+        #    {
+        #        qBds  = _query.dataSourceTable(tableNum(UserRequest));
+        #    }
+        #    else
+        #    {
+        #        qBds = query.dataSourceTable(_tableId);
+        #    }
+        #
+        #    if (EPQuery::customerSelfServiceQueryFieldId(_tableId))
+        #    {
+        #        range = qBds.addRange(EPQuery::customerSelfServiceQueryFieldId(_tableId));
+        #        range.value(queryValueStr);
+        #        range.status(RangeStatus::Hidden);
+        #
+        #        if (_tableId == tableNum(CustUserRequest))
+        #        {
+        #            dataAreaRange = SysQuery::findOrCreateRange(qBds, fieldNum(CustUserRequest, CustomerDataAreaId));
+        #            dataAreaRange.status(RangeStatus::Hidden);
+        #            dataAreaRange.value(queryValue(curext()));
+        #        }
+        #    }
+        #
+        #    return query;
+        #}
+      ENDSOURCE
+      SOURCE #makeMyVendorSelfServiceQuery
+        #/// <summary>
+        #///    Filters the query to the selected vendor account that is set on the EP vendor chooser control.
+        #/// </summary>
+        #/// <param name="_query">
+        #///    The query object to modify.
+        #/// </param>
+        #/// <param name="_tableId">
+        #///    The ID of the table to which to add the filter.
+        #/// </param>
+        #/// <returns>
+        #///    A query that is filtered with the vendor account that is selected on the EP vendor chooser control.
+        #/// </returns>
+        #public static Query makeMyVendorSelfServiceQuery(Query _query, tableId _tableId)
+        #{
+        #    QueryBuildDataSource    qBds;
+        #    str                     queryValueStr;
+        #    QueryBuildRange         range;
+        #    QueryBuildRange         dataAreaRange;
+        #    VendAccount             vendAccount;
+        #
+        #    // get selected account from vendor account chooser control in EP
+        #    vendAccount = VendAccountManager::getSelectedAccount();
+        #
+        #    if (vendAccount)
+        #    {
+        #        queryValueStr = vendAccount;
+        #    }
+        #    else
+        #    {
+        #        queryValueStr = SysQuery::valueEmptyString();
+        #    }
+        #
+        #    if (_tableId == tableNum(VendUserRequest))
+        #    {
+        #        qBds  = _query.dataSourceTable(tableNum(UserRequest));
+        #    }
+        #    else
+        #    {
+        #        qBds  = _query.dataSourceTable(_tableId);
+        #    }
+        #
+        #    if (EPQuery::vendorSelfServiceQueryFieldId(_tableId))
+        #    {
+        #        range = qBds.addRange(EPQuery::vendorSelfServiceQueryFieldId(_tableId));
+        #        if (_tableId == tableNum(InventTransOrigin) || _tableId == tableNum(CatVendorCatalog))
+        #        {
+        #            queryValueStr = queryValue(VendTable::find(queryValueStr).Party);
+        #        }
+        #        else if (_tableId == tableNum(VendUserRequest))
+        #        {
+        #            dataAreaRange = SysQuery::findOrCreateRange(qBds, fieldNum(VendUserRequest, VendorDataAreaId));
+        #            dataAreaRange.status(RangeStatus::Hidden);
+        #            dataAreaRange.value(queryValue(curext()));
+        #        }
+        #
+        #        range.value(queryValueStr);
+        #        range.status(RangeStatus::Hidden);
+        #    }
+        #
+        #    return _query;
+        #}
+      ENDSOURCE
+      SOURCE #makeRecIdQuery
+        #static Query makeRecIdQuery(Query       _query,
+        #                            tableId     _tableId,
+        #                            recId       _recId = 0)
+        #{
+        #    EPQuery             epQuery;
+        #    Query               tableQuery;
+        #    QueryBuildRange     range;
+        #    ;
+        #
+        #    epQuery     = EPQuery::construct(_query);
+        #    tableQuery  = epQuery.parmQuery();
+        #    tableQuery.dataSourceTable(_tableId).clearRanges();
+        #    range = tableQuery.dataSourceTable(_tableId).addRange(fieldName2id(_tableId, 'recId'));
+        #    range.value(SysQuery::value(_recId));
+        #    range.status(RangeStatus::Hidden);
+        #
+        #    return tableQuery;
+        #}
+      ENDSOURCE
+      SOURCE #vendorSelfServiceQueryFieldId
+        #static fieldId vendorSelfServiceQueryFieldId(tableId _tableId)
+        #{
+        #    fieldId fieldId;
+        #
+        #    switch (_tableId)
+        #    {
+        #        case tableNum(VendTable)                                : fieldId = fieldNum(VendTable,AccountNum); break;
+        #        case tableNum(InventTable)                              : fieldId = fieldNum(InventTable,PrimaryVendorId); break;
+        #        case tableNum(VendPackingSlipJour)                      : fieldId = fieldNum(VendPackingSlipJour,OrderAccount); break;
+        #        case tableNum(VendPurchOrderJour)                       : fieldId = fieldNum(VendPurchOrderJour,OrderAccount); break;
+        #        case tableNum(VendInvoiceJour)                          : fieldId = fieldNum(VendInvoiceJour,OrderAccount); break;
+        #        case tableNum(InventTransOrigin)                        : fieldId = fieldNum(InventTransOrigin,Party); break;
+        #        case tableNum(PurchTable)                               : fieldId = fieldNum(PurchTable,OrderAccount); break;
+        #        case tableNum(PurchRFQTable)                            : fieldId = fieldNum(PurchRFQTable,VendAccount); break;
+        #        case tableNum(VendRequest)                              : fieldId = fieldNum(VendRequest, AccountNum); break;
+        #        case tableNum(VendRequestCategoryExtension)             : fieldId = fieldNum(VendRequestCategoryExtension, AccountNum); break;
+        #        case tableNum(VendUserRequest)                          : fieldId = fieldNum(VendUserRequest, VendorAccountNumber); break;
+        #        case tableNum(VendBankAccount)                          : fieldId = fieldNum(VendBankAccount,AccountNum); break;
+        #        case tableNum(VendPostedUnionUnpostedInvoice)           : fieldId = fieldNum(VendPostedUnionUnpostedInvoice, InvoiceAccount); break;
+        #        case tableNum(VendInvoiceInfoTable)                     : fieldId = fieldNum(VendInvoiceInfoTable, InvoiceAccount); break;
+        #        case tableNum(VendInvoiceInfoLine)                      : fieldId = fieldNum(VendInvoiceInfoLine, InvoiceAccount); break;
+        #        case tableNum(CatVendorCatalog)                         : fieldId = fieldNum(CatVendorCatalog,VendorParty); break;
+        #        case tableNum(PurchTableAllVersions)                    : fieldId = fieldNum(PurchTableAllVersions,OrderAccount); break;
+        #    }
+        #
+        #    return fieldId;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

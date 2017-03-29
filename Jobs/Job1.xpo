@@ -1,0 +1,45 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: JOB
+
+; 
+; --------------------------------------------------------------------------------
+  JOBVERSION 1
+  
+  SOURCE #Job1
+    #static void Job1(Args _args)
+    #{
+    #    str         tmpStr;
+    #    str         _name = "John H Smith";
+    #    str         reduction;
+    #    int         marker;
+    #    int         len;
+    #    ;
+    #    len = strLen(_name);
+    #    marker = strFind(_name,' ',1,len);
+    #
+    #    reduction = subStr(_name,marker,len-marker+1);
+    #
+    #    while (strLen(reduction)>0)
+    #    {
+    #        marker = strFind(reduction,' ',1,30);
+    #
+    #        if (marker == 0)
+    #        {
+    #            tmpStr = subStr(reduction,1,30);
+    #            reduction ='';
+    #        }
+    #        else
+    #        {
+    #            reduction = subStr(reduction,marker+1,30);
+    #        }
+    #    }
+    #}
+  ENDSOURCE
+  PROPERTIES
+    Origin              #{0675C379-0AA3-4D7F-8B07-D2D27EED9F94}
+  ENDPROPERTIES
+  
+
+***Element: END

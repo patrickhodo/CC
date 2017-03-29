@@ -1,0 +1,901 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardOrbitalXMLBuilder43
+    PROPERTIES
+      Name                #CreditCardOrbitalXMLBuilder43
+      Extends             #CreditCardOrbitalXMLBuilder
+      Origin              #{56FFC9E4-BBED-4462-8F9D-2CDDEAEA37B9}
+      LegacyId            #20036
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #build
+        #TempStr build(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                         parmList;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A        :
+        #            parmList = this.buildNewOrder(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            parmList = this.buildReturn(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::D     :
+        #            parmList = this.buildMarkforCapture(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            parmList = this.buildNewOrder(ccTrans);
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            parmList = this.buildReversal(ccTrans);
+        #            break;
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildAddress
+        #XMLElement buildAddress(CreditCardTrans     ccTrans,
+        #                        XMLElement          newOrder)
+        #{
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> AVS Information
+        #    if (this.parmPostalAddress().ZipCode && creditCardParameters::findParameter().AVS)
+        #    {
+        #        xmlGen = xmlDocument.createElement('AVSzip');
+        #        xmlGen.innerText(this.parmPostalAddress().ZipCode);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        if (creditCardParameters::findParameter().AVSZipOnly == NoYes::No)
+        #        {
+        #            xmlGen = xmlDocument.createElement('AVSaddress1');
+        #            xmlGen.innerText(this.parmPostalAddress().Street);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScity');
+        #            xmlGen.innerText(this.parmPostalAddress().City);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #
+        #            xmlGen = xmlDocument.createElement('AVSstate');
+        #            xmlGen.innerText(this.parmPostalAddress().State);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            if (ccTrans.AVSPhone)
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVSphoneNum');
+        #                xmlGen.innerText(ccTrans.AVSPhone);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #
+        #            xmlGen = xmlDocument.createElement('AVSname');
+        #            xmlGen.innerText(ccTrans.NameOnCard);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScountryCode');
+        #            xmlGen.innerText(this.parmPostalAddress().CountryRegionId);
+        #            newOrder.appendChild(xmlGen);
+        #        }
+        #        else
+        #        {
+        #            if (this.parmPostalAddress().CountryRegionId == 'UK' || this.parmPostalAddress().CountryRegionId == 'GB')
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVScountryCode');
+        #                xmlGen.innerText(this.parmPostalAddress().CountryRegionId);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #        }
+        #    }
+        #
+        #    return newOrder;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    XMLProcessingInstruction        instruction;
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #    instruction = xmlDocument.createProcessingInstruction('xml-stylesheet',
+        #        'type="text/xsl" href="www.redmaple.com"');
+        #
+        #    xmlDocument.appendChild(instruction);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildMarkforCapture
+        #xml buildMarkforCapture(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    TempStr                         amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantID,OrbitalCurrency from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('MarkForCapture');
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    xmlGen.innerText(strReplace(ccTrans.SalesId,'_',''));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #    xmlAmount.innerText(amount);
+        #
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    BIN.innerText('000001');
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText('001');
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('TxRefNum');
+        #    xmlGen.innerText(ccTrans.OrbitalTxRefNum);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildNewOrder
+        #xml buildNewOrder(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    TempStr                         amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      AccountNum;
+        #    XMLElement                      ExpDate;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantID,OrbitalCurrency from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('NewOrder');
+        #
+        #    //--> Industry type
+        #    xmlGen = xmlDocument.createElement('IndustryType');
+        #    xmlGen.innerText(this.IndustryType(ccTerminal));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('IndustryType',this.IndustryType(ccTerminal));
+        #
+        #    //--> Transaction type
+        #    xmlGen = xmlDocument.createElement('MessageType');
+        #    xmlGen.innerText(this.TransactionType(ccTrans.TransType));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('MessageType',this.TransactionType(ccTrans));
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    BIN.innerText('000001');
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText('001');
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Card Brand
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CardBrand');
+        #        xmlGen.innerText('SW');
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    //--> Account information
+        #    AccountNum = xmlDocument.createElement('AccountNum');
+        #    AccountNum.innerText(this.returnAccount(ccTrans));
+        #    newOrder.appendChild(AccountNum);
+        #
+        #    //--> Expiration
+        #    ExpDate = xmlDocument.createElement('Exp');
+        #    ExpDate.innerText(this.returnExpDate(ccTrans));
+        #    newOrder.appendChild(ExpDate);
+        #
+        #    //--> Currency
+        #    xmlGen = xmlDocument.createElement('CurrencyCode');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Currency Exponent
+        #    xmlGen = xmlDocument.createElement('CurrencyExponent');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyExponentISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Card Sec Val INd
+        #    //--> Only used by Visa and Discover
+        #    if ((ccTrans.CreditCardType == CreditCardType::Visa
+        #        || ccTrans.CreditCardType == CreditCardType::Discover)
+        #        && CreditCardParameters::findParameter().CVD)
+        #    {
+        #        xmlGen = xmlDocument.createElement('CardSecValInd');
+        #        switch (ccTrans.CVDSent)
+        #        {
+        #            case    CreditCardCVDValues::Provided   :
+        #                xmlGen.innerText('1');
+        #                break;
+        #            case    CreditCardCVDValues::NotReadable    :
+        #                xmlGen.innerText('2');
+        #                break;
+        #            default :
+        #                xmlGen.innerText('9');
+        #                break;
+        #        }
+        #        newOrder.appendChild(xmlGen);
+        #    }
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    // Card Sec Val
+        #    if (ccTrans.CID && creditCardParameters::findParameter().CVD)
+        #    {
+        #        switch (ccTrans.CreditCardType)
+        #        {
+        #            case    CreditCardType::Visa,
+        #                CreditCardType::MasterCard,
+        #                CreditCardType::AmericanExpress,
+        #                CreditCardType::Discover    :
+        #
+        #                xmlGen = xmlDocument.createElement('CardSecVal');
+        #                xmlGen.innerText(ccTrans.CID);
+        #                newOrder.appendChild(xmlGen);
+        #                break;
+        #
+        #        }
+        #    }
+        #
+        #    //--> Switch Solo
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        xmlGen = xmlDocument.createElement('DebitCardIssueNum');
+        #        xmlGen.innerText(ccTrans.SoloIssueNum);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        /*The DebitCardStartDate field should be submitted only
+        #        when the card does not have an Issue Number. If the
+        #        card displays ONLY a Start Date and no Issue Number,
+        #        the DebitCardStartDate field should contain a value
+        #        and the DebitCardIssueNum field must be left blank
+        #        [null filled].*/
+        #        xmlGen = xmlDocument.createElement('DebitCardStartDate');
+        #        if (!ccTrans.SoloIssueNum)
+        #        {
+        #            xmlGen.innerText(this.returnStartDate(ccTrans));
+        #        }
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        parmList = newOrder.xml();
+        #    }
+        #
+        #    //--> AVS Information
+        #    newOrder  = this.buildAddress(ccTrans,newOrder);
+        #
+        #    //--Customer prfile
+        #    xmlGen = xmlDocument.createElement('CustomerProfileFromOrderInd');
+        #    xmlGen.innerText('EMPTY');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    xmlGen.innerText(strReplace(ccTrans.SalesId,'_',''));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('OrderID',strReplace(ccTrans.SalesId,'_',''));
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #
+        #    /*sLen = strLen(amount);
+        #
+        #    for (sLen=sLen;sLen<=12;sLen++)
+        #    {
+        #        amount = '0'+ amount;
+        #        sLen = strLen(amount);
+        #    } */
+        #
+        #    xmlAmount.innerText(amount);
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildReturn
+        #xml buildReturn(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    TempStr                         amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      AccountNum;
+        #    XMLElement                      ExpDate;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantId,OrbitalCurrency from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('NewOrder');
+        #
+        #    //--> Industry type
+        #    xmlGen = xmlDocument.createElement('IndustryType');
+        #    xmlGen.innerText(this.IndustryType(ccTerminal));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('IndustryType',this.IndustryType(ccTerminal));
+        #
+        #    //--> Transaction type
+        #    xmlGen = xmlDocument.createElement('MessageType');
+        #    xmlGen.innerText(this.TransactionType(ccTrans.TransType));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('MessageType',this.TransactionType(ccTrans));
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    BIN.innerText('000001');
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText('001');
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    if (ccTrans.OrbitalTxRefNum)
+        #    {
+        #        //--> Account information
+        #        AccountNum = xmlDocument.createElement('AccountNum');
+        #        newOrder.appendChild(AccountNum);
+        #
+        #        //--> Expiration
+        #        ExpDate = xmlDocument.createElement('Exp');
+        #        newOrder.appendChild(ExpDate);
+        #    }
+        #    else
+        #    {
+        #        //--> Account information
+        #        AccountNum = xmlDocument.createElement('AccountNum');
+        #        AccountNum.innerText(this.returnAccount(ccTrans));
+        #        newOrder.appendChild(AccountNum);
+        #
+        #        //--> Expiration
+        #        ExpDate = xmlDocument.createElement('Exp');
+        #        ExpDate.innerText(this.returnExpDate(ccTrans));
+        #        newOrder.appendChild(ExpDate);
+        #    }
+        #
+        #
+        #    //--> Currency
+        #    xmlGen = xmlDocument.createElement('CurrencyCode');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    //--> Currency Exponent
+        #    xmlGen = xmlDocument.createElement('CurrencyExponent');
+        #    xmlGen.innerText(CreditCardTerminalTable::getCurrencyExponentISO(ccTrans.TransCurrencyCode));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #
+        #    //--Customer prfile
+        #    xmlGen = xmlDocument.createElement('CustomerProfileFromOrderInd');
+        #    xmlGen.innerText('EMPTY');
+        #    newOrder.appendChild(xmlGen);
+        #
+        #     xmlGen = xmlDocument.createElement('OrderID');
+        #    xmlGen.innerText(strReplace(ccTrans.SalesId,'_',''));
+        #    newOrder.appendChild(xmlGen);
+        #    //newOrder.setAttribute('OrderID',strReplace(ccTrans.SalesId,'_',''));
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('Amount');
+        #    amount = strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #
+        #    xmlAmount.innerText(amount);
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    if (ccTrans.OrbitalTxRefNum)
+        #    {
+        #        AccountNum = xmlDocument.createElement('TxRefNum');
+        #        AccountNum.innerText(ccTrans.OrbitalTxRefNum);
+        #        newOrder.appendChild(AccountNum);
+        #    }
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #buildReversal
+        #xml buildReversal(CreditCardTrans     ccTrans)
+        #{
+        #    TempStr                         ParmList;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantOrbital       ccPaymentech;
+        #    TempStr                         amount;
+        #    int                             location;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      newOrder;
+        #    XMLElement                      BIN;
+        #    XMLElement                      MerchantID;
+        #    XMLElement                      TerminalID;
+        #    XMLElement                      xmlGen;
+        #    XMLElement                      xmlAmount;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select MerchantId from ccPaymentech
+        #        where ccPaymentech.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    request = xmlDocument.createElement('Request');
+        #
+        #    newOrder = xmlDocument.createElement('Reversal');
+        #
+        #    xmlGen = xmlDocument.createElement('TxRefNum');
+        #    xmlGen.innerText(ccTrans.OrbitalTxRefNum);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('TxRefIdx');
+        #    xmlGen.innerText(ccTrans.OrbitalTxRefIdx);
+        #    newOrder.appendChild(xmlGen);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    //--> Amount
+        #    xmlAmount = xmlDocument.createElement('AdjustedAmt');
+        #    amount = strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    //--> Remove decimal as amount of $123.45 is reported as $12345
+        #    location = strFind(amount,'.',0,99);
+        #    amount = strDel(amount,location,1);
+        #
+        #    xmlAmount.innerText(amount);
+        #    newOrder.appendChild(xmlAmount);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    xmlGen = xmlDocument.createElement('OrderID');
+        #    xmlGen.innerText(strReplace(ccTrans.SalesId,'_',''));
+        #    newOrder.appendChild(xmlGen);
+        #
+        #
+        #
+        #    BIN = xmlDocument.createElement('BIN');
+        #    BIN.innerText('000001');
+        #    newOrder.appendChild(BIN);
+        #
+        #    MerchantId = xmlDocument.createElement('MerchantID');
+        #    MerchantId.innerText(ccPaymentech.MerchantId);
+        #    newOrder.appendChild(merchantId);
+        #
+        #    TerminalId = xmlDocument.createElement('TerminalID');
+        #    TerminalId.innerText('001');
+        #    newOrder.appendChild(TerminalId);
+        #
+        #    parmList = newOrder.xml();
+        #
+        #    request.appendChild(newOrder);
+        #
+        #    return request.xml();
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardOrbitalXMLBuilder43 extends CreditCardOrbitalXMLBuilder
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    LogisticsPostalAddress          postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #IndustryType
+        #str 2 IndustryType(CreditCardTerminalTable   terminalTable)
+        #{
+        #    str 2                       industry;
+        #    CreditCardMerchantOrbital    ccOrbital;
+        #    ;
+        #    select IndustryOrbital from ccOrbital
+        #        where ccOrbital.TerminalId == terminalTable.TerminalId;
+        #
+        #    switch  (ccOrbital.IndustryOrbital)
+        #    {
+        #        case CreditCardIndustryOrbital::EC  :
+        #            industry = 'EC';
+        #            break;
+        #        case CreditCardIndustryOrbital::Mail    :
+        #            industry = 'MO';
+        #            break;
+        #    }
+        #
+        #    return industry;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #resolveCountry
+        #TempStr resolveCountry(AddressZipcodeId   zipCodeId)
+        #{
+        #    AddressCountryRegionId       countryId;
+        #    ;
+        #    countryId = LogisticsAddressZipCode::find(zipCodeId).CountryRegionId;
+        #
+        #    if (countryId == 'USA')
+        #    {
+        #        countryId = 'US';
+        #    }
+        #
+        #    return countryId;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #TempStr retrieveValue(CreditCardTrans ccTrans)
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccTrans.CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(ccTrans);
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumEncrypt)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(ccTrans);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnBankAccountType
+        #TempStr returnBankAccountType(CustBankAccount       custBankAccount)
+        #{
+        #    TempStr         parmList;
+        #    ;
+        #    switch (custBankAccount.BankAccountType)
+        #    {
+        #        case BankAccountType::CheckingAccount     :
+        #            parmList = 'C';
+        #            break;
+        #        case BankAccountType::SavingsAccount      :
+        #            parmList = 'S';
+        #            break;
+        #        case BankAccountType::CommercialChecking  :
+        #            parmList = 'X';
+        #            break;
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnExpDate
+        #TempStr returnExpDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                     ParmList;
+        #    TempStr                     month;
+        #    TempStr                     ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2Str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (Strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2Str(Year(ccTrans.OneTimeDateExp));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && Strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = subStr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2Str(Mthofyr(ccTable.ExpirationDate));
+        #            if (Strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2Str(Year(ccTable.ExpirationDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && Strlen(ccYear) == 4)
+        #            {
+        #                ccYear = subStr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartDate
+        #TempStr returnStartDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTrans.SoloStartDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ccYear = int2str(Year(ccTrans.SoloStartDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,2);
+        #        }
+        #
+        #        ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ccYear = int2str(Year(ccTable.SoloStartDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,2);
+        #        }
+        #
+        #        ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #TransactionType
+        #str 2 TransactionType(CreditCardTrxType     ccTransType)
+        #{
+        #    str 2       transType;
+        #    ;
+        #    switch (cctransType)
+        #    {
+        #        case CreditCardTrxType::A   :
+        #            transType = 'A';
+        #            break;
+        #        case CreditCardTrxType::S   :
+        #            transType = 'AC';
+        #            break;
+        #        case CreditCardTrxType::D   :
+        #            transType = 'FC';
+        #            break;
+        #        case CreditCardTrxType::C   :
+        #            transType  = 'R';
+        #            break;
+        #    }
+        #
+        #    return transType;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static TempStr construct(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantOrbital       ccMerchantOrbital;
+        #
+        #    //--> Obital Specific variables
+        #    HttpRequest                     request;
+        #    CreditCardOrbitalXMLBuilder43   xmlBuilder = new CreditCardOrbitalXMLBuilder43();
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #    //-->
+        #    TempStr                         response;
+        #    TempStr                         parmList;
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccMerchantOrbital
+        #        where ccMerchantOrbital.TerminalId == ccTrans.TerminalId;
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantOrbital(ccMerchantOrbital);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #
+        #    request = new HTTPRequest();
+        #
+        #    //--> Build <Request> Node
+        #    ParmList += xmlBuilder.build(ccTrans);
+        #
+        #
+        #    request.open('POST', ccMerchantOrbital.HostAddress);
+        #
+        #    request.setRequestHeader('CONTENT-TYPE','application/PTI43');
+        #    request.setRequestHeader('MIME-Version','1.0');
+        #
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.setRequestHeader('Content-transfer-encoding','text');
+        #    request.setRequestHeader('Request-number','1');
+        #    request.setRequestHeader('Document-type','Request');
+        #    request.setRequestHeader('Interface-Version','Version 4.0.2');
+        #
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

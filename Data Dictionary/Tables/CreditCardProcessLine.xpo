@@ -1,0 +1,474 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardProcessLine
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardProcessLine
+      Label               #@ACC1244
+      FormRef             #creditcardprocessline
+      TitleField1         #ProcessGroupId
+      TitleField2         #TerminalId
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CreateRecIdIndex    #Yes
+      TableGroup          #Group
+      PrimaryIndex        #RecId
+      ClusterIndex        #ProcessGroupIdIdx
+      DeveloperDocumentation  #@ACC1743
+      Origin              #{E2639725-D06E-4FF5-939C-55906A9AA217}
+      LegacyId            #20029
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #CountryRegionId
+        STRING
+        PROPERTIES
+          Name                #CountryRegionId
+          AllowEdit           #No
+          Table               #CreditCardProcessLine
+          Origin              #{508D7950-B092-4369-9356-00C1F5D364E2}
+          LegacyId            #20006
+          ExtendedDataType    #AddressCountryRegionId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardType
+        ENUM
+        PROPERTIES
+          Name                #CreditCardType
+          AllowEdit           #No
+          Table               #CreditCardProcessLine
+          Origin              #{2B934744-7C7F-40D7-A222-DFCDD2386165}
+          LegacyId            #20004
+          EnumType            #CreditCardType
+        ENDPROPERTIES
+        
+      FIELD #CreditCardTypeActive
+        ENUM
+        PROPERTIES
+          Name                #CreditCardTypeActive
+          Label               #@ACC1242
+          HelpText            #@ACC1243
+          Table               #CreditCardProcessLine
+          Origin              #{28AEA862-6ADB-4A72-A8EF-652B3F63D17C}
+          LegacyId            #20003
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #CurrencyCode
+        STRING
+        PROPERTIES
+          Name                #CurrencyCode
+          AllowEdit           #No
+          Table               #CreditCardProcessLine
+          Origin              #{041A29C4-C288-43A9-9ACD-347CA3018583}
+          LegacyId            #20005
+          ExtendedDataType    #CurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #CustAccount
+        STRING
+        PROPERTIES
+          Name                #CustAccount
+          Table               #CreditCardProcessLine
+          Origin              #{05739131-909F-45C0-8019-6966801AFC5F}
+          ExtendedDataType    #CustAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #DefaultDimension
+        INT64
+        PROPERTIES
+          Name                #DefaultDimension
+          Table               #CreditCardProcessLine
+          Origin              #{4B14ACAA-B100-41DD-889D-87FE34BDA181}
+          ExtendedDataType    #DimensionDefault
+        ENDPROPERTIES
+        
+      FIELD #Priority
+        INT
+        PROPERTIES
+          Name                #Priority
+          Table               #CreditCardProcessLine
+          Origin              #{B4EDE538-EDBB-4ADA-96F7-DDCAF121F53B}
+          ExtendedDataType    #Priority
+        ENDPROPERTIES
+        
+      FIELD #ProcessGroupId
+        STRING
+        PROPERTIES
+          Name                #ProcessGroupId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardProcessLine
+          Origin              #{396B74F7-DA3B-43C4-BAA9-DE6C73BF4B10}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardProcessGroupId
+        ENDPROPERTIES
+        
+      FIELD #SalesOriginId
+        STRING
+        PROPERTIES
+          Name                #SalesOriginId
+          Table               #CreditCardProcessLine
+          Origin              #{15019BCB-4765-47F9-9AA0-8A05B335411A}
+          ExtendedDataType    #SalesOriginId
+        ENDPROPERTIES
+        
+      FIELD #SetPrimary
+        ENUM
+        PROPERTIES
+          Name                #SetPrimary
+          Label               #@SYS13577
+          HelpText            #@ACC1245
+          Table               #CreditCardProcessLine
+          Origin              #{CF6CD0F6-5B96-4264-B66D-9A5109787E58}
+          LegacyId            #20007
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #SetTokenPrimary
+        ENUM
+        PROPERTIES
+          Name                #SetTokenPrimary
+          Label               #@SYS38595
+          HelpText            #@ACC1528
+          Table               #CreditCardProcessLine
+          Origin              #{5FE3FB69-5451-4CE9-BB1D-FB9A39BB4F07}
+          LegacyId            #20008
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Table               #CreditCardProcessLine
+          Origin              #{5D93F98B-084E-4394-80E4-706D503E6769}
+          LegacyId            #20002
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ProcessGroupId
+          #TerminalId
+          #CreditCardTypeActive
+          #CreditCardType
+          #CurrencyCode
+          #CountryRegionId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ProcessGroupId
+          #TerminalId
+          #CreditCardTypeActive
+          #CreditCardType
+          #CurrencyCode
+          #CountryRegionId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Country
+        PROPERTIES
+          Name                #Country
+          Label               #@SYS7437
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CountryRegionId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #CreditCardType
+        PROPERTIES
+          Name                #CreditCardType
+          Label               #@SYS81228
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardTypeActive
+          #CreditCardType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Currency
+        PROPERTIES
+          Name                #Currency
+          Label               #@SYS7572
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CurrencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS36186
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ProcessGroupId
+          #TerminalId
+          #SetPrimary
+          #SetTokenPrimary
+          #SalesOriginId
+          #CustAccount
+          #Priority
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Ledger
+        PROPERTIES
+          Name                #Ledger
+          Label               #@SYS13356
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #DefaultDimension
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #ProcessGroupIdIdx
+      PROPERTIES
+        Name                #ProcessGroupIdIdx
+        Origin              #{F4627F08-1FA7-4A01-AE2A-0CD982DAACE8}
+        LegacyId            #20004
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #ProcessGroupId
+        #TerminalId
+      ENDINDEXFIELDS
+      
+      #SalesOriginIdx
+      PROPERTIES
+        Name                #SalesOriginIdx
+        Origin              #{2CB5169B-AE47-44A2-BF86-07BB5CFA9BD9}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #SalesOriginId
+      ENDINDEXFIELDS
+      
+      #ProcessGroupPriorityIdx
+      PROPERTIES
+        Name                #ProcessGroupPriorityIdx
+        AllowDuplicates     #No
+        Origin              #{A5F8A508-9421-4156-8490-554C773AC94D}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #ProcessGroupId
+        #Priority
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardProcessGroups
+        PROPERTIES
+          Name                #CreditCardProcessGroups
+          Table               #CreditCardProcessGroups
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #ProcessGroupId
+            RelatedField        #ProcessGroupId
+            SourceEDT           #CreditCardProcessGroupId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CurrencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustTable
+        PROPERTIES
+          Name                #CustTable
+          Table               #CustTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #AccountNum
+            SourceEDT           #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #DefaultDimension
+        PROPERTIES
+          Name                #DefaultDimension
+          Table               #DimensionAttributeValueSet
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #DefaultDimension
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #LogisticsAddressCountryRegion
+        PROPERTIES
+          Name                #LogisticsAddressCountryRegion
+          Table               #LogisticsAddressCountryRegion
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CountryRegionId
+            RelatedField        #CountryRegionId
+            SourceEDT           #AddressCountryRegionId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesOrigin
+        PROPERTIES
+          Name                #SalesOrigin
+          Table               #SalesOrigin
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #SalesOriginId
+            RelatedField        #OriginId
+            SourceEDT           #SalesOriginId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #checkPrimaryToken
+        #server boolean checkPrimaryToken()
+        #{
+        #    CreditCardProcessLine       processLine;
+        #    boolean                     ret = true;
+        #    ;
+        #    select processLine
+        #        where processLine.ProcessGroupId == this.ProcessGroupId
+        #        && processLine.SetTokenPrimary == NoYes::Yes
+        #        && processLine.RecId != this.RecId;
+        #
+        #    if (processLine)
+        #    {
+        #        ret = checkFailed("@ACC1715");
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateField
+        #public boolean validateField(fieldId _fieldIdToCheck)
+        #{
+        #    boolean ret;
+        #    ;
+        #    if (_fieldIdToCheck == fieldnum(CreditCardProcessLine,setTokenPrimary))
+        #    {
+        #        ret = this.checkPrimaryToken();
+        #    }
+        #
+        #    ret = super(_fieldIdToCheck);
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

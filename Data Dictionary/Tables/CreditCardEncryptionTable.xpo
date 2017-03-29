@@ -1,0 +1,259 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardEncryptionTable
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardEncryptionTable
+      Label               #@ACC1286
+      FormRef             #CreditCardEncryptionTable
+      TitleField1         #Description
+      TitleField2         #StartDate
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      PrimaryIndex        #EncryptionKyIdx
+      ClusterIndex        #EncryptionKyIdx
+      DeveloperDocumentation  #@ACC1427
+      Origin              #{AA7C885C-4B9A-4A02-8BC2-C8CD37DBEFEE}
+      LegacyId            #20033
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Description
+        STRING
+        PROPERTIES
+          Name                #Description
+          Table               #CreditCardEncryptionTable
+          Origin              #{6D4D2C78-38F8-4CAD-A82D-D850A29A9777}
+          LegacyId            #20004
+          ExtendedDataType    #Description
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #EncryptionKey
+        STRING
+        PROPERTIES
+          Name                #EncryptionKey
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardEncryptionTable
+          Origin              #{8D1EB284-7EA5-4F90-8F43-F61487586FBF}
+          LegacyId            #20003
+          ExtendedDataType    #CreditCardEncryptionKey
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #EndDate
+        DATE
+        PROPERTIES
+          Name                #EndDate
+          Table               #CreditCardEncryptionTable
+          Origin              #{8382AD07-6F1B-41E2-A3F8-87ECAC26ADCF}
+          LegacyId            #20001
+          ExtendedDataType    #EndDate
+        ENDPROPERTIES
+        
+      FIELD #StartDate
+        DATE
+        PROPERTIES
+          Name                #StartDate
+          Table               #CreditCardEncryptionTable
+          Origin              #{F2896EBA-C3B2-4F55-A6F3-F98205B2EDDE}
+          LegacyId            #20002
+          ExtendedDataType    #StartDate
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #EncryptionKey
+          #EndDate
+          #StartDate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Description
+          #EncryptionKey
+          #StartDate
+          #EndDate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Dates
+        PROPERTIES
+          Name                #Dates
+          Label               #@SYS80293
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #StartDate
+          #EndDate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS104938
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #EncryptionKey
+          #Description
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #EncryptionKyIdx
+      PROPERTIES
+        Name                #EncryptionKyIdx
+        AllowDuplicates     #No
+        Origin              #{787727DA-9CD3-423F-9200-2DDC9DA38C0F}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #EncryptionKey
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #checkOverlapDates
+        #boolean checkOverlapDates()
+        #{
+        #    CreditCardEncryptionTable       ccETable;
+        #    boolean                         ret;
+        #    ;
+        #    while select StartDate,EndDate from ccETable
+        #    {
+        #        //--> New start date is earlier than old end date
+        #        if ((ccETable.StartDate >= this.StartDate
+        #            && ccETable.StartDate <= this.EndDate)
+        #
+        #            || ccETable.EndDate >= this.StartDate
+        #            && ccETable.EndDate <= this.EndDate)
+        #        {
+        #            ret = true;
+        #        }
+        #
+        #
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #checkReverseDates
+        #boolean checkReverseDates()
+        #{
+        #    boolean                         ret;
+        #    ;
+        #    //--> New start date later than end date
+        #    if (this.StartDate >= this.EndDate)
+        #    {
+        #        ret = true;
+        #    }
+        #
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #insert
+        #public void insert()
+        #{
+        #    ;
+        #    if (this.checkOverlapDates())
+        #    {
+        #        throw error("@ACC1293");
+        #    }
+        #
+        #    if (this.checkReverseDates())
+        #    {
+        #        throw error("@ACC1294");
+        #    }
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #isCurrent
+        #boolean isCurrent(TransDate    transDate)
+        #{
+        #    CreditCardEncryptionTable       encryptTable;
+        #    boolean                         ret;
+        #    ;
+        #    select StartDate, EndDate from encryptTable
+        #        where encryptTable.StartDate <= systemDateGet()
+        #        && encryptTable.EndDate >= systemDateGet();
+        #
+        #    if (encryptTable.StartDate <= transdate
+        #        || encryptTable.EndDate >= transdate)
+        #    {
+        #        ret = true;
+        #    }
+        #    else
+        #    {
+        #        ret = false;
+        #    }
+        #
+        #    return ret;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #findKeyByDate
+        #static creditCardEncryptionTable findKeyByDate(TransDate    transDate)
+        #{
+        #    CreditCardEncryptionTable       encryptTable;
+        #    ;
+        #    select encryptTable
+        #        where encryptTable.StartDate <= transDate
+        #        && encryptTable.EndDate >= transDate;
+        #
+        #    return encryptTable;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #retrieveKey
+        #static CreditCardEncryptionKey retrieveKey(TransDate transDate = systemDateGet())
+        #{
+        #    CreditCardEncryptionTable       ccEncryptTable;
+        #    ;
+        #    select StartDate,EndDate from ccEncryptTable
+        #        where ccEncryptTable.StartDate <= transDate
+        #        && ccEncryptTable.EndDate >= transDate;
+        #
+        #    if (ccEncryptTable.RecId == 0)
+        #    {
+        #        throw error("@ACC1295");
+        #    }
+        #
+        #    return ccEncryptTable.EncryptionKey;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

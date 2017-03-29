@@ -1,0 +1,187 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardSale
+    PROPERTIES
+      Name                #CreditCardSale
+      Extends             #CreditCardAdv
+      RunOn               #Server
+      Origin              #{A4DBF89F-849E-449B-8580-008375322D95}
+      LegacyId            #20016
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #public class CreditCardSale extends CreditCardAdv
+        #{
+        #    /*
+        #    COPYRIGHT 2004, Red Maple Press, Inc.
+        #    ALL RIGHTS RESERVED
+        #
+        #    For information on the license or copyright of this software, please
+        #    contact our offices at +1 972 980 6963
+        #    or at www.redmaple.com
+        #
+        #    */
+        #
+        #    AddressZipCodeId    zipCodeId;
+        #    CreditCardComment   ccComment;
+        #    CreditCardTransId   creditCardTransId;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createTrans
+        #CreditCardTrans createTrans(CreditCardTrans    _ccTrans)
+        #{
+        #    CreditCardTrans         newCCTrans;
+        #    ;
+        #    if (result)
+        #    {
+        #        ttsbegin;
+        #
+        #        select forupdate newCCTrans where newCCTrans.RecId == _ccTrans.RecId;
+        #
+        #        if (!newCCTrans)
+        #            throw error(strFmt("@ACC142"));
+        #
+        #        newccTrans.Result               =   Result;
+        #        newccTrans.AuthCode             =   AuthCode;
+        #        newccTrans.AuthNetId            =   netId;
+        #        newccTrans.AuthSource           =   authSource;
+        #        newccTrans.AvsAddr              =   AvsAddr;
+        #        newccTrans.IAvs                 =   IAvs;
+        #        newccTrans.PNRef                =   pnRef;
+        #        newccTrans.RepMsg               =   RepMsg;
+        #        newccTrans.Comment1             =   Comment;
+        #        newccTrans.Comment2             =   Comment2;
+        #        newccTrans.RetrevalRefNum       =   retrievalNum;
+        #        newccTrans.BatchTransNumber     =   sequenceId;
+        #        newccTrans.BatchPaymentechNum   =   batch;
+        #        newccTrans.CVDResponse          =   cvdResponse;
+        #        newccTrans.OrbitalTxRefNum      =   txtRef;
+        #        newccTrans.OrbitalTxRefIdx      =   txtRefIdx;
+        #        newccTrans.CybersourceToken     =   token;
+        #
+        #        if (!newCCTrans.Voucher)
+        #        {
+        #            newCCTrans.Voucher         =   this.parmccVoucher();
+        #        }
+        #
+        #        newCCTrans.update();
+        #
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        newccTrans = this.parmccTrans();
+        #    }
+        #
+        #    return newCCTrans;
+        #}
+      ENDSOURCE
+      SOURCE #creditCardId
+        #CreditCardId creditCardId(CreditCardId ccId = '')
+        #{
+        #    return ccId;
+        #}
+      ENDSOURCE
+      SOURCE #creditCardTransId
+        #CreditCardTransId creditCardTransId(CreditCardTransId ccTransId = creditCardTransId)
+        #{
+        #    ;
+        #    creditCardTransId = ccTransId;
+        #    return creditCardTransId;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #server static CreditCardTrans construct(CreditCardTrans ccTrans,
+        #                                  CreditCardSwipe ccSwipe)
+        #
+        #{
+        #    CreditCardSale         ccSales;
+        #    CreditCardParameters   ccParameters;
+        #    str                    total;
+        #    str                    response;
+        #    CreditCardTrans        updateCCTrans;
+        #
+        #    Voucher                voucher;
+        #    ;
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #
+        #    if (!ccParameters)
+        #        //<--Error Reported
+        #        throw error("@ACC140");
+        #
+        #    total   = num2str(ccTrans.AmountMST,10,2,1,2);
+        #
+        #    ccSales = new CreditCardSale();
+        #    ccSales.parmCCId(ccTrans.CreditCardId);
+        #    ccSales.parmAuthcode(ccTrans.AuthCode);
+        #
+        #    //--> Currency is determined by process group in creditCardTrans.resolveTerminalforSalesTableCC
+        #    if (ccTrans.TransCurrencyCode != companyinfo::standardCurrency())
+        #    {
+        #        ccSales.parmccAmount(ccTrans.AmountCur);
+        #        ccSales.parmccAmountStr(ccTrans.AmountCur);
+        #    }
+        #    else
+        #    {
+        #        ccSales.parmccAmount(ccTrans.AmountMST);
+        #        ccSales.parmccAmountStr(ccTrans.AmountMST);
+        #    }
+        #
+        #    ccSales.parmccTrans(ccTrans);
+        #    ccSales.parmCID(ccTrans.CID);
+        #    ccSales.parmCVD(ccTrans.CVDSent);
+        #    ccSales.parmEmtrySource(ccTrans.EntrySource);
+        #    ccSales.parmccType(ccTrans.CreditCardType);
+        #    ccSales.parmTrxType(ccTrans.TrxType);
+        #
+        #    ccSales.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #    ccSales.parmYearType(ccParameters.DateType);
+        #
+        #    if (ccSwipe)
+        #        ccSales.parmSwipe(ccSwipe);
+        #
+        #    //<-- Test Mode
+        #    if (ccParameters.Testing == NoYes::No)
+        #    {
+        #        response = ccSales.run();
+        #        ccSales.analyzeResponse(response);
+        #    }
+        #    else
+        #    {
+        #        ccSales.updateForDemo(ccTrans);
+        #    }
+        #
+        #    //<--Update the Transaction record
+        #    updateCCTrans = ccSales.createTrans(ccTrans);
+        #
+        #    //<-- Customer Journal
+        #    if (ccParameters.CreateLedger == NoYes::Yes
+        #        && updateCCTrans.Result == '0'
+        #        && updateCCTrans.JournalOrig == CreditCardJournalOrig::System)
+        #    {
+        #            voucher = creditCardCustLedger::construct(ccTrans.CustAccount,
+        #                ccTrans.AmountCur,
+        #                ccTrans.TransID);
+        #
+        #            ccSales.parmccVoucher(voucher);
+        #
+        #    }
+        #
+        #
+        #    return updateCCTrans;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

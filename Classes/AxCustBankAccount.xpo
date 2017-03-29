@@ -1,0 +1,718 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #AxCustBankAccount
+    PROPERTIES
+      Name                #AxCustBankAccount
+      Extends             #AxInternalBase
+      Origin              #{A07C0AB1-BCF7-4675-8C7C-4F16D4781DE9}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #axOrig
+        #public AxInternalBase axOrig()
+        #{
+        #    return super();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class AxCustBankAccount extends AxInternalBase
+        #{
+        #    CustBankAccount custBankAccount;
+        #
+        #    str             county;
+        #    str             state;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #currentRecord
+        #/// <summary>
+        #/// Gets or sets the current record in the <c>CustBankAccount</c> table.
+        #/// </summary>
+        #/// <param name="_custBankAccount">
+        #/// The <c>CustBankAccount</c> record to set; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A <c>CustBankAccount</c> record.
+        #/// </returns>
+        #public Common currentRecord(Common _custBankAccount = custBankAccount)
+        #{
+        #    if (!prmisdefault(_custBankAccount))
+        #    {
+        #        super(_custBankAccount);
+        #        custBankAccount = _custBankAccount;
+        #    }
+        #    else
+        #    {
+        #        super();
+        #    }
+        #
+        #    return custBankAccount;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #custBankAccount
+        #public CustBankAccount custBankAccount(CustBankAccount _custBankAccount = custBankAccount)
+        #{
+        #    if (!prmisdefault(_custBankAccount))
+        #    {
+        #        this.setCurrentRecordFromExternal(_custBankAccount);
+        #    }
+        #
+        #    return this.currentRecord();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #emptyRecord
+        #/// <summary>
+        #/// Gets an empty <c>CustBankAccount</c> record.
+        #/// </summary>
+        #/// <returns>
+        #/// An empty <c>CustBankAccount</c> record.
+        #/// </returns>
+        #protected Common emptyRecord()
+        #{
+        #    CustBankAccount localCustBankAccount;
+        #    ;
+        #    return localCustBankAccount;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmAccountID
+        #public CustBankAccountId parmAccountID(CustBankAccountId _accountID = '')
+        #{
+        #    if (!prmisdefault(_accountID))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, AccountID), _accountID);
+        #    }
+        #
+        #    return custBankAccount.AccountID;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmAccountNum
+        #public BankAccount parmAccountNum(BankAccount _accountNum = '')
+        #{
+        #    if (!prmisdefault(_accountNum))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, AccountNum), _accountNum);
+        #    }
+        #
+        #    return custBankAccount.AccountNum;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmBankAccountType
+        #public BankAccountType parmBankAccountType(BankAccountType _bankAccountType = BankAccountType::CheckingAccount)
+        #{
+        #    if (!prmisdefault(_bankAccountType))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, BankAccountType), _bankAccountType);
+        #    }
+        #
+        #    return custBankAccount.BankAccountType;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmBankCIN
+        #public BankCIN parmBankCIN(BankCIN _bankCIN = '')
+        #{
+        #    if (!prmisdefault(_bankCIN))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, BankCIN), _bankCIN);
+        #    }
+        #
+        #    return custBankAccount.BankCIN;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmBankCodeType
+        #public BankCodeType parmBankCodeType(BankCodeType _bankCodeType = BankCodeType::Code_None)
+        #{
+        #    if (!prmisdefault(_bankCodeType))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, BankCodeType), _bankCodeType);
+        #    }
+        #
+        #    return custBankAccount.BankCodeType;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmBankConstantSymbol
+        #// <GEECZ>
+        #public RefRecId parmBankConstantSymbol(RefRecId _bankConstantSymbol = 0)
+        #{
+        #    if (!prmisdefault(_bankConstantSymbol))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, BankConstantSymbol), _bankConstantSymbol);
+        #    }
+        #
+        #    return custBankAccount.BankConstantSymbol;
+        #}
+        #// </GEECZ>
+      ENDSOURCE
+      SOURCE #parmBankContractAccount
+        #public GiroContractAccount parmBankContractAccount(GiroContractAccount _bankContractAccount = '')
+        #{
+        #    if (!prmisdefault(_bankContractAccount))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, BankContractAccount), _bankContractAccount);
+        #    }
+        #
+        #    return custBankAccount.BankContractAccount;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmBankGroupId
+        #public BankGroupId parmBankGroupId(BankGroupId _bankGroupId = '')
+        #{
+        #    if (!prmisdefault(_bankGroupId))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, BankGroupId), _bankGroupId);
+        #    }
+        #
+        #    return custBankAccount.BankGroupId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmBankIBAN
+        #public BankIBAN parmBankIBAN(BankIBAN _bankIBAN = '')
+        #{
+        #    if (!prmisdefault(_bankIBAN))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, BankIBAN), _bankIBAN);
+        #    }
+        #
+        #    return custBankAccount.BankIBAN;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmBankSortCode_RU
+        #// <GEERU>
+        #public BankSortCode parmBankSortCode_RU(BankSortCode _bankSortCode = '')
+        #{
+        #    if (!prmisDefault(_bankSortCode))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, BankSortCode_RU), _bankSortCode);
+        #    }
+        #
+        #    return custBankAccount.BankSortCode_RU;
+        #}
+        #// </GEERU>
+        #
+      ENDSOURCE
+      SOURCE #parmCellularPhone
+        #public PhoneMobile parmCellularPhone(PhoneMobile _cellularPhone = '')
+        #{
+        #    if (!prmisdefault(_cellularPhone))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, CellularPhone), _cellularPhone);
+        #    }
+        #
+        #    return custBankAccount.CellularPhone;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmContactPerson
+        #public PersonName parmContactPerson(PersonName _contactPerson = '')
+        #{
+        #    if (!prmisdefault(_contactPerson))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, ContactPerson), _contactPerson);
+        #    }
+        #
+        #    return custBankAccount.ContactPerson;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCorrAccount_W
+        #// <GEERU>
+        #public BankCorrAccount_W parmCorrAccount_W(BankCorrAccount_W _corrAccount = '')
+        #{
+        #    if (!prmisDefault(_corrAccount))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, CorrAccount_W), _corrAccount);
+        #    }
+        #
+        #    return custBankAccount.CorrAccount_W;
+        #}
+        #// </GEERU>
+        #
+      ENDSOURCE
+      SOURCE #parmCorrespondentBankAccount_LT
+        #public LtCorrespondentBankAccount parmCorrespondentBankAccount_LT(LtCorrespondentBankAccount _correspondentBankAccount_LT = '')
+        #{
+        #    if (!prmisDefault(_correspondentBankAccount_LT))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, CorrespondentBankAccount_LT), _correspondentBankAccount_LT);
+        #    }
+        #
+        #    return custBankAccount.CorrespondentBankAccount_LT;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCorrespondentBankAddress_LT
+        #public LtCorrespondentBankAddress parmCorrespondentBankAddress_LT(LtCorrespondentBankAddress _correspondentBankAddress_LT = '')
+        #{
+        #    if (!prmisDefault(_correspondentBankAddress_LT))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, CorrespondentBankAddress_LT), _correspondentBankAddress_LT);
+        #    }
+        #
+        #    return custBankAccount.CorrespondentBankAddress_LT;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCorrespondentBankName_LT
+        #public LtCorrespondentBankName parmCorrespondentBankName_LT(LtCorrespondentBankName _correspondentBankName_LT = '')
+        #{
+        #    if (!prmisDefault(_correspondentBankName_LT))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, CorrespondentBankName_LT), _correspondentBankName_LT);
+        #    }
+        #
+        #    return custBankAccount.CorrespondentBankName_LT;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCorrespondentBankSWIFT_LT
+        #public LtCorrespondentBankSWIFT parmCorrespondentBankSWIFT_LT(LtCorrespondentBankSWIFT _correspondentBankSWIFT_LT = '')
+        #{
+        #    if (!prmisDefault(_correspondentBankSWIFT_LT))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, CorrespondentBankSWIFT_LT), _correspondentBankSWIFT_LT);
+        #    }
+        #
+        #    return custBankAccount.CorrespondentBankSWIFT_LT;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCreditCardECPAuthMethod
+        #public CreditCardECPAuthMethod parmCreditCardECPAuthMethod(CreditCardECPAuthMethod _creditCardECPAuthMethod = CreditCardECPAuthMethod::I)
+        #{
+        #    if (!prmisdefault(_creditCardECPAuthMethod))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, CreditCardECPAuthMethod), _creditCardECPAuthMethod);
+        #    }
+        #
+        #    return custBankAccount.CreditCardECPAuthMethod;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCurrencyCode
+        #public CurrencyCode parmCurrencyCode(CurrencyCode _currencyCode = '')
+        #{
+        #    if (!prmisdefault(_currencyCode))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, CurrencyCode), _currencyCode);
+        #    }
+        #
+        #    return CustBankAccount.CurrencyCode;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCustAccount
+        #public str parmCustAccount(str _custAccount = '')
+        #{
+        #    DictField   dictField;
+        #    ;
+        #    if (!prmisdefault(_custAccount))
+        #    {
+        #        dictField = new DictField(tablenum(CustBankAccount),fieldnum(CustBankAccount,CustAccount));
+        #        if(this.valueMappingInbound())
+        #        {
+        #            this.validateInboundString(_custAccount,dictField,this.mapPolicy().xMLMapCustAccount());
+        #            _custAccount = this.axCustAccount(_custAccount);
+        #        }
+        #        else
+        #        {
+        #            this.validateInboundString(_custAccount,dictField);
+        #        }
+        #        this.setField(fieldnum(CustBankAccount, CustAccount), _custAccount);
+        #    }
+        #
+        #    if (this.valueMappingOutbound())
+        #    {
+        #        return this.axCustAccount(custBankAccount.CustAccount);
+        #    }
+        #    else
+        #    {
+        #        return custBankAccount.CustAccount;
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCustDomNumber_BE
+        #public CustDomNumber_BE parmCustDomNumber_BE(CustDomNumber_BE _custDomNumber_BE = '')
+        #{
+        #    if (!prmisdefault(_custDomNumber_BE))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, CustDomNumber_BE), _custDomNumber_BE);
+        #    }
+        #
+        #    return custBankAccount.CustDomNumber_BE;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmCustPaymentTextCode
+        #public CustPaymTextCode parmCustPaymentTextCode(CustPaymTextCode _custPaymentTextCode = '')
+        #{
+        #    if (!prmisdefault(_custPaymentTextCode))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, CustPaymentTextCode), _custPaymentTextCode);
+        #    }
+        #
+        #    return custBankAccount.CustPaymentTextCode;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmEmail
+        #public Email parmEmail(Email _email = '')
+        #{
+        #    if (!prmisdefault(_email))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, Email), _email);
+        #    }
+        #
+        #    return custBankAccount.Email;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmEUDDBankSortCode
+        #public CreditCardEUDDBankSortCode parmEUDDBankSortCode(CreditCardEUDDBankSortCode _EUDDBankSortCode = '')
+        #{
+        #    if (!prmisdefault(_EUDDBankSortCode))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, EUDDBankSortCode), _EUDDBankSortCode);
+        #    }
+        #
+        #    return custBankAccount.EUDDBankSortCode;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmEUDDCountryCode
+        #public CreditCardEUDDCountryCode parmEUDDCountryCode(CreditCardEUDDCountryCode _EUDDCountryCode = CreditCardEUDDCountryCode::None)
+        #{
+        #    if (!prmisdefault(_EUDDCountryCode))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, EUDDCountryCode), _EUDDCountryCode);
+        #    }
+        #
+        #    return custBankAccount.EUDDCountryCode;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmExchRate
+        #public CrossExchRate parmExchRate(CrossExchRate _exchRate = 0)
+        #{
+        #    if (!prmisdefault(_exchRate))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, ExchRate), _exchRate);
+        #    }
+        #
+        #    return custBankAccount.ExchRate;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmExchRateRef
+        #public ExchRateRef parmExchRateRef(ExchRateRef _exchRateRef = '')
+        #{
+        #    if (!prmisdefault(_exchRateRef))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, ExchRateRef), _exchRateRef);
+        #    }
+        #
+        #    return custBankAccount.ExchRateRef;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmForeignAccount_RU
+        #public BankAccount parmForeignAccount_RU(BankAccount _foreignAccount_RU = '')
+        #{
+        #    if (!prmisdefault(_foreignAccount_RU))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, ForeignAccount_RU), _foreignAccount_RU);
+        #    }
+        #
+        #    return custBankAccount.ForeignAccount_RU;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmForeignBank_RU
+        #public BankGroupId parmForeignBank_RU(BankGroupId _foreignBank_RU = '')
+        #{
+        #    if (!prmisdefault(_foreignBank_RU))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, ForeignBank_RU), _foreignBank_RU);
+        #    }
+        #
+        #    return custBankAccount.ForeignBank_RU;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmForeignSWIFT_RU
+        #public SWIFTNo parmForeignSWIFT_RU(SWIFTNo _foreignSWIFT_RU = '')
+        #{
+        #    if (!prmisdefault(_foreignSWIFT_RU))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, ForeignSWIFT_RU), _foreignSWIFT_RU);
+        #    }
+        #
+        #    return custBankAccount.ForeignSWIFT_RU;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmIntermediateBankAccount_LT
+        #public LtIntermediateBankAccount parmIntermediateBankAccount_LT(LtIntermediateBankAccount _intermediateBankAccount_LT = '')
+        #{
+        #    if (!prmisDefault(_intermediateBankAccount_LT))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, IntermediateBankAccount_LT), _intermediateBankAccount_LT);
+        #    }
+        #
+        #    return custBankAccount.IntermediateBankAccount_LT;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmIntermediateBankAddress_LT
+        #public LtIntermediateBankAddress parmIntermediateBankAddress_LT(LtIntermediateBankAddress _intermediateBankAddress_LT = '')
+        #{
+        #    if (!prmisDefault(_intermediateBankAddress_LT))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, IntermediateBankAddress_LT), _intermediateBankAddress_LT);
+        #    }
+        #
+        #    return custBankAccount.IntermediateBankAddress_LT;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmIntermediateBankName_LT
+        #public LtIntermediateBankName parmIntermediateBankName_LT(LtIntermediateBankName _intermediateBankName_LT = '')
+        #{
+        #    if (!prmisDefault(_intermediateBankName_LT))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, IntermediateBankName_LT), _intermediateBankName_LT);
+        #    }
+        #
+        #    return custBankAccount.IntermediateBankName_LT;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmIntermediateBankSWIFT_LT
+        #public LtIntermediateBankSWIFT parmIntermediateBankSWIFT_LT(LtIntermediateBankSWIFT _intermediateBankSWIFT_LT = '')
+        #{
+        #    if (!prmisDefault(_intermediateBankSWIFT_LT))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, IntermediateBankSWIFT_LT), _intermediateBankSWIFT_LT);
+        #    }
+        #
+        #    return custBankAccount.IntermediateBankSWIFT_LT;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmLocation
+        #public LogisticsLocationRecId parmLocation(LogisticsLocationRecId _location = 0)
+        #{
+        #    if (!prmisdefault(_location))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, Location), _location);
+        #    }
+        #
+        #    return custBankAccount.Location;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmLvDefaultBank
+        #// <GEEU>
+        #public LVDefaultBank parmLvDefaultBank(LVDefaultBank _lvDefaultBank = NoYes::No)
+        #{
+        #    if (!prmisDefault(_lvDefaultBank))
+        #    {
+        #        this.setField(fieldNum(CustBankAccount, LvDefaultBank), _lvDefaultBank);
+        #    }
+        #
+        #    return custBankAccount.LvDefaultBank;
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #parmMsgToBank
+        #public BankMsgToBank parmMsgToBank(BankMsgToBank _msgToBank = '')
+        #{
+        #    if (!prmisdefault(_msgToBank))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, MsgToBank), _msgToBank);
+        #    }
+        #
+        #    return custBankAccount.MsgToBank;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmName
+        #public Name parmName(Name _name = '')
+        #{
+        #    if (!prmisdefault(_name))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, Name), _name);
+        #    }
+        #
+        #    return custBankAccount.Name;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmPager
+        #public Pager parmPager(Pager _pager = '')
+        #{
+        #    if (!prmisdefault(_pager))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, Pager), _pager);
+        #    }
+        #
+        #    return custBankAccount.Pager;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmPhone
+        #public Phone parmPhone(Phone _phone = '')
+        #{
+        #    if (!prmisdefault(_phone))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, Phone), _phone);
+        #    }
+        #
+        #    return custBankAccount.Phone;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmPhoneLocal
+        #public PhoneLocal parmPhoneLocal(PhoneLocal _phoneLocal = '')
+        #{
+        #    if (!prmisdefault(_phoneLocal))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, PhoneLocal), _phoneLocal);
+        #    }
+        #
+        #    return custBankAccount.PhoneLocal;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmRegistrationNum
+        #public BankRegNum parmRegistrationNum(BankRegNum _registrationNum = '')
+        #{
+        #    if (!prmisdefault(_registrationNum))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, RegistrationNum), _registrationNum);
+        #    }
+        #
+        #    return custBankAccount.RegistrationNum;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmSMS
+        #public SMS parmSMS(SMS _sms = '')
+        #{
+        #    if (!prmisdefault(_sms))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, sms), _sms);
+        #    }
+        #
+        #    return custBankAccount.sms;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmSpecificSymbol
+        #// <GEECZ>
+        #public SpecificSymbol parmSpecificSymbol(SpecificSymbol _specificSymbol = '')
+        #{
+        #    if (!prmisdefault(_specificSymbol))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, SpecificSymbol), _specificSymbol);
+        #    }
+        #
+        #    return custBankAccount.SpecificSymbol;
+        #}
+        #// </GEECZ>
+      ENDSOURCE
+      SOURCE #parmSWIFTNo
+        #public SWIFTNo parmSWIFTNo(SWIFTNo _swiftNo = '')
+        #{
+        #    if (!prmisdefault(_swiftNo))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, swiftNo), _swiftNo);
+        #    }
+        #
+        #    return custBankAccount.swiftNo;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmTeleFax
+        #public TeleFax parmTeleFax(TeleFax _teleFax = '')
+        #{
+        #    if (!prmisdefault(_teleFax))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, TeleFax), _teleFax);
+        #    }
+        #
+        #    return custBankAccount.TeleFax;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmTelex
+        #public Telex parmTelex(Telex _telex = '')
+        #{
+        #    if (!prmisdefault(_telex))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, Telex), _telex);
+        #    }
+        #
+        #    return custBankAccount.Telex;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmURL
+        #public URL parmURL(URL _url = '')
+        #{
+        #    if (!prmisdefault(_url))
+        #    {
+        #        this.setField(fieldnum(CustBankAccount, url), _url);
+        #    }
+        #
+        #    return custBankAccount.url;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #setTableFields
+        #protected void setTableFields()
+        #{
+        #    this.currentRecord().defaultRow();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #construct
+        #static AxCustBankAccount construct()
+        #{
+        #    return new AxCustBankAccount();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #newCustBankAccount
+        #public static AxCustBankAccount newCustBankAccount(CustBankAccount _custBankAccount)
+        #{
+        #    AxCustBankAccount axCustBankAccount = AxCustBankAccount::construct();
+        #    ;
+        #    axCustBankAccount.custBankAccount(_custBankAccount);
+        #
+        #    return axCustBankAccount;
+        #}
+        #
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

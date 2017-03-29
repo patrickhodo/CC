@@ -1,0 +1,228 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantAdflex
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantAdflex
+      Label               #@ACC1697
+      FormRef             #creditCardterminalTable
+      TitleField1         #TerminalId
+      TitleField2         #URL
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdIdx
+      ClusterIndex        #TerminalIdIdx
+      DeveloperDocumentation  #@ACC1711
+      Origin              #{2A04A1FB-A376-4AD3-8F48-64D5768A30A2}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Industry
+        ENUM
+        PROPERTIES
+          Name                #Industry
+          Table               #CreditCardMerchantAdflex
+          Origin              #{2117A496-4447-4CB6-B246-99316D801875}
+          EnumType            #CreditCardIndustryCybersource
+        ENDPROPERTIES
+        
+      FIELD #MerchantId
+        STRING
+        PROPERTIES
+          Name                #MerchantId
+          Label               #@ACC603
+          Table               #CreditCardMerchantAdflex
+          Origin              #{484D76F2-80B6-4FCE-9641-884B255A1B67}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #PSPId
+        STRING
+        PROPERTIES
+          Name                #PSPId
+          Label               #@ACC1698
+          Table               #CreditCardMerchantAdflex
+          Origin              #{C0CD53E5-C0AB-4CC1-867F-53E2DB2FD2F5}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #Pwd
+        STRING
+        PROPERTIES
+          Name                #Pwd
+          Label               #@SYS30019
+          Table               #CreditCardMerchantAdflex
+          Origin              #{6665FA3A-F59F-4B34-84F6-820616E707CE}
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantAdflex
+          Origin              #{94E39A17-B9BE-4694-B8F8-C1CFD2163B21}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #URL
+        STRING
+        PROPERTIES
+          Name                #URL
+          Table               #CreditCardMerchantAdflex
+          Origin              #{93D05449-2AAE-4951-B90B-F13D2F0E6DE7}
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #UserId
+        STRING
+        PROPERTIES
+          Name                #UserId
+          Table               #CreditCardMerchantAdflex
+          Origin              #{CFEB1EB6-4F95-4536-8A58-FB8B334611E5}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Industry
+        PROPERTIES
+          Name                #Industry
+          Label               #@ACC634
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Industry
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Interface
+        PROPERTIES
+          Name                #Interface
+          Label               #@SYS69603
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Merchant
+        PROPERTIES
+          Name                #Merchant
+          Label               #@ACC1012
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #PSPId
+          #UserId
+          #Pwd
+          #MerchantId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdIdx
+      PROPERTIES
+        Name                #TerminalIdIdx
+        AllowDuplicates     #No
+        Origin              #{CAFEA786-3358-4227-95CE-F74A12505829}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #findTerminalWithId
+        #static CreditCardMerchantAdflex findTerminalWithId(CreditCardTerminalId ccTerminalId)
+        #{
+        #    CreditCardMerchantAdflex     ccADN;
+        #    ;
+        #
+        #    select ccADN where ccADN.TerminalId == ccTerminalId;
+        #
+        #    if (!ccADN)
+        #        throw error("@ACC924");
+        #
+        #    return ccADN;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

@@ -1,0 +1,2021 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #EP
+    PROPERTIES
+      Name                #EP
+      Origin              #{2D02192A-0000-1000-4550-000000000000}
+      LegacyId            #6442
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #// This is a framework class. Customizing this class may cause problems with future upgrades to the software.
+        #class Ep
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getLanguageId
+        #LanguageId getLanguageId()
+        #{
+        #    return webSession().language();
+        #}
+      ENDSOURCE
+      SOURCE #createContactPerson
+        #server static ContactPerson createContactPerson(ContactPerson _contactPerson)
+        #
+        #{
+        #    AxContactPerson        axContactPerson        = AxContactPerson::newValidateInput();
+        #    ;
+        #
+        #    ttsbegin;
+        #
+        #    // relation accounts
+        #    axContactPerson.parmCustAccount(_contactPerson.CustAccount);
+        #    axContactPerson.parmContactForParty(_contactPerson.ContactForParty);
+        #
+        #    // Contact Person
+        #    axContactPerson.parmTitle(_contactPerson.Title);
+        #    axContactPerson.parmFunction(_contactPerson.Function);
+        #    axContactPerson.parmInactive(_contactPerson.Inactive);
+        #
+        #
+        #
+        #
+        #    // Memo
+        #    axContactPerson.parmMemo(_contactPerson.Memo);
+        #
+        #    axContactPerson.save();
+        #
+        #    ttscommit;
+        #
+        #    return axContactPerson.contactPerson();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createCreditNote
+        #[SysEntryPointAttribute]
+        #static server CustConfirmJour createCreditNote(SalesTable _salesTable, TmpFrmVirtual _tmpFrmVirtualLines)
+        #{
+        #    SalesCopying    salesCopying;
+        #    TmpFrmVirtual   tmpFrmVirtualHeader;
+        #    CustConfirmJour custConfirmJour;
+        #
+        #    salesCopying = SalesCopying::construct(SalesPurchCopy::CreditNoteLines);
+        #    salesCopying.initParameters(_salesTable,
+        #                                _tmpFrmVirtualLines,
+        #                                tmpFrmVirtualHeader,
+        #                                1,
+        #                                true,
+        #                                false,
+        #                                true,
+        #                                true,
+        #                                false);
+        #
+        #    salesCopying.copy();
+        #
+        #    custConfirmJour = EP::updateCreditNote(_salesTable);
+        #
+        #    return custConfirmJour;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createCustTable
+        #server static CustTable createCustTable(CustTable   _custTable)
+        #{
+        #    AxCustTable     axCustTable;
+        #    SysDictTable    sysDictTable = new SysDictTable(tableNum(CustTable));
+        #    int             i;
+        #    int             fieldCnt;
+        #    FieldId         fieldId;
+        #    ;
+        #
+        #    ttsbegin;
+        #    axCustTable = AxCustTable::constructValidateInput(_custTable);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (fieldNum(CustTable, AccountNum) != fieldId)//field contactPersonId can not be modified.
+        #            axCustTable.setFieldAsTouched(fieldId);
+        #    }
+        #
+        #    axCustTable.save();
+        #
+        #    ttscommit;
+        #
+        #    return axCustTable.custTable();
+        #}
+      ENDSOURCE
+      SOURCE #createDocuRef
+        #static DocuRef createDocuRef(DocuRef _docuRef)
+        #{
+        #    AxDocuRef axDocuRef = AxDocuRef::newValidateInput();
+        #
+        #    ttsbegin;
+        #    axDocuRef.parmRefTableId(_docuRef.RefTableId);
+        #    axDocuRef.parmRefRecId(_docuRef.RefRecId);
+        #    axDocuRef.parmName(_docuRef.Name);
+        #    axDocuRef.parmTypeId(_docuRef.TypeId);
+        #    axDocuRef.parmNotes(_docuRef.Notes);
+        #    axDocuRef.parmRefCompanyId(_docuRef.RefCompanyId);
+        #    axDocuRef.parmRestriction(_docuRef.Restriction);
+        #    axDocuRef.parmValueRecId(_docuRef.ValueRecId);
+        #    axDocuRef.save();
+        #    ttscommit;
+        #
+        #    return axDocuRef.docuRef();
+        #}
+      ENDSOURCE
+      SOURCE #createECPCustSignUp
+        #static ECPCustSignUp createECPCustSignUp(ECPCustSignUp _ecpCustSignUp)
+        #{
+        #    ECPCustSignUp       ecpCustSignUp;
+        #    EnterprisePortal    enterprisePortal;
+        #    ;
+        #    enterprisePortal = webSession().webApplication();
+        #
+        #    ttsbegin;
+        #
+        #    if (!_ecpCustSignUp.SignUpId)
+        #    {
+        #        _ecpCustSignUp.SignUpId = NumberSeq::newGetNum(ECPParameters::numRefECPCustSignUpId()).num();
+        #    }
+        #    ecpCustSignUp.SignUpId =_ecpCustSignUp.SignUpId;
+        #    ecpCustSignUp.Name = _ecpCustSignUp.Name;
+        #    ecpCustSignUp.Email = _ecpCustSignUp.Email;
+        #    ecpCustSignUp.TeleFax = _ecpCustSignUp.TeleFax;
+        #    ecpCustSignUp.Phone = _ecpCustSignUp.Phone;
+        #    ecpCustSignUp.Address = _ecpCustSignUp.Address;
+        #    ecpCustSignUp.Name = _ecpCustSignUp.Name;
+        #
+        #    ecpCustSignUp.CustCreated = _ecpCustSignUp.CustCreated;
+        #    ecpCustSignUp.LanguageId = _ecpCustSignUp.LanguageId;
+        #
+        #    ecpCustSignUp.SessionId = _ecpCustSignUp.SessionId;
+        #    ecpCustSignUp.SessionLoginDateTime = _ecpCustSignUp.SessionLoginDateTime;
+        #    ecpCustSignUp.ContactPersonName = _ecpCustSignUp.ContactPersonName;
+        #    ecpCustSignUp.UserEmail = _ecpCustSignUp.UserEmail;
+        #    ecpCustSignUp.UserAlias = _ecpCustSignUp.UserAlias;
+        #    ecpCustSignUp.CountryRegionId = _ecpCustSignUp.CountryRegionId;
+        #    ecpCustSignUp.ZipCode = _ecpCustSignUp.ZipCode;
+        #    ecpCustSignUp.State = _ecpCustSignUp.State;
+        #    ecpCustSignUp.County = _ecpCustSignUp.County;
+        #    ecpCustSignUp.City = _ecpCustSignUp.City;
+        #    ecpCustSignUp.Street = _ecpCustSignUp.Street;
+        #    ecpCustSignUp.insert();
+        #
+        #    ttscommit;
+        #
+        #    return ecpCustSignUp;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createReturnOrderFromInvoice
+        #[SysEntryPointAttribute]
+        #server public static SalesTable createReturnOrderFromInvoice(CustInvoiceJour _invoiceRec,
+        #                                                      str _returnReason,
+        #                                                      FormDataSource _custInvoiceTrans_ds,
+        #                                                      Map _qtyMap)
+        #{
+        #    CustInvoiceTrans        custInvoiceTransOrig;
+        #    SalesLine               salesLine;
+        #    SalesTable              newRetOrder;
+        #
+        #    // <GEEPL>
+        #    #ISOCountryRegionCodes
+        #    // </GEEPL>
+        #
+        #    custInvoiceTransOrig = _custInvoiceTrans_ds.getFirst(true);
+        #
+        #    ttsbegin;
+        #
+        #    // first we need to create the sales order header for the return order
+        #    newRetOrder = EP::createReturnOrderHeader(_invoiceRec, _returnReason);
+        #
+        #    while (custInvoiceTransOrig)
+        #    {
+        #        // now we need to populate all the necessary fields for the new salesline
+        #        // using the existing invoice and the new sales order
+        #        salesLine.initFromCustInvoiceTrans(custInvoiceTransOrig, false, false, false);
+        #        salesLine.initFromSalesTable(newRetOrder);
+        #
+        #        // udpate the quantity with the one we store in the map
+        #        if (_qtyMap.exists(custInvoiceTransOrig.RecId))
+        #        {
+        #            salesLine.ExpectedRetQty = _qtyMap.lookup(custInvoiceTransOrig.RecId);
+        #        }
+        #
+        #        if (salesLine.ExpectedRetQty > 0)
+        #        {
+        #            error("@SYS53512");
+        #            ttsabort;
+        #        }
+        #
+        #        // set the quantity and amount fields
+        #        salesLine.LineAmount = salesLine.returnLineAmount();
+        #        salesLine.ReturnStatus = ReturnStatusLine::Awaiting;
+        #        salesLine.SalesQty = 0;
+        #        salesLine.QtyOrdered = 0;
+        #        salesLine.InventTransIdReturn = custInvoiceTransOrig.InventTransId;
+        #
+        #        //create the line
+        #        salesLine.createLine(true, false, false, false, false, false, false, false, salesLine.InventTransId);
+        #
+        #        // <GEEPL>
+        #        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        #        {
+        #            TaxServiceTariff::insertTaxServiceTariffForNewParent(newRetOrder.TableId, newRetOrder.RecId, salesLine.TableId, salesLine.RecId);
+        #        }
+        #        // </GEEPL>
+        #
+        #        // get the next selected invoice line
+        #        custInvoiceTransOrig = _custInvoiceTrans_ds.getNext();
+        #
+        #        // clear the buffer, so that the orig() doesn't return anything
+        #        salesLine.clear();
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    return newRetOrder;
+        #}
+      ENDSOURCE
+      SOURCE #createReturnOrderHeader
+        #[SysEntryPointAttribute]
+        #private server static SalesTable createReturnOrderHeader(CustInvoiceJour _invoiceRec, str _returnReason)
+        #{
+        #    SalesTable          old, newRec;
+        #    boolean             bChecksOk               = true;
+        #    ;
+        #
+        #    old = SalesTable::find(_invoiceRec.SalesId);
+        #
+        #    newRec.initReturnFromSalesTable(old);
+        #
+        #    newRec.CustInvoiceId      = _invoiceRec.InvoiceId;
+        #    newRec.ReturnDeadline     = today();
+        #    newRec.ReturnReasonCodeId = _returnReason;
+        #    newRec.SalesType          = SalesType::ReturnItem;
+        #
+        #    if (EP::isCustomer())
+        #    {
+        #        newRec.SalesOriginId    = ECPParameters::find().SalesOriginId;
+        #    }
+        #    else
+        #    {
+        #        newRec.WorkerSalesTaker = DirPersonUser::findUserWorkerReference();
+        #        newRec.SalesOriginId    = SalesParameters::find().epSalesOriginId;
+        #    }
+        #
+        #    newRec.setReturnAddressFromInventLocationId(newRec.InventLocationId);
+        #
+        #    if ( newRec.ReturnReasonCodeId == '' && CustParameters::find().ReturnOrdersReasonReq ||
+        #         newRec.ReturnReasonCodeId != '' && !ReturnReasonCode::exist(newRec.ReturnReasonCodeId) )
+        #    {
+        #        checkFailed(strFmt("@SYS26332", fieldId2pname(tableNum(SalesTable), fieldNum(SalesTable, ReturnReasonCodeId))));
+        #        bChecksOk = false;
+        #    }
+        #
+        #    if ( bChecksOk && newRec.validateWrite())
+        #    {
+        #        newRec.insert();
+        #    }
+        #    else
+        #    {
+        #        throw error("@SYS18722");
+        #    }
+        #
+        #    newRec.reread();
+        #
+        #    return newRec;
+        #}
+      ENDSOURCE
+      SOURCE #createSalesOrder
+        #[SysEntryPointAttribute]
+        #static server SalesTable createSalesOrder(SalesTable _salesTable, FormDataSource salesBasketLine_ds, SalesBasketId salesBasketId = '', boolean checkForLines = true)
+        #{
+        #    #OCCRetryCount
+        #    AxSalesTable    axSalesTable = new AxSalesTable();
+        #    SalesBasketLine salesBasketLine;
+        #    SalesTable      salesTable;
+        #    boolean         createOrder = false;
+        #
+        #    if (checkForLines)
+        #    {
+        #        if (salesBasketId)
+        #        {
+        #            select firstonly RecId from salesBasketLine where salesBasketLine.SalesBasketId == salesBasketId;
+        #            createOrder = salesBasketLine.RecId != 0;
+        #            if (createOrder)
+        #            {
+        #                createOrder = SalesBasket::checkPBALines(salesBasketId);
+        #            }
+        #        }
+        #        else
+        #        {
+        #            createOrder = (salesBasketLine_ds.getFirst(true)) || (salesBasketLine_ds.getFirst(false));
+        #        }
+        #    }
+        #    else
+        #    {
+        #        createOrder = true;
+        #    }
+        #
+        #    if (createOrder)
+        #    {
+        #        try
+        #    {
+        #        ttsbegin;
+        #
+        #        //Filling the parameters values from the existing Sales Table.
+        #        axSalesTable = EP::initAxSalesTable(_salesTable);
+        #        axSalesTable.save();
+        #
+        #        if (salesBasketId)
+        #        {
+        #            //lines for an existing salesBasketId
+        #            while select * from salesBasketLine where salesBasketLine.SalesBasketId == salesBasketId
+        #            {
+        #                EP::processSalesBasketLine(salesBasketLine, axSalesTable, salesBasketId);
+        #            }
+        #        }
+        #        else
+        #        {
+        #            //marked lines in the grid
+        #            for (salesBasketLine = salesBasketLine_ds.getFirst(true); salesBasketLine; salesBasketLine = salesBasketLine_ds.getNext())
+        #            {
+        #                EP::processSalesBasketLine(salesBasketLine, axSalesTable);
+        #            }
+        #
+        #            //unmarked lines in the grid
+        #            for (salesBasketLine = salesBasketLine_ds.getFirst(false); salesBasketLine; salesBasketLine = salesBasketLine_ds.getNext())
+        #            {
+        #                EP::processSalesBasketLine(salesBasketLine, axSalesTable);
+        #            }
+        #        }
+        #
+        #        axSalesTable.salesTable().updateMultiLineDisc();
+        #        axSalesTable.salesTable().updateFinalDisc();
+        #        if (axSalesTable.salesTable().setEstimate())
+        #            axSalesTable.salesTable().doUpdate();
+        #
+        #        if (CustParameters::find().salesCheckCreditOnHeader())
+        #            if (!axSalesTable.salesTable().checkAgainstCreditLimit())
+        #                throw Exception::Error;
+        #
+        #        ttscommit;
+        #
+        #        salesTable = axSalesTable.salesTable();
+        #
+        #        //--> Credit Card Begin
+        #        CreditCardPosting::createSalesBasketAuthorization(salesTable);
+        #    }
+        #        catch (Exception::Deadlock)
+        #        {
+        #            retry;
+        #        }
+        #        catch (Exception::UpdateConflict)
+        #        {
+        #            if (appl.ttsLevel() == 0)
+        #            {
+        #                if (xSession::currentRetryCount() >= #RetryNum)
+        #                {
+        #                    throw Exception::UpdateConflictNotRecovered;
+        #                }
+        #                else
+        #                {
+        #                    retry;
+        #                }
+        #            }
+        #            else
+        #            {
+        #                throw Exception::UpdateConflict;
+        #            }
+        #        }
+        #        catch (Exception::Error)
+        #        {
+        #            error("@SYS78886");
+        #        }
+        #
+        #    }
+        #
+        #    return salesTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createSalesQuotation
+        #[SysEntryPointAttribute]
+        #server static SalesQuotationTable createSalesQuotation(SalesQuotationTable _salesQuotationTable, FormDataSource salesQuotationBasketLine_ds, SalesQuotationBasketId salesQuotationBasketId = '')
+        #{
+        #    #OCCRetryCount
+        #    AxSalesQuotationTable           axSalesQuotationTable = new AxSalesQuotationTable();
+        #    SalesQuotationBasketLine        salesQuotationBasketLine;
+        #    SalesQuotationTable             salesQuotationTable;
+        #    SalesQuotationLine              salesQuotationLine;
+        #    boolean                         createOrder = false;
+        #    PBAExecuteSalesQuotationLine    pbaExecuteSalesQuotationLine;
+        #
+        #    void processBasketLine(SalesQuotationBasketLine _salesQuotationBasketLine)
+        #    {
+        #        InventTable             inventTable;
+        #        AxSalesQuotationLine    axSalesQuotationLine;
+        #
+        #        // true if the item is a Product Configuration (PC) item:
+        #        boolean isPc = PCRuntimeLibrary::isConstraintBasedConfigurable(_salesQuotationBasketLine.ItemId);
+        #
+        #        inventTable = _salesQuotationBasketLine.inventTable();
+        #
+        #        axSalesQuotationLine = AxSalesQuotationLine::construct();
+        #        axSalesQuotationLine.axSalesQuotationTable(axSalesQuotationTable);
+        #
+        #        axSalesQuotationLine.parmItemId(_salesQuotationBasketLine.ItemId);
+        #
+        #        axSalesQuotationLine.axInventDim(AxInventDim_SalesQuotationLine::newAxSalesQuotationLine(axSalesQuotationLine)).allDimensions(_salesQuotationBasketLine.inventDim());
+        #        axSalesQuotationLine.parmInventDimId(_salesQuotationBasketLine.InventDimId);
+        #
+        #        // PBA or PC - for Product Builder and Product Configuration items set Product model id, BOM id, Route id, and calculated sales price
+        #        if(_salesQuotationBasketLine.ItemPBAId)
+        #        {
+        #            axSalesQuotationLine.parmItemPBAId(_salesQuotationBasketLine.ItemPBAId);
+        #        }
+        #        if(_salesQuotationBasketLine.ItemPBAId || isPc)
+        #        {
+        #            axSalesQuotationLine.parmItemBOMId(_salesQuotationBasketLine.ItemBomId);
+        #            axSalesQuotationLine.parmItemRouteId(_salesQuotationBasketLine.ItemRouteId);
+        #            axSalesQuotationLine.parmSalesPrice(_salesQuotationBasketLine.SalesPrice);
+        #        }
+        #
+        #        axSalesQuotationLine.parmTaxGroup(_salesQuotationTable.TaxGroup);
+        #        axSalesQuotationLine.parmSalesGroup(_salesQuotationTable.SalesGroup);
+        #        axSalesQuotationLine.parmDeliveryDateControlType(_salesQuotationTable.DeliveryDateControlType);
+        #        axSalesQuotationLine.parmReceiptDateRequested(_salesQuotationTable.ReceiptDateRequested);
+        #        axSalesQuotationLine.parmShippingDateRequested(_salesQuotationTable.ShippingDateRequested);
+        #        axSalesQuotationLine.parmConfirmedDlv(_salesQuotationTable.ShippingDateRequested);
+        #
+        #        axSalesQuotationLine.parmTransactionCode(_salesQuotationTable.TransactionCode);
+        #        axSalesQuotationLine.parmTransport(_salesQuotationTable.Transport);
+        #        axSalesQuotationLine.parmPort(_salesQuotationTable.Port);
+        #        axSalesQuotationLine.parmStatProcId(_salesQuotationTable.StatProcId);
+        #        axSalesQuotationLine.parmDlvMode(_salesQuotationTable.DlvMode);
+        #        axSalesQuotationLine.parmTransactionCode(_salesQuotationTable.TransactionCode);
+        #
+        #        axSalesQuotationLine.parmSalesQty(_salesQuotationBasketLine.SalesQty);
+        #        axSalesQuotationLine.parmProjTransType(_salesQuotationBasketLine.ProjTransType);
+        #        if(axSalesQuotationLine.parmProjTransType())
+        #        {
+        #            axSalesQuotationLine.parmProjectWorker(_salesQuotationBasketLine.ProjectWorker);
+        #            axSalesQuotationLine.parmProjCategoryId(_salesQuotationBasketLine.ProjCategoryId);
+        #            axSalesQuotationLine.parmLinePropertyId(_salesQuotationBasketLine.LinePropertyId);
+        #            axSalesQuotationLine.parmTransDate(_salesQuotationBasketLine.TransDate);
+        #            axSalesQuotationLine.parmCostPrice(_salesQuotationBasketLine.CostPrice);
+        #            axSalesQuotationLine.parmSalesPrice(_salesQuotationBasketLine.SalesPrice);
+        #            axSalesQuotationLine.parmLineAmount(_salesQuotationBasketLine.LineAmount);
+        #        }
+        #
+        #        axSalesQuotationLine.save();
+        #
+        #        // PBA - copy docu refs if any and move association of the user selections to the newly created sales quotation line
+        #        if (_salesQuotationBasketLine.ItemPBAId)
+        #        {
+        #            //importing the document references from the salesQuotationBasketLine
+        #            axSalesQuotationLine.pbaMoveDocRefs(salesQuotationBasketLine);
+        #
+        #            PBATableInstance::copyInstance(axSalesQuotationLine.salesQuotationLine().InventTransId, salesQuotationBasketLine.BasketTransId);
+        #
+        #            salesQuotationLine = axSalesQuotationLine.salesQuotationLine();
+        #
+        #            //running PBA Item Generation on the new SalesQuotationLine
+        #            pbaExecuteSalesQuotationLine = PBAExecuteSalesQuotationLine::construct();
+        #            pbaExecuteSalesQuotationLine.parmPBAId(_salesQuotationBasketLine.ItemPBAId);
+        #            pbaExecuteSalesQuotationLine.parmItemLine(salesQuotationLine);
+        #            pbaExecuteSalesQuotationLine.createNewId(salesQuotationLine, salesQuotationLine.InventTransId);
+        #        }
+        #
+        #        // PC - copy docu refs
+        #        if (isPc)
+        #        {
+        #            //importing the document references from the salesQuotationBasketLine
+        #            axSalesQuotationLine.pbaMoveDocRefs(salesQuotationBasketLine);
+        #        }
+        #    }
+        #    ;
+        #
+        #    if (salesQuotationBasketId)
+        #    {
+        #        select firstonly RecId from salesQuotationBasketLine where salesQuotationBasketLine.SalesQuotationBasketId == salesQuotationBasketId;
+        #        createOrder = salesQuotationBasketLine.RecId != 0;
+        #        if (createOrder)
+        #        {
+        #            createOrder = SalesQuotationBasket::checkPBALines(salesQuotationBasketId);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        createOrder = (salesQuotationBasketLine_ds.getFirst(true)) || (salesQuotationBasketLine_ds.getFirst(false));
+        #    }
+        #
+        #    if (createOrder)
+        #    {
+        #        try
+        #    {
+        #        ttsbegin;
+        #        axSalesQuotationTable.parmQuotationName(_salesQuotationTable.QuotationName);
+        #
+        #        if (_salesQuotationTable.CustAccount)
+        #        {
+        #            axSalesQuotationTable.parmCustAccount(_salesQuotationTable.CustAccount);
+        #        }
+        #        if (_salesQuotationTable.BusRelAccount)
+        #        {
+        #            axSalesQuotationTable.parmBusRelAccount(_salesQuotationTable.BusRelAccount);
+        #        }
+        #        axSalesQuotationTable.parmInvoiceAccount(_salesQuotationTable.InvoiceAccount);
+        #        axSalesQuotationTable.parmVATNum(_salesQuotationTable.vatNum);
+        #
+        #        axSalesQuotationTable.parmQuotationCategory(_salesQuotationTable.QuotationCategory);
+        #        axSalesQuotationTable.parmQuotationExpiryDate(_salesQuotationTable.QuotationExpiryDate);
+        #
+        #        axSalesQuotationTable.parmWorkerSalesResponsible(_salesQuotationTable.WorkerSalesResponsible);
+        #        axSalesQuotationTable.parmWorkerSalesTaker(_salesQuotationTable.WorkerSalesTaker);
+        #        axSalesQuotationTable.parmSalesPoolId(_salesQuotationTable.SalesPoolId);
+        #        axSalesQuotationTable.parmCurrencyCode(_salesQuotationTable.CurrencyCode);
+        #        axSalesQuotationTable.parmLanguageId(_salesQuotationTable.LanguageId);
+        #        axSalesQuotationTable.parmQuotationType(_salesQuotationTable.QuotationType);
+        #        axSalesQuotationTable.parmSalesOriginId(_salesQuotationTable.SalesOriginId);
+        #        axSalesQuotationTable.parmSalesGroup(_salesQuotationTable.SalesGroup);
+        #
+        #        axSalesQuotationTable.parmDeliveryName(_salesQuotationTable.DeliveryName);
+        #        axSalesQuotationTable.parmDeliveryPostalAddress(_salesQuotationTable.DeliveryPostalAddress);
+        #        axSalesQuotationTable.parmShippingDateRequested(_salesQuotationTable.ShippingDateRequested);
+        #
+        #        axSalesQuotationTable.parmCommissionGroup(_salesQuotationTable.CommissionGroup);
+        #        axSalesQuotationTable.parmTaxGroup(_salesQuotationTable.TaxGroup);
+        #        axSalesQuotationTable.parmDlvMode(_salesQuotationTable.DlvMode);
+        #
+        #        axSalesQuotationTable.parmPayment(_salesQuotationTable.Payment);
+        #        axSalesQuotationTable.parmPaymMode(_salesQuotationTable.PaymMode);
+        #        axSalesQuotationTable.parmPaymSpec(_salesQuotationTable.PaymSpec);
+        #        axSalesQuotationTable.parmCashDisc(_salesQuotationTable.CashDisc);
+        #
+        #        axSalesQuotationTable.parmContactPersonId(_salesQuotationTable.ContactPersonId);
+        #
+        #        axSalesQuotationTable.parmInventSiteId(_salesQuotationTable.InventSiteId);
+        #        axSalesQuotationTable.parmInventLocationId(_salesQuotationTable.InventLocationId);
+        #        axSalesQuotationTable.parmOpportunityId(_salesQuotationTable.OpportunityId);
+        #
+        #        if (_salesQuotationTable.ProjIdRef)
+        #        {
+        #            axSalesQuotationTable.parmProjIdRef(_salesQuotationTable.ProjIdRef);
+        #        }
+        #
+        #        axSalesQuotationTable.save();
+        #
+        #        if (salesQuotationBasketId)
+        #        {
+        #            while select * from salesQuotationBasketLine where salesQuotationBasketLine.SalesQuotationBasketId == salesQuotationBasketId
+        #            {
+        #                processBasketLine(salesQuotationBasketLine);
+        #            }
+        #        }
+        #        else
+        #        {
+        #            for (salesQuotationBasketLine = salesQuotationBasketLine_ds.getFirst(true); salesQuotationBasketLine; salesQuotationBasketLine = salesQuotationBasketLine_ds.getNext())
+        #            {//lines which is marked, in the grid. (if any)
+        #                processBasketLine(salesQuotationBasketLine);
+        #            }
+        #
+        #            for (salesQuotationBasketLine = salesQuotationBasketLine_ds.getFirst(false); salesQuotationBasketLine; salesQuotationBasketLine = salesQuotationBasketLine_ds.getNext())
+        #            {//lines which are not marked, in the grid.
+        #                processBasketLine(salesQuotationBasketLine);
+        #            }
+        #        }
+        #
+        #        ttscommit;
+        #
+        #        salesQuotationTable = axSalesQuotationTable.salesQuotationTable();
+        #    }
+        #        catch (Exception::Deadlock)
+        #        {
+        #            retry;
+        #        }
+        #        catch (Exception::UpdateConflict)
+        #        {
+        #            if (appl.ttsLevel() == 0)
+        #            {
+        #                if (xSession::currentRetryCount() >= #RetryNum)
+        #                {
+        #                    throw Exception::UpdateConflictNotRecovered;
+        #                }
+        #                else
+        #                {
+        #                    retry;
+        #                }
+        #            }
+        #            else
+        #            {
+        #                throw Exception::UpdateConflict;
+        #            }
+        #        }
+        #        catch (Exception::Error)
+        #        {
+        #            error("@SYS78886");
+        #        }
+        #
+        #    }
+        #
+        #    return salesQuotationTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createServiceOrderLine
+        #public static SMAServiceOrderLine createServiceOrderLine(SMAServiceOrderLine _smaServiceOrderLine)
+        #{
+        #    #OCCRetryCount
+        #
+        #    AxSMAServiceOrderLine   axSMAServiceOrderLine = AxSMAServiceOrderLine::constructValidateInput(_smaServiceOrderLine);
+        #    SMAServiceOrderLine     smaServiceOrderLine;
+        #    ;
+        #
+        #    smaServiceOrderLine = _smaServiceOrderLine;
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #        axSMAServiceOrderLine.parmTransactionType(smaServiceOrderLine.TransactionType);
+        #        axSMAServiceOrderLine.parmWorker(smaServiceOrderLine.Worker);
+        #
+        #        axSMAServiceOrderLine.parmDescription(smaServiceOrderLine.Description);
+        #        axSMAServiceOrderLine.parmDescriptionService(smaServiceOrderLine.DescriptionService);
+        #
+        #        axSMAServiceOrderLine.parmProjCategoryId(smaServiceOrderLine.ProjCategoryId);
+        #        axSMAServiceOrderLine.parmProjLinePropertyId(smaServiceOrderLine.ProjLinePropertyId);
+        #
+        #        axSMAServiceOrderLine.parmItemId(smaServiceOrderLine.ItemId);
+        #        axSMAServiceOrderLine.parmInventDimId(smaServiceOrderLine.InventDimId);
+        #
+        #        // Origin is web
+        #        axSMAServiceOrderLine.parmOrigin(SMAServiceOrderOrigin::Web);
+        #
+        #        axSMAServiceOrderLine.parmQty(smaServiceOrderLine.Qty);
+        #        axSMAServiceOrderLine.parmProjCostPrice(smaServiceOrderLine.ProjCostPrice);
+        #        axSMAServiceOrderLine.parmServiceTaskId(smaServiceOrderLine.ServiceTaskId);
+        #
+        #        axSMAServiceOrderLine.parmServiceObjectRelationId(smaServiceOrderLine.ServiceObjectRelationId);
+        #        axSMAServiceOrderLine.parmServiceObjectId(smaServiceOrderLine.ServiceObjectId);
+        #
+        #        axSMAServiceOrderLine.parmServiceOrderId(smaServiceOrderLine.ServiceOrderId);
+        #        axSMAServiceOrderLine.parmProjId(smaServiceOrderLine.ProjId);
+        #        axSMAServiceOrderLine.parmAgreementId(smaServiceOrderLine.AgreementId);
+        #
+        #        axSMAServiceOrderLine.save();
+        #        ttscommit;
+        #
+        #        smaServiceOrderLine = axSMAServiceOrderLine.smaServiceOrderLine();
+        #    }
+        #
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    catch (Exception::UpdateConflict)
+        #    {
+        #        if (appl.ttsLevel() == 0)
+        #        {
+        #            if (xSession::currentRetryCount() >= #RetryNum)
+        #            {
+        #                throw Exception::UpdateConflictNotRecovered;
+        #            }
+        #            else
+        #            {
+        #                retry;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            throw Exception::UpdateConflict;
+        #        }
+        #    }
+        #
+        #    catch (Exception::Error)
+        #    {
+        #        error("@SYS78886");
+        #    }
+        #
+        #    return smaServiceOrderLine;
+        #}
+      ENDSOURCE
+      SOURCE #createServiceOrderTable
+        #public static SMAServiceOrderTable createServiceOrderTable(SMAServiceOrderTable _serviceOrderTable)
+        #{
+        #    #OCCRetryCount
+        #
+        #    AxSMAServiceOrderTable  axSMAServiceOrderTable = new AxSMAServiceOrderTable();
+        #
+        #    SMAServiceOrderTable    serviceOrderTable;
+        #    ;
+        #
+        #    serviceOrderTable = _serviceOrderTable;
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #        // Addding new service order id
+        #        axSMAServiceOrderTable.parmServiceOrderId(NumberSeq::newGetNum(SMAParameters::numRefServiceOrderId()).num());
+        #
+        #        axSMAServiceOrderTable.parmCustAccount(serviceOrderTable.CustAccount);
+        #        axSMAServiceOrderTable.parmProjId(serviceOrderTable.ProjId);
+        #
+        #        axSMAServiceOrderTable.parmAddressRefRecId(serviceOrderTable.AddressRefRecId);
+        #        axSMAServiceOrderTable.parmAddressRefTableId(serviceOrderTable.AddressRefTableId);
+        #        axSMAServiceOrderTable.parmContactPersonId(serviceOrderTable.ContactPersonId);
+        #
+        #        // fields that are initilized from the Web
+        #        axSMAServiceOrderTable.parmOrigin(serviceOrderTable.Origin);
+        #        axSMAServiceOrderTable.parmProgress(serviceOrderTable.Progress);
+        #        axSMAServiceOrderTable.parmStageId(serviceOrderTable.StageId);
+        #        axSMAServiceOrderTable.parmServiceDateTime(serviceOrderTable.ServiceDateTime);
+        #
+        #        // Fields from tap 1
+        #        axSMAServiceOrderTable.parmAgreementId(serviceOrderTable.AgreementId);
+        #        axSMAServiceOrderTable.parmDescription(serviceOrderTable.Description);
+        #        // fields related to SLA
+        #        axSMAServiceOrderTable.parmServiceLevelAgreement(serviceOrderTable.ServiceLevelAgreement);
+        #        axSMAServiceOrderTable.parmServiceLevelAgreementStatus(serviceOrderTable.ServiceLevelAgreementStatus);
+        #
+        #
+        #        // Fields from tap 2
+        #        axSMAServiceOrderTable.parmServicePostalAddress(serviceOrderTable.ServicePostalAddress);
+        #        axSMAServiceOrderTable.parmServiceAddressName(serviceOrderTable.ServiceAddressName);
+        #
+        #        // Fields that are in any category of no change from either the web form or the init method on the table.
+        #        axSMAServiceOrderTable.parmSignOff(serviceOrderTable.SignOff);
+        #        axSMAServiceOrderTable.parmIncomingWebOrder(NoYes::Yes);
+        #        axSMAServiceOrderTable.parmActivityNumber(serviceOrderTable.ActivityNumber);
+        #        axSMAServiceOrderTable.parmCalendarConflict(serviceOrderTable.CalendarConflict);
+        #        axSMAServiceOrderTable.parmWorkerResponsible(serviceOrderTable.WorkerResponsible);
+        #
+        #        axSMAServiceOrderTable.save();
+        #
+        #        ttscommit;
+        #
+        #        serviceOrderTable = axSMAServiceOrderTable.smaServiceOrderTable();
+        #    }
+        #
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    catch (Exception::UpdateConflict)
+        #    {
+        #        if (appl.ttsLevel() == 0)
+        #        {
+        #            if (xSession::currentRetryCount() >= #RetryNum)
+        #            {
+        #                throw Exception::UpdateConflictNotRecovered;
+        #            }
+        #            else
+        #            {
+        #                retry;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            throw Exception::UpdateConflict;
+        #        }
+        #    }
+        #
+        #    catch (Exception::Error)
+        #    {
+        #        error("@SYS78886");
+        #    }
+        #
+        #    return serviceOrderTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createServiceRepairLine
+        #public static SMARepairLine createServiceRepairLine(SMARepairLine _repairLine, SMAServiceOrderId _serviceOrderId = '')
+        #{
+        #    #OCCRetryCount
+        #
+        #    SMARepairLine         smaRepairLine;
+        #    SMARepairLine           repairLine;
+        #
+        #    repairLine = _repairLine;
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #
+        #        // Setting the same service OrderId
+        #        smaRepairLine.ServiceOrderId = _serviceOrderId ? _serviceOrderId : repairLine.ServiceOrderId;
+        #
+        #        // Fields from the web that are stored
+        #        smaRepairLine.ServiceObjectRelationId = repairLine.ServiceObjectRelationId;
+        #        smaRepairLine.ServiceObjectId = repairLine.ServiceObjectId;
+        #
+        #        smaRepairLine.ConditionId = repairLine.ConditionId;
+        #        smaRepairLine.SymptomAreaId = repairLine.SymptomAreaId;
+        #        smaRepairLine.SymptomCodeId = repairLine.SymptomCodeId;
+        #
+        #        smaRepairLine.Name = repairLine.Name;
+        #        smaRepairLine.Description = repairLine.Description;
+        #
+        #        // Fields that are not stored from the web
+        #        smaRepairLine.DateTimeFinished = repairLine.DateTimeFinished;
+        #        smaRepairLine.DiagnosisAreaId = repairLine.DiagnosisAreaId;
+        #        smaRepairLine.DiagnosisCodeId = repairLine.DiagnosisCodeId;
+        #        smaRepairLine.Worker = repairLine.Worker;
+        #        smaRepairLine.RepairLineId = repairLine.RepairLineId;
+        #        smaRepairLine.RepairStageId = repairLine.RepairStageId;
+        #        smaRepairLine.ResolutionId = repairLine.ResolutionId;
+        #        smaRepairLine.validateWrite();
+        #        smaRepairLine.insert();
+        #
+        #        ttscommit;
+        #
+        #        repairLine = smaRepairLine;
+        #    }
+        #
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #    catch (Exception::UpdateConflict)
+        #    {
+        #        if (appl.ttsLevel() == 0)
+        #        {
+        #            if (xSession::currentRetryCount() >= #RetryNum)
+        #            {
+        #                throw Exception::UpdateConflictNotRecovered;
+        #            }
+        #            else
+        #            {
+        #                retry;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            throw Exception::UpdateConflict;
+        #        }
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        error("@SYS78886");
+        #    }
+        #
+        #    return repairLine;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createSMAServiceOrderLine
+        #public static SMAServiceOrderLine createSMAServiceOrderLine(SMAServiceOrderLine _smaServiceOrderLine)
+        #{
+        #    #OCCRetryCount
+        #
+        #    AxSMAServiceOrderLine   axSMAServiceOrderLine = AxSMAServiceOrderLine::constructValidateInput(_smaServiceOrderLine);
+        #    SMAServiceOrderLine     smaServiceOrderLine;
+        #    ;
+        #
+        #    smaServiceOrderLine = _smaServiceOrderLine;
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #        axSMAServiceOrderLine.parmTransactionType(smaServiceOrderLine.TransactionType);
+        #        axSMAServiceOrderLine.parmWorker(smaServiceOrderLine.Worker);
+        #
+        #        axSMAServiceOrderLine.parmDescription(smaServiceOrderLine.Description);
+        #        axSMAServiceOrderLine.parmDescriptionService(smaServiceOrderLine.DescriptionService);
+        #
+        #        axSMAServiceOrderLine.parmProjCategoryId(smaServiceOrderLine.ProjCategoryId);
+        #        axSMAServiceOrderLine.parmProjLinePropertyId(smaServiceOrderLine.ProjLinePropertyId);
+        #
+        #        axSMAServiceOrderLine.parmItemId(smaServiceOrderLine.ItemId);
+        #        axSMAServiceOrderLine.parmInventDimId(smaServiceOrderLine.InventDimId);
+        #
+        #        axSMAServiceOrderLine.parmOrigin(SMAServiceOrderOrigin::Web);
+        #
+        #        axSMAServiceOrderLine.parmQty(smaServiceOrderLine.Qty);
+        #        axSMAServiceOrderLine.parmServiceTaskId(smaServiceOrderLine.ServiceTaskId);
+        #
+        #        axSMAServiceOrderLine.parmServiceObjectRelationId(smaServiceOrderLine.ServiceObjectRelationId);
+        #        axSMAServiceOrderLine.parmServiceObjectId(smaServiceOrderLine.ServiceObjectRelationId);
+        #
+        #        axSMAServiceOrderLine.parmServiceOrderId(smaServiceOrderLine.ServiceOrderId);
+        #        axSMAServiceOrderLine.parmProjId(smaServiceOrderLine.ProjId);
+        #        axSMAServiceOrderLine.parmAgreementId(smaServiceOrderLine.AgreementId);
+        #
+        #        axSMAServiceOrderLine.save();
+        #        ttscommit;
+        #
+        #        smaServiceOrderLine = axSMAServiceOrderLine.smaServiceOrderLine();
+        #    }
+        #
+        #    catch (Exception::Deadlock)
+        #    {
+        #        retry;
+        #    }
+        #
+        #    catch (Exception::UpdateConflict)
+        #    {
+        #        if (appl.ttsLevel() == 0)
+        #        {
+        #            if (xSession::currentRetryCount() >= #RetryNum)
+        #            {
+        #                throw Exception::UpdateConflictNotRecovered;
+        #            }
+        #            else
+        #            {
+        #                retry;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            throw Exception::UpdateConflict;
+        #        }
+        #    }
+        #
+        #    catch (Exception::Error)
+        #    {
+        #        error("@SYS78886");
+        #    }
+        #
+        #    return smaServiceOrderLine;
+        #}
+      ENDSOURCE
+      SOURCE #createSmmBusRelTable
+        #static smmBusRelTable createSmmBusRelTable(smmBusRelTable _busRelTable)
+        #{
+        #    AxSmmBusRelTable axSmmBusRelTable = AxSmmBusRelTable::newValidateInput();
+        #
+        #
+        #    ttsbegin;
+        #
+        #    axSmmBusRelTable.parmParty(_busRelTable.Party);
+        #    axSmmBusRelTable.parmBusRelTypeId(_busRelTable.BusRelTypeId);
+        #    axSmmBusRelTable.parmStatus(_busRelTable.Status);
+        #    axSmmBusRelTable.parmCurrency(_busRelTable.Currency);
+        #    axSmmBusRelTable.parmMainContactWorker(_busRelTable.MainContactWorker);
+        #
+        #
+        #
+        #
+        #    axSmmBusRelTable.save();
+        #
+        #    ttscommit;
+        #
+        #    return axSmmBusRelTable.busRelTable();
+        #}
+      ENDSOURCE
+      SOURCE #createVendTable
+        #server static VendTable createVendTable(VendTable   _vendTable)
+        #{
+        #    AxVendTable     axVendTable;
+        #    SysDictTable    sysDictTable = new SysDictTable(tableNum(VendTable));
+        #    int             i;
+        #    int             fieldCnt;
+        #    FieldId         fieldId;
+        #    ;
+        #
+        #    ttsbegin;
+        #    axVendTable = AxVendTable::constructValidateInput(_vendTable);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (fieldNum(VendTable, AccountNum) != fieldId && fieldNum(VendTable, Party) != fieldId)//field VendAccount/PartyId can not be modified.
+        #            axVendTable.setFieldAsTouched(fieldId);
+        #    }
+        #
+        #    axVendTable.save();
+        #
+        #    ttscommit;
+        #
+        #    return axVendTable.vendTable();
+        #}
+      ENDSOURCE
+      SOURCE #externalItemName
+        #static ItemName externalItemName(   ModuleInventPurchSalesVendCustGroup _module,
+        #                                    ItemId  _itemId,
+        #                                    InventDimId _inventDimId,
+        #                                    CustVendRel _custVendRel,
+        #                                    Common _record)
+        #{
+        #    ItemName    itemName = CustVendExternalItem::find(_module, _itemId, _inventDimId, _custVendRel ).ExternalItemTxt;
+        #    ;
+        #    if (!itemName)
+        #        itemName = InventTable::find(_itemId).itemName(InventDim::find(_inventDimId));
+        #
+        #    return itemName;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findECPPresentation
+        #static ECPPresentation findECPPresentation(ECPPresentationRefType   _refType,
+        #                                            ECPPresentationRefId    _refId,
+        #                                            LanguageId              _languageId,
+        #                                            InventDimId             _inventDimId = InventDim::inventDimIdBlank(),
+        #                                            boolean                 _forUpdate = false,
+        #                                            boolean                 _setRecordLevelSecurity = false)
+        #{
+        #    ECPPresentation presentation;
+        #    ;
+        #
+        #    presentation.recordLevelSecurity(_setRecordLevelSecurity);
+        #    presentation = ECPPresentation::find(_refType, _refId, _languageId, _inventDimId, _forUpdate);
+        #
+        #    return presentation;
+        #}
+      ENDSOURCE
+      SOURCE #getUserCacheKey
+        #private static container getUserCacheKey(UserId _userId, MethodName _methodName)
+        #{
+        #    return [_userId, _methodName];
+        #}
+      ENDSOURCE
+      SOURCE #initAxSalesTable
+        #static AxSalesTable initAxSalesTable(SalesTable _salesTable)
+        #{
+        #    //This method creates a new AxSalesTable
+        #    //using the values in a SalesTable
+        #    AxSalesTable axSalesTable = new AxSalesTable();
+        #
+        #    axSalesTable.parmCustAccount(_salesTable.CustAccount);
+        #    axSalesTable.parmInvoiceAccount(_salesTable.InvoiceAccount);
+        #    axSalesTable.parmVATNum(_salesTable.vatNum);
+        #    axSalesTable.parmWorkerSalesTaker(_salesTable.WorkerSalesTaker);
+        #    axSalesTable.parmSalesPoolId(_salesTable.SalesPoolId);
+        #    axSalesTable.parmCurrencyCode(_salesTable.CurrencyCode);
+        #    axSalesTable.parmLanguageId(_salesTable.LanguageId);
+        #    axSalesTable.parmSalesType(_salesTable.SalesType);
+        #    axSalesTable.parmSalesOriginId(_salesTable.SalesOriginId);
+        #    axSalesTable.parmSalesGroup(_salesTable.SalesGroup);
+        #    axSalesTable.parmDeliveryDateControlType(SalesDeliveryDateControlType::None);
+        #    axSalesTable.parmDeliveryName(_salesTable.DeliveryName);
+        #    axSalesTable.parmDeliveryPostalAddress(_salesTable.DeliveryPostalAddress);
+        #    axSalesTable.parmDeliveryDate(_salesTable.DeliveryDate);
+        #    axSalesTable.parmShipCarrierDeliveryContact(_salesTable.ShipCarrierDeliveryContact);
+        #
+        #    axSalesTable.parmReturnStatus(_salesTable.ReturnStatus);
+        #    axSalesTable.parmReturnReasonCodeId(_salesTable.ReturnReasonCodeId);
+        #    axSalesTable.parmCustInvoiceId(_salesTable.CustInvoiceId);
+        #    axSalesTable.parmReturnItemNum(_salesTable.ReturnItemNum);
+        #
+        #    axSalesTable.parmShippingDateRequested(_salesTable.ShippingDateRequested);
+        #
+        #    axSalesTable.parmDlvMode(_salesTable.DlvMode);
+        #    axSalesTable.parmContactPersonId(_salesTable.ContactPersonId);
+        #
+        #    axSalesTable.parmInventSiteId(_salesTable.InventSiteId);
+        #    axSalesTable.parmInventLocationId(_salesTable.InventLocationId);
+        #
+        #    return axSalesTable;
+        #}
+      ENDSOURCE
+      SOURCE #initInventDimReport
+        #static InventDimParm initInventDimReport()
+        #{
+        #    InventDimParm   inventDimParm;
+        #
+        #    inventDimParm.initProductDimensionsAllGroups();
+        #
+        #    if (EP::isVendor())
+        #    {
+        #        inventDimParm.InventSerialIdFlag = NoYes::Yes;
+        #    }
+        #
+        #    return inventDimParm;
+        #}
+      ENDSOURCE
+      SOURCE #isCustomer
+        #/// <summary>
+        #///    Checks whether the current user is a customer.
+        #/// </summary>
+        #/// <param name="_useCache">
+        #///    A Boolean value that specifies if the value should be retrieved from and saved to the cache; optional.
+        #/// </param>
+        #/// <returns>
+        #///    true if the current user is a customer; otherwise, false.
+        #/// </returns>
+        #static boolean isCustomer(boolean _useCache = false)
+        #{
+        #    DirPersonUser           dirPersonUser;
+        #    DirPartyRelationship    dirPartyRelationship;
+        #    CustTable               custTable;
+        #    UserExternalParty       externalPartyRelation;
+        #    container               cacheKey = EP::getUserCacheKey(curUserId(), staticMethodStr(EP, isCustomer));
+        #    container               isCustomerContainer;
+        #
+        #    if (_useCache && classfactory.globalCache().isSet(classStr(EP), cacheKey))
+        #    {
+        #        // Retrieve stored value from cache
+        #        isCustomerContainer = classfactory.globalCache().get(classStr(EP), cacheKey);
+        #    }
+        #    else // Determine if the current user is a customer
+        #    {
+        #        // Check if an external party relation has been defined
+        #        select firstonly RecId from externalPartyRelation
+        #            where externalPartyRelation.User                == curUserId()
+        #                && externalPartyRelation.ExternalEntityType == UserExternalPartyEntityType::Customer;
+        #
+        #        if (externalPartyRelation.RecId)
+        #        {
+        #            isCustomerContainer = [true];
+        #        }
+        #        else
+        #        {
+        #            // Check if person is a contact person for a customer
+        #            select firstonly crossCompany RecId from dirPersonUser
+        #                where dirPersonUser.User == curUserId()
+        #                exists join dirPartyRelationship
+        #                    where dirPartyRelationship.ChildParty == dirPersonUser.PersonParty
+        #                exists join custTable
+        #                    where custTable.Party == dirPartyRelationship.ParentParty;
+        #
+        #            isCustomerContainer = [dirPersonUser.RecId != 0];
+        #        }
+        #
+        #        if (_useCache)
+        #        {
+        #            // Put calculated value to the cache
+        #            classfactory.globalCache().set(classStr(EP), cacheKey, isCustomerContainer);
+        #        }
+        #    }
+        #
+        #    return conPeek(isCustomerContainer, 1);
+        #}
+      ENDSOURCE
+      SOURCE #isExternalUser
+        #/// <summary>
+        #///    Indicates whether the current user is an external user.
+        #/// </summary>
+        #/// <returns>
+        #///    true if the current user is an external user; otherwise, false.
+        #/// </returns>
+        #public static boolean isExternalUser()
+        #{
+        #    return UserExternalParty::existUserLegalEntity(curUserId());
+        #}
+      ENDSOURCE
+      SOURCE #isVendor
+        #/// <summary>
+        #///    Determines whether the current user is a vendor.
+        #/// </summary>
+        #/// <param name="_useCache">
+        #///    A Boolean value that specifies if the value should be retrieved from and saved to the cache; optional.
+        #/// </param>
+        #/// <returns>
+        #///    true if the user is a vendor; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///    This method uses the user relation in the <c>UserExternalParty</c> table to determine whether there
+        #///    is a relationship between the current user and a vendor.
+        #/// </remarks>
+        #static boolean isVendor(boolean _useCache = false)
+        #{
+        #    container cacheKey = EP::getUserCacheKey(curUserId(), staticMethodStr(EP, isVendor));
+        #    container isVendorContainer;
+        #
+        #    if (_useCache && classfactory.globalCache().isSet(classStr(EP), cacheKey))
+        #    {
+        #        // Retrieve stored value from cache
+        #        isVendorContainer = classfactory.globalCache().get(classStr(EP), cacheKey);
+        #    }
+        #    else
+        #    {
+        #        // Determine if the current user is a vendor
+        #        isVendorContainer = [UserExternalParty::existUserEntityType(curUserId(), UserExternalPartyEntityType::Vendor)];
+        #
+        #        if (_useCache)
+        #        {
+        #            // Put calculated value to the cache
+        #            classfactory.globalCache().set(classStr(EP), cacheKey, isVendorContainer);
+        #        }
+        #    }
+        #
+        #    return conPeek(isVendorContainer, 1);
+        #}
+      ENDSOURCE
+      SOURCE #layoutExternalItemId
+        #static void layoutExternalItemId(ModuleInventPurchSalesVendCustGroup _module,
+        #                                 ItemId      _itemId,
+        #                                 InventDimId _inventDimId,
+        #                                 CustVendRel _custVendRel,
+        #                                 Common      _record,
+        #                                 boolean     _layoutAsLink = true)
+        #{
+        #    ItemId      itemId = CustVendExternalItem::find(_module, _itemId, _inventDimId, _custVendRel ).ExternalItemId;
+        #    WebLink     webLink = WebLink::construct();
+        #;
+        #    if (!itemId)
+        #        itemId = _itemId;
+        #
+        #    if (_layoutAsLink)
+        #    {
+        #        webLink.record(_record);
+        #        webLink.menufunction(new WebUrlMenuFunction(webUrlItemStr(EPInventTableInfo)));
+        #        webLink.label(itemId);
+        #        webSession().writeTxt(webLink.completeLink());
+        #    }
+        #    else
+        #    {
+        #        webSession().writeTxt(itemId);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #modifyContactPerson
+        #server static void modifyContactPerson(ContactPerson _contactPerson)
+        #{
+        #    AxContactPerson axContactPerson;
+        #    SysDictTable    sysDictTable = new SysDictTable(tableNum(ContactPerson));
+        #    int             i;
+        #    int             fieldCnt;
+        #    FieldId         fieldId;
+        #    ContactPerson   contactPerson;
+        #    ;
+        #
+        #    ttsbegin;
+        #
+        #    axContactPerson = AxContactPerson::constructValidateInput(_contactPerson);
+        #    contactPerson   = ContactPerson::find(_contactPerson.ContactPersonId);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (contactPerson.(fieldId) != _contactPerson. (fieldId))
+        #        {
+        #            if (fieldNum(ContactPerson, ContactPersonId) != fieldId)
+        #            {
+        #            axContactPerson.setFieldAsTouched(fieldId);
+        #            }
+        #        }
+        #    }
+        #
+        #    axContactPerson.save();
+        #
+        #    ttscommit;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #modifyCustTable
+        #[SysEntryPointAttribute]
+        #server static void modifyCustTable(CustTable   _custTable)
+        #{
+        #    AxCustTable     axCustTable;
+        #    SysDictTable    sysDictTable = new SysDictTable(tableNum(CustTable));
+        #    int             i;
+        #    int             fieldCnt;
+        #    FieldId         fieldId;
+        #    CustTable       custTable;
+        #    ;
+        #
+        #    ttsbegin;
+        #    axCustTable = AxCustTable::constructValidateInput(_custTable);
+        #    custTable   = CustTable::find(_custTable.AccountNum);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (custTable.(fieldId) != _custTable.(fieldId))
+        #        {
+        #            axCustTable.setFieldAsTouched(fieldId);
+        #        }
+        #    }
+        #
+        #    axCustTable.save();
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #modifyDocuRef
+        #server static void modifyDocuRef(DocuRef _docuRef)
+        #{
+        #    AxDocuRef       axDocuRef;
+        #    SysDictTable    sysDictTable;
+        #    int             i;
+        #    int             fieldCnt;
+        #    FieldId         fieldId;
+        #    DocuRef         docuRef
+        #    ;
+        #
+        #    sysDictTable = new SysDictTable(tableNum(DocuRef));
+        #
+        #    ttsbegin;
+        #    axDocuRef = AxDocuRef::constructValidateInput(_docuRef);
+        #    docuRef   = DocuRef::findRecId(_docuRef.RecId);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (docuRef.(fieldId) != _docuRef.(fieldId))
+        #        {
+        #            axDocuRef.setFieldAsTouched(fieldId);
+        #        }
+        #    }
+        #
+        #    axDocuRef.save();
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #modifyPurchaseOrder
+        #[SysEntryPointAttribute]
+        #server static void modifyPurchaseOrder(PurchTable _purchTable,
+        #                                       container  _conPurchLine = conNull(),
+        #                                       container  _conInventDim = conNull())
+        #{
+        #    AxPurchTable    axPurchTable;
+        #    AxPurchLine     axPurchLine;
+        #    PurchLine       purchLine;
+        #    PurchLine       purchLine2;
+        #    PurchTable      purchTableOrg;
+        #    InventDim       inventDim2;
+        #    InventDim       inventDim;
+        #    SysDictTable    sysDictTable    = new SysDictTable(tableNum(PurchTable));
+        #    SysDictTable    sysDictLine     = new SysDictTable(tableNum(PurchLine));
+        #    SysDictTable    sysDictDim      = new SysDictTable(tableNum(InventDim));
+        #    int             i;
+        #    int             fieldCnt;
+        #    int             fieldCntLine;
+        #    int             fieldCntInventDim;
+        #    FieldId         fieldId;
+        #    boolean         anyTouched;
+        #
+        #    Map             mapLines        = (_conPurchLine)   ? Map::create(_conPurchLine) : null;
+        #    Map             mapDim          = (_conInventdim)   ? Map::create(_conInventdim) : null;
+        #    MapEnumerator   me;
+        #    ;
+        #
+        #    ttsbegin;
+        #
+        #    if (_purchTable.ChangeRequestRequired == NoYes::Yes
+        #       && _purchTable.DocumentState >= VersioningDocumentState::Approved)
+        #    {
+        #        _purchTable.DocumentState = VersioningDocumentState::Draft;
+        #    }
+        #    // check if the header or lines are editable
+        #    else if (!_purchTable.editAllowed(true))
+        #    {
+        #        throw error("@SYS310054");
+        #    }
+        #
+        #    purchTableOrg = PurchTable::find(_purchTable.PurchId);
+        #
+        #    axPurchTable = AxPurchTable::constructValidateInput(_purchTable);
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (purchTableOrg.(fieldId) != _purchTable.(fieldId))
+        #        {
+        #            axPurchTable.setFieldAsTouched(fieldId);
+        #            anyTouched = true;
+        #        }
+        #    }
+        #    if (anyTouched)
+        #    {
+        #        axPurchTable.save();
+        #        anyTouched = false;
+        #    }
+        #
+        #    fieldCntLine = sysDictLine.fieldCntWithoutSys();
+        #
+        #    if (mapLines && mapLines.elements())
+        #    {
+        #        me = mapLines.getEnumerator();
+        #        while (me.moveNext())
+        #        {
+        #            purchLine2 = me.currentValue();
+        #            purchLine = PurchLine::findInventTransId(purchLine2.InventTransId,true);
+        #            axPurchLine = AxPurchLine::newPurchLine(purchLine);
+        #            for (i=1;i <= fieldCntLine;i++)
+        #            {
+        #                fieldId = sysDictLine.fieldCnt2Id(i);
+        #                if (purchLine2.(fieldId) != purchLine.(fieldId) &&
+        #                    fieldNum(PurchLine, LineAmount) != fieldId) //AxPurchLine must re-calculate the line amount.
+        #                {
+        #                    purchLine.(fieldId) = purchLine2.(fieldId);
+        #                    axPurchLine.setFieldAsTouched(fieldId);
+        #                    anyTouched = true;
+        #                }
+        #            }
+        #
+        #            if (mapDim && mapDim.elements())
+        #            {
+        #                if (mapDim.exists(me.currentKey()))
+        #                {
+        #                    inventDim = purchLine.inventDim();
+        #                    inventDim2 = mapDim.lookup(me.currentKey());
+        #                    if (!anyTouched)
+        #                    {
+        #                        fieldCntInventDim = sysDictDim.fieldCntWithoutSys();
+        #                        for (i=1;i <= fieldCntInventDim;i++)
+        #                        {
+        #                            fieldId = sysDictDim.fieldCnt2Id(i);
+        #                            if (inventDim2.(fieldId) != inventDim.(fieldId))
+        #                            {
+        #                                anyTouched = true;
+        #                            }
+        #                        }
+        #                    }
+        #                    axPurchLine.axInventDim().productDimensions(inventDim2);
+        #                }
+        #            }
+        #            if (anyTouched)
+        #            {
+        #                axPurchLine.save();
+        #                anyTouched = false;
+        #            }
+        #        }
+        #    }
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #modifySalesOrder
+        #[SysEntryPointAttribute]
+        #server static void modifySalesOrder(SalesTable _salesTable,
+        #                                    container  _conSalesline = conNull(),
+        #                                    container  _conInventDim = conNull())
+        #{
+        #    AxSalesTable    axSalesTable = new AxSalesTable();
+        #    AxSalesLine     axSalesLine;
+        #    SalesTable      salesTableOrg;
+        #    SalesLine       salesLine;
+        #    SalesLine       salesLine2;
+        #    InventDim       inventDim;
+        #    InventDim       inventDim2;
+        #    SysDictTable    sysDictTable = new SysDictTable(tableNum(SalesTable));
+        #    SysDictTable    sysDictLine  = new SysDictTable(tableNum(SalesLine));
+        #    SysDictTable    sysDictDim   = new SysDictTable(tableNum(InventDim));
+        #    int             i;
+        #    int             fieldCnt;
+        #    int             fieldCntLine;
+        #    int             fieldCntInventDim;
+        #    FieldId         fieldId;
+        #    boolean         anyTouched;
+        #    boolean         anyLineChanged;
+        #
+        #    Map             mapLines    = (_conSalesLine)   ? Map::create(_conSalesLine) : null;
+        #    Map             mapDim      = (_conInventdim)   ? Map::create(_conInventdim) : null;
+        #    MapEnumerator   me;
+        #    ;
+        #
+        #    ttsbegin;
+        #    axSalesTable = AxSalesTable::constructValidateInput(_salesTable);
+        #    salesTableOrg = SalesTable::find(_salesTable.SalesId);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (salesTableOrg.(fieldId) != _salesTable.(fieldId))
+        #        {
+        #            axSalesTable.setFieldAsTouched(fieldId);
+        #            anyTouched = true;
+        #        }
+        #    }
+        #    if (anyTouched)
+        #    {
+        #        axSalesTable.save();
+        #        anyTouched = false;
+        #    }
+        #
+        #    if (mapLines && mapLines.elements())
+        #    {
+        #        me = mapLines.getEnumerator();
+        #        fieldCntLine = sysDictLine.fieldCntWithoutSys();
+        #        while (me.moveNext())
+        #        {
+        #            salesLine2 = me.currentValue();
+        #            salesLine = SalesLine::findInventTransId(salesLine2.InventTransId,true);
+        #            axSalesLine = AxSalesLine::newSalesLine(salesLine);
+        #            for (i=1;i <= fieldCntLine;i++)
+        #            {
+        #                fieldId = sysDictLine.fieldCnt2Id(i);
+        #                if (salesLine2.(fieldId) != salesLine.(fieldId) &&
+        #                    fieldNum(SalesLine, LineAmount) != fieldId)//AxSalesLine must re-calculate the line amount.
+        #                {
+        #                    salesLine.(fieldId) = salesLine2.(fieldId);
+        #                    axSalesLine.setFieldAsTouched(fieldId);
+        #                    anyTouched = true;
+        #                }
+        #            }
+        #
+        #            if (mapDim && mapDim.elements())
+        #            {
+        #                if (mapDim.exists(me.currentKey()))
+        #                {
+        #                    inventDim = salesLine.inventDim();
+        #                    inventDim2 = mapDim.lookup(me.currentKey());
+        #                    if (!anyTouched)
+        #                    {
+        #                        fieldCntInventDim = sysDictDim.fieldCntWithoutSys();
+        #                        for (i=1;i <= fieldCntInventDim;i++)
+        #                        {
+        #                            fieldId = sysDictDim.fieldCnt2Id(i);
+        #                            if (inventDim2.(fieldId) != inventDim.(fieldId))
+        #                            {
+        #                                anyTouched = true;
+        #                            }
+        #                        }
+        #                    }
+        #                    axSalesLine.axInventDim().allDimensions(inventDim2);
+        #                }
+        #            }
+        #            if (anyTouched)
+        #            {
+        #                axSalesLine.save();
+        #                anyTouched = false;
+        #                anyLineChanged = true;
+        #            }
+        #        }
+        #
+        #        if (anyLineChanged)
+        #        {
+        #            axSalesTable.salesTable().updateMultiLineDisc();
+        #            if (axSalesTable.salesTable().setEstimate())
+        #                axSalesTable.salesTable().doUpdate();
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #modifySalesQuotationTable
+        #[SysEntryPointAttribute]
+        #server static void modifySalesQuotationTable(SalesQuotationTable    _salesQuotationTable,
+        #                                                       container    _conSaQline = conNull())
+        #{
+        #    AxSalesQuotationTable    axSaQTable = new AxSalesQuotationTable();
+        #    AxSalesQuotationLine     axSaQLine;
+        #
+        #    SalesQuotationTable      saQTableOrig;
+        #    SalesQuotationLine       saQLine;
+        #    SalesQuotationLine       saQLine2;
+        #
+        #    SysDictTable    sysDictTable = new SysDictTable(tableNum(SalesQuotationTable));
+        #    SysDictTable    sysDictLine  = new SysDictTable(tableNum(SalesQuotationLine));
+        #
+        #    int             i;
+        #    int             fieldCnt;
+        #    int             fieldCntLine;
+        #
+        #    FieldId         fieldId;
+        #    boolean         anyTouched;
+        #
+        #    Map             mapLines    = (_conSaQLine)   ? Map::create(_conSaQLine) : null;
+        #    MapEnumerator   me;
+        #    ;
+        #
+        #    ttsbegin;
+        #    axSaQTable      = AxSalesQuotationTable::constructValidateInput(_salesQuotationTable);
+        #    saQTableOrig    = SalesQuotationTable::find(_salesQuotationTable.QuotationId);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (saQTableOrig.(fieldId) != _salesQuotationTable.(fieldId))
+        #        {
+        #            axSaQTable.setFieldAsTouched(fieldId);
+        #            anyTouched = true;
+        #        }
+        #    }
+        #    if (anyTouched)
+        #    {
+        #        axSaQTable.save();
+        #        anyTouched = false;
+        #    }
+        #
+        #    if (mapLines && mapLines.elements())
+        #    {
+        #        me = mapLines.getEnumerator();
+        #        fieldCntLine = sysDictLine.fieldCntWithoutSys();
+        #        while (me.moveNext())
+        #        {
+        #            saQLine2    = me.currentValue();
+        #            saQLine     = SalesQuotationLine::find(_salesQuotationTable.QuotationId,saQLine2.LineNum,true);
+        #            axSaQLine   = AxSalesQuotationLine::newSalesQuotationLine(saQLine);
+        #
+        #            for (i=1;i <= fieldCntLine;i++)
+        #            {
+        #                fieldId = sysDictLine.fieldCnt2Id(i);
+        #                if (saQLine2.(fieldId) != saQLine.(fieldId) &&
+        #                    fieldNum(SalesQuotationLine, LineAmount) != fieldId) //AxSalesQuotationhLine must re-calculate the line amount.)
+        #                {
+        #                    saQLine.(fieldId) = saQLine2.(fieldId);
+        #                    axSaQLine.setFieldAsTouched(fieldId);
+        #                    anyTouched = true;
+        #                }
+        #            }
+        #
+        #            if (anyTouched)
+        #            {
+        #                axSaQLine.save();
+        #            }
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #modifyServiceOrderLine
+        #server static void modifyServiceOrderLine(container  _conSeOline = conNull())//, container  _conInventDim = connull())
+        #{
+        #    AxSMAServiceOrderLine   axSMAServiceOrderLine;
+        #
+        #    SMAServiceOrderLine     smaServiceOrderLine;
+        #    SMAServiceOrderLine     smaServiceOrderLine2;
+        #
+        #    SMAServiceOrderId       serviceOrderId;
+        #
+        #    SysDictTable            sysDictLine = new SysDictTable(tableNum(SMAServiceOrderLine));
+        #
+        #    int             i;
+        #    int             fieldCnt;
+        #    FieldId         fieldId;
+        #
+        #    boolean         anyTouched;
+        #    boolean         anyLineChanged;
+        #
+        #    Map             mapLines    = (_conSeOline)   ? Map::create(_conSeOline) : null;
+        #    MapEnumerator   me;
+        #    ;
+        #
+        #    ttsbegin;
+        #
+        #    if (mapLines && mapLines.elements())
+        #    {
+        #        me = mapLines.getEnumerator();
+        #        fieldCnt = sysDictLine.fieldCntWithoutSys();
+        #        while (me.moveNext())
+        #        {
+        #            smaServiceOrderLine2 = me.currentValue();
+        #            smaServiceOrderLine = SMAServiceOrderLine::find(smaServiceOrderLine2.ServiceOrderId, smaServiceOrderLine2.ServiceOrderLineNum, true);
+        #            axSMAServiceOrderLine = AxSMAServiceOrderLine::newSMAServiceOrderLine(smaServiceOrderLine);
+        #
+        #            if (! serviceOrderId)
+        #            {
+        #                serviceOrderId = smaServiceOrderLine.ServiceOrderId;
+        #            }
+        #
+        #            for (i=1;i <= fieldCnt;i++)
+        #            {
+        #                fieldId = sysDictLine.fieldCnt2Id(i);
+        #                if (smaServiceOrderLine2.(fieldId) != smaServiceOrderLine.(fieldId))
+        #                {
+        #                    smaServiceOrderLine.(fieldId) = smaServiceOrderLine2.(fieldId);
+        #                    axSMAServiceOrderLine.setFieldAsTouched(fieldId);
+        #                    anyTouched = true;
+        #                }
+        #            }
+        #
+        #            if (anyTouched)
+        #            {
+        #                axSMAServiceOrderLine.save();
+        #                anyTouched = false;
+        #                anyLineChanged = true;
+        #            }
+        #        }
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #modifyServiceOrderTable
+        #public static void modifyServiceOrderTable(SMAServiceOrderTable _serviceOrderTable)
+        #{
+        #    AxSMAServiceOrderTable  axSMAServiceOrderTable;
+        #    SysDictTable            sysDictTable = new SysDictTable(tableNum(SMAServiceOrderTable));
+        #    int                     i;
+        #    int                     fieldCnt;
+        #    FieldId                 fieldId;
+        #
+        #    SMAServiceOrderTable    serviceOrderTable;
+        #    ;
+        #
+        #    axSMAServiceOrderTable = AxSMAServiceOrderTable::constructValidateInput(_serviceOrderTable);
+        #
+        #    serviceOrderTable = SMAServiceOrderTable::find(_serviceOrderTable.ServiceOrderId);
+        #
+        #    ttsbegin;
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (serviceOrderTable.(fieldId) != _serviceOrderTable.(fieldId))
+        #        {
+        #            axSMAServiceOrderTable.setFieldAsTouched(fieldId);
+        #        }
+        #    }
+        #
+        #    axSMAServiceOrderTable.save();
+        #
+        #    ttscommit;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #modifySMARepairLine
+        #server static void modifySMARepairLine(SMARepairLine   _smaRepairLine)
+        #{
+        #    AxCommon        axCommonSMARepairLine;
+        #    SysDictTable    sysDictTable = new SysDictTable(tableNum(SMARepairLine));
+        #    int             i;
+        #    int             fieldCnt;
+        #    FieldId         fieldId;
+        #    SMARepairLine   smaRepairLine;
+        #    ;
+        #
+        #    ttsbegin;
+        #
+        #    axCommonSMARepairLine = AxCommon::constructAxCommon(_smaRepairLine);
+        #    axCommonSMARepairLine.validateInput(true);
+        #    smaRepairLine = SMARepairLine::findRecId(_smaRepairLine.RecId);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (smaRepairLine.(fieldId) != _smaRepairLine.(fieldId))
+        #        {
+        #            axCommonSMARepairLine.setFieldAsTouched(fieldId);
+        #        }
+        #    }
+        #
+        #    axCommonSMARepairLine.save();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #modifySmmBusRelTable
+        #static void modifySmmBusRelTable(smmBusRelTable _busReltable, Common _custVendTable = null)
+        #{
+        #    AxSmmBusRelTable    axSmmBusRelTable;
+        #    Name                newBusRelName;
+        #    CustTable           custTable;
+        #    VendTable           vendTable;
+        #
+        #
+        #    axSmmBusRelTable = AxSmmBusRelTable::constructValidateInput(_busReltable);
+        #
+        #    newBusRelName = _busReltable.name();
+        #
+        #    ttsbegin;
+        #
+        #    axSmmBusRelTable.parmParty(_busReltable.Party);
+        #    axSmmBusRelTable.parmBusRelTypeId(_busReltable.BusRelTypeId);
+        #    axSmmBusRelTable.parmMainContactWorker(_busReltable.MainContactWorker);
+        #
+        #    if (_custVendTable.RecId)
+        #    {
+        #        if (_custVendTable.TableId == tableNum(CustTable))
+        #        {
+        #            custTable = _custVendTable;
+        #        }
+        #        else
+        #        {
+        #            vendTable = _custVendTable;
+        #        }
+        #    }
+        #
+        #    axSmmBusRelTable.modify();
+        #    axSmmBusRelTable.save();
+        #
+        #    ttscommit;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #modifyVendTable
+        #server static void modifyVendTable(VendTable   _vendTable)
+        #{
+        #    AxVendTable     axVendTable;
+        #    SysDictTable    sysDictTable = new SysDictTable(tableNum(VendTable));
+        #    int             i;
+        #    int             fieldCnt;
+        #    FieldId         fieldId;
+        #    VendTable       vendTable;
+        #    ;
+        #
+        #    ttsbegin;
+        #    axVendTable = AxVendTable::newVendTable(_vendTable);
+        #    vendTable   = VendTable::findRecId(_vendTable.RecId);
+        #
+        #    fieldCnt = sysDictTable.fieldCntWithoutSys();
+        #
+        #    for (i=1;i <= fieldCnt;i++)
+        #    {
+        #        fieldId = sysDictTable.fieldCnt2Id(i);
+        #        if (vendTable.(fieldId) != _vendTable.(fieldId))
+        #        {
+        #            axVendTable.setFieldAsTouched(fieldId);
+        #        }
+        #    }
+        #
+        #    axVendTable.save();
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #pbaRedirect
+        #static void pbaRedirect(PBAItemLine _itemLine)
+        #{
+        #
+        #    WebLink     pbaRedirectLink = WebLink::construct(true);
+        #    ;
+        #
+        #    // instanciate product builder menu item
+        #    pbaRedirectLink.menufunction(new WebUrlMenuFunction(webUrlItemStr(EPPBAConfigurator)));
+        #
+        #    // attach the current order or qoutation basket line
+        #    pbaRedirectLink.record(_itemLine);
+        #
+        #    // redirect
+        #    webSession().redirect(pbaRedirectLink);
+        #}
+      ENDSOURCE
+      SOURCE #processSalesBasketLine
+        #static void processSalesBasketLine(SalesBasketLine salesBasketLine, AxSalesTable axSalesTable, SalesBasketId salesBasketId = '')
+        #{
+        #    //This method creates and stores an AxSalesLine from a SalesBasketLine
+        #    InventTable         inventTable;
+        #    AxSalesLine         axSalesLine;
+        #    SalesTable          salesTable;
+        #    SalesLine           salesLine;
+        #    PBAExecuteSalesLine pbaExecuteSalesLine = PBAExecuteSalesLine::construct();
+        #    // true if the item is a Product Configuration (PC) item:
+        #    boolean isPc = PCRuntimeLibrary::isConstraintBasedConfigurable(salesBasketLine.ItemId);
+        #
+        #    salesTable = axSalesTable.salesTable();
+        #    inventTable = salesBasketLine.inventTable();
+        #    axSalesLine = new AxSalesLine();
+        #    axSalesLine.axSalesTable(axSalesTable);
+        #    axSalesLine.parmItemId(salesBasketLine.ItemId);
+        #    axSalesLine.axInventDim().allDimensions(salesBasketLine.inventDim());
+        #
+        #    if (salesBasketId && (salesTable.ReturnStatus != ReturnStatusHeader::None))
+        #    {
+        #        axSalesLine.parmExpectedRetQty(salesBasketLine.SalesQty);
+        #    }
+        #    else if ((salesTable.SalesType == SalesType::ReturnItem) && (salesBasketLine.SalesQty > 0))
+        #    {
+        #        salesBasketLine.SalesQty = salesBasketLine.SalesQty * -1;
+        #    }
+        #
+        #    if (salesTable.SalesType == SalesType::ReturnItem)
+        #    {
+        #        axSalesLine.parmReturnStatus(ReturnStatusLine::Awaiting);
+        #    }
+        #
+        #    axSalesLine.parmSalesQty(salesBasketLine.SalesQty);
+        #    axSalesLine.pbaInitFromSalesBasketLine(salesBasketLine);
+        #    //Don't perform credit limit check when line is added to order.
+        #    axSalesLine.skipCreditLimitCheck(true);
+        #    axSalesLine.save();
+        #
+        #    // check if item on sales line is a product builder item
+        #    if (  salesBasketLine.ItemPBAId != '' )
+        #    {
+        #        //importing the document references from the salesBasketLine
+        #        axSalesLine.pbaMoveDocRefs(salesBasketLine);
+        #
+        #        salesLine = axSalesLine.salesLine();
+        #        PBATableInstance::copyInstance(salesLine.InventTransId,salesBasketLine.BasketTransId);
+        #
+        #        //running PBA Item Generation on the new SalesLine
+        #        pbaExecuteSalesLine.parmItemLine(salesLine);
+        #        pbaExecuteSalesLine.parmPBAId(salesLine.ItemPBAId);
+        #        pbaExecuteSalesLine.createNewId(salesLine, salesLine.InventTransId);
+        #    }
+        #
+        #    if (isPc)
+        #    {
+        #        //importing the document references from the salesBasketLine
+        #        axSalesLine.pbaMoveDocRefs(salesBasketLine);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #redirectOnCreate
+        #static void redirectOnCreate(   WebMenuFunction menuFunction,
+        #                                Common linkrecord = null,
+        #                                ECPDialogText _text = '',
+        #                                Caption _caption = '',
+        #                                FieldLabel _buttonText = '')
+        #{
+        #    WebLink         webLink = WebLink::construct();
+        #    str url;
+        #
+        #    webLink.menufunction(menuFunction);
+        #    webLink.record(linkrecord);
+        #
+        #    url = webLink.url(false);
+        #    webSession().redirectURL(url);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #searchECPPresentation
+        #static ECPPresentation searchECPPresentation(ECPPresentationRefType      _refType,
+        #                                                ECPPresentationRefId     _refId,
+        #                                                LanguageId               _languageId,
+        #                                                InventDimId              _inventDimId,
+        #                                                boolean                  _forUpdate = false,
+        #                                                boolean                  _setRecordLevelSecurity = false)
+        #{
+        #    ECPPresentation presentation;
+        #    ;
+        #
+        #    presentation.recordLevelSecurity(_setRecordLevelSecurity);
+        #    presentation = ECPPresentation::searchPresentation(_refType, _refId, _languageId, _inventDimId, _forUpdate);
+        #
+        #    return presentation;
+        #}
+      ENDSOURCE
+      SOURCE #sendMail_UserActivationKey
+        #static void sendMail_UserActivationKey(ECPCustSignUp _ecpCustSignUp)
+        #{
+        #    str                 msg;
+        #    EPWebSiteParameters webSite;
+        #    CompanyInfo         companyInfo     = CompanyInfo::find();
+        #    SysMailerNet        mail            = new SysMailerNet();
+        #    WebUrlMenuFunction  urlMenuFunction = new WebUrlMenuFunction(webUrlItemStr(EPCSSCustSignUpUserActivation));
+        #    ;
+        #    //Build mail message
+        #    msg  = strFmt("@SYS335347",_ecpCustSignUp.ContactPersonName) + '<br><br>';
+        #    msg += "@SYS335348" + '<br>';
+        #
+        #    select firstonly ExternalUrl from webSite
+        #        where webSite.AnonymousAccess == true;
+        #
+        #    if (!webSite)
+        #        throw warning("@SYS98752");
+        #
+        #    msg += strFmt('%1?GUID=%2&WCMP=%3',webSite.ExternalUrl+'/' + urlMenuFunction.uRL(),SysCompanyGUIDUsers::guid2StrEx(SysCompanyGUIDUsers::find(_ecpCustSignUp).WebGUID,false,false), _ecpCustSignUp.DataAreaId) + '<br><br>';
+        #
+        #    msg += "@SYS335350" + '<br><br>';
+        #
+        #    msg += strFmt("@SYS335349", companyInfo.name());
+        #
+        #    try
+        #    {
+        #        mail.quickSend(companyInfo.email(), _ecpCustSignUp.UserEmail, strFmt("@SYS335351", companyInfo.name()), msg);
+        #        mail.finalize();
+        #    }
+        #    catch(Exception::CLRError)
+        #    {
+        #        mail.finalize();
+        #        throw Exception::CLRError;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateConfirmation
+        #static void updateConfirmation(SalesTable _salesTable)
+        #{
+        #    SalesFormLetter salesFormLetter = SalesFormLetter::construct(DocumentStatus::Confirmation);
+        #    WebLink         webLink = WebLink::construct();
+        #    ;
+        #
+        #    salesFormLetter.update(_salesTable);
+        #    webLink.record(salesFormLetter.parmJournalRecord());
+        #    webLink.parm(enum2str(PrintCopyOriginal::OriginalPrint));
+        #    webLink.menufunction(new WebUrlMenuFunction(webUrlItemStr(EPSalesConfirmation)));
+        #    webSession().redirect(webLink);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #updateCreditNote
+        #static CustConfirmJour updateCreditNote(SalesTable _salesTable)
+        #{
+        #    SalesFormLetter salesFormLetter = SalesFormLetter::construct(DocumentStatus::Confirmation);
+        #    CustConfirmJour custConfirmJour;
+        #
+        #    salesFormLetter.update(_salesTable);
+        #    custConfirmJour = salesFormLetter.parmJournalRecord();
+        #    return custConfirmJour;
+        #}
+        #
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

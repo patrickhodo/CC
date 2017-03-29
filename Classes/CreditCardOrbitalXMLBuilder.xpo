@@ -1,0 +1,66 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardOrbitalXMLBuilder
+    PROPERTIES
+      Name                #CreditCardOrbitalXMLBuilder
+      Origin              #{FD8B80BE-CB18-4DEE-A235-E963E9267E33}
+      LegacyId            #20011
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #checkMerchantOrbital
+        #boolean checkMerchantOrbital(CreditCardMerchantOrbital  ccMerchantOrbital)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantOrbital.MerchantId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantOrbital.HostAddress)
+        #        throw error("@ACC56");
+        #    //else if (!ccMerchantOrbital.Port)
+        #    //    throw error("@ACC57");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardOrbitalXMLBuilder
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static CreditCardStr construct(CreditCardTrans        ccTrans)
+        #{
+        #    CreditCardMerchantOrbital       ccOrbital;
+        #    CreditCardStr                   parmList;
+        #    ;
+        #    select OrbitalVersion from ccOrbital
+        #        where ccOrbital.TerminalId == ccTrans.TerminalId;
+        #
+        #    switch (ccOrbital.OrbitalVersion)
+        #    {
+        #        case    CreditCardOrbitalVersion::del_Version34 :
+        #            throw error(strFmt("@ACC1456"));
+        #        case    CreditCardOrbitalVersion::Version43 :
+        #            parmList = CreditCardOrbitalXMLBuilder43::construct(ccTrans);
+        #            break;
+        #        case    CreditCardOrbitalVersion::Version50 :
+        #            parmList = CreditCardOrbitalXMLBuilder50::construct(ccTrans);
+        #            break;
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

@@ -1,0 +1,460 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SalesConfirmJournalPost
+    PROPERTIES
+      Name                #SalesConfirmJournalPost
+      Extends             #FormletterJournalPost
+      RunOn               #Server
+      Origin              #{2D170000-0000-1000-AF11-D25CF778A42E}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #addToInventReportDimHistory
+        #protected void addToInventReportDimHistory(Common _custConfirmTrans)
+        #{
+        #    CustConfirmTrans        localCustConfirmTrans = _custConfirmTrans as CustConfirmTrans;
+        #    InventTransOrigin       inventTransOrigin;
+        #    InventTrans             inventTrans;
+        #    InventQty               qtyRemain           = localCustConfirmTrans.InventQty;
+        #
+        #    if (salesLine.isStocked())
+        #    {
+        #        while select TableId from inventTransOrigin
+        #            where inventTransOrigin.InventTransId       == localCustConfirmTrans.InventTransId
+        #               && inventTransOrigin.ReferenceCategory   == InventTransType::Sales
+        #            join InventDimId, Qty from inventTrans
+        #            order by StatusIssue, InventDimId
+        #            where inventTrans.InventTransOrigin         == inventTransOrigin.RecId
+        #              && (inventTrans.StatusIssue               == StatusIssue::OnOrder
+        #              ||  inventTrans.StatusIssue               == StatusIssue::ReservOrdered
+        #              ||  inventTrans.StatusIssue               == StatusIssue::ReservPhysical)
+        #        {
+        #            if (qtyRemain)
+        #            {
+        #                qtyRemain = this.createInventReportDimHistory(localCustConfirmTrans.InventTransId, inventTrans.InventDimId,localCustConfirmTrans.ConfirmId, inventTrans.Qty, qtyRemain);
+        #            }
+        #            else
+        #                break;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        this.createInventReportDimHistory(localCustConfirmTrans.InventTransId,
+        #                                          localCustConfirmTrans.InventDimId,
+        #                                          localCustConfirmTrans.ConfirmId,
+        #                                          localCustConfirmTrans.Qty,
+        #                                          localCustConfirmTrans.Qty );
+        #    }
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #canPostTax
+        #/// <summary>
+        #/// Determines whether tax can be posted.
+        #/// </summary>
+        #/// <returns>
+        #/// true if taxes can be posted; otherwise, false.
+        #/// </returns>
+        #protected boolean canPostTax()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class SalesConfirmJournalPost
+        #extends FormletterJournalPost
+        #{
+        #    SalesParmTable      salesParmTable;
+        #    CustConfirmJour     custConfirmJour;
+        #    CustConfirmTrans    custConfirmTrans;
+        #    SalesLine           salesLine;
+        #    SalesTable          salesTable;
+        #
+        #    SalesTotals         salesTotals;
+        #}
+      ENDSOURCE
+      SOURCE #createReportData
+        #public boolean createReportData(FormletterJournalPrint _formletterJournalPrint)
+        #{
+        #    SRSTmpDataStore      srsTmpDataStore;
+        #    SalesConfirmDP       salesConfirmDP = new SalesConfirmDP();
+        #    SalesConfirmContract salesConfirmContract = new SalesConfirmContract();
+        #
+        #    salesConfirmContract.parmRecordId(formletterJournal.RecId);
+        #
+        #    if (_formletterJournalPrint)
+        #    {
+        #        // Pack the class and insert into the temporary store.
+        #        srsTmpDataStore.Value = _formletterJournalPrint.pack();
+        #        srsTmpDataStore.insert();
+        #        salesConfirmContract.parmFormLetterRecordId(srsTmpDataStore.RecId);
+        #    }
+        #
+        #    salesConfirmDP.createData(salesConfirmContract);
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #documentStatus
+        #/// <summary>
+        #/// Gets the type of document.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>DocumentStatus</c> enumeration value.
+        #/// </returns>
+        #protected DocumentStatus  documentStatus()
+        #{
+        #    return DocumentStatus::Confirmation;
+        #}
+      ENDSOURCE
+      SOURCE #formletterType
+        #/// <summary>
+        #/// Determines the value of the <c>FormletterType</c> enumeration.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>FormletterType</c> enumeration value.
+        #/// </returns>
+        #protected FormletterType formletterType()
+        #{
+        #    return FormletterType::Sales;
+        #}
+      ENDSOURCE
+      SOURCE #getVoucher
+        #/// <summary>
+        #/// Gets a voucher number.
+        #/// </summary>
+        #/// <returns>
+        #/// A voucher number.
+        #/// </returns>
+        #protected Num getVoucher()
+        #{
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #/// <summary>
+        #/// Initializes the class.
+        #/// </summary>
+        #public void init()
+        #{
+        #    super();
+        #    salesTable  = salesParmTable.salesTable();
+        #    if (this.parmTotals())
+        #    {
+        #        salesTotals = this.parmTotals() as SalesTotals;
+        #    }
+        #    else
+        #    {
+        #        salesTotals = SalesTotals::construct(salesParmTable, this.parmSpecQty(), this.parmSumBy(), custConfirmJour.ParmId, this.parmSumOrderId(), this.documentStatus());
+        #    }
+        #    this.tax(salesTotals.tax());
+        #}
+      ENDSOURCE
+      SOURCE #initRelatedLineTables
+        #/// <summary>
+        #/// Initializes the records that are related to the current journal line.
+        #/// </summary>
+        #protected void initRelatedLineTables()
+        #{
+        #    super();
+        #
+        #    salesLine = custConfirmTrans.salesLine();
+        #}
+      ENDSOURCE
+      SOURCE #inventReportDimHistoryLogType
+        #/// <summary>
+        #/// Gets the inventory report dimension history type.
+        #/// </summary>
+        #/// <returns>
+        #/// An <c>InventReportDimHistoryLogType</c> enumeration value.
+        #/// </returns>
+        #protected InventReportDimHistoryLogType inventReportDimHistoryLogType()
+        #{
+        #    return InventReportDimHistoryLogType::SalesConfirm;
+        #}
+      ENDSOURCE
+      SOURCE #journalLine
+        #/// <summary>
+        #/// Gets or sets the current journal line record.
+        #/// </summary>
+        #/// <param name="_journalLine">
+        #/// A journal line record.
+        #/// </param>
+        #/// <returns>
+        #/// A journal line record.
+        #/// </returns>
+        #protected Common journalLine(Common _journalLine = custConfirmTrans)
+        #{
+        #    custConfirmTrans = _journalLine as CustConfirmTrans;
+        #    return custConfirmTrans;
+        #}
+      ENDSOURCE
+      SOURCE #journalLineTableId
+        #/// <summary>
+        #/// Gets the table ID for the journal line table.
+        #/// </summary>
+        #/// <returns>
+        #/// A table ID.
+        #/// </returns>
+        #protected TableId journalLineTableId()
+        #{
+        #    return tableNum(CustConfirmTrans);
+        #}
+      ENDSOURCE
+      SOURCE #newJournalList
+        #/// <summary>
+        #/// Constructs a record sorted list.
+        #/// </summary>
+        #/// <returns>
+        #/// The constructed record sorted list.
+        #/// </returns>
+        #public RecordSortedList  newJournalList()
+        #{
+        #    RecordSortedList  recordSortedList;
+        #
+        #    recordSortedList = new RecordSortedList(this.parmJournalTable().TableId);
+        #
+        #    return recordSortedList;
+        #}
+      ENDSOURCE
+      SOURCE #parmJournalTable
+        #public Common parmJournalTable(Common _journalTable = custConfirmJour)
+        #{
+        #    custConfirmJour = _journalTable as CustConfirmJour;
+        #
+        #    return custConfirmJour;
+        #}
+      ENDSOURCE
+      SOURCE #parmParmTable
+        #public Common parmParmTable(Common _parmTable = salesParmTable)
+        #{
+        #    salesParmTable = _parmTable as SalesParmTable;
+        #    return salesParmTable;
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupOnJour
+        #protected void postMarkupOnJour(SalesTable _salesTableMarkup)
+        #{
+        #    if (salesTable.mcrIsCallCenter())
+        #    {
+        #        markup.mcrPostJournal(1,
+        #                         salesTotals.totalOrderBalance(_salesTableMarkup.RecId),
+        #                         _salesTableMarkup,
+        #                         _salesTableMarkup.DefaultDimension,
+        #                         //  Pass along custom parameters so misc charges will be pro-rated on confirmation.
+        #                         custConfirmJour,
+        #                         0,
+        #                         salesTotals.mcrTotalOrderBalanceAbsoluteValue(_salesTableMarkup.RecId),
+        #                         salesParmTable.ParmId,
+        #                         salesParmTable.TableRefId);
+        #
+        #    }
+        #    else
+        #    {
+        #        markup.postJournal(1,
+        #                            salesTotals.totalOrderBalance(_salesTableMarkup.RecId),
+        #                            _salesTableMarkup,
+        #                            _salesTableMarkup.DefaultDimension,
+        #                            custConfirmJour);
+        #
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupOnTrans
+        #/// <summary>
+        #/// Posts the markup for the journal lines.
+        #/// </summary>
+        #protected void postMarkupOnTrans()
+        #{
+        #    markup.postJournal(custConfirmTrans.Qty,
+        #                       custConfirmTrans.LineAmount,
+        #                       salesLine,
+        #                       salesLine.DefaultDimension,
+        #                       custConfirmTrans);
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupTable
+        #/// <summary>
+        #/// Posts the markup for the journal header.
+        #/// </summary>
+        #protected void postMarkupTable()
+        #{
+        #    QueryRun        queryRun;
+        #    SalesTable      salesTableMarkup;
+        #
+        #    queryRun = new QueryRun(salesParmTable.querySalesTable());
+        #    while (queryRun.next())
+        #    {
+        #        if (queryRun.changed(tableNum(SalesTable)))
+        #        {
+        #            salesTableMarkup = queryRun.get(tableNum(SalesTable));
+        #            this.postMarkupOnJour(salesTableMarkup);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postTaxOnProforma
+        #protected boolean postTaxOnProforma()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #postTaxOnUpdate
+        #/// <summary>
+        #/// Determines whether tax should be posted on the update.
+        #/// </summary>
+        #/// <returns>
+        #/// true if tax should be posted on update; otherwise, false.
+        #/// </returns>
+        #protected boolean postTaxOnUpdate()
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #public void run()
+        #{
+        #    super();
+        #
+        #    CreditCardPosting::createConfirmAuthorization(this);
+        #}
+      ENDSOURCE
+      SOURCE #sourceLine
+        #/// <summary>
+        #/// Gets the source line record for the current journal line.
+        #/// </summary>
+        #/// <returns>
+        #/// A source line record.
+        #/// </returns>
+        #protected Common sourceLine()
+        #{
+        #    return salesLine;
+        #}
+      ENDSOURCE
+      SOURCE #sourceTable
+        #/// <summary>
+        #/// Gets the source header record for the journal header.
+        #/// </summary>
+        #/// <returns>
+        #/// A source header record.
+        #/// </returns>
+        #protected Common sourceTable()
+        #{
+        #    return salesTable;
+        #}
+      ENDSOURCE
+      SOURCE #tradeCalcTax
+        #/// <summary>
+        #/// Gets an instance of the <c>TradeCalcTax</c> class.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>TradeCalcTax</c> class.
+        #/// </returns>
+        #protected Object tradeCalcTax()
+        #{
+        #    return SalesCalcTax::construct(custConfirmJour);
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogTxt
+        #/// <summary>
+        #/// Gets an instance of the <c>TransTxt</c> class.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>TransTxt</c> class.
+        #/// </returns>
+        #protected TransTxt  transactionLogTxt()
+        #{
+        #    return "@SYS9032";
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogType
+        #/// <summary>
+        #/// Gets the transaction log type.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>TransactionLogType</c> enumeration value.
+        #/// </returns>
+        #protected TransactionLogType  transactionLogType()
+        #{
+        #    return TransactionLogType::SalesConfirm;
+        #}
+      ENDSOURCE
+      SOURCE #updateDate
+        #/// <summary>
+        #/// Gets the transaction date.
+        #/// </summary>
+        #/// <returns>
+        #/// A transaction date.
+        #/// </returns>
+        #protected TransDate updateDate()
+        #{
+        #    return custConfirmJour.ConfirmDate;
+        #}
+      ENDSOURCE
+      SOURCE #updateJournalLine
+        #/// <summary>
+        #/// Updates the journal line.
+        #/// </summary>
+        #protected void updateJournalLine()
+        #{
+        #    if (custConfirmJour.SalesId != custConfirmTrans.OrigSalesId)
+        #    {
+        #        this.updateSumSalesId();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSourceTable
+        #/// <summary>
+        #/// Updates the source table for the journal header.
+        #/// </summary>
+        #protected void updateSourceTable()
+        #{
+        #    SetEnumerator   se = ordersPosted.getEnumerator();
+        #
+        #    ttsbegin;
+        #    while (se.moveNext())
+        #    {
+        #        salesTable = SalesTable::find(se.current(),true);
+        #        if (salesTable)
+        #        {
+        #            salesTable.updateDocumentStatus(this.documentStatus());
+        #            salesTable.updateBackStatus();
+        #            salesTable.updateSalesType();
+        #            salesTable.updateDeadline(custConfirmJour.Deadline);
+        #        }
+        #    }
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #updateSumSalesId
+        #protected void  updateSumSalesId()
+        #{
+        #    SalesTable  localSalesTable;
+        #
+        #    ttsbegin;
+        #
+        #    localSalesTable = custConfirmTrans.origSalesTable(true);
+        #    localSalesTable.updateBackStatus();
+        #    localSalesTable.write();
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static SalesConfirmJournalPost construct()
+        #{
+        #    return new SalesConfirmJournalPost();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

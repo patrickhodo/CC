@@ -1,0 +1,74 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardEPSetPrimary
+    PROPERTIES
+      Name                #CreditCardEPSetPrimary
+      Extends             #RunBase
+      Origin              #{E2B44E30-8AEB-4479-96BF-477EB1BA996F}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardEPSetPrimary extends RunBase
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args args)
+        #{
+        #    WebArgs                     webArgs                 = args.parmObject();
+        #    CreditCardTable             creditCardTable;
+        #    creditCardTable             pCCTable;
+        #    ;
+        #    ttsBegin;
+        #
+        #
+        #    if (webArgs && webArgs.table() == tablenum(CreditCardTable))
+        #    {
+        #        creditCardTable = args.record();
+        #    }
+        #
+        #    if (!webArgs)
+        #    {
+        #        if (args.record().TableId == tableNum(creditCardTable))
+        #        {
+        #            creditCardTable = args.record();
+        #        }
+        #    }
+        #
+        #    if (!creditCardTable)
+        #    {
+        #        throw error("@ACC1820");
+        #    }
+        #
+        #    select forupdate pCCTable
+        #        where pCCTable.PrimaryCard == NoYes::Yes
+        #        && pCCTable.CustAccount == creditCardTable.CustAccount
+        #        && pCCTable.RecId != creditCardTable.RecId;
+        #
+        #    if (pCCTable)
+        #    {
+        #        pCCTable.PrimaryCard = NoYes::No;
+        #        pCCTable.write();
+        #    }
+        #
+        #    creditCardTable.selectForUpdate(true);
+        #    creditCardTable.PrimaryCard = NoYes::Yes;
+        #    creditCardTable.write();
+        #
+        #    ttsCommit;
+        #
+        #}
+        #
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

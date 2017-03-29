@@ -1,0 +1,969 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CustPayments_CustBankAccount
+    PROPERTIES
+      Name                #CustPayments_CustBankAccount
+      Extends             #AfStronglyTypedDataContainer
+      Origin              #{094D7D60-A625-487A-9663-C447EED84246}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///    The <c>CustPayments_CustBankAccount</c> class is the data object class that is exposed through the
+        #///    <c>CustPaymentsService</c> class.
+        #/// </summary>
+        ##AxdCustPaymentsDCT
+        #[AifDataContainerTypeAttribute(#CustPayments_CustBankAccount)]
+        #class CustPayments_CustBankAccount extends AfStronglyTypedDataContainer
+        #{
+        #    #define.EUDDCountryCode('EUDDCountryCode')
+        #    #define.EUDDBankSortCode('EUDDBankSortCode')
+        #    #define.CreditCardECPAuthMethod('CreditCardECPAuthMethod')
+        #    #define.LogisticsPostalAddressView('LogisticsPostalAddressView')
+        #    #define.URL('URL')
+        #    #define.Telex('Telex')
+        #    #define.TeleFax('TeleFax')
+        #    #define.SWIFTNo('SWIFTNo')
+        #    #define.SMS('SMS')
+        #    #define.RegistrationNum('RegistrationNum')
+        #    #define.RecVersion('RecVersion')
+        #    #define.RecId('RecId')
+        #    #define.PhoneLocal('PhoneLocal')
+        #    #define.Phone('Phone')
+        #    #define.Pager('Pager')
+        #    #define.Name('Name')
+        #    #define.MsgToBank('MsgToBank')
+        #    #define.ExchRateRef('ExchRateRef')
+        #    #define.ExchRate('ExchRate')
+        #    #define.Email('Email')
+        #    #define.CustPaymentTextCode('CustPaymentTextCode')
+        #    #define.CustDomNumber_BE('CustDomNumber_BE')
+        #    #define.CustAccount('CustAccount')
+        #    #define.CurrencyCode('CurrencyCode')
+        #    #define.ContactPerson('ContactPerson')
+        #    #define.CellularPhone('CellularPhone')
+        #    #define.BankIBAN('BankIBAN')
+        #    #define.BankGroupId('BankGroupId')
+        #    #define.BankContractAccount('BankContractAccount')
+        #    #define.BankCodeType('BankCodeType')
+        #    #define.BankCIN('BankCIN')
+        #    #define.BankAccountType('BankAccountType')
+        #    #define.AccountNum('AccountNum')
+        #    #define.AccountID('AccountID')
+        #    // <GEERU>
+        #    #define.CorrAccount_W('CorrAccount_W')
+        #    #define.BankSortCode_RU('BankSortCode_RU')
+        #    #define.ForeignAccount_RU('ForeignAccount_RU')
+        #    #define.ForeignBank_RU('ForeignBank_RU')
+        #    #define.ForeignSWIFT_RU('ForeignSWIFT_RU')
+        #    // </GEERU>
+        #
+        #
+        #    // <GEEU>
+        #    #define.LvDefaultBank('LvDefaultBank')
+        #    // </GEEU>
+        #
+        #    // <GEELT>
+        #    #define.IntermediateBankAccount_LT('IntermediateBankAccount_LT')
+        #    #define.CorrespondentBankAccount_LT('CorrespondentBankAccount_LT')
+        #    #define.DefaultBank_LT('DefaultBank_LT')
+        #    #define.IntermediateBankSWIFT_LT('IntermediateBankSWIFT_LT')
+        #    #define.IntermediateBankAddress_LT('IntermediateBankAddress_LT')
+        #    #define.IntermediateBankName_LT('IntermediateBankName_LT')
+        #    #define.CorrespondentBankSWIFT_LT('CorrespondentBankSWIFT_LT')
+        #    #define.CorrespondentBankName_LT('CorrespondentBankName_LT')
+        #    #define.CorrespondentBankAddress_LT('CorrespondentBankAddress_LT')
+        #    // </GEELT>
+        #    // <GEECZ>
+        #    #define.BankConstantSymbol('BankConstantSymbol')
+        #    #define.SpecificSymbol('SpecificSymbol')
+        #    // </GEECZ>
+        #}
+        #
+      ENDSOURCE
+      SOURCE #createLogisticsPostalAddressView
+        #public AfStronglyTypedDataContainerList createLogisticsPostalAddressView()
+        #{
+        #    return this.get_NewList(#LogisticsPostalAddressView);
+        #}
+      ENDSOURCE
+      SOURCE #existsAccountID
+        #public boolean existsAccountID()
+        #{
+        #    return this.exists(#AccountID);
+        #}
+      ENDSOURCE
+      SOURCE #existsAccountNum
+        #public boolean existsAccountNum()
+        #{
+        #    return this.exists(#AccountNum);
+        #}
+      ENDSOURCE
+      SOURCE #existsBankAccountType
+        #public boolean existsBankAccountType()
+        #{
+        #    return this.exists(#BankAccountType);
+        #}
+      ENDSOURCE
+      SOURCE #existsBankCIN
+        #public boolean existsBankCIN()
+        #{
+        #    return this.exists(#BankCIN);
+        #}
+      ENDSOURCE
+      SOURCE #existsBankCodeType
+        #public boolean existsBankCodeType()
+        #{
+        #    return this.exists(#BankCodeType);
+        #}
+      ENDSOURCE
+      SOURCE #existsBankConstantSymbol
+        #// <GEECZ>
+        #public boolean existsBankConstantSymbol()
+        #{
+        #    return this.exists(#BankConstantSymbol);
+        #}
+        #// </GEECZ>
+      ENDSOURCE
+      SOURCE #existsBankContractAccount
+        #public boolean existsBankContractAccount()
+        #{
+        #    return this.exists(#BankContractAccount);
+        #}
+      ENDSOURCE
+      SOURCE #existsBankGroupId
+        #public boolean existsBankGroupId()
+        #{
+        #    return this.exists(#BankGroupId);
+        #}
+      ENDSOURCE
+      SOURCE #existsBankIBAN
+        #public boolean existsBankIBAN()
+        #{
+        #    return this.exists(#BankIBAN);
+        #}
+      ENDSOURCE
+      SOURCE #existsBankSortCode_RU
+        #public boolean existsBankSortCode_RU()
+        #{
+        #    return this.exists(#BankSortCode_RU);
+        #}
+      ENDSOURCE
+      SOURCE #existsCellularPhone
+        #public boolean existsCellularPhone()
+        #{
+        #    return this.exists(#CellularPhone);
+        #}
+      ENDSOURCE
+      SOURCE #existsContactPerson
+        #public boolean existsContactPerson()
+        #{
+        #    return this.exists(#ContactPerson);
+        #}
+      ENDSOURCE
+      SOURCE #existsCorrAccount_W
+        #public boolean existsCorrAccount_W()
+        #{
+        #    return this.exists(#CorrAccount_W);
+        #}
+      ENDSOURCE
+      SOURCE #existsCorrespondentBankAccount_LT
+        #public boolean existsCorrespondentBankAccount_LT()
+        #{
+        #    return this.exists(#CorrespondentBankAccount_LT);
+        #}
+      ENDSOURCE
+      SOURCE #existsCorrespondentBankAddress_LT
+        #public boolean existsCorrespondentBankAddress_LT()
+        #{
+        #    return this.exists(#CorrespondentBankAddress_LT);
+        #}
+      ENDSOURCE
+      SOURCE #existsCorrespondentBankName_LT
+        #public boolean existsCorrespondentBankName_LT()
+        #{
+        #    return this.exists(#CorrespondentBankName_LT);
+        #}
+      ENDSOURCE
+      SOURCE #existsCorrespondentBankSWIFT_LT
+        #public boolean existsCorrespondentBankSWIFT_LT()
+        #{
+        #    return this.exists(#CorrespondentBankSWIFT_LT);
+        #}
+      ENDSOURCE
+      SOURCE #existsCreditCardECPAuthMethod
+        #public boolean existsCreditCardECPAuthMethod()
+        #{
+        #    return this.exists(#CreditCardECPAuthMethod);
+        #}
+      ENDSOURCE
+      SOURCE #existsCurrencyCode
+        #public boolean existsCurrencyCode()
+        #{
+        #    return this.exists(#CurrencyCode);
+        #}
+      ENDSOURCE
+      SOURCE #existsCustAccount
+        #public boolean existsCustAccount()
+        #{
+        #    return this.exists(#CustAccount);
+        #}
+      ENDSOURCE
+      SOURCE #existsCustDomNumber_BE
+        #public boolean existsCustDomNumber_BE()
+        #{
+        #    return this.exists(#CustDomNumber_BE);
+        #}
+      ENDSOURCE
+      SOURCE #existsCustPaymentTextCode
+        #public boolean existsCustPaymentTextCode()
+        #{
+        #    return this.exists(#CustPaymentTextCode);
+        #}
+      ENDSOURCE
+      SOURCE #existsEmail
+        #public boolean existsEmail()
+        #{
+        #    return this.exists(#Email);
+        #}
+      ENDSOURCE
+      SOURCE #existsEUDDBankSortCode
+        #public boolean existsEUDDBankSortCode()
+        #{
+        #    return this.exists(#EUDDBankSortCode);
+        #}
+      ENDSOURCE
+      SOURCE #existsEUDDCountryCode
+        #public boolean existsEUDDCountryCode()
+        #{
+        #    return this.exists(#EUDDCountryCode);
+        #}
+      ENDSOURCE
+      SOURCE #existsExchRate
+        #public boolean existsExchRate()
+        #{
+        #    return this.exists(#ExchRate);
+        #}
+      ENDSOURCE
+      SOURCE #existsExchRateRef
+        #public boolean existsExchRateRef()
+        #{
+        #    return this.exists(#ExchRateRef);
+        #}
+      ENDSOURCE
+      SOURCE #existsForeignAccount_RU
+        #public boolean existsForeignAccount_RU()
+        #{
+        #    return this.exists(#ForeignAccount_RU);
+        #}
+      ENDSOURCE
+      SOURCE #existsForeignBank_RU
+        #public boolean existsForeignBank_RU()
+        #{
+        #    return this.exists(#ForeignBank_RU);
+        #}
+      ENDSOURCE
+      SOURCE #existsForeignSWIFT_RU
+        #public boolean existsForeignSWIFT_RU()
+        #{
+        #    return this.exists(#ForeignSWIFT_RU);
+        #}
+      ENDSOURCE
+      SOURCE #existsIntermediateBankAccount_LT
+        #public boolean existsIntermediateBankAccount_LT()
+        #{
+        #    return this.exists(#IntermediateBankAccount_LT);
+        #}
+      ENDSOURCE
+      SOURCE #existsIntermediateBankAddress_LT
+        #public boolean existsIntermediateBankAddress_LT()
+        #{
+        #    return this.exists(#IntermediateBankAddress_LT);
+        #}
+      ENDSOURCE
+      SOURCE #existsIntermediateBankName_LT
+        #public boolean existsIntermediateBankName_LT()
+        #{
+        #    return this.exists(#IntermediateBankName_LT);
+        #}
+      ENDSOURCE
+      SOURCE #existsIntermediateBankSWIFT_LT
+        #public boolean existsIntermediateBankSWIFT_LT()
+        #{
+        #    return this.exists(#IntermediateBankSWIFT_LT);
+        #}
+      ENDSOURCE
+      SOURCE #existsLogisticsPostalAddressView
+        #public boolean existsLogisticsPostalAddressView()
+        #{
+        #    return this.exists(#LogisticsPostalAddressView);
+        #}
+      ENDSOURCE
+      SOURCE #existsLvDefaultBank
+        #// <GEEU>
+        #public boolean existsLvDefaultBank()
+        #{
+        #    return this.exists(#LvDefaultBank);
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #existsMsgToBank
+        #public boolean existsMsgToBank()
+        #{
+        #    return this.exists(#MsgToBank);
+        #}
+      ENDSOURCE
+      SOURCE #existsName
+        #public boolean existsName()
+        #{
+        #    return this.exists(#Name);
+        #}
+      ENDSOURCE
+      SOURCE #existsPager
+        #public boolean existsPager()
+        #{
+        #    return this.exists(#Pager);
+        #}
+      ENDSOURCE
+      SOURCE #existsPhone
+        #public boolean existsPhone()
+        #{
+        #    return this.exists(#Phone);
+        #}
+      ENDSOURCE
+      SOURCE #existsPhoneLocal
+        #public boolean existsPhoneLocal()
+        #{
+        #    return this.exists(#PhoneLocal);
+        #}
+      ENDSOURCE
+      SOURCE #existsRecId
+        #public boolean existsRecId()
+        #{
+        #    return this.exists(#RecId);
+        #}
+      ENDSOURCE
+      SOURCE #existsRecVersion
+        #public boolean existsRecVersion()
+        #{
+        #    return this.exists(#RecVersion);
+        #}
+      ENDSOURCE
+      SOURCE #existsRegistrationNum
+        #public boolean existsRegistrationNum()
+        #{
+        #    return this.exists(#RegistrationNum);
+        #}
+      ENDSOURCE
+      SOURCE #existsSMS
+        #public boolean existsSMS()
+        #{
+        #    return this.exists(#SMS);
+        #}
+      ENDSOURCE
+      SOURCE #existsSpecificSymbol
+        #// <GEECZ>
+        #public boolean existsSpecificSymbol()
+        #{
+        #    return this.exists(#SpecificSymbol);
+        #}
+        #// </GEECZ>
+      ENDSOURCE
+      SOURCE #existsSWIFTNo
+        #public boolean existsSWIFTNo()
+        #{
+        #    return this.exists(#SWIFTNo);
+        #}
+      ENDSOURCE
+      SOURCE #existsTeleFax
+        #public boolean existsTeleFax()
+        #{
+        #    return this.exists(#TeleFax);
+        #}
+      ENDSOURCE
+      SOURCE #existsTelex
+        #public boolean existsTelex()
+        #{
+        #    return this.exists(#Telex);
+        #}
+      ENDSOURCE
+      SOURCE #existsURL
+        #public boolean existsURL()
+        #{
+        #    return this.exists(#URL);
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #public void new()
+        #{
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #parmAccountID
+        #public CustBankAccountId parmAccountID(CustBankAccountId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AccountID, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AccountID);
+        #}
+      ENDSOURCE
+      SOURCE #parmAccountNum
+        #public BankAccount parmAccountNum(BankAccount _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#AccountNum, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#AccountNum);
+        #}
+      ENDSOURCE
+      SOURCE #parmBankAccountType
+        #public BankAccountType parmBankAccountType(BankAccountType _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BankAccountType, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BankAccountType);
+        #}
+      ENDSOURCE
+      SOURCE #parmBankCIN
+        #public BankCIN parmBankCIN(BankCIN _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BankCIN, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BankCIN);
+        #}
+      ENDSOURCE
+      SOURCE #parmBankCodeType
+        #public BankCodeType parmBankCodeType(BankCodeType _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BankCodeType, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BankCodeType);
+        #}
+      ENDSOURCE
+      SOURCE #parmBankConstantSymbol
+        #// <GEECZ>
+        #public RefRecId parmBankConstantSymbol(RefRecId _value = 0)
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#BankConstantSymbol, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BankConstantSymbol);
+        #}
+        #// </GEECZ>
+      ENDSOURCE
+      SOURCE #parmBankContractAccount
+        #public GiroContractAccount parmBankContractAccount(GiroContractAccount _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BankContractAccount, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BankContractAccount);
+        #}
+      ENDSOURCE
+      SOURCE #parmBankGroupId
+        #public BankGroupId parmBankGroupId(BankGroupId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BankGroupId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BankGroupId);
+        #}
+      ENDSOURCE
+      SOURCE #parmBankIBAN
+        #public BankIBAN parmBankIBAN(BankIBAN _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#BankIBAN, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BankIBAN);
+        #}
+      ENDSOURCE
+      SOURCE #parmBankSortCode_RU
+        #public BankSortCode parmBankSortCode_RU(BankSortCode _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#BankSortCode_RU, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#BankSortCode_RU);
+        #}
+      ENDSOURCE
+      SOURCE #parmCellularPhone
+        #public PhoneMobile parmCellularPhone(PhoneMobile _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CellularPhone, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CellularPhone);
+        #}
+      ENDSOURCE
+      SOURCE #parmContactPerson
+        #public PersonName parmContactPerson(PersonName _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ContactPerson, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ContactPerson);
+        #}
+      ENDSOURCE
+      SOURCE #parmCorrAccount_W
+        #public BankCorrAccount_W parmCorrAccount_W(BankCorrAccount_W _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#CorrAccount_W, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CorrAccount_W);
+        #}
+      ENDSOURCE
+      SOURCE #parmCorrespondentBankAccount_LT
+        #public LtCorrespondentBankAccount parmCorrespondentBankAccount_LT(LtCorrespondentBankAccount _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#CorrespondentBankAccount_LT, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CorrespondentBankAccount_LT);
+        #}
+      ENDSOURCE
+      SOURCE #parmCorrespondentBankAddress_LT
+        #public LtCorrespondentBankAddress parmCorrespondentBankAddress_LT(LtCorrespondentBankAddress _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#CorrespondentBankAddress_LT, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CorrespondentBankAddress_LT);
+        #}
+      ENDSOURCE
+      SOURCE #parmCorrespondentBankName_LT
+        #public LtCorrespondentBankName parmCorrespondentBankName_LT(LtCorrespondentBankName _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#CorrespondentBankName_LT, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CorrespondentBankName_LT);
+        #}
+      ENDSOURCE
+      SOURCE #parmCorrespondentBankSWIFT_LT
+        #public LtCorrespondentBankSWIFT parmCorrespondentBankSWIFT_LT(LtCorrespondentBankSWIFT _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#CorrespondentBankSWIFT_LT, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CorrespondentBankSWIFT_LT);
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardECPAuthMethod
+        #public CreditCardECPAuthMethod parmCreditCardECPAuthMethod(CreditCardECPAuthMethod _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CreditCardECPAuthMethod, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CreditCardECPAuthMethod);
+        #}
+      ENDSOURCE
+      SOURCE #parmCurrencyCode
+        #public CurrencyCode parmCurrencyCode(CurrencyCode _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CurrencyCode, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CurrencyCode);
+        #}
+      ENDSOURCE
+      SOURCE #parmCustAccount
+        #public str parmCustAccount(str _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CustAccount, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CustAccount);
+        #}
+      ENDSOURCE
+      SOURCE #parmCustDomNumber_BE
+        #public CustDomNumber_BE parmCustDomNumber_BE(CustDomNumber_BE _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CustDomNumber_BE, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CustDomNumber_BE);
+        #}
+      ENDSOURCE
+      SOURCE #parmCustPaymentTextCode
+        #public CustPaymTextCode parmCustPaymentTextCode(CustPaymTextCode _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#CustPaymentTextCode, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#CustPaymentTextCode);
+        #}
+      ENDSOURCE
+      SOURCE #parmEmail
+        #public Email parmEmail(Email _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Email, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Email);
+        #}
+      ENDSOURCE
+      SOURCE #parmEUDDBankSortCode
+        #public CreditCardEUDDBankSortCode parmEUDDBankSortCode(CreditCardEUDDBankSortCode _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#EUDDBankSortCode, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#EUDDBankSortCode);
+        #}
+      ENDSOURCE
+      SOURCE #parmEUDDCountryCode
+        #public CreditCardEUDDCountryCode parmEUDDCountryCode(CreditCardEUDDCountryCode _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#EUDDCountryCode, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#EUDDCountryCode);
+        #}
+      ENDSOURCE
+      SOURCE #parmExchRate
+        #public CrossExchRate parmExchRate(CrossExchRate _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ExchRate, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ExchRate);
+        #}
+      ENDSOURCE
+      SOURCE #parmExchRateRef
+        #public ExchRateRef parmExchRateRef(ExchRateRef _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ExchRateRef, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ExchRateRef);
+        #}
+      ENDSOURCE
+      SOURCE #parmForeignAccount_RU
+        #public BankAccount parmForeignAccount_RU(BankAccount _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ForeignAccount_RU, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ForeignAccount_RU);
+        #}
+      ENDSOURCE
+      SOURCE #parmForeignBank_RU
+        #public BankGroupId parmForeignBank_RU(BankGroupId _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ForeignBank_RU, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ForeignBank_RU);
+        #}
+      ENDSOURCE
+      SOURCE #parmForeignSWIFT_RU
+        #public SWIFTNo parmForeignSWIFT_RU(SWIFTNo _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#ForeignSWIFT_RU, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#ForeignSWIFT_RU);
+        #}
+      ENDSOURCE
+      SOURCE #parmIntermediateBankAccount_LT
+        #public LtIntermediateBankAccount parmIntermediateBankAccount_LT(LtIntermediateBankAccount _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#IntermediateBankAccount_LT, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#IntermediateBankAccount_LT);
+        #}
+      ENDSOURCE
+      SOURCE #parmIntermediateBankAddress_LT
+        #public LtIntermediateBankAddress parmIntermediateBankAddress_LT(LtIntermediateBankAddress _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#IntermediateBankAddress_LT, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#IntermediateBankAddress_LT);
+        #}
+      ENDSOURCE
+      SOURCE #parmIntermediateBankName_LT
+        #public LtIntermediateBankName parmIntermediateBankName_LT(LtIntermediateBankName _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#IntermediateBankName_LT, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#IntermediateBankName_LT);
+        #}
+      ENDSOURCE
+      SOURCE #parmIntermediateBankSWIFT_LT
+        #public LtIntermediateBankSWIFT parmIntermediateBankSWIFT_LT(LtIntermediateBankSWIFT _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#IntermediateBankSWIFT_LT, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#IntermediateBankSWIFT_LT);
+        #}
+      ENDSOURCE
+      SOURCE #parmLogisticsPostalAddressView
+        #public AfStronglyTypedDataContainerList parmLogisticsPostalAddressView(AfStronglyTypedDataContainerList _value = null)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_List(#LogisticsPostalAddressView, _value);
+        #    }
+        #
+        #    return this.get_List(#LogisticsPostalAddressView);
+        #}
+      ENDSOURCE
+      SOURCE #parmLvDefaultBank
+        #// <GEEU>
+        #public LVDefaultBank parmLvDefaultBank(LVDefaultBank _value = NoYes::No)
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#LvDefaultBank, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#LvDefaultBank);
+        #}
+        #// </GEEU>
+      ENDSOURCE
+      SOURCE #parmMsgToBank
+        #public BankMsgToBank parmMsgToBank(BankMsgToBank _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#MsgToBank, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#MsgToBank);
+        #}
+      ENDSOURCE
+      SOURCE #parmName
+        #public Name parmName(Name _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Name, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Name);
+        #}
+      ENDSOURCE
+      SOURCE #parmPager
+        #public Pager parmPager(Pager _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Pager, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Pager);
+        #}
+      ENDSOURCE
+      SOURCE #parmPhone
+        #public Phone parmPhone(Phone _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Phone, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Phone);
+        #}
+      ENDSOURCE
+      SOURCE #parmPhoneLocal
+        #public PhoneLocal parmPhoneLocal(PhoneLocal _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#PhoneLocal, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#PhoneLocal);
+        #}
+      ENDSOURCE
+      SOURCE #parmRecId
+        #public recId parmRecId(recId _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RecId, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RecId);
+        #}
+      ENDSOURCE
+      SOURCE #parmRecVersion
+        #public recVersion parmRecVersion(recVersion _value = 0)
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RecVersion, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RecVersion);
+        #}
+      ENDSOURCE
+      SOURCE #parmRegistrationNum
+        #public BankRegNum parmRegistrationNum(BankRegNum _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#RegistrationNum, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#RegistrationNum);
+        #}
+      ENDSOURCE
+      SOURCE #parmSMS
+        #public SMS parmSMS(SMS _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#SMS, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#SMS);
+        #}
+      ENDSOURCE
+      SOURCE #parmSpecificSymbol
+        #// <GEECZ>
+        #public SpecificSymbol parmSpecificSymbol(SpecificSymbol _value = '')
+        #{
+        #    if (!prmisDefault(_value))
+        #    {
+        #        this.set_Attribute(#SpecificSymbol, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#SpecificSymbol);
+        #}
+        #// </GEECZ>
+      ENDSOURCE
+      SOURCE #parmSWIFTNo
+        #public SWIFTNo parmSWIFTNo(SWIFTNo _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#SWIFTNo, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#SWIFTNo);
+        #}
+      ENDSOURCE
+      SOURCE #parmTeleFax
+        #public TeleFax parmTeleFax(TeleFax _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#TeleFax, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#TeleFax);
+        #}
+      ENDSOURCE
+      SOURCE #parmTelex
+        #public Telex parmTelex(Telex _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#Telex, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#Telex);
+        #}
+      ENDSOURCE
+      SOURCE #parmURL
+        #public URL parmURL(URL _value = '')
+        #{
+        #    if (!prmisdefault(_value))
+        #    {
+        #        this.set_Attribute(#URL, _value);
+        #    }
+        #
+        #    return this.get_Attribute(#URL);
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

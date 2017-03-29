@@ -1,0 +1,153 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: WCL
+
+; 
+; --------------------------------------------------------------------------------
+  VERSION 1
+  
+  WEBCONTROL #CreditCardTableList
+    PROPERTIES
+      Name                #CreditCardTableList
+      Filename            #CreditCardTableList.ascx
+      RelativePath        #ep
+      Origin              #{FDF190CF-9E13-4726-BB3F-B7B307874C7D}
+    ENDPROPERTIES
+    
+    SOURCE #
+      #ï»¿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="CreditCardTableList.ascx.cs" Inherits="CreditCardTableList" %>
+      #<dynamics:AxDataSource ID="CreditCardTableDS" runat="server" DataSetName="CreditCardTableDS" ProviderView="CreditCardTable">
+      #</dynamics:AxDataSource>
+      #<dynamics:AxGridView ID="AxGridView1" runat="server" BodyHeight="" DataKeyNames="CreditCardId" DataMember="CreditCardTable" DataSourceID="CreditCardTableDS">
+      #    <Columns>
+      #        <dynamics:AxBoundField DataField="CreditCardId" DataSet="CreditCardTableDS" DataSetView="CreditCardTable" ReadOnly="True" SortExpression="CreditCardId">
+      #        </dynamics:AxBoundField>
+      #        <dynamics:AxDropDownBoundField DataField="CreditCardType" DataSet="CreditCardTableDS" DataSetView="CreditCardTable" SortExpression="CreditCardType">
+      #        </dynamics:AxDropDownBoundField>
+      #        <dynamics:AxBoundField DataField="CreditCardNumSecure" DataSet="CreditCardTableDS" DataSetView="CreditCardTable" SortExpression="CreditCardNumSecure">
+      #        </dynamics:AxBoundField>
+      #        <dynamics:AxBoundField DataField="Name" DataSet="CreditCardTableDS" DataSetView="CreditCardTable" SortExpression="Name">
+      #        </dynamics:AxBoundField>
+      #        <dynamics:AxBoundField DataField="NameOnCard" DataSet="CreditCardTableDS" DataSetView="CreditCardTable" SortExpression="NameOnCard">
+      #        </dynamics:AxBoundField>
+      #    </Columns>
+      #</dynamics:AxGridView>
+      #<asp:HyperLink ID="HyperLink1" runat="server" NavigateUrl="http://www.google.com">Click here to create a new card</asp:HyperLink>
+      #
+      #
+    ENDSOURCE
+    PERMISSIONS #Permissions
+      PROPERTIES
+      ENDPROPERTIES
+      
+      PERMISSIONSET #Read
+        PROPERTIES
+        ENDPROPERTIES
+        
+        TABLES #Tables
+        ENDTABLES
+        
+      SERVERMETHODS #Server Methods
+      ENDSERVERMETHODS
+      
+    ASSOCIATEDWEBCONTROLS #Associated Web Controls
+    ENDASSOCIATEDWEBCONTROLS
+    
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDWEBCONTROLS #Associated Web Controls
+ENDASSOCIATEDWEBCONTROLS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDWEBCONTROLS #Associated Web Controls
+ENDASSOCIATEDWEBCONTROLS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDWEBCONTROLS #Associated Web Controls
+ENDASSOCIATEDWEBCONTROLS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+SOURCEFILE
+PROPERTIES
+  Name                #CreditCardTableList_ascx_cs
+  Filename            #CreditCardTableList.ascx.cs
+  RelativePath        #ep
+ENDPROPERTIES
+
+SOURCE #
+  #ï»¿using System;
+  #using System.Collections.Generic;
+  #using System.Linq;
+  #using System.Web;
+  #using System.Web.UI;
+  #using System.Web.UI.DataVisualization.Charting;
+  #using System.Web.UI.WebControls;
+  #using Microsoft.Dynamics.Framework.Portal.UI.WebControls;
+  #using Microsoft.Dynamics.Framework.Portal.UI.WebControls.WebParts;
+  #using Microsoft.Dynamics.Framework.Portal.CommonControls;
+  #using Microsoft.Dynamics.Framework.BusinessConnector.Session;
+  #
+  #public partial class CreditCardTableList : System.Web.UI.UserControl
+  #{
+  #    private ISession AxSession
+  #    {
+  #        get
+  #        {
+  #            AxBaseWebPart webpart = AxBaseWebPart.GetWebpart(this);
+  #            return webpart == null ? null : webpart.Session;
+  #        }
+  #    }
+  #    protected void Page_Load(object sender, EventArgs e)
+  #    {
+  #        string company,customer;
+  #
+  #        company = ControlHelper.GetCurrentSessionCompany(AxSession);
+  #        customer = this.CreditCardTableDS.GetDataSet().DataSetRun.AxaptaObjectAdapter.Call("getCustomer").ToString();
+  #
+  #        Response.Redirect("http://www.mysite.com");
+  #    }
+  #}
+  #
+ENDSOURCE
+ENDSOURCEFILE
+
+ENDWEBCONTROL
+
+
+***Element: END

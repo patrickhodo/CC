@@ -1,0 +1,236 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardBatchTable
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardBatchTable
+      Label               #@ACC713
+      TitleField1         #BatchNumber
+      TitleField2         #TotalAmount
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CreateRecIdIndex    #Yes
+      TableGroup          #WorksheetHeader
+      PrimaryIndex        #RecId
+      ClusterIndex        #RecId
+      DeveloperDocumentation  #@ACC1442
+      Origin              #{1E746C83-B187-445A-AB2D-ACD15A7CB24E}
+      LegacyId            #20003
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #BatchNumber
+        STRING
+        PROPERTIES
+          Name                #BatchNumber
+          Table               #CreditCardBatchTable
+          Origin              #{5EA17190-A89F-4268-9768-507FCD077066}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardBatchNumber
+          StringSize          #6
+        ENDPROPERTIES
+        
+      FIELD #BatchStatus
+        ENUM
+        PROPERTIES
+          Name                #BatchStatus
+          Table               #CreditCardBatchTable
+          Origin              #{F6604B5E-908F-4173-BBF2-E7BD443A40A2}
+          LegacyId            #20005
+          EnumType            #CreditCardBatchStatus
+        ENDPROPERTIES
+        
+      FIELD #SettlementDate
+        DATE
+        PROPERTIES
+          Name                #SettlementDate
+          Label               #@ACC709
+          Table               #CreditCardBatchTable
+          Origin              #{3BFA5C9E-AC16-4AFA-8C99-12CD96F322D3}
+          LegacyId            #20002
+          ExtendedDataType    #TransDate
+        ENDPROPERTIES
+        
+      FIELD #SettlementTime
+        TIME
+        PROPERTIES
+          Name                #SettlementTime
+          Label               #@ACC710
+          Table               #CreditCardBatchTable
+          Origin              #{96F7EA28-3779-4B55-93D8-D22AA77478B8}
+          LegacyId            #20004
+          ExtendedDataType    #TimeHour24
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Table               #CreditCardBatchTable
+          Origin              #{26C1AD11-6C34-4CC8-BCCE-33EB3E0BBBF0}
+          LegacyId            #20006
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #TotalAmount
+        REAL
+        PROPERTIES
+          Name                #TotalAmount
+          Table               #CreditCardBatchTable
+          Origin              #{CA955AC1-7365-4023-8C36-2F984BE140D6}
+          LegacyId            #20007
+          ExtendedDataType    #AmountMST
+        ENDPROPERTIES
+        
+      FIELD #TransDate
+        DATE
+        PROPERTIES
+          Name                #TransDate
+          Table               #CreditCardBatchTable
+          Origin              #{B0556F1A-5AAC-4E00-B041-DC85FDF4BF5D}
+          LegacyId            #20003
+          ExtendedDataType    #TransDate
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BatchNumber
+          #SettlementDate
+          #TransDate
+          #SettlementTime
+          #BatchStatus
+          #TerminalId
+          #TotalAmount
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BatchNumber
+          #SettlementDate
+          #TransDate
+          #SettlementTime
+          #BatchStatus
+          #TerminalId
+          #TotalAmount
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Batch
+        PROPERTIES
+          Name                #Batch
+          Label               #@SYS14462
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #BatchNumber
+          #BatchStatus
+          #TotalAmount
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Dates
+        PROPERTIES
+          Name                #Dates
+          Label               #@SYS80293
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TransDate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Settlement
+        PROPERTIES
+          Name                #Settlement
+          Label               #@SYS10163
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SettlementDate
+          #SettlementTime
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+            SourceEDT           #CreditCardTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #CreditCardBatchLines
+      PROPERTIES
+        Table               #CreditCardBatchLines
+        DeleteAction        #Restricted
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #initValue
+        #public void initValue()
+        #{
+        #    ;
+        #    this.BatchNumber = NumberSeq::newGetNum(CreditCardParameters::numRefBatchNum()).num();
+        #    this.TransDate = today();
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #checkBatchNum
+        #static boolean checkBatchNum(CreditCardBatchNumber ccBatchNum)
+        #{
+        #    boolean     located;
+        #    str         staticStr;
+        #    ;
+        #    //--> We use these methods due to Microsoft requirements for no static
+        #    //--> text in code.  Utterly ridiculous.
+        #    staticStr = strFmt("@ACC1076");
+        #    located = strFind(ccBatchNum,staticStr,1,999);
+        #    located = located + strFind(ccBatchNum,strFmt("@SYS136211"),1,999);
+        #    return located;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

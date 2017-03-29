@@ -1,0 +1,3971 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardAdflexXMLBuilder17
+    PROPERTIES
+      Name                #CreditCardAdflexXMLBuilder17
+      Extends             #CreditCardAdflexXMLBuilder
+      Origin              #{F2183683-FF77-472E-8E25-447505FD7ECD}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeAdflexResponseProfile
+        #CreditCardTable analyzeAdflexResponseProfile(TempStr                 msg,
+        #                                CreditCardTable                      ccTable)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i,j;
+        #    TempStr                         tmpStr;
+        #    TempStr                         node;
+        #    TempStr                         errMsg;
+        #    boolean                         accepted;
+        #
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #                childNodeLst2 = elementChild2.childNodes();
+        #                j = childNodeLst2.length();
+        #
+        #                for (childCnt2=0;childCnt2< j;childCnt2++)
+        #                {
+        #                    elementChild3 = childNodeLst2.item(childCnt2);
+        #                    node = elementChild3.nodeName();
+        #                    switch (node)
+        #                    {
+        #                        case    'ErrorCode' :
+        #                            if (elementChild3.innerText() == '50001')
+        #                            {
+        #                                accepted = true;
+        #                            }
+        #                            else
+        #                            {
+        #                                accepted = false;
+        #                            }
+        #                            break;
+        #                        case    'ErrorMessage'  :
+        #                            if (elementChild3.innerText() != 'OK')
+        #                            {
+        #                                errMsg      =   elementChild3.innerText();
+        #                            }
+        #                            break;
+        #                        case    'Token'    :
+        #                            this.parmProfileId(elementChild3.innerText());
+        #                            break;
+        #                    }
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    if (accepted)
+        #    {
+        #        this.parmResult('0');
+        #    }
+        #    else
+        #    {
+        #        Throw error(strfmt(errMsg));
+        #    }
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #str build(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                         parmList;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = this.buildAuthorise(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                parmList = this.buildAuthoriseProfile(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = this.buildReturn(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                parmList = this.buildReturnProfile(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D    :
+        #            if (ccTrans.VoiceAuth == NoYes::No)
+        #            {
+        #                parmList = this.buildSettlePartial(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = this.buildAuthoriseSubmit(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                parmList = this.buildAuthoriseSubmitProfile(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            parmList = this.buildReversal(ccTrans);
+        #            break;
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #buildACPCAddress
+        #public str buildACPCAddress(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                     parmAll;
+        #    CompanyInfo                 companyInfo = CompanyInfo::find();
+        #    CustInvoiceJour custInvoiceJour = CustInvoiceJour::findFromCustTrans(ccTrans.InvoiceId,ccTrans.TransDate,ccTrans.CustAccount);
+        #    LogisticsPostalAddress      address = companyInfo.postalAddress();
+        #    LogisticsPostalAddress      deliveryAddress = LogisticsPostalAddress::findRecId(custInvoiceJour.DeliveryPostalAddress);
+        #
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    //--> Place line types
+        #    parmAll     =   '85';
+        #    parmAll     +=  #break;
+        #    //--> Sequence number
+        #    parmAll     +=  '1';
+        #    parmAll     +=  #break;
+        #    //--> Ship From Postcode
+        #    parmAll     +=  address.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> Street
+        #    parmAll     +=  CompanyInfo.Name;
+        #    parmAll     +=  #break;
+        #    //--> Street 2
+        #    parmAll     +=  address.Street;
+        #    parmAll     +=  #break;
+        #    //--> City
+        #    parmAll     +=  address.City;
+        #    parmAll     +=  #break;
+        #    //--> County
+        #    parmAll     +=  address.County;
+        #    parmAll     +=  #break;
+        #    //--> Country
+        #    parmAll     +=  address.CountryRegionId;
+        #    parmAll     +=  #break;
+        #    //--> Euro country
+        #    parmAll     +=  'Y';
+        #    parmAll     +=  #break;
+        #
+        #    //--> Ship From Postcode
+        #    parmAll     +=  deliveryAddress.ZipCode;
+        #    parmAll     +=  #break;
+        #
+        #    //--> Street 2
+        #    parmAll     +=  address.Street;
+        #    parmAll     +=  #break;
+        #    //--> Street 2
+        #    parmAll     +=  address.BuildingCompliment;
+        #    parmAll     +=  #break;
+        #    //--> City
+        #    parmAll     +=  address.City;
+        #    parmAll     +=  #break;
+        #    //--> County
+        #    parmAll     +=  address.County;
+        #    parmAll     +=  #break;
+        #    //--> Country
+        #    parmAll     +=  address.CountryRegionId;
+        #    parmAll     +=  #break;
+        #    //--> Euro country
+        #    parmAll     +=  'Y';
+        #    parmAll     +=  #break;
+        #    //--> Record end
+        #    parmAll     += #lineBreak;
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildACPCDocHeader
+        #public str buildACPCDocHeader(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr             parmAll;
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    TempStr     month   = int2str(Mthofyr(ccTrans.transDate));
+        #    TempStr     day     = int2str(dayOfMth(ccTrans.TransDate));
+        #    CustInvoiceJour custInvoiceJour = CustInvoiceJour::findFromCustTrans(ccTrans.InvoiceId,ccTrans.TransDate,ccTrans.CustAccount);
+        #    CustTable                   custTable = CustTable::find(ccTrans.CustAccount);
+        #    CompanyInfo                 companyInfo = CompanyInfo::find();
+        #    LogisticsPostalAddress      address = companyInfo.postalAddress();
+        #    LogisticsPostalAddress      deliveryAddress = LogisticsPostalAddress::findRecId(custInvoiceJour.DeliveryPostalAddress);
+        #    ;
+        #
+        #    if (strLen(month) == 1)
+        #        month = '0'+month;
+        #
+        #    if (strLen(day) == 1)
+        #        day = '0'+day;
+        #
+        #    //--> Place line types
+        #    parmAll     =   '84';
+        #    parmAll     +=  #break;
+        #    //--> Sequence number
+        #    parmAll     +=  '1';
+        #    parmAll     +=  #break;
+        #    //--> DocumentTax
+        #    parmAll     +=  strLRTrim(num2str(abs(custInvoiceJour.SumTax),9,2,0,0));
+        #    parmAll     +=  #break;
+        #    //--> VATNumber
+        #    parmAll     +=  custTable.VATNum;
+        #    parmAll     +=  #break;
+        #    //--> Invoice number
+        #    parmAll     +=  ccTrans.CustomerRef;
+        #    parmAll     +=  #break;
+        #    //--> InvoiceDate
+        #    parmAll     +=  int2str(year(ccTrans.TransDate)) + '-' + month + '-' + day;
+        #    parmAll     +=  #break;
+        #    //--> Discount amount
+        #    parmAll     += '0.00';
+        #    parmAll     +=  #break;
+        #    //--> Freight amount
+        #    parmAll     += '0.00';
+        #    parmAll     +=  #break;
+        #    //--> ship from postal code
+        #    parmAll     += address.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> destination postal code
+        #    parmAll     += deliveryAddress.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> destination postal code
+        #    parmAll     += deliveryAddress.CountryRegionId;
+        #    parmAll     +=  #break;
+        #    //--> Freigh VAT amount
+        #    parmAll     += '0.00';
+        #    parmAll     +=  #break;
+        #    //--> Transaction VAT status
+        #    if (custInvoiceJour.TaxGroup)
+        #    {
+        #        parmAll += '1';
+        #    }
+        #    else
+        #    {
+        #        parmAll += '0';
+        #    }
+        #    parmAll     +=  #break;
+        #    //--> Suppliers Order num
+        #    parmAll     +=  subStr(custInvoiceJour.SalesId,1,20);
+        #    parmAll     +=  #break;
+        #
+        #    //--> PONum
+        #    parmAll     +=  subStr(custInvoiceJour.CustomerRef,1,20);
+        #    parmAll     +=  #break;
+        #    //--> OriginalInvoiceNumber
+        #    if (ccTrans.TransType == CreditCardTrxType::C)
+        #    {
+        #        parmAll     +=  ccTrans.SalesId;
+        #        parmAll     +=  #break;
+        #    }
+        #    else
+        #    {
+        #        parmAll     +=  '';
+        #        parmAll     +=  #break;
+        #    }
+        #    //--> Customer Ref2
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Customer Number
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Cardholder reference
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Record end
+        #    parmAll     += '[#$]';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildACPCDocLine
+        #public str buildACPCDocLine(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                             parmAll,lineAll;
+        #    CustTable                           custTable = CustTable::find(ccTrans.CustAccount);
+        #    LogisticsPostalAddress              address = custTable.postalAddress();
+        #    CustInvoiceTrans                    custInvoiceTrans;
+        #    TaxTrans                            taxTrans;
+        #    Amount                              subTotal;
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    sequence = 2;
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        while select salesPrice,ItemId,InventTransId,LineNum,LineAmount,InventQty,TaxAmount,salesUnit,defaultdimension from custInvoiceTrans
+        #            where custInvoiceTrans.InvoiceId == ccTrans.InvoiceId
+        #        {
+        #            select sum(TaxBaseAmount),sum(TaxAmount),inventTransId from TaxTrans
+        #                where taxTrans.InventTransId == custInvoiceTrans.InventTransId;
+        #
+        #            //--> Place line types
+        #            parmAll     =   '86';
+        #            parmAll     +=  #break;
+        #            //--> Sequence number
+        #            parmAll     +=  int2str(sequence);
+        #            parmAll     +=  #break;
+        #            //--> Line number number
+        #            parmAll     +=  strLRTrim(num2str(custInvoiceTrans.LineNum,9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> Unit price
+        #            parmAll     +=  strLRTrim(num2str(custInvoiceTrans.SalesPrice,9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> UnitOfMeasure
+        #            parmAll     +=  custInvoiceTrans.SalesUnit;
+        #            parmAll     +=  #break;
+        #            //--> Commodity Code
+        #            parmAll     +=  '0000';
+        #            parmAll     +=  #break;
+        #            //--> Item description
+        #            parmAll     +=  custInvoiceTrans.itemName();
+        #            parmAll     +=  #break;
+        #            //--> Qty
+        #            parmAll     +=  strLRTrim(num2str(abs(custInvoiceTrans.InventQty),9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> TaxPercent
+        #            parmAll     +=  strLRTrim(num2str(percent(abs(taxTrans.TaxAmount),abs(taxTrans.TaxBaseAmount)),9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> DiscountValue
+        #            parmAll     +=  strLRTrim(num2str(abs(subTotal-abs(custInvoiceTrans.LineAmount)),9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> VPartNumber
+        #            parmAll     +=  custInvoiceTrans.ItemId;
+        #            parmAll     +=  #break;
+        #            //--> Line Total Amount
+        #            parmAll     +=  strLRTrim(num2str(abs(custInvoiceTrans.LineAmount),9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> TaxAmount
+        #            parmAll     +=  strLRTrim(num2str(abs(taxTrans.TaxAmount),9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> Vat Code
+        #            if (!custInvoiceTrans.TaxGroup)
+        #            {
+        #                parmAll     += 'E';  //-- Exempt
+        #            }
+        #            else
+        #            {
+        #                parmAll     += 'S'; //--> Standard
+        #            }
+        #            parmAll     +=  #break;
+        #
+        #            parmAll     += #lineBreak;
+        #
+        #            lineAll     += parmAll;
+        #            sequence++;
+        #        }
+        #    }
+        #
+        #
+        #
+        #    return lineAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildAddress
+        #XMLElement buildAddress(CreditCardTrans     ccTrans,
+        #                        XMLElement          newOrder)
+        #{
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> AVS Information
+        #    if (this.parmPostalAddress().ZipCode && creditCardParameters::findParameter().AVS)
+        #    {
+        #        xmlGen = xmlDocument.createElement('AVSzip');
+        #        xmlGen.innerText(this.parmPostalAddress().ZipCode);
+        #        newOrder.appendChild(xmlGen);
+        #
+        #        if (creditCardParameters::findParameter().AVSZipOnly == NoYes::No)
+        #        {
+        #            xmlGen = xmlDocument.createElement('AVSaddress1');
+        #            xmlGen.innerText(this.parmPostalAddress().Street);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScity');
+        #            xmlGen.innerText(this.parmPostalAddress().City);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #
+        #            xmlGen = xmlDocument.createElement('AVSstate');
+        #            xmlGen.innerText(this.parmPostalAddress().State);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            if (ccTrans.AVSPhone)
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVSphoneNum');
+        #                xmlGen.innerText(ccTrans.AVSPhone);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #
+        #            xmlGen = xmlDocument.createElement('AVSname');
+        #            xmlGen.innerText(ccTrans.NameOnCard);
+        #            newOrder.appendChild(xmlGen);
+        #
+        #            xmlGen = xmlDocument.createElement('AVScountryCode');
+        #            xmlGen.innerText(this.resolveCountry(this.parmPostalAddress().CountryRegionId));
+        #            newOrder.appendChild(xmlGen);
+        #        }
+        #        else
+        #        {
+        #            if (this.parmPostalAddress().CountryRegionId == 'UK' || this.parmPostalAddress().CountryRegionId == 'GB')
+        #            {
+        #                xmlGen = xmlDocument.createElement('AVScountryCode');
+        #                xmlGen.innerText(this.parmPostalAddress().CountryRegionId);
+        #                newOrder.appendChild(xmlGen);
+        #            }
+        #        }
+        #    }
+        #
+        #    return newOrder;
+        #}
+      ENDSOURCE
+      SOURCE #buildAuthorise
+        #xml buildAuthorise(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:Authorise>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN
+        #    parmAll += '<soap:PAN>';
+        #    parmAll += this.returnAccount(ccTrans);
+        #    parmAll += '</soap:PAN>';
+        #
+        #    //--> EXP Date
+        #    parmAll += '<soap:ExpiryDate>';
+        #    parmAll += this.returnMonth(ccTrans) + '/' + this.returnYear(ccTrans);
+        #    parmAll += '</soap:ExpiryDate>';
+        #
+        #    //--> Start Date
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        if (ccTrans.SoloStartDate)
+        #        {
+        #            parmAll += '<soap:StartDate>';
+        #            parmAll += this.returnStartMonth(ccTrans) + '/' + this.returnStartYear(ccTrans);
+        #            parmAll += '</soap:StartDate>';
+        #        }
+        #
+        #        if (ccTrans.SoloIssueNum)
+        #        {
+        #            parmAll += '<soap:IssueNumber>';
+        #            parmAll += ccTrans.SoloIssueNum;
+        #            parmAll += '</soap:IssueNumber>';
+        #        }
+        #
+        #    }
+        #
+        #    //--> CSC
+        #    if (ccTrans.CID)
+        #    {
+        #        parmAll += '<soap:CSC>';
+        #        parmAll += ccTrans.CID;
+        #        parmAll += '</soap:CSC>';
+        #    }
+        #
+        #    //--> Cardholder's name
+        #    if (ccTrans.NameOnCard)
+        #    {
+        #        parmAll += '<soap:CardHolderName>';
+        #        parmAll += ccTrans.NameOnCard;
+        #        parmAll += '</soap:CardHolderName>';
+        #    }
+        #
+        #
+        #    if (this.parmPostalAddress().Street)
+        #    {
+        #        parmAll += '<soap:Add1>';
+        #        parmAll += this.parmPostalAddress().Street;
+        #        parmAll += '</soap:Add1>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().City)
+        #    {
+        #        parmAll += '<soap:Add2>';
+        #        parmAll += this.parmPostalAddress().City;
+        #        parmAll += '</soap:Add2>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().State)
+        #    {
+        #        parmAll += '<soap:Add3>';
+        #        parmAll += this.parmPostalAddress().State;
+        #        parmAll += '</soap:Add3>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        parmAll += '<soap:Add4>';
+        #        parmAll += this.parmPostalAddress().CountryRegionId;
+        #        parmAll += '</soap:Add4>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        parmAll += '<soap:Postcode>';
+        #        parmAll += this.replacePostCode(this.parmPostalAddress().ZipCode);
+        #        parmAll += '</soap:Postcode>';
+        #    }
+        #
+        #    parmAll += '<soap:TransactionRef>';
+        #    parmAll += ccTrans.CustomerRef;
+        #    parmAll += '</soap:TransactionRef>';
+        #
+        #    parmAll += '<soap:Amount>';
+        #    parmAll += strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    parmAll += '</soap:Amount>';
+        #
+        #    parmAll += '<soap:TransactionType>';
+        #    parmAll += '1';
+        #    parmAll += '</soap:TransactionType>';
+        #
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '<soap:Currency>';
+        #    parmAll += 'GBP';//Currency::find(ccTrans.CurrencyCode).CurrencyCodeISO;
+        #    parmAll += '</soap:Currency>';
+        #
+        #    parmAll += '<soap:ProcessMode>';
+        #    parmAll += "2";
+        #    parmAll += '</soap:ProcessMode>';
+        #
+        #    parmAll += '</soap:Authorise>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildAuthoriseProfile
+        #xml buildAuthoriseProfile(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #    CreditCardTable                 ccTable = CreditCardTable::find(ccTrans.CreditCardId);
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:AuthoriseToken>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN
+        #    parmAll += '<soap:Token>';
+        #    parmAll += ccTrans.ProfileId;
+        #    parmAll += '</soap:Token>';
+        #
+        #    //--> EXP Date
+        #    parmAll += '<soap:LastFourDigits>';
+        #    if (ccTrans.CreditCardId)
+        #    {
+        #        parmAll += subStr(ccTable.CreditCardNumSecure,strlen(ccTable.CreditCardNumSecure)-3,4);
+        #    }
+        #    else
+        #    {
+        #        parmAll += subStr(ccTrans.CreditCardNumSecure,strlen(ccTrans.CreditCardNumSecure)-3,4);
+        #    }
+        #    parmAll += '</soap:LastFourDigits>';
+        #
+        #    //--> CSC
+        #    if (ccTrans.CID)
+        #    {
+        #        parmAll += '<soap:CSC>';
+        #        parmAll += ccTrans.CID;
+        #        parmAll += '</soap:CSC>';
+        #    }
+        #
+        #    parmAll += '<soap:TransactionRef>';
+        #    parmAll += ccTrans.CustomerRef;
+        #    parmAll += '</soap:TransactionRef>';
+        #
+        #    parmAll += '<soap:Amount>';
+        #    parmAll += strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    parmAll += '</soap:Amount>';
+        #
+        #    parmAll += '<soap:TransactionType>';
+        #    parmAll += '1';
+        #    parmAll += '</soap:TransactionType>';
+        #
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '<soap:Currency>';
+        #    parmAll += Currency::find(ccTrans.CurrencyCode).CurrencyCodeISO;
+        #    parmAll += '</soap:Currency>';
+        #
+        #    parmAll += '<soap:ProcessMode>';
+        #    parmAll += "2";
+        #    parmAll += '</soap:ProcessMode>';
+        #
+        #    parmAll += '</soap:AuthoriseToken>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildAuthoriseSubmit
+        #xml buildAuthoriseSubmit(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:Authorise>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN
+        #    parmAll += '<soap:PAN>';
+        #    parmAll += this.returnAccount(ccTrans);
+        #    parmAll += '</soap:PAN>';
+        #
+        #    //--> EXP Date
+        #    parmAll += '<soap:ExpiryDate>';
+        #    parmAll += this.returnMonth(ccTrans) + '/' + this.returnYear(ccTrans);
+        #    parmAll += '</soap:ExpiryDate>';
+        #
+        #    //--> Start Date
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        if (ccTrans.SoloStartDate)
+        #        {
+        #            parmAll += '<soap:StartDate>';
+        #            parmAll += this.returnStartMonth(ccTrans) + '/' + this.returnStartYear(ccTrans);
+        #            parmAll += '</soap:StartDate>';
+        #        }
+        #
+        #        if (ccTrans.SoloIssueNum)
+        #        {
+        #            parmAll += '<soap:IssueNumber>';
+        #            parmAll += ccTrans.SoloIssueNum;
+        #            parmAll += '</soap:IssueNumber>';
+        #        }
+        #
+        #    }
+        #
+        #    //--> CSC
+        #    if (ccTrans.CID)
+        #    {
+        #        parmAll += '<soap:CSC>';
+        #        parmAll += ccTrans.CID;
+        #        parmAll += '</soap:CSC>';
+        #    }
+        #
+        #    //--> Cardholder's name
+        #    if (ccTrans.NameOnCard)
+        #    {
+        #        parmAll += '<soap:CardHolderName>';
+        #        parmAll += ccTrans.NameOnCard;
+        #        parmAll += '</soap:CardHolderName>';
+        #    }
+        #
+        #
+        #    if (this.parmPostalAddress().Street)
+        #    {
+        #        parmAll += '<soap:Add1>';
+        #        parmAll += this.parmPostalAddress().Street;
+        #        parmAll += '</soap:Add1>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().City)
+        #    {
+        #        parmAll += '<soap:Add2>';
+        #        parmAll += this.parmPostalAddress().City;
+        #        parmAll += '</soap:Add2>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().State)
+        #    {
+        #        parmAll += '<soap:Add3>';
+        #        parmAll += this.parmPostalAddress().State;
+        #        parmAll += '</soap:Add3>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        parmAll += '<soap:Add4>';
+        #        parmAll += this.parmPostalAddress().CountryRegionId;
+        #        parmAll += '</soap:Add4>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        parmAll += '<soap:Postcode>';
+        #        parmAll += this.replacePostCode(this.parmPostalAddress().ZipCode);
+        #        parmAll += '</soap:Postcode>';
+        #    }
+        #
+        #    parmAll += '<soap:TransactionRef>';
+        #    parmAll += ccTrans.CustomerRef;
+        #    parmAll += '</soap:TransactionRef>';
+        #
+        #    parmAll += '<soap:Amount>';
+        #    parmAll += strLRTrim(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    parmAll += '</soap:Amount>';
+        #
+        #    parmAll += '<soap:TransactionType>';
+        #    parmAll += '1';
+        #    parmAll += '</soap:TransactionType>';
+        #
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '<soap:Currency>';
+        #    parmAll += Currency::find(ccTrans.CurrencyCode).CurrencyCodeISO;
+        #    parmAll += '</soap:Currency>';
+        #
+        #    parmAll += '<soap:ProcessMode>';
+        #    parmAll += "0";
+        #    parmAll += '</soap:ProcessMode>';
+        #
+        #    parmAll += '</soap:Authorise>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildAuthoriseSubmitProfile
+        #xml buildAuthoriseSubmitProfile(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #    CreditCardTable                 ccTable = CreditCardTable::find(ccTrans.CreditCardId);
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:AuthoriseToken>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN
+        #    parmAll += '<soap:Token>';
+        #    parmAll += ccTrans.ProfileId;
+        #    parmAll += '</soap:Token>';
+        #
+        #    //--> EXP Date
+        #    parmAll += '<soap:LastFourDigits>';
+        #    if (ccTrans.CreditCardId)
+        #    {
+        #        parmAll += subStr(ccTable.CreditCardNumSecure,strlen(ccTable.CreditCardNumSecure)-3,4);
+        #    }
+        #    else
+        #    {
+        #        parmAll += subStr(ccTrans.CreditCardNumSecure,strlen(ccTrans.CreditCardNumSecure)-3,4);
+        #    }
+        #    parmAll += '</soap:LastFourDigits>';
+        #
+        #    //--> CSC
+        #    if (ccTrans.CID)
+        #    {
+        #        parmAll += '<soap:CSC>';
+        #        parmAll += ccTrans.CID;
+        #        parmAll += '</soap:CSC>';
+        #    }
+        #
+        #    parmAll += '<soap:TransactionRef>';
+        #    parmAll += ccTrans.CustomerRef;
+        #    parmAll += '</soap:TransactionRef>';
+        #
+        #    parmAll += '<soap:Amount>';
+        #    parmAll += strLRTrim(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    parmAll += '</soap:Amount>';
+        #
+        #    parmAll += '<soap:TransactionType>';
+        #    parmAll += '1';
+        #    parmAll += '</soap:TransactionType>';
+        #
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '<soap:Currency>';
+        #    parmAll += Currency::find(ccTrans.CurrencyCode).CurrencyCodeISO;
+        #    parmAll += '</soap:Currency>';
+        #
+        #    parmAll += '<soap:ProcessMode>';
+        #    parmAll += "0";
+        #    parmAll += '</soap:ProcessMode>';
+        #
+        #    parmAll += '</soap:AuthoriseToken>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDeleteProfile
+        #xml buildDeleteProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTable.ProfileTerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:DeleteToken>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:Token>';
+        #    parmAll += cctable.ProfileId;
+        #    parmAll += '</soap:Token>';
+        #
+        #    parmAll += '</soap:DeleteToken>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #    //instruction = xmlDocument.createProcessingInstruction('xml-stylesheet',
+        #    //    'type="text/xsl" href="www.redmaple.com"');
+        #
+        #    //xmlDocument.appendChild(instruction);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelope
+        #str buildEnvelope()
+        #{
+        #    TempStr                         tmpstr;
+        #    ;
+        #    //tmpStr = '<?xml version="1.0" encoding="utf-8"?>';
+        #    tmpStr += '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
+        #    tmpStr +=' xmlns:soap="https://secure.vgis.co.uk/transaction/soap">';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildGetBININfo
+        #xml buildGetBININfo(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:GetBinInfo>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN.  Only need first 6 digits
+        #    parmAll += '<soap:PAN>';
+        #    parmAll += subStr(this.returnAccount(ccTrans),1,6);
+        #    parmAll += '</soap:PAN>';
+        #
+        #    //--> Mode
+        #    parmAll += '<soap:Mode>';
+        #    parmAll += "0";
+        #    parmAll += '</soap:Mode>';
+        #
+        #    parmAll += '</soap:GetBinInfo>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildGetCardBININfo
+        #xml buildGetCardBININfo(CreditCardTable     ccTable)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardProcessGroups::resolveTerminalforToken(ccTable);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:GetBinInfo>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN.  Only need first 6 digits
+        #    parmAll += '<soap:PAN>';
+        #    parmAll += subStr(CreditCardTable::retrieveValue(ccTable,systemDateGet()),1,6);
+        #    parmAll += '</soap:PAN>';
+        #
+        #    //--> Mode
+        #    parmAll += '<soap:Mode>';
+        #    parmAll += "0";
+        #    parmAll += '</soap:Mode>';
+        #
+        #    parmAll += '</soap:GetBinInfo>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildLevelIII
+        #public str buildLevelIII(CreditCardTrans        ccTrans)
+        #{
+        #    TempStr         parmAll;
+        #    ;
+        #    if (ccTrans.CommercialCard)
+        #    {
+        #        if (ccTrans.CreditCardType == CreditCardType::MCOneCard)
+        #        {
+        #            parmAll =   this.buildLIDDocHeader(ccTrans);
+        #            parmAll +=  this.buildLIDSDocLine(ccTrans);
+        #        }
+        #        else if (ccTrans.CreditCardType == CreditCardType::AMEXCPC)
+        #        {
+        #            parmAll = this.buildACPCAddress(ccTrans);
+        #            parmAll += this.buildACPCAddress(ccTrans);
+        #            parmAll += this.buildACPCDocLine(ccTrans);
+        #        }
+        #        else
+        #        {
+        #            parmAll =   this.buildVGISDocHeader(ccTrans);
+        #
+        #            parmAll +=  this.buildVGISDocSupplier(ccTrans);
+        #            parmAll +=  this.buildVGISDocSupplierMerchant(ccTrans);
+        #            parmAll +=  this.buildVGISDocBuyer(ccTrans);
+        #            parmAll +=  this.buildVGISDocLine(ccTrans);
+        #            parmAll +=  this.buildVGISDocTaxSummary(ccTrans);
+        #        }
+        #    }
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildLIDDocHeader
+        #public str buildLIDDocHeader(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr             parmAll;
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    TempStr     month   = int2str(Mthofyr(ccTrans.transDate));
+        #    TempStr     day     = int2str(dayOfMth(ccTrans.TransDate));
+        #    CustTable                   custTable = CustTable::find(ccTrans.CustAccount);
+        #    LogisticsPostalAddress      address = custTable.postalAddress();
+        #    CustInvoiceJour custInvoiceJour = CustInvoiceJour::findFromCustTrans(ccTrans.InvoiceId,ccTrans.TransDate,ccTrans.CustAccount);
+        #    CompanyInfo                 companyInfo = CompanyInfo::find();
+        #    LogisticsPostalAddress      supplierAddress = companyInfo.postalAddress();
+        #    ;
+        #
+        #    if (strLen(month) == 1)
+        #        month = '0'+month;
+        #
+        #    if (strLen(day) == 1)
+        #        day = '0'+day;
+        #
+        #    //--> Place line types
+        #    parmAll     =   '80';
+        #    parmAll     +=  #break;
+        #    //--> Sequence number
+        #    parmAll     +=  '1';
+        #    parmAll     +=  #break;
+        #    //--> DocumentTax
+        #    parmAll     +=  strLRTrim(num2str(abs(custInvoiceJour.SumTax),9,2,0,0));
+        #    parmAll     +=  #break;
+        #    //--> VATNumber
+        #    parmAll     +=  custTable.VATNum;
+        #    parmAll     +=  #break;
+        #    //--> Invoice number
+        #    parmAll     +=  ccTrans.CustomerRef;
+        #    parmAll     +=  #break;
+        #    //--> InvoiceDate
+        #    parmAll     +=  int2str(year(ccTrans.TransDate)) + '-' + month + '-' + day;
+        #    parmAll     +=  #break;
+        #    //--> Document Discount
+        #    parmAll     +=  "0.00";//per Adfex, no discount at header
+        #    //strLRTrim(num2str(abs(custInvoiceJour.SumLineDisc),9,2,0,0));
+        #    parmAll     +=  #break;
+        #    //--> Freight
+        #    parmAll     +=  strLRTrim(num2str(abs(custInvoiceJour.SumMarkup),9,2,0,0));
+        #    parmAll     +=  #break;
+        #    //--> Postcode
+        #    parmAll     +=  address.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> Our Postcode
+        #    parmAll     +=  supplierAddress.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> Destination country
+        #    parmAll     +=  address.CountryRegionId;
+        #    parmAll     +=  #break;
+        #    //--> Freight VAT Rate
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Transaction VAT status
+        #    if (custInvoiceJour.SumTax != 0)
+        #    {
+        #        parmAll += '1';
+        #    }
+        #    else
+        #    {
+        #        parmAll += '0';
+        #    }
+        #    parmAll     +=  #break;
+        #
+        #    //--> Cost Centre
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Suppliers Order Number
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Original Invoice Number
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #
+        #    //--> Customer ref
+        #    parmAll     +=  ccTrans.CustomerRef;
+        #
+        #    //--> Record end
+        #    parmAll     += '[#$]';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildLIDDocSummary
+        #public str buildLIDDocSummary(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                     parmAll;
+        #    CustTable                   custTable = CustTable::find(ccTrans.CustAccount);
+        #    LogisticsPostalAddress      address = custTable.postalAddress();
+        #    CustInvoiceTrans            custInvoiceTrans;
+        #    TaxTrans                    taxTrans;
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        while select salesPrice,ItemId,InventTransId,LineNum,LineAmount,qtyPhysical,TaxAmount,salesUnit from custInvoiceTrans
+        #            where custInvoiceTrans.InvoiceId == ccTrans.InvoiceId
+        #        {
+        #            select sum(TaxBaseAmount),sum(TaxAmount),inventTransId from TaxTrans
+        #                where taxTrans.InventTransId == custInvoiceTrans.InventTransId;
+        #
+        #            //--> Place line types
+        #            parmAll     =   '82';
+        #            parmAll     +=  #break;
+        #            //--> Sequence number
+        #            parmAll     +=  int2str(sequence);
+        #            parmAll     +=  #break;
+        #            //--> Commodity code
+        #            parmAll     +=  '0000';
+        #            parmAll     +=  #break;
+        #            //--> VAT Rate
+        #            parmAll     +=  strLRTrim(num2str(percent(taxAmount,taxBaseCur),9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> LineTotal amount
+        #            parmAll     +=  strLRTrim(num2str(abs(custInvoiceTrans.LineAmount),9,2,0,0));
+        #
+        #            parmAll     += #lineBreak;
+        #
+        #            sequence++;
+        #        }
+        #    }
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildLIDSDocLine
+        #public str buildLIDSDocLine(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                             parmAll,lineAll;
+        #    CustTable                           custTable = CustTable::find(ccTrans.CustAccount);
+        #    LogisticsPostalAddress              address = custTable.postalAddress();
+        #    CustInvoiceTrans                    custInvoiceTrans;
+        #    TaxTrans                            taxTrans;
+        #    Amount                              subTotal;
+        #    int                                 lineNumber = 1;
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    sequence = 2;
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        while select salesPrice,ItemId,InventTransId,LineNum,LineAmount,InventQty,TaxAmount,salesUnit,defaultdimension from custInvoiceTrans
+        #            where custInvoiceTrans.InvoiceId == ccTrans.InvoiceId
+        #        {
+        #            select sum(TaxBaseAmount),sum(TaxAmount),inventTransId from TaxTrans
+        #                where taxTrans.InventTransId == custInvoiceTrans.InventTransId;
+        #
+        #            //--> Place line types
+        #            parmAll     =   '81';
+        #            parmAll     +=  #break;
+        #            //--> Sequence number
+        #            parmAll     +=  int2str(sequence);
+        #            parmAll     +=  #break;
+        #            //--> Line number number
+        #            parmAll     +=  strLRTrim(num2str(lineNumber,9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> Unit price
+        #            parmAll     +=  strLRTrim(num2str(custInvoiceTrans.SalesPrice,9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> UnitOfMeasure
+        #            parmAll     +=  custInvoiceTrans.SalesUnit;
+        #            parmAll     +=  #break;
+        #            //--> Commodity Code
+        #            parmAll     +=  '0000';
+        #            parmAll     +=  #break;
+        #            //--> Item description
+        #            parmAll     +=  custInvoiceTrans.itemName();
+        #            parmAll     +=  #break;
+        #            //--> Qty
+        #            parmAll     +=  strLRTrim(num2str(abs(custInvoiceTrans.InventQty),9,0,0,0));
+        #            parmAll     +=  #break;
+        #            subTotal = abs(custInvoiceTrans.InventQty) * custInvoiceTrans.SalesPrice;
+        #            //--> TaxPercent
+        #            parmAll     +=  strLRTrim(num2str(percent(abs(taxTrans.TaxAmount),abs(taxTrans.TaxBaseAmount)),9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> DiscountValue
+        #            parmAll     +=  strLRTrim(num2str(abs(subTotal-abs(custInvoiceTrans.LineAmount)),9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> VPartNumber
+        #            parmAll     +=  custInvoiceTrans.ItemId;
+        #            parmAll     +=  #break;
+        #
+        #            //--> Line Total Amount
+        #            parmAll     +=  strLRTrim(num2str(abs(custInvoiceTrans.LineAmount),9,2,0,0));
+        #
+        #            parmAll     += #lineBreak;
+        #
+        #            lineAll     += parmAll;
+        #            sequence++;
+        #            lineNumber++;
+        #        }
+        #    }
+        #
+        #
+        #
+        #    return lineAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfile
+        #xml buildProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTable.ProfileTerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:CreateToken>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN
+        #    parmAll += '<soap:PAN>';
+        #    parmAll += CreditCardTable::retrieveValue(ccTable);
+        #    parmAll += '</soap:PAN>';
+        #
+        #    //--> EXP Date
+        #    parmAll += '<soap:ExpiryDate>';
+        #    parmAll += this.returnMonthProfile(ccTable) + '/' + this.returnYearProfile(ccTable);
+        #    parmAll += '</soap:ExpiryDate>';
+        #
+        #    //--> Start Date
+        #    if (ccTable.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        if (ccTable.SoloStartDate)
+        #        {
+        #            parmAll += '<soap:StartDate>';
+        #            parmAll += int2str(Mthofyr(ccTable.SoloStartDate)) + '/' + int2str(Year(ccTable.SoloStartDate));
+        #            parmAll += '</soap:StartDate>';
+        #        }
+        #
+        #        if (ccTable.SoloIssueNum)
+        #        {
+        #            parmAll += '<soap:IssueNumber>';
+        #            parmAll += ccTable.SoloIssueNum;
+        #            parmAll += '</soap:IssueNumber>';
+        #        }
+        #
+        #    }
+        #
+        #    //--> Cardholder's name
+        #    if (ccTable.NameOnCard)
+        #    {
+        #        parmAll += '<soap:CardHolderName>';
+        #        parmAll += ccTable.NameOnCard;
+        #        parmAll += '</soap:CardHolderName>';
+        #    }
+        #
+        #
+        #    if (this.parmPostalAddress().Street)
+        #    {
+        #        parmAll += '<soap:Add1>';
+        #        parmAll += this.parmPostalAddress().Street;
+        #        parmAll += '</soap:Add1>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().City)
+        #    {
+        #        parmAll += '<soap:Add2>';
+        #        parmAll += this.parmPostalAddress().City;
+        #        parmAll += '</soap:Add2>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().State)
+        #    {
+        #        parmAll += '<soap:Add3>';
+        #        parmAll += this.parmPostalAddress().State;
+        #        parmAll += '</soap:Add3>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        parmAll += '<soap:Add4>';
+        #        parmAll += this.parmPostalAddress().CountryRegionId;
+        #        parmAll += '</soap:Add4>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        parmAll += '<soap:Postcode>';
+        #        parmAll += this.parmPostalAddress().ZipCode;
+        #        parmAll += '</soap:Postcode>';
+        #    }
+        #
+        #    parmAll += '<soap:CustomerRef>';
+        #    parmAll += ccTable.CustAccount;
+        #    parmAll += '</soap:CustomerRef>';
+        #
+        #
+        #
+        #    parmAll += '</soap:CreateToken>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildReturn
+        #xml buildReturn(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:Authorise>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN
+        #    parmAll += '<soap:PAN>';
+        #    parmAll += this.returnAccount(ccTrans);
+        #    parmAll += '</soap:PAN>';
+        #
+        #    //--> EXP Date
+        #    parmAll += '<soap:ExpiryDate>';
+        #    parmAll += this.returnMonth(ccTrans) + '/' + this.returnYear(ccTrans);
+        #    parmAll += '</soap:ExpiryDate>';
+        #
+        #    //--> Start Date
+        #    if (ccTrans.CreditCardType == CreditCardType::Solo)
+        #    {
+        #        if (ccTrans.SoloStartDate)
+        #        {
+        #            parmAll += '<soap:StartDate>';
+        #            parmAll += this.returnStartMonth(ccTrans) + '/' + this.returnStartYear(ccTrans);
+        #            parmAll += '</soap:StartDate>';
+        #        }
+        #
+        #        if (ccTrans.SoloIssueNum)
+        #        {
+        #            parmAll += '<soap:IssueNumber>';
+        #            parmAll += ccTrans.SoloIssueNum;
+        #            parmAll += '</soap:IssueNumber>';
+        #        }
+        #
+        #    }
+        #
+        #    //--> CSC
+        #    if (ccTrans.CID)
+        #    {
+        #        parmAll += '<soap:CSC>';
+        #        parmAll += ccTrans.CID;
+        #        parmAll += '</soap:CSC>';
+        #    }
+        #
+        #    //--> Cardholder's name
+        #    if (ccTrans.NameOnCard)
+        #    {
+        #        parmAll += '<soap:CardHolderName>';
+        #        parmAll += ccTrans.NameOnCard;
+        #        parmAll += '</soap:CardHolderName>';
+        #    }
+        #
+        #
+        #    if (this.parmPostalAddress().Street)
+        #    {
+        #        parmAll += '<soap:Add1>';
+        #        parmAll += this.parmPostalAddress().Street;
+        #        parmAll += '</soap:Add1>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().City)
+        #    {
+        #        parmAll += '<soap:Add2>';
+        #        parmAll += this.parmPostalAddress().City;
+        #        parmAll += '</soap:Add2>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().State)
+        #    {
+        #        parmAll += '<soap:Add3>';
+        #        parmAll += this.parmPostalAddress().State;
+        #        parmAll += '</soap:Add3>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().CountryRegionId)
+        #    {
+        #        parmAll += '<soap:Add4>';
+        #        parmAll += this.parmPostalAddress().CountryRegionId;
+        #        parmAll += '</soap:Add4>';
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode)
+        #    {
+        #        parmAll += '<soap:Postcode>';
+        #        parmAll += this.replacePostCode(this.parmPostalAddress().ZipCode);
+        #        parmAll += '</soap:Postcode>';
+        #    }
+        #
+        #    parmAll += '<soap:TransactionRef>';
+        #    parmAll += ccTrans.CustomerRef;
+        #    parmAll += '</soap:TransactionRef>';
+        #
+        #    parmAll += '<soap:Amount>';
+        #    parmAll += strLRTrim(num2str(abs(ccTrans.AmountCur),9,2,1,0));
+        #    parmAll += '</soap:Amount>';
+        #
+        #    parmAll += '<soap:TransactionType>';
+        #    parmAll += '7';
+        #    parmAll += '</soap:TransactionType>';
+        #
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        //--> Aux Data for Levell II
+        #        parmAll += '<soap:AuxData>';
+        #        parmAll += this.buildLevelIII(ccTrans);
+        #        parmAll += '</soap:AuxData>';
+        #
+        #        if (ccTrans.CreditCardType == CreditCardType::MCOneCard)
+        #        {
+        #            //--> Aux Data Encoding per APGL
+        #            parmAll += '<soap:AuxDataEncodingMethod>';
+        #            parmAll += 'TEXT/APGLLID';
+        #            parmAll += '</soap:AuxDataEncodingMethod>';
+        #        }
+        #        else if (ccTrans.CreditCardType == CreditCardType::AMEXCPC)
+        #        {
+        #            //--> Aux Data Encoding per APGL
+        #            parmAll += '<soap:AuxDataEncodingMethod>';
+        #            parmAll += 'TEXT/APGLAMEXGL';
+        #            parmAll += '</soap:AuxDataEncodingMethod>';
+        #        }
+        #        else
+        #        {
+        #            //--> Aux Data Encoding per APGL
+        #            parmAll += '<soap:AuxDataEncodingMethod>';
+        #            parmAll += 'TEXT/APGLVGIS';
+        #            parmAll += '</soap:AuxDataEncodingMethod>';
+        #        }
+        #    }
+        #
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '<soap:Currency>';
+        #    parmAll += Currency::find(ccTrans.CurrencyCode).CurrencyCodeISO;
+        #    parmAll += '</soap:Currency>';
+        #
+        #    parmAll += '<soap:ProcessMode>';
+        #    parmAll += "0";
+        #    parmAll += '</soap:ProcessMode>';
+        #
+        #    parmAll += '</soap:Authorise>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildReturnProfile
+        #xml buildReturnProfile(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #    CreditCardTable                 ccTable = CreditCardTable::find(ccTrans.CreditCardId);
+        #
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:AuthoriseToken>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> PAN
+        #    parmAll += '<soap:Token>';
+        #    parmAll += ccTrans.ProfileId;
+        #    parmAll += '</soap:Token>';
+        #
+        #    //--> EXP Date
+        #    parmAll += '<soap:LastFourDigits>';
+        #    if (ccTrans.CreditCardId)
+        #    {
+        #        parmAll += subStr(ccTable.CreditCardNumSecure,strlen(ccTable.CreditCardNumSecure)-3,4);
+        #    }
+        #    else
+        #    {
+        #        parmAll += subStr(ccTrans.CreditCardNumSecure,strlen(ccTrans.CreditCardNumSecure)-3,4);
+        #    }
+        #    parmAll += '</soap:LastFourDigits>';
+        #
+        #    //--> CSC
+        #    if (ccTrans.CID)
+        #    {
+        #        parmAll += '<soap:CSC>';
+        #        parmAll += ccTrans.CID;
+        #        parmAll += '</soap:CSC>';
+        #    }
+        #
+        #    parmAll += '<soap:TransactionRef>';
+        #    parmAll += ccTrans.CustomerRef;
+        #    parmAll += '</soap:TransactionRef>';
+        #
+        #    parmAll += '<soap:Amount>';
+        #    parmAll += strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    parmAll += '</soap:Amount>';
+        #
+        #    parmAll += '<soap:TransactionType>';
+        #    parmAll += '7';
+        #    parmAll += '</soap:TransactionType>';
+        #
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '<soap:Currency>';
+        #    parmAll += Currency::find(ccTrans.CurrencyCode).CurrencyCodeISO;
+        #    parmAll += '</soap:Currency>';
+        #
+        #    parmAll += '<soap:ProcessMode>';
+        #    parmAll += "0";
+        #    parmAll += '</soap:ProcessMode>';
+        #
+        #    parmAll += '</soap:AuthoriseToken>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildReversal
+        #xml buildReversal(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:PostReversal>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '</soap:PostReversal>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildSettle
+        #xml buildSettle(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:Settle>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '</soap:Settle>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildSettleEx
+        #xml buildSettleEx(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    str                             parmHeader,parmAll;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:SettleEx>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    //--> Amount
+        #    parmAll += '<soap:Amount>';
+        #    parmAll += num2str(ccTrans.AmountCur,9,2,0,0);
+        #    parmAll += '</soap:Amount>';
+        #
+        #    //--> Aux Data for Levell II
+        #    parmAll += '<soap:AuxData>';
+        #    parmAll += this.buildLevelIII(ccTrans);
+        #    parmAll += '</soap:AuxData>';
+        #
+        #    if (ccTrans.CreditCardType == CreditCardType::MCOneCard)
+        #    {
+        #        //--> Aux Data Encoding per APGL
+        #        parmAll += '<soap:AuxDataEncodingMethod>';
+        #        parmAll += 'TEXT/APGLLID';
+        #        parmAll += '</soap:AuxDataEncodingMethod>';
+        #    }
+        #    else if (ccTrans.CreditCardType == CreditCardType::AMEXCPC)
+        #    {
+        #        //--> Aux Data Encoding per APGL
+        #        parmAll += '<soap:AuxDataEncodingMethod>';
+        #        parmAll += 'TEXT/APGLAMEXGL';
+        #        parmAll += '</soap:AuxDataEncodingMethod>';
+        #    }
+        #    else
+        #    {
+        #        //--> Aux Data Encoding per APGL
+        #        parmAll += '<soap:AuxDataEncodingMethod>';
+        #        parmAll += 'TEXT/APGLVGIS';
+        #        parmAll += '</soap:AuxDataEncodingMethod>';
+        #    }
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '</soap:SettleEx>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildSettlePartial
+        #xml buildSettlePartial(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantAdflex        ccAdflex;
+        #    TempStr                         parmHeader,parmAll;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    select UserId,Pwd,PSPId,TerminalId from ccAdflex
+        #        where ccAdflex.TerminalId == ccTerminal.TerminalId;
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #    parmAll = parmHeader;
+        #    parmAll += '<SOAP-ENV:Header/>';
+        #    parmAll += '<SOAP-ENV:Body>';
+        #    parmAll += '<soap:SettlePartial>';
+        #
+        #    //--> Merchant username
+        #    parmAll += '<soap:Username>';
+        #    parmAll += ccAdflex.UserId;
+        #    parmAll += '</soap:Username>';
+        #
+        #    //--> Merchant password
+        #    parmAll += '<soap:Password>';
+        #    parmAll += ccAdflex.Pwd;
+        #    parmAll += '</soap:Password>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:PSPID>';
+        #    parmAll += ccAdflex.PSPId;
+        #    parmAll += '</soap:PSPID>';
+        #
+        #    parmAll += '<soap:Amount>';
+        #    parmAll += strLRTrim(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    parmAll += '</soap:Amount>';
+        #
+        #    //--> Merchant PSPID
+        #    parmAll += '<soap:TxRefGUID>';
+        #    parmAll += guid2str(ccTrans.TxRefGuid);
+        #    parmAll += '</soap:TxRefGUID>';
+        #
+        #    parmAll += '</soap:SettlePartial>';
+        #
+        #    //--> End Body
+        #    parmAll += '</SOAP-ENV:Body>';
+        #    parmAll += '</SOAP-ENV:Envelope>';
+        #
+        #    return parmAll;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildVGISDocBuyer
+        #public str buildVGISDocBuyer(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                     parmAll;
+        #    CustTable                   custTable = CustTable::find(ccTrans.CustAccount);
+        #    LogisticsPostalAddress      address = custTable.postalAddress();
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    //--> Place line types
+        #    parmAll     =   '44';
+        #    parmAll     +=  #break;
+        #    //--> Sequence number
+        #    parmAll     +=  '4';
+        #    parmAll     +=  #break;
+        #    //--> Name
+        #    parmAll     +=  custTable.Name();
+        #    parmAll     +=  #break;
+        #    //--> Street
+        #    parmAll     +=  address.Street;
+        #    parmAll     +=  #break;
+        #    //--> Street 2
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Street 3
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Street 4
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> City
+        #    parmAll     +=  address.City;
+        #    parmAll     +=  #break;
+        #    //--> County
+        #    parmAll     +=  address.County;
+        #    parmAll     +=  #break;
+        #    //--> Postcode
+        #    parmAll     +=  address.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> Country
+        #    parmAll     +=  address.CountryRegionId;
+        #    parmAll     +=  #break;
+        #    //--> Contact name
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> VATNumber
+        #    parmAll     +=  custTable.VATNum;
+        #    parmAll     += #lineBreak;
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVGISDocDelivery
+        #public str buildVGISDocDelivery(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                     parmAll;
+        #    SalesTable                  salesTable = salestable::find(ccTrans.SalesId);
+        #    LogisticsPostalAddress      address = salesTable.deliveryAddress();
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    //--> Place line types
+        #    parmAll     =   '45';
+        #    parmAll     +=  #break;
+        #    //--> Sequence number
+        #    parmAll     +=  '1';
+        #    parmAll     +=  #break;
+        #    //--> Name
+        #    parmAll     +=  salesTable.contactPersonName();
+        #    parmAll     +=  #break;
+        #    //--> Street
+        #    parmAll     +=  address.Street;
+        #    parmAll     +=  #break;
+        #    //--> Street 2
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Street 3
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Street 4
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> City
+        #    parmAll     +=  address.City;
+        #    parmAll     +=  #break;
+        #    //--> County
+        #    parmAll     +=  address.County;
+        #    parmAll     +=  #break;
+        #    //--> Postcode
+        #    parmAll     +=  address.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> Country
+        #    parmAll     +=  address.CountryRegionId;
+        #    parmAll     += #lineBreak;
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVGISDocHeader
+        #public str buildVGISDocHeader(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr             parmAll;
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    TempStr     month   = int2str(Mthofyr(ccTrans.transDate));
+        #    TempStr     day     = int2str(dayOfMth(ccTrans.TransDate));
+        #    CustInvoiceJour custInvoiceJour = CustInvoiceJour::findFromCustTrans(ccTrans.InvoiceId,ccTrans.TransDate,ccTrans.CustAccount);
+        #    ;
+        #
+        #    if (strLen(month) == 1)
+        #        month = '0'+month;
+        #
+        #    if (strLen(day) == 1)
+        #        day = '0'+day;
+        #
+        #    //--> Place line types
+        #    parmAll     =   '40';
+        #    parmAll     +=  #break;
+        #    //--> Sequence number
+        #    parmAll     +=  '1';
+        #    parmAll     +=  #break;
+        #    //--> Invoice number
+        #    parmAll     +=  subStr(ccTrans.CustomerRef,1,12);
+        #    parmAll     +=  #break;
+        #    //--> InvoiceType
+        #    parmAll     +=  '1';
+        #    parmAll     +=  #break;
+        #    //--> InvoiceDate
+        #    parmAll     +=  int2str(year(ccTrans.TransDate)) + '-' + month + '-' + day;
+        #    parmAll     +=  #break;
+        #    //--> TaxPointDate
+        #    parmAll     +=  int2str(year(ccTrans.TransDate)) + '-' + month + '-' + day;
+        #    parmAll     +=  #break;
+        #    //--> Buyers purchase order date
+        #    parmAll     +=  int2str(year(ccTrans.TransDate)) + '-' + month + '-' + day;
+        #    parmAll     +=  #break;
+        #    //--> TaxTreatment
+        #    parmAll     +=  '2';
+        #    parmAll     +=  #break;
+        #    //--> InvoiceTreatment
+        #    parmAll     +=  '2';
+        #    parmAll     +=  #break;
+        #    //--> DiscountTreatment
+        #    parmAll     +=  '3';
+        #    parmAll     +=  #break;
+        #    //--> OriginalInvoiceNumber
+        #    if (ccTrans.TransType == CreditCardTrxType::C)
+        #    {
+        #        parmAll     +=  ccTrans.SalesId;
+        #        parmAll     +=  #break;
+        #    }
+        #    else
+        #    {
+        #        parmAll     +=  '';
+        #        parmAll     +=  #break;
+        #    }
+        #    //--> PONum
+        #    parmAll     +=  subStr(ccTrans.CustomerRef,1,10);
+        #    parmAll     +=  #break;
+        #    //--> Sector type
+        #    parmAll     +=  'MM';
+        #    parmAll     +=  #break;
+        #    //--> CostCentre
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Customer ref
+        #    parmAll     +=  ccTrans.CustomerRef;
+        #    parmAll     +=  #break;
+        #    //--> Total lines
+        #    parmAll     +=  int2str(custInvoiceTrans::numOfLines(custInvoiceJour.InvoiceId,custInvoiceJour.InvoiceDate));
+        #    parmAll     +=  #break;
+        #    //--> DocumentNet
+        #    //--> Change back
+        #    parmAll     +=  strLRTrim(num2str(abs(custInvoiceJour.SalesBalance),9,2,0,0));
+        #    parmAll     +=  #break;
+        #    //--> DocumentTax
+        #    parmAll     +=  strLRTrim(num2str(abs(custInvoiceJour.SumTax),9,2,0,0));
+        #    parmAll     +=  #break;
+        #    //--> DocumentGross
+        #    parmAll     +=  strLRTrim(num2str(abs(custInvoiceJour.InvoiceAmount),9,2,0,0));
+        #    parmAll     +=  #break;
+        #    //--> Document Discount
+        #    parmAll     +=  strLRTrim(num2str(abs(custInvoiceJour.SumLineDisc),9,2,0,0));
+        #    //--> Record end
+        #    parmAll     += '[#$]';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVGISDocLine
+        #public str buildVGISDocLine(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                             parmAll,lineAll;
+        #    CustTable                           custTable = CustTable::find(ccTrans.CustAccount);
+        #    LogisticsPostalAddress              address = custTable.postalAddress();
+        #    CustInvoiceTrans                    custInvoiceTrans;
+        #    TaxTrans                            taxTrans;
+        #    Amount                              subTotal;
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    sequence = 5;
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        while select salesPrice,ItemId,InventTransId,LineNum,LineAmount,InventQty,TaxAmount,salesUnit,defaultdimension from custInvoiceTrans
+        #            where custInvoiceTrans.InvoiceId == ccTrans.InvoiceId
+        #        {
+        #            select sum(TaxBaseAmount),sum(TaxAmount),inventTransId from TaxTrans
+        #                where taxTrans.InventTransId == custInvoiceTrans.InventTransId;
+        #
+        #            //--> Place line types
+        #            parmAll     =   '60';
+        #            parmAll     +=  #break;
+        #            //--> Sequence number
+        #            parmAll     +=  int2str(sequence);
+        #            parmAll     +=  #break;
+        #            //--> Line number number
+        #            parmAll     +=  strLRTrim(num2str(custInvoiceTrans.LineNum,9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> IsFreightLine
+        #            parmAll     +=  '0';
+        #            parmAll     +=  #break;
+        #            //--> VPartNumber
+        #            parmAll     +=  custInvoiceTrans.ItemId;
+        #            parmAll     +=  #break;
+        #            //--> VPartDescription
+        #            parmAll     +=  custInvoiceTrans.itemName();
+        #            parmAll     +=  #break;
+        #            //--> Commodity Code
+        #            parmAll     +=  '0000';
+        #            parmAll     +=  #break;
+        #            //--> Commodity description
+        #            parmAll     +=  '';
+        #            parmAll     +=  #break;
+        #            //--> ByPartNumber
+        #            parmAll     +=  '';
+        #            parmAll     +=  #break;
+        #            //--> ByPartDescription
+        #            parmAll     +=  '';
+        #            parmAll     +=  #break;
+        #            //--> UnitOfMeasure
+        #            parmAll     +=  custInvoiceTrans.SalesUnit;
+        #            parmAll     +=  #break;
+        #            //--> Qty
+        #            parmAll     +=  strLRTrim(num2str(abs(custInvoiceTrans.InventQty),9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> Unit price
+        #            parmAll     +=  strLRTrim(num2str(custInvoiceTrans.SalesPrice,9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> PoLineNumber
+        #            parmAll     +=  '';
+        #            parmAll     +=  #break;
+        #            //--> LineSubtotal
+        #            subTotal =  abs(custInvoiceTrans.SalesPrice*custInvoiceTrans.InventQty);
+        #            parmAll     +=  strLRTrim(num2str(subTotal,9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> Discount Type
+        #            if (custInvoiceTrans.DiscPercent)
+        #            {
+        #                parmAll     +=  '1';
+        #                parmAll     +=  #break;
+        #            }
+        #            else
+        #            {
+        #                parmAll     +=  '0';
+        #                parmAll     +=  #break;
+        #            }
+        #            //--> DiscountValue
+        #            parmAll     +=  strLRTrim(num2str(abs(subTotal-abs(custInvoiceTrans.LineAmount)),9,2,0,0));
+        #            parmAll     +=  #break;
+        #
+        #            //--> Tax Category
+        #            //switch (ccTrans.CommercialLocalTax)
+        #            //--> Tax Category
+        #            if (taxTrans.TaxAmount != 0)
+        #            {
+        #                /*case CreditCardCommercialTaxFlag::NonTaxable:
+        #                    parmAll += '3';
+        #                    break;
+        #
+        #                case CreditCardCommercialTaxFlag::TaxIncluded   :
+        #                    parmAll += '7';
+        #                    break;
+        #
+        #                case CreditCardCommercialTaxFlag::TaxNotProvided    :
+        #                    parmAll += '8';
+        #                    break;
+        #                default:
+        #                    parmAll += '9';
+        #                    break;*/
+        #                parmAll += '7';
+        #
+        #
+        #            }
+        #            else
+        #            {
+        #                parmAll += '3';
+        #            }
+        #            parmAll     +=  #break;
+        #            //--> TaxType
+        #            parmAll     +=  '0';
+        #            parmAll     +=  #break;
+        #            //--> TaxCode
+        #            parmAll     +=  '';
+        #            parmAll     +=  #break;
+        #            //--> TaxPercent
+        #            parmAll     +=  strLRTrim(num2str(percent(abs(taxTrans.TaxAmount),abs(taxTrans.TaxBaseAmount)),9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> TaxableAmount
+        #            parmAll     +=  strLRTrim(num2str(abs(custInvoiceTrans.LineAmount),9,2,0,0));
+        #            //abs(taxTrans.taxbaseAmount);
+        #            parmAll     +=  #break;
+        #            taxBaseCur  += abs(custInvoiceTrans.LineAmount);
+        #            //taxBaseCur  += abs(taxTrans.taxbaseAmount);
+        #            //--> TaxAmount
+        #            parmAll     +=  strLRTrim(num2str(abs(taxTrans.TaxAmount),9,2,0,0));
+        #            parmAll     +=  #break;
+        #            TaxAmount   += abs(taxTrans.TaxAmount);
+        #            //--> UnitpricePreDiscount
+        #            parmAll     += '';
+        #            parmAll     += #lineBreak;
+        #
+        #            lineAll     += parmAll;
+        #            sequence++;
+        #        }
+        #    }
+        #
+        #
+        #
+        #    return lineAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVGISDocSupplier
+        #public str buildVGISDocSupplier(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                     parmAll;
+        #    CompanyInfo                 companyInfo = CompanyInfo::find();
+        #    LogisticsPostalAddress      address = companyInfo.postalAddress();
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    //--> Place line types
+        #    parmAll     =   '41';
+        #    parmAll     +=  #break;
+        #    //--> Sequence number
+        #    parmAll     +=  '2';
+        #    parmAll     +=  #break;
+        #    //--> Name
+        #    parmAll     +=  CompanyInfo.Name;
+        #    parmAll     +=  #break;
+        #    //--> Street
+        #    parmAll     +=  address.Street;
+        #    parmAll     +=  #break;
+        #    //--> Street 2
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Street 3
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Street 4
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> City
+        #    parmAll     +=  address.City;
+        #    parmAll     +=  #break;
+        #    //--> County
+        #    parmAll     +=  address.County;
+        #    parmAll     +=  #break;
+        #    //--> Postcode
+        #    parmAll     +=  address.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> Country
+        #    parmAll     +=  address.CountryRegionId;
+        #    parmAll     +=  #break;
+        #    //--> Contact name
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> Telnum name
+        #    parmAll     +=  companyInfo.phone();
+        #    parmAll     +=  #break;
+        #    //--> Email name
+        #    parmAll     +=  companyInfo.email();
+        #    parmAll     +=  #break;
+        #    //--> Function
+        #    parmAll     +=  '';
+        #    parmAll     +=  #break;
+        #    //--> VatNumber
+        #    parmAll     +=  companyInfo.VATNum;
+        #    parmAll     +=  #break;
+        #    //--> URL
+        #    parmAll     +=  companyInfo.url();
+        #    //--> Record end
+        #    parmAll     += #lineBreak;
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVGISDocSupplierMerchant
+        #public str buildVGISDocSupplierMerchant(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                     parmAll;
+        #    CompanyInfo                 companyInfo = CompanyInfo::find();
+        #    LogisticsPostalAddress      address = companyInfo.postalAddress();
+        #    CreditCardMerchantAdflex    mAdflex = CreditCardMerchantAdflex::findTerminalWithId(ccTrans.TerminalId);
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    //--> Place line types
+        #    parmAll     =   '43';
+        #    parmAll     +=  #break;
+        #    //--> Sequence number
+        #    parmAll     +=  '3';
+        #    parmAll     +=  #break;
+        #    //--> MID
+        #    parmAll     +=  mAdflex.MerchantId;//mAdflex.MerchantId;
+        #    parmAll     +=  #break;
+        #    //--> Name
+        #    parmAll     +=  CompanyInfo.Name;
+        #    parmAll     +=  #break;
+        #    //--> City
+        #    parmAll     +=  address.City;
+        #    parmAll     +=  #break;
+        #    //--> Postcode
+        #    parmAll     +=  address.ZipCode;
+        #    parmAll     +=  #break;
+        #    //--> Country
+        #    parmAll     +=  address.CountryRegionId;
+        #    parmAll     +=  #break;
+        #    //--> MCC
+        #    parmAll     +=  '9999';
+        #    //--> Record end
+        #    parmAll     += #lineBreak;
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVGISDocTaxSummary
+        #public str buildVGISDocTaxSummary(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                     parmAll;
+        #    CustTable                   custTable = CustTable::find(ccTrans.CustAccount);
+        #    LogisticsPostalAddress      address = custTable.postalAddress();
+        #    CustInvoiceTrans            custInvoiceTrans;
+        #    TaxTrans                    taxTrans;
+        #    #define.break('|')
+        #    #define.linebreak('[#$]')
+        #    ;
+        #    if (ccTrans.InvoiceId)
+        #    {
+        #        while select salesPrice,ItemId,InventTransId,LineNum,LineAmount,qtyPhysical,TaxAmount,salesUnit from custInvoiceTrans
+        #            where custInvoiceTrans.InvoiceId == ccTrans.InvoiceId
+        #        {
+        #            select sum(TaxBaseAmount),sum(TaxAmount),inventTransId from TaxTrans
+        #                where taxTrans.InventTransId == custInvoiceTrans.InventTransId;
+        #
+        #            //--> Place line types
+        #            parmAll     =   '70';
+        #            parmAll     +=  #break;
+        #            //--> Sequence number
+        #            parmAll     +=  int2str(sequence);
+        #            parmAll     +=  #break;
+        #
+        #            //--> Tax Category
+        #            if (taxTrans.TaxAmount != 0)
+        #            {
+        #                /*switch (ccTrans.CommercialLocalTax)
+        #                {
+        #                    case CreditCardCommercialTaxFlag::NonTaxable:
+        #                        parmAll += '3';
+        #                        break;
+        #
+        #                    case CreditCardCommercialTaxFlag::TaxIncluded   :
+        #                        parmAll += '7';
+        #                        break;
+        #
+        #                    case CreditCardCommercialTaxFlag::TaxNotProvided    :
+        #                        parmAll += '8';
+        #                        break;
+        #                    default:
+        #                        parmAll += '9';
+        #                        break;
+        #
+        #                }*/
+        #                parmAll += '7';
+        #
+        #            }
+        #            else
+        #            {
+        #                parmAll += '3';
+        #            }
+        #            parmAll     +=  #break;
+        #
+        #            //--> TaxCode
+        #            parmAll     +=  '';
+        #            parmAll     +=  #break;
+        #            //--> TaxPercent
+        #            parmAll     +=  strLRTrim(num2str(percent(taxAmount,taxBaseCur),9,0,0,0));
+        #            parmAll     +=  #break;
+        #            //--> TaxableAmount
+        #            parmAll     +=  strLRTrim(num2str(abs(taxBaseCur),9,2,0,0));
+        #            parmAll     +=  #break;
+        #            //--> TaxAmount
+        #            parmAll     +=  strLRTrim(num2str(abs(TaxAmount),9,2,0,0));
+        #            parmAll     += #lineBreak;
+        #
+        #            sequence++;
+        #        }
+        #    }
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantAdflex
+        #boolean checkMerchantAdflex(CreditCardMerchantAdflex ccMerchantAdflex)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantAdflex.PSPId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantAdflex.URL)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardAdflexXMLBuilder17 extends CreditCardAdflexXMLBuilder
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardMerchantAdflex        merchantAdflex;
+        #    CreditCardProfileId             profileId;
+        #    CreditCardProfileiD             payProfileId;
+        #    TempStr                         result;
+        #    TempStr                         errorMessage;
+        #    LogisticsPostalAddress          postalAddress;
+        #    TaxBaseCur                      taxBaseCur;
+        #    TaxAmount                       taxAmount;
+        #    int                             sequence;
+        #}
+      ENDSOURCE
+      SOURCE #getAction
+        #str getAction(CreditCardTrans   ccTrans)
+        #{
+        #    TempStr                         parmList;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/Authorise';
+        #            }
+        #            else
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/AuthoriseToken';
+        #            }
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/Authorise';
+        #            }
+        #            else
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/AuthoriseToken';
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D    :
+        #            parmList = 'https://secure.vgis.co.uk/transaction/soap/SettleEx';
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/Authorise';
+        #            }
+        #            else
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/AuthoriseToken';
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            parmList = 'https://secure.vgis.co.uk/transaction/soap/PostReversal';
+        #            break;
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #getPhone
+        #str getPhone(Phone      phone)
+        #{
+        #    TempStr         ret;
+        #    ;
+        #    ret = strReplace(phone,' ','');
+        #    ret = strReplace(ret,'(','');
+        #    ret = strReplace(ret,')','');
+        #    ret = strReplace(ret,'x','');
+        #    ret = strReplace(ret,'ext','');
+        #    ret = strReplace(ret,'-','');
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #parmErrorMessage
+        #str parmErrorMessage(str    _errorMessage = errorMessage)
+        #{
+        #    ;
+        #    errorMessage = _errorMessage;
+        #    return errorMessage;
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantAdflex
+        #CreditCardMerchantAdflex parmMerchantAdflex(CreditCardMerchantAdflex _merchantAdflex = merchantAdflex)
+        #{
+        #    ;
+        #    merchantAdflex = _merchantAdflex;
+        #    return merchantAdflex;
+        #}
+      ENDSOURCE
+      SOURCE #parmPayProfileId
+        #CreditCardProfileId parmPayProfileId(CreditCardProfileId   _payProfileId = payProfileId)
+        #{
+        #    ;
+        #    payProfileId = _payProfileId;
+        #    return payProfileId;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmProfileId
+        #CreditCardProfileId parmProfileId(CreditCardProfileId   _profileId = profileId)
+        #{
+        #    ;
+        #    profileId = _profileId;
+        #    return profileId;
+        #}
+      ENDSOURCE
+      SOURCE #parmResult
+        #str parmResult(str     _result  = result)
+        #{
+        #    ;
+        #    result = _result;
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #replacePostCode
+        #str replacePostCode(TempStr zipCode)
+        #{
+        #    TempStr         postCode =  zipCode;
+        #    ;
+        #    postCode = strReplace(postCode,'A','');
+        #    postCode = strReplace(postCode,'B','');
+        #    postCode = strReplace(postCode,'C','');
+        #    postCode = strReplace(postCode,'D','');
+        #    postCode = strReplace(postCode,'E','');
+        #    postCode = strReplace(postCode,'F','');
+        #    postCode = strReplace(postCode,'G','');
+        #    postCode = strReplace(postCode,'H','');
+        #    postCode = strReplace(postCode,'I','');
+        #    postCode = strReplace(postCode,'J','');
+        #    postCode = strReplace(postCode,'K','');
+        #    postCode = strReplace(postCode,'L','');
+        #    postCode = strReplace(postCode,'M','');
+        #    postCode = strReplace(postCode,'N','');
+        #    postCode = strReplace(postCode,'O','');
+        #    postCode = strReplace(postCode,'P','');
+        #    postCode = strReplace(postCode,'Q','');
+        #    postCode = strReplace(postCode,'R','');
+        #    postCode = strReplace(postCode,'S','');
+        #    postCode = strReplace(postCode,'T','');
+        #    postCode = strReplace(postCode,'U','');
+        #    postCode = strReplace(postCode,'V','');
+        #    postCode = strReplace(postCode,'W','');
+        #    postCode = strReplace(postCode,'X','');
+        #    postCode = strReplace(postCode,'Y','');
+        #    postCode = strReplace(postCode,'Z','');
+        #    postCode = strReplace(postCode,' ','');
+        #
+        #    return postCode;
+        #}
+      ENDSOURCE
+      SOURCE #resolveCountry
+        #str resolveCountry(AddressZipcodeId   zipCodeId)
+        #{
+        #    AddressCountryRegionId       countryId;
+        #    ;
+        #    countryId = LogisticsAddressZipCode::find(zipCodeId).CountryRegionId;
+        #
+        #    if (countryId == 'USA')
+        #    {
+        #        countryId = 'US';
+        #    }
+        #
+        #    return countryId;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue(CreditCardTrans ccTrans)
+        #{
+        #    TempStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccTrans.CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(ccTrans);
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumEncrypt)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(ccTrans);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnBankAccountType
+        #str returnBankAccountType(CustBankAccount       custBankAccount)
+        #{
+        #    TempStr     parmList;
+        #    ;
+        #    switch (custBankAccount.BankAccountType)
+        #    {
+        #        case BankAccountType::CheckingAccount     :
+        #            parmList = 'C';
+        #            break;
+        #        case BankAccountType::SavingsAccount      :
+        #            parmList = 'S';
+        #            break;
+        #        case BankAccountType::CommercialChecking  :
+        #            parmList = 'X';
+        #            break;
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnDay
+        #str returnDay(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        month =  int2str(dayOfMth(ccTrans.OneTimeDateExp));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        month =  int2str(dayOfMth(ccTable.ExpirationDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnExpDate
+        #str returnExpDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.ExpirationDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnExpDateCC
+        #str returnExpDateCC(CreditCardTable      ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,2);
+        #    }
+        #
+        #    ParmList =  month + ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonth
+        #str returnMonth(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthProfile
+        #str returnMonthProfile(CreditCardTable      ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartDate
+        #str returnStartDate(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.SoloStartDate));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ccYear = int2str(Year(ccTrans.SoloStartDate));
+        #                if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #                {
+        #                    ccYear = substr(ccYear,3,2);
+        #                }
+        #
+        #                ParmList =  month + ccYear;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ccYear = int2str(Year(ccTable.SoloStartDate));
+        #            if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #            {
+        #                ccYear = substr(ccYear,3,2);
+        #            }
+        #
+        #            ParmList =  month + ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartDateCC
+        #str returnStartDateCC(CreditCardTable      ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2str(Year(ccTable.SoloStartDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,2);
+        #    }
+        #
+        #    ParmList =  month + ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartMonth
+        #str returnStartMonth(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTrans.SoloStartDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        month =  int2str(Mthofyr(ccTable.SoloStartDate));
+        #        if (strlen(month)==1)
+        #        {
+        #            month = '0' + month;
+        #        }
+        #
+        #        ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnStartYear
+        #str returnStartYear(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(ccTrans.SoloStartDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.SoloStartDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear
+        #str returnYear(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear4
+        #str returnYear4(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYearProfile
+        #str returnYearProfile(CreditCardTable       ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #
+        #    ParmList =  ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #strw2binl
+        #/*
+        # * Convert a wide-character string to a sequence of 16-word blocks, stored as
+        # * an array, and append appropriate padding for MD4/5 calculation.
+        # */
+        #private Array strw2binl(str string)
+        #{
+        #    int nblk = ((strlen(string) + 4) >> 5) + 1; // number of 16-word blocks
+        #    Array blks = new Array(Types::Integer);
+        #    int i;
+        #    ;
+        #
+        #//nblk * 16
+        #    for(i = 1; i < nblk * 16 + 1; i++)
+        #    {
+        #        blks.value(i,0);
+        #    }
+        #    for(i = 0; i < strlen(string); i++)
+        #    {
+        #        blks.value(i>>1 + 1,blks.value(i>>1 + 1) | char2num(string,i + 1) << ((i mod 2) * 16));
+        #
+        #    }
+        #    blks.value(i>>1 + 1,blks.value(i>>1 + 1) | 0x80 << ((i mod 2) * 16));
+        #    blks.value(nblk*16-2+1,strlen(string) * 16);
+        #
+        #    return blks;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #toHex
+        #TempStr toHex(int v)
+        #{
+        #    TempStr hex  = '0123456789abcdef';
+        #    return subStr(hex, (v / 16)+1, 1) + subStr(hex, (v mod 16)+1, 1);
+        #}
+      ENDSOURCE
+      SOURCE #TransactionType
+        #TempSTr TransactionType(CreditCardTrxType     ccTransType)
+        #{
+        #    TempStr       transType;
+        #    ;
+        #    switch (cctransType)
+        #    {
+        #        case CreditCardTrxType::A   :
+        #            transType = 'A';
+        #            break;
+        #        case CreditCardTrxType::S   :
+        #            transType = 'AC';
+        #            break;
+        #        case CreditCardTrxType::D   :
+        #            transType = 'FC';
+        #            break;
+        #        case CreditCardTrxType::C   :
+        #            transType  = 'R';
+        #            break;
+        #    }
+        #
+        #    return transType;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeAdflexBinInfoResponse
+        #static CreditCardTrans analyzeAdflexBinInfoResponse(TempStr                 msg,
+        #                                CreditCardTrans                      ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i,j,k,l;
+        #    TempStr                         tmpStr;
+        #    TempStr                         node;
+        #    TempStr                         errMsg;
+        #    boolean                         accepted;
+        #    TempStr                         supports;
+        #    System.Globalization.NumberStyles   numberStyles = System.Globalization.NumberStyles::AllowHexSpecifier;
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #                childNodeLst2 = elementChild2.childNodes();
+        #                j = childNodeLst2.length();
+        #
+        #                for (childCnt2=0;childCnt2< j;childCnt2++)
+        #                {
+        #                    elementChild3 = childNodeLst2.item(childCnt2);
+        #                    node = elementChild3.nodeName();
+        #                    switch (node)
+        #                    {
+        #                        case    'ErrorCode' :
+        #                            if (elementChild3.innerText() == '50001')
+        #                            {
+        #                                accepted = true;
+        #                                ccTrans.Result = '0';
+        #                            }
+        #                            else
+        #                            {
+        #                                accepted = false;
+        #                            }
+        #                            break;
+        #                        case    'ErrorMessage'  :
+        #                            if (elementChild3.innerText() != 'OK')
+        #                            {
+        #                                errMsg      =   elementChild3.innerText();
+        #                            }
+        #                            break;
+        #                        case    'Supports'    :
+        #                            supports = elementChild3.innerText();
+        #                            l = System.Int32::Parse(supports);
+        #
+        #                            k = System.Int32::Parse("8",numberstyles);
+        #                            if ((l & k) == k)
+        #                            {
+        #                                ccTrans.CommercialCard = true;
+        #                            }
+        #
+        #                            k = System.Int32::Parse("10",numberstyles);
+        #                            if ((l & k) == k)
+        #                            {
+        #                                ccTrans.CommercialCard = true;
+        #                            }
+        #
+        #                            k = System.Int32::Parse("20000",numberstyles);
+        #
+        #                            if ((l & k) == k)
+        #                            {
+        #                                ccTrans.CreditCardType = CreditCardType::MCOneCard;
+        #                                ccTrans.CommercialCard = true;
+        #                            }
+        #                            k = System.Int32::Parse("40000",numberstyles);
+        #                            if ((l & k) == k)
+        #                            {
+        #                                ccTrans.CreditCardType = CreditCardType::AMEXCPC;
+        #                                ccTrans.CommercialCard = true;
+        #                            }
+        #                            k = System.Int32::Parse("8000000",numberstyles);
+        #                            if ((l & k) == k && ccTrans.CreditCardType == CreditCardType::AmericanExpress)
+        #                            {
+        #                                ccTrans.CreditCardType = CreditCardType::AMEXCPC;
+        #                                ccTrans.CommercialCard = true;
+        #                            }
+        #
+        #                            break;
+        #                    }
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeAdflexResponse
+        #static CreditCardTrans analyzeAdflexResponse(TempStr                 msg,
+        #                                CreditCardTrans         ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i,j,x;
+        #    TempStr                         tmpStr;
+        #    TempStr                         node;
+        #
+        #    ;
+        #    ttsbegin;
+        #    ccTRans.selectForUpdate(true);
+        #
+        #    if (msg == '')
+        #    {
+        #        throw error("@ACC1762");
+        #    }
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        //--> Second node should be the soap envelope body
+        #        if (cnt == 1)
+        #        {
+        #            //--> store in comment
+        #            ccTrans.Comment1 = tmpStr;
+        #        }
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #                childNodeLst2 = elementChild2.childNodes();
+        #                j = childNodeLst2.length();
+        #                ccTrans.Comment2 = elementChild2.xml();
+        #
+        #                if (node =='SettleResult')
+        #                {
+        #                    ccTrans.PNRef = elementChild2.innerText();
+        #                    ccTrans.Result  = '0';
+        #                }
+        #                else
+        #                {
+        #                    for (childCnt2=0;childCnt2< j;childCnt2++)
+        #                    {
+        #                        elementChild3 = childNodeLst2.item(childCnt2);
+        #                        node = elementChild3.nodeName();
+        #                        switch (node)
+        #                        {
+        #                            case    'ErrorCode' :
+        #                                if (elementChild3.innerText() == '50001')
+        #                                {
+        #                                    ccTrans.Result      = '0';
+        #                                }
+        #                                else
+        #                                {
+        #                                    ccTrans.Result      =   elementChild3.innerText();
+        #                                }
+        #                                break;
+        #                            case    'ErrorMessage'  :
+        #                                if (elementChild3.innerText() != 'OK')
+        #                                {
+        #                                    ccTrans.RepMsg      =   elementChild3.innerText();
+        #                                }
+        #                                break;
+        #                            case    'AuthStatus'    :
+        #                                ccTrans.AuthCode = elementChild3.innerText();
+        #                                switch (elementChild3.innerText())
+        #                                {
+        #                                    case    '8' :
+        #                                        //--> All is well 'Authorised'
+        #                                        break;
+        #                                    case    '9' :
+        #                                        ccTrans.Result  =   elementChild3.innerText();
+        #                                        break;
+        #                                    case    '19' :
+        #                                        ccTrans.Result  =   elementChild3.innerText();
+        #                                        break;
+        #                                    case    '20' :
+        #                                        ccTrans.Result  =   elementChild3.innerText();
+        #                                        break;
+        #                                    case    '21' :
+        #                                        ccTrans.Result  =   elementChild3.innerText();
+        #                                        break;
+        #
+        #                                }
+        #                                break;
+        #                            case    'ResponseMsg'   :
+        #                                ccTrans.RepMsg = elementchild3.innerText();
+        #                                break;
+        #                            case    'ReferralPhoneNo'   :
+        #                                ccTrans.RepMsg += ' ' + elementChild3.innerText();
+        #                                break;
+        #                            case    'MessageNo'         :
+        #                                ccTrans.AuthSource = elementChild3.innerText();
+        #                                break;
+        #                            case    'AuthCode'         :
+        #                                ccTrans.PNRef = elementChild3.innerText();
+        #                                break;
+        #                            case    'CSCAVSResponse'    :
+        #                                ccTrans.Comment1    = elementChild3.innerText();
+        #                                for (x=1;x<strLen(ccTrans.Comment1);x++)
+        #                                {
+        #                                    tmpStr = subStr(ccTrans.Comment1,x,1);
+        #                                    switch (x)
+        #                                    {
+        #                                        case    1 :
+        #                                            switch (tmpStr)
+        #                                            {
+        #                                                //--> Not checked
+        #                                                case    '1':
+        #                                                    ccTrans.CVDResponse = CreditCardCVDResponse::P;
+        #                                                    break;
+        #                                                case    '2':
+        #                                                    ccTrans.CVDResponse = CreditCardCVDResponse::M;
+        #                                                    break;
+        #                                                case    '4':
+        #                                                    ccTrans.CVDResponse = CreditCardCVDResponse::N;
+        #                                                    break;
+        #
+        #                                            }
+        #                                            break;
+        #                                        case    2   :
+        #                                            ccTrans.AvsAddr = tmpStr;
+        #                                            break;
+        #                                        case    3   :
+        #                                            break;
+        #                                    }
+        #
+        #                                }
+        #                                break;
+        #                            case    'Supports'      :
+        #                                tmpStr = elementChild3.innerText();
+        #                                switch (tmpStr)
+        #                                {
+        #                                    case    '8','10','20000','40000'    :
+        #                                        ccTrans.CommercialCard = NoYes::Yes;
+        #                                        break;
+        #
+        #                                }
+        #                                break;
+        #                        }
+        #                    }
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    ccTrans.update();
+        #    ttscommit;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static str construct(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantAdflex        ccMerchantAdflex;
+        #
+        #    //--> Obital Specific variables
+        #    CreditCardAdflexXMLBuilder17    xmlBuilder = new CreditCardAdflexXMLBuilder17();
+        #    //-->
+        #    TempStr                         response;
+        #    TempStr                         parmList;
+        #
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    System.Net.WebHeaderCollection  headerCollection;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccMerchantAdflex
+        #        where ccMerchantAdflex.TerminalId == ccTrans.TerminalId;
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantAdflex(ccMerchantAdflex);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTrans.Location));
+        #
+        #    //--> Check for customer reference, if 0 or blank, insert RefRecId
+        #    if (ccTrans.CustomerRef == '0' || ccTrans.CustomerRef == '')
+        #    {
+        #        ccTrans.CustomerRef = int642str(ccTrans.RecId);
+        #    }
+        #
+        #    if (ccTrans.TransType == CreditCardTrxType::D
+        #        || ccTrans.TransType == CreditCardTrxType::C)
+        #    {
+        #        if (!ccTrans.Profile)
+        #        {
+        #            response = CreditCardAdflexXMLBuilder17::constructBINInfo(ccTrans);
+        #            ccTrans = CreditCardAdflexXMLBuilder17::analyzeAdflexBinInfoResponse(response,ccTrans);
+        #
+        #            if (ccTrans.Result != '0')
+        #            {
+        #                throw error(strFmt("@ACC1822",ccTrans.Result,ccTrans.RepMsg));
+        #            }
+        #            else
+        #            {
+        #                //--> Remove status for next transaction
+        #                ccTrans.Result = '';
+        #
+        #            }
+        #        }
+        #    }
+        #
+        #    try
+        #    {
+        #        //--> Build <Request> Node
+        #        ParmList += xmlBuilder.build(ccTrans);
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('Content-transfer-encoding','text');
+        #        headerCollection.Add('SOAPAction',xmlBuilder.getAction(ccTrans));
+        #
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantAdflex.URL);
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('text/xml; charset=utf-8');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #constructBINCardInfo
+        #static str constructBINCardInfo(CreditCardTable        ccTable)
+        #{
+        #    CreditCardMerchantAdflex        ccMerchantAdflex;
+        #    CreditCardAdflexXMLBuilder17    xmlBuilder = new CreditCardAdflexXMLBuilder17();
+        #    //-->
+        #    TempStr                         response;
+        #    TempStr                         parmList;
+        #
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    System.Net.WebHeaderCollection  headerCollection;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccMerchantAdflex
+        #        where ccMerchantAdflex.TerminalId == CreditCardProcessGroups::resolveTerminalforToken(ccTable).TerminalId;
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantAdflex(ccMerchantAdflex);
+        #
+        #
+        #    try
+        #    {
+        #        //--> Build <Request> Node
+        #        ParmList += xmlBuilder.buildGetCardBININfo(ccTable);
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('Content-transfer-encoding','text');
+        #        headerCollection.Add('SOAPAction','https://secure.vgis.co.uk/transaction/soap/GetBinInfo');
+        #
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantAdflex.URL);
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('text/xml; charset=utf-8');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #constructBINInfo
+        #static str constructBINInfo(CreditCardTrans        ccTrans)
+        #{
+        #    CreditCardMerchantAdflex        ccMerchantAdflex;
+        #    CreditCardAdflexXMLBuilder17    xmlBuilder = new CreditCardAdflexXMLBuilder17();
+        #    //-->
+        #    TempStr                         response;
+        #    TempStr                         parmList;
+        #
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    System.Net.WebHeaderCollection  headerCollection;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccMerchantAdflex
+        #        where ccMerchantAdflex.TerminalId == ccTrans.TerminalId;
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantAdflex(ccMerchantAdflex);
+        #
+        #    //--> Check for customer reference, if 0 or blank, insert RefRecId
+        #    if (ccTrans.CustomerRef == '0' || ccTrans.CustomerRef == '')
+        #    {
+        #        ccTrans.CustomerRef = int642str(ccTrans.RecId);
+        #    }
+        #
+        #    try
+        #    {
+        #        //--> Build <Request> Node
+        #        ParmList += xmlBuilder.buildGetBININfo(ccTrans);
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('Content-transfer-encoding','text');
+        #        headerCollection.Add('SOAPAction','https://secure.vgis.co.uk/transaction/soap/GetBinInfo');
+        #
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantAdflex.URL);
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('text/xml; charset=utf-8');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #static void createProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantAdflex            ccMerchantAdflex;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    CreditCardTable                     locCCTable;
+        #    //--> Adflex Specific variables
+        #    CreditCardAdflexXMLBuilder17        xmlBuilder = new CreditCardAdflexXMLBuilder17();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    HttpRequest                         request;
+        #
+        #    TempStr                             response;
+        #    TempStr                             parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantAdflex
+        #        where ccMerchantAdflex.TerminalId ==  CreditCardProcessGroups::resolveTerminalforToken(ccTable).TerminalId;
+        #
+        #    if (!ccMerchantAdflex)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantAdflex(ccMerchantAdflex);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantAdflex(ccMerchantAdflex);
+        #
+        #    //--> Do we already have a profile for this customer?
+        #    select locCCTable where locCCTable.CustAccount == ccTable.CustAccount
+        #        && locCCTable.Profile == NoYes::Yes;
+        #
+        #    if (!locCCTable)
+        #    {
+        #        response = CreditCardAdflexXMLBuilder17::constructBINCardInfo(ccTable);
+        #        //ccTable = CreditCardAdflexXMLBuilder17::analyzeAdflexBinInfoResponse(response,ccTable);
+        #
+        #        //--> Build  Node
+        #        parmList  = xmlBuilder.buildProfile(ccTable);
+        #    }
+        #    else
+        #    {
+        #        response = CreditCardAdflexXMLBuilder17::constructBINCardInfo(ccTable);
+        #        //ccTable = CreditCardAdflexXMLBuilder17::analyzeAdflexBinInfoResponse(response,ccTable);
+        #        //--> Build  Node.  No chaining of records
+        #        parmList  = xmlBuilder.buildProfile(ccTable);
+        #    }
+        #
+        #    request = new HTTPRequest();
+        #
+        #    request.open('POST', ccMerchantAdflex.URL);
+        #    request.setRequestHeader('Content-Type','text/xml; charset=utf-8');
+        #    request.setRequestHeader('SOAPAction','https://secure.vgis.co.uk/transaction/soap/CreateToken');
+        #
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    ccTable = xmlBuilder.analyzeAdflexResponseProfile(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.ProfileId = xmlBuilder.parmProfileId();
+        #        ccTable.CreditCardNum = '';
+        #        ccTAble.update();
+        #        ttscommit;
+        #
+        #        info("@ACC1408");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",xmlBuilder.parmErrorMessage()));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #deleteProfile
+        #static void deleteProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantAdflex            ccMerchantAdflex;
+        #    CreditCardAdv                       creditCard = new CreditCardADV();
+        #    //--> Adflex Specific variables
+        #    CreditCardAdflexXMLBuilder17        xmlBuilder = new CreditCardAdflexXMLBuilder17();
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    HttpRequest                         request;
+        #
+        #    TempStr                             response;
+        #    TempStr                             parmList;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantAdflex
+        #        where ccMerchantAdflex.TerminalId ==  CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantAdflex)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantAdflex(ccMerchantAdflex);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantAdflex(ccMerchantAdflex);
+        #
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildDeleteProfile(ccTable);
+        #
+        #
+        #    request = new HTTPRequest();
+        #
+        #    request.open('POST', ccMerchantAdflex.URL);
+        #    request.setRequestHeader('Content-Type','text/xml; charset=utf-8');
+        #    request.setRequestHeader('SOAPAction','https://secure.vgis.co.uk/transaction/soap/DeleteToken');
+        #
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    ccTable = xmlBuilder.analyzeAdflexResponseProfile(response,ccTable);
+        #
+        #    if (xmlBuilder.parmResult() == '0')
+        #    {
+        #        ttsbegin;
+        #        ccTable.selectForUpdate(true);
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.ProfileId = xmlBuilder.parmProfileId();
+        #        ccTable.PaymentProfileId = xmlBuilder.parmPayProfileId();
+        #        ccTable.CreditCardNum = '';
+        #        ccTAble.update();
+        #        ttscommit;
+        #
+        #        info("@ACC1408");
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@ACC1407",xmlBuilder.parmErrorMessage()));
+        #    }
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #readProfile
+        #static void readProfile(CreditCardTable      ccTable)
+        #{
+        #    throw error("@ACC1703");
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

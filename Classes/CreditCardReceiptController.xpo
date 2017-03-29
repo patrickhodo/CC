@@ -1,0 +1,93 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardReceiptController
+    PROPERTIES
+      Name                #CreditCardReceiptController
+      Extends             #SrsReportRunController
+      Origin              #{804456AD-8958-40E8-BF23-2D1A6D5ED251}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #/// <summary>
+        #/// The <c>CreditCardReceiptController</c> class is the controller class for the
+        #/// <c>CreditCardReceipt</c> report.
+        #/// </summary>
+        #class CreditCardReceiptController extends SrsReportRunController
+        #{
+        #    #define.CreditCardReceipt('CreditCardReceipt.Report')
+        #}
+        #
+      ENDSOURCE
+      SOURCE #prePromptModifyContract
+        #protected void prePromptModifyContract()
+        #{
+        #    CreditCardTrans    creditCardTrans;
+        #
+        #    if (this.parmArgs().record())
+        #    {
+        #        creditCardTrans = this.parmArgs().record();
+        #    }
+        #
+        #    this.setRanges(this.getFirstQuery(), creditCardTrans.TransID);
+        #}
+      ENDSOURCE
+      SOURCE #setRanges
+        #/// <summary>
+        #/// Applies filters on the report.
+        #/// </summary>
+        #/// <param name="_queryContract">
+        #/// The report query to modify.
+        #/// </param>
+        #/// <param name="_transId">
+        #/// The credit card transaction ID.
+        #/// </param>
+        #/// <remarks>
+        #/// Sets ranges on a data source based on the values that are selected in the report parameters dialog.
+        #/// </remarks>
+        #public void setRanges(Query _queryContract, CreditCardTransId _transId)
+        #{
+        #    QueryBuildDataSource qbds;
+        #
+        #    qbds = _queryContract.dataSourceTable(tableNum(CreditCardTrans));
+        #    SysQuery::findOrCreateRange(qbds,fieldNum(CreditCardTrans, TransId)).value(_transId);
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args _args)
+        #{
+        #    CreditCardReceiptController controller  = new CreditCardReceiptController();
+        #    TempStr                     reportName;
+        #    CreditCardTrans             creditCardTrans;
+        #    ;
+        #    if (_args.record())
+        #    {
+        #        creditCardTrans = _args.record();
+        #    }
+        #    else if (!_args || !(_args.record() is CreditCardTrans))
+        #    {
+        #        throw error(Error::missingFormActiveBuffer(_args.menuItemName(), tablePName(CreditCardTrans)));
+        #    }
+        #
+        #    if (creditCardTrans.Result != "0")
+        #    {
+        #        throw error("@ACC1794");
+        #    }
+        #
+        #    reportName = #CreditCardReceipt;
+        #    controller.parmReportName(reportName);
+        #    controller.parmArgs(_args);
+        #    controller.startOperation();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

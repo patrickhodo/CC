@@ -1,0 +1,609 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #MCRHoldCodeTable
+  PROPERTIES
+    Name                #MCRHoldCodeTable
+    Origin              #{83298BC2-4E58-4E77-B365-2D5AF9F3E254}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    SysFormSplitter_X           verticalSplitter;
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    super();
+      #    verticalSplitter = new SysFormSplitter_X(vSplitter, gridContainer, element, 300);
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #MCRHoldCodeTable
+          Table               #MCRHoldCodeTable
+        ENDPROPERTIES
+        
+        FIELDLIST
+          DATAFIELD MCRHoldCodeDisplayColor
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    MCRHoldCodeTable mcrHoldCodeTableModified;
+                #    super();
+                #
+                #    for (mcrHoldCodeTableModified = MCRHoldCodeTable_ds.getFirst();  mcrHoldCodeTableModified;  mcrHoldCodeTableModified = MCRHoldCodeTable_ds.getNext())
+                #    {
+                #        if (mcrHoldCodeTableModified.MCRHoldCode == mcrHoldCodeTableModified.MCRHoldCode)
+                #        {
+                #            MCRHoldCodeTable_ds.clearDisplayOption( mcrHoldCodeTableModified );
+                #        }
+                #    }
+                #    MCRHoldCodeTable_ds.write();
+                #    MCRHoldCodeTable_ds.refreshEx();
+                #}
+              ENDSOURCE
+              SOURCE #lookup
+                #/// <summary>
+                #/// Looks up the a background color to use for a specific hold code.
+                #/// </summary>
+                #/// <param name="_formControl">
+                #/// A form control.
+                #/// </param>
+                #/// <param name="_filterStr">
+                #/// The filter string.
+                #/// </param>
+                #public void lookup(FormControl _formControl, str _filterStr)
+                #{
+                #    Binary              customColors;
+                #    int                 r, g, b;
+                #    container           chosenColor;
+                #    MCRHoldCodeTable    mcrHoldCodeTableLookup;
+                #
+                #    [r, g, b]   = WinApi::RGBint2Con(MCRHoldCodeTable_MCRHoldCodeDisplayColor.backgroundColor());
+                #    chosenColor = WinApi::chooseColor(element.hWnd(), r, g, b, customColors, true);
+                #    if (chosenColor)
+                #    {
+                #        [r, g, b] = chosenColor;
+                #        MCRHoldCodeTable.MCRHoldCodeDisplayColor = Winapi::RGB2int(r, g, b);
+                #
+                #        MCRHoldCodeTable_ds.refresh();
+                #        MCRHoldCodeTable_ds.write();
+                #
+                #        for (mcrHoldCodeTableLookup = MCRHoldCodeTable_ds.getFirst();  mcrHoldCodeTableLookup;  mcrHoldCodeTableLookup = MCRHoldCodeTable_ds.getNext())
+                #        {
+                #            if (mcrHoldCodeTableLookup.MCRHoldCode == mcrHoldCodeTableLookup.MCRHoldCode)
+                #            {
+                #                MCRHoldCodeTable_ds.clearDisplayOption( mcrHoldCodeTableLookup );
+                #            }
+                #        }
+                #
+                #        MCRHoldCodeTable_ds.refresh();
+                #    }
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+          DATAFIELD MCRDefaultSOHoldCode
+            PROPERTIES
+            ENDPROPERTIES
+            
+            METHODS
+              SOURCE #modified
+                #public void modified()
+                #{
+                #    MCRHoldCodeTable currentRecord;
+                #    MCRHoldCodeTable.clearDefaultSOHoldCode();
+                #    super();
+                #    // Save the currently selected record.
+                #    currentRecord = MCRHoldCodeTable.data();
+                #    MCRHoldCodeTable_ds.executeQuery();
+                #    MCRHoldCodeTable_ds.refresh();
+                #
+                #    // Re-select the previously selected record.
+                #    MCRHoldCodeTable_ds.findRecord(currentRecord);
+                #
+                #}
+              ENDSOURCE
+            ENDMETHODS
+          ENDDATAFIELD
+          
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #displayOption
+          #/// <summary>
+          #/// Sets the background color.
+          #/// </summary>
+          #/// <param name="_record">
+          #/// The hold code record.
+          #/// </param>
+          #/// <param name="_options">
+          #/// The form row display options.
+          #/// </param>
+          #public void displayOption(Common _record, FormRowDisplayOption _options)
+          #{
+          #    MCRHoldCodeTable mcrHoldCodeTableDisplay =  _record;
+          #
+          #    if (mcrHoldCodeTableDisplay.MCRHoldCodeDisplayColor)
+          #    {
+          #        _options.backColor(mcrHoldCodeTableDisplay.MCRHoldCodeDisplayColor);
+          #
+          #    }
+          #    else
+          #    {
+          #         _options.clearBackColor();
+          #    }
+          #
+          #    super(_record, _options);
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@MCR12719
+      DataSource          #MCRHoldCodeTable
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+      Style               #SimpleListDetails
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane
+          ElementPosition     #715827882
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #CreditCard
+          ElementPosition     #1789569705
+          HierarchyParent     #ActionPaneTab
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #RecordBasics
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          AllowEdit           #No
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #GridContainer
+          MultiSelect         #No
+          ShowRowLabels       #No
+          DataSource          #MCRHoldCodeTable
+          GridLinesStyle      #Vertical
+          AlternateRowShading #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Body
+          ElementPosition     #1431655764
+          Style               #MarginlessContainer
+          Columns             #3
+          Columnspace         #0
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DetailsContainer
+          ElementPosition     #1717986916
+          HierarchyParent     #Body
+          Style               #MarginlessContainer
+          TopMargin           #5
+          RightMargin         #5
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DetailsHeader
+          ElementPosition     #1073741822
+          HierarchyParent     #DetailsContainer
+          FrameType           #None
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #GridContainer
+          AutoDeclaration     #Yes
+          Width               #300
+          ElementPosition     #858993458
+          HierarchyParent     #Body
+          Style               #BorderlessGridContainer
+          DataSource          #MCRHoldCodeTable
+          RightMargin         #0
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Group
+          ElementPosition     #1431655764
+          HierarchyParent     #TabPage
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #VSplitter
+          AutoDeclaration     #Yes
+          ElementPosition     #1288490187
+          HierarchyParent     #Body
+          Style               #SplitterVerticalContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REFERENCEGROUP
+        PROPERTIES
+          Name                #ReferenceGroup
+          ElementPosition     #536870910
+          HierarchyParent     #Group
+          DataSource          #MCRHoldCodeTable
+          ReferenceField      #RoleRefRecID
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #DetailsTab
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1610612733
+          HierarchyParent     #DetailsContainer
+          Style               #FastTabs
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #TabPage
+          ElementPosition     #1431655764
+          HierarchyParent     #DetailsTab
+          Caption             #@SYS35893
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #MCRHoldCodeTable_MCRDefaultSOHoldCode
+          AutoDeclaration     #Yes
+          ElementPosition     #805306365
+          HierarchyParent     #Group
+          BackgroundColor     #Window background
+          DataSource          #MCRHoldCodeTable
+          DataField           #MCRDefaultSOHoldCode
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #MCRHoldCodeTable_MCRUnReserve
+          ElementPosition     #1879048185
+          HierarchyParent     #Group
+          BackgroundColor     #Window background
+          DataSource          #MCRHoldCodeTable
+          DataField           #MCRUnReserve
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #DeleteButton
+          ElementPosition     #1610612733
+          HierarchyParent     #RecordBasics
+          Text                #@sys14425
+          ButtonDisplay       #Text & Image left
+          NormalImage         #10121
+          ImageLocation       #EmbeddedResource
+          SaveRecord          #No
+          Primary             #Yes
+          Command             #2832
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #NewButton
+          ElementPosition     #1073741822
+          HierarchyParent     #RecordBasics
+          ButtonDisplay       #Text & Image left
+          NormalImage         #11045
+          ImageLocation       #EmbeddedResource
+          Primary             #Yes
+          Command             #260
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL INTEDIT
+        PROPERTIES
+          Name                #MCRHoldCodeTable_MCRHoldCodeDisplayColor
+          AutoDeclaration     #Yes
+          ElementPosition     #1610612730
+          HierarchyParent     #Group
+          ColorScheme         #Windows palette
+          DataSource          #MCRHoldCodeTable
+          DataField           #MCRHoldCodeDisplayColor
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CreditCardOrderHoldTable
+          ElementPosition     #1431655764
+          HierarchyParent     #CreditCard
+          Text                #@MCR20754
+          MenuItemName        #CreditCardOrderHoldTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #DHMCRHoldCodeTable_MCRHoldCode
+          ElementPosition     #1073741822
+          HierarchyParent     #DetailsHeader
+          DataSource          #MCRHoldCodeTable
+          DataField           #MCRHoldCode
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #DHMCRHoldCodeTable_MCRHoldCodeDescription
+          ElementPosition     #1610612733
+          HierarchyParent     #DetailsHeader
+          DataSource          #MCRHoldCodeTable
+          DataField           #MCRHoldCodeDescription
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #MCRHoldCodeTable_MCRHoldCode
+          ElementPosition     #1073741822
+          HierarchyParent     #Grid
+          DataSource          #MCRHoldCodeTable
+          DataField           #MCRHoldCode
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #MCRHoldCodeTable_MCRHoldCodeDescription
+          ElementPosition     #1610612733
+          HierarchyParent     #Grid
+          DataSource          #MCRHoldCodeTable
+          DataField           #MCRHoldCodeDescription
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

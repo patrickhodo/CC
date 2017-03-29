@@ -1,0 +1,1082 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #RetailGiftCardTable
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #RetailGiftCardTable
+      Label               #@RET4435
+      FormRef             #RetailGiftCardTable
+      TitleField1         #entryId
+      TitleField2         #currencyCode
+      ConfigurationKey    #Retail
+      SecurityKey         #RetailTablesEx3
+      CacheLookup         #NotInTTS
+      TableGroup          #Transaction
+      PrimaryIndex        #typeEntryIdx
+      ClusterIndex        #typeEntryIdx
+      DeveloperDocumentation  #@RET4040257
+      Origin              #{2C104379-0000-1000-8D19-547B889ADF78}
+      LegacyId            #17273
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #ActiveFrom
+        DATETIME
+        PROPERTIES
+          Name                #ActiveFrom
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTable
+          Origin              #{DD128D8D-3A13-417D-A850-3E50BE383327}
+          ExtendedDataType    #RetailGiftCardActiveFrom
+        ENDPROPERTIES
+        
+      FIELD #currencyCode
+        STRING
+        PROPERTIES
+          Name                #currencyCode
+          Table               #RetailGiftCardTable
+          Origin              #{2A0C3E80-4379-1000-7466-FD70E27D6379}
+          LegacyId            #16000
+          ExtendedDataType    #CurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #entryId
+        STRING
+        PROPERTIES
+          Name                #entryId
+          Mandatory           #Yes
+          Table               #RetailGiftCardTable
+          Origin              #{2A073E82-4379-1000-656E-747279496400}
+          LegacyId            #16002
+          ExtendedDataType    #RetailGiftCardId
+          StringSize          #30
+        ENDPROPERTIES
+        
+      FIELD #ExpiryDate
+        DATE
+        PROPERTIES
+          Name                #ExpiryDate
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTable
+          Origin              #{C65E5372-D756-44F0-B2FB-2D490956A229}
+          ExtendedDataType    #RetailGiftCardExpireDate
+        ENDPROPERTIES
+        
+      FIELD #FaceValue
+        REAL
+        PROPERTIES
+          Name                #FaceValue
+          HelpText            #@SYP4880776
+          Table               #RetailGiftCardTable
+          Origin              #{F9D7848A-1000-4F19-8F78-44B7867C52A9}
+          ExtendedDataType    #RetailGiftCardFaceValue
+        ENDPROPERTIES
+        
+      FIELD #MaxBalanceMST
+        REAL
+        PROPERTIES
+          Name                #MaxBalanceMST
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTable
+          Origin              #{1B477B3C-3B89-4EA3-92D9-5B117ECF50B9}
+          ExtendedDataType    #RetailGiftCardMaxBalanceMST
+        ENDPROPERTIES
+        
+      FIELD #MCRGiftCardType
+        ENUM
+        PROPERTIES
+          Name                #MCRGiftCardType
+          Table               #RetailGiftCardTable
+          Origin              #{2B149086-69FB-4F85-A639-EE5A7B4C7BAE}
+          EnumType            #MCRGiftCardType
+        ENDPROPERTIES
+        
+      FIELD #MinReloadMST
+        REAL
+        PROPERTIES
+          Name                #MinReloadMST
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTable
+          Origin              #{A659FD05-C356-4742-9C01-4591BE01F93D}
+          ExtendedDataType    #RetailGiftCardMinReloadMST
+        ENDPROPERTIES
+        
+      FIELD #NonReloadable
+        ENUM
+        PROPERTIES
+          Name                #NonReloadable
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTable
+          Origin              #{30062DC0-AAF9-43C3-ADCE-2520FC1837BE}
+          ExtendedDataType    #RetailGiftCardNonReloadable
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #OneTimeRedemption
+        ENUM
+        PROPERTIES
+          Name                #OneTimeRedemption
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTable
+          Origin              #{EC00A24D-0F79-4763-8799-6939A8ABCD8D}
+          ExtendedDataType    #RetailGiftCardOneTimeRedemption
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #PIN
+        STRING
+        PROPERTIES
+          Name                #PIN
+          Table               #RetailGiftCardTable
+          Origin              #{3BE3C98D-BA81-4452-A2FF-AFAFC020D5FE}
+          ExtendedDataType    #CreditCardPIN
+          StringSize          #6
+        ENDPROPERTIES
+        
+      FIELD #replicationCounter
+        INT
+        PROPERTIES
+          Name                #replicationCounter
+          Table               #RetailGiftCardTable
+          Origin              #{2A123E8E-4379-1000-2C98-886D6BB9EB8F}
+          LegacyId            #16014
+          ExtendedDataType    #RetailReplicationCounter
+        ENDPROPERTIES
+        
+      FIELD #reserved
+        ENUM
+        PROPERTIES
+          Name                #reserved
+          Label               #@SYS8709
+          Table               #RetailGiftCardTable
+          Origin              #{2A083E99-4379-1000-7265-736572766564}
+          LegacyId            #16025
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #reservedByChannel
+        INT64
+        PROPERTIES
+          Name                #reservedByChannel
+          Table               #RetailGiftCardTable
+          Origin              #{17BF9757-C37C-4C07-ADE7-C6DE44CDAFF2}
+          ExtendedDataType    #RetailChannelRecId
+        ENDPROPERTIES
+        
+      FIELD #reservedByTerminalId
+        STRING
+        PROPERTIES
+          Name                #reservedByTerminalId
+          Table               #RetailGiftCardTable
+          Origin              #{2A143E8C-4379-1000-A372-16B7447E3019}
+          LegacyId            #16012
+          ExtendedDataType    #RetailTerminalId
+        ENDPROPERTIES
+        
+      FIELD #Status
+        ENUM
+        PROPERTIES
+          Name                #Status
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTable
+          Origin              #{8EDC81C9-83F1-4F3B-B7E1-AB858D7AC852}
+          EnumType            #RetailGiftCardStatus
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #balance
+          #currencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #balance
+          #currencyCode
+          #reservedByChannel
+          #reservedByTerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #All
+        PROPERTIES
+          Name                #All
+          Label               #@SYS80094
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #reservedByTerminalId
+          #reservedByChannel
+          #reserved
+          #replicationCounter
+          #currencyCode
+          #MCRGiftCardType
+          #entryId
+          #Status
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Amount
+        PROPERTIES
+          Name                #Amount
+          Label               #@RET3221
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #balance
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Balance
+        PROPERTIES
+          Name                #Balance
+          Label               #@SYP4880752
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #MinReloadMST
+          #MaxBalanceMST
+          #NonReloadable
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Details
+        PROPERTIES
+          Name                #Details
+          Label               #@RET3813
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #balance
+          #currencyCode
+          #Status
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #FaceValue
+        PROPERTIES
+          Name                #FaceValue
+          Label               #@syp4880773
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #FaceValue
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #GiftCardPolicy
+        PROPERTIES
+          Name                #GiftCardPolicy
+          Label               #@SYP4880754
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #getExtendedStatus
+          #ActiveFrom
+          #ExpiryDate
+          #minReloadCur
+          #maxBalanceCur
+          #OneTimeRedemption
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Grid
+        PROPERTIES
+          Name                #Grid
+          Label               #@RET4772
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #balance
+          #currencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@RET3040
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Locked
+        PROPERTIES
+          Name                #Locked
+          Label               #@SYS8709
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #reserved
+          #reservedByChannel
+          #reservedByTerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #MCRRetailGiftCard
+        PROPERTIES
+          Name                #MCRRetailGiftCard
+          Label               #@MCR30166
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #MCRGiftCardType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #MCRRetailGiftCardVirtual
+        PROPERTIES
+          Name                #MCRRetailGiftCardVirtual
+          Label               #@MCR30166
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #MCRGiftCardType
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Redemption
+        PROPERTIES
+          Name                #Redemption
+          Label               #@SYP4880753
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #OneTimeRedemption
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #ValidityPeriod
+        PROPERTIES
+          Name                #ValidityPeriod
+          Label               #@SYP4880751
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ActiveFrom
+          #ExpiryDate
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #typeEntryIdx
+      PROPERTIES
+        Name                #typeEntryIdx
+        AllowDuplicates     #No
+        Origin              #{2B0C3E80-4379-1000-37A8-355FA9807472}
+        LegacyId            #16000
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #entryId
+      ENDINDEXFIELDS
+      
+      #replicationIdx
+      PROPERTIES
+        Name                #replicationIdx
+        Origin              #{2B0E3E82-4379-1000-8524-0FFE2C5DC586}
+        LegacyId            #16002
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #replicationCounter
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #currencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailChannelTable
+        PROPERTIES
+          Name                #RetailChannelTable
+          Table               #RetailChannelTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #reservedByChannel
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailTerminalTable
+        PROPERTIES
+          Name                #RetailTerminalTable
+          Table               #RetailTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #reservedByTerminalId
+            RelatedField        #terminalId
+            SourceEDT           #RetailTerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #RetailGiftCardTransactions
+      PROPERTIES
+        Table               #RetailGiftCardTransactions
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #balance
+        #/// <summary>
+        #/// Gets the total amount of the gift card transactions for the current gift card.
+        #/// </summary>
+        #/// <returns>
+        #/// The sum of the gift card amount.
+        #/// </returns>
+        #/// <exception cref="M:Exception::Error">
+        #/// An insufficient rights exception.
+        #/// </exception>
+        #//BP Deviation Documented
+        #public display RetailBalance balance()
+        #{
+        #    if(!hasFieldAccess(tablenum(RetailGiftCardTransactions), fieldnum(RetailGiftCardTransactions, Amount)))
+        #    {
+        #        throw error("@SYS57330");
+        #    }
+        #
+        #    return RetailGiftCardTransactions::calcBalance(this);
+        #}
+      ENDSOURCE
+      SOURCE #canDelete
+        #/// <summary>
+        #/// Indicates whether the gift card transactions for the deletion of gift card table are valid.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the gift card can be deleted; otherwise, false.
+        #/// </returns>
+        #boolean canDelete()
+        #{
+        #    RetailGiftCardTransactions giftCardTransactions;
+        #    boolean result = false;
+        #
+        #    select count(operation) from giftCardTransactions
+        #        where giftCardTransactions.cardNumber == this.entryId;
+        #
+        #    // Delete only if has only one issue type transaction
+        #    if (giftCardTransactions.operation == 1)
+        #        result = true;
+        #
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #checkPolicy
+        #/// <summary>
+        #/// Checks policy conditions for operations of gift card.
+        #/// </summary>
+        #/// <param name="_retailGiftCardOperation">
+        #/// Gift card operation.
+        #/// </param>
+        #/// <param name="_transactionAmount">
+        #/// Tarnsaction amount of operation; optional.
+        #/// </param>
+        #/// <param name="_showErrors">
+        #/// Boolean flag used to determine whether to show error messages; optional.
+        #/// </param>
+        #/// <returns>
+        #/// true if an opertion is allowed by policies; otherwise, false.
+        #/// </returns>
+        #public boolean checkPolicy(RetailGiftCardOperation _retailGiftCardOperation, AmountCur _transactionAmount = 0, boolean _showErrors = true)
+        #{
+        #    RetailGiftCardPolicyChecker retailGiftCardPolicyChecker;
+        #
+        #    if (prmisDefault(_transactionAmount))
+        #    {
+        #        retailGiftCardPolicyChecker = RetailGiftCardPolicyChecker::construct(_retailGiftCardOperation, this);
+        #    }
+        #    else
+        #    {
+        #        retailGiftCardPolicyChecker = RetailGiftCardPolicyChecker::construct(_retailGiftCardOperation, this, _transactionAmount);
+        #    }
+        #    retailGiftCardPolicyChecker.parmShowErrors(_showErrors);
+        #
+        #    return retailGiftCardPolicyChecker.check();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #description
+        #/// <summary>
+        #/// Gets the description of the <c>RetailGiftCardTable</c> table.
+        #/// </summary>
+        #/// <returns>
+        #/// The description of the <c>RetailGiftCardTable</c> table.
+        #/// </returns>
+        #//BP deviation documented
+        #display Name description()
+        #{
+        #    return "@RET4435";
+        #}
+      ENDSOURCE
+      SOURCE #faceValueCur
+        #/// <summary>
+        #/// Get a staring balance of the gift card in the gift card the transaction currency.
+        #/// </summary>
+        #/// <param name="_transDate">
+        #/// Transaction date; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A staring balance of the gift card in the transaction currency.
+        #/// </returns>
+        #public display AmountCur faceValueCur(TransDate _transDate = systemDateGet())
+        #{
+        #    return Currency::curAmount2CurAmount(this.FaceValue, this.giftCardCompanyCurrencyCode(), this.currencyCode, _transDate);
+        #}
+      ENDSOURCE
+      SOURCE #getExtendedStatus
+        #/// <summary>
+        #/// Shows extended status of the gift card
+        #/// </summary>
+        #/// <returns>
+        #/// Current extended status of the gift card.
+        #/// </returns>
+        #public display RetailGiftCardStatusExtended getExtendedStatus()
+        #{
+        #    RetailGiftCardStatusExtended result;
+        #    if (!this.RecId)
+        #    {
+        #        result = RetailGiftCardStatusExtended::NotIssued;
+        #    }
+        #    else
+        #    {
+        #        switch (this.Status)
+        #        {
+        #            case RetailGiftCardStatus::Closed:
+        #                result = RetailGiftCardStatusExtended::Closed;
+        #                break;
+        #            case RetailGiftCardStatus::Expired:
+        #                if (this.ExpiryDate && this.ExpiryDate < today())
+        #                {
+        #                    result = RetailGiftCardStatusExtended::Expired;
+        #                }
+        #                else
+        #                {
+        #                    result = RetailGiftCardStatusExtended::Redeemed;
+        #                }
+        #                break;
+        #            default:
+        #                if (this.ActiveFrom && this.ActiveFrom > DateTimeUtil::utcNow())
+        #                {
+        #                    result = RetailGiftCardStatusExtended::NotActivated;
+        #                }
+        #                else if (this.ExpiryDate && this.ExpiryDate < today())
+        #                {
+        #                    result = RetailGiftCardStatusExtended::Expired;
+        #                }
+        #                else
+        #                {
+        #                    result = RetailGiftCardStatusExtended::Active;
+        #                }
+        #                break;
+        #        }
+        #    }
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #giftCardCompanyCurrencyCode
+        #/// <summary>
+        #/// Get an accounting currency code of company that manages gift cards.
+        #/// </summary>
+        #/// <returns>
+        #/// An accounting currency code of company that manages gift cards.
+        #/// </returns>
+        #/// <remarks>
+        #/// Gift policies amounts (FaceValue, MaxBalanceMST, MinReloadMST) are saved in this currency.
+        #/// </remarks>
+        #public display CurrencyCode giftCardCompanyCurrencyCode()
+        #{
+        #    return Ledger::accountingCurrency(CompanyInfo::findDataArea(this.company()).RecId);
+        #}
+      ENDSOURCE
+      SOURCE #initGiftCardPolicies
+        #/// <summary>
+        #/// Initializes gift card policies.
+        #/// </summary>
+        #/// <param name="_cardNumber">
+        #/// The gift card number.
+        #/// </param>
+        #/// <param name="_channelDateTime">
+        #/// Channel date and time.
+        #/// </param>
+        #/// <param name="_channelTimeZone">
+        #/// Channel time zone.
+        #/// </param>
+        #public void initGiftCardPolicies(RetailGiftCardId   _cardNumber,
+        #                                 utcDateTime        _channelDateTime,
+        #                                 Timezone           _channelTimeZone)
+        #{
+        #    #TimeConstants
+        #
+        #    RetailGiftCardPolicySet policySet;
+        #
+        #    policySet = RetailGiftCardPolicySet::findOrCreateDefaultByGiftCardNumber(_cardNumber);
+        #
+        #    // Gift card Active from date and time is stored as UTC date time
+        #    this.ActiveFrom = DateTimeUtil::addSeconds(DateTimeUtil::removeTimeZoneOffset(_channelDateTime, _channelTimeZone), any2int64(policySet.ActivationPeriod * #secondsPerHour));
+        #
+        #    if (policySet.FixedExpiryDate || policySet.ValidityPeriod)
+        #    {
+        #        this.ExpiryDate = policySet.FixedExpiryDate ?
+        #            policySet.FixedExpiryDate :
+        #            // Gift card Expiry date is calculated based on local channel date, not UTC date
+        #            DateTimeUtil::date(_channelDateTime) + policySet.ValidityPeriod;
+        #    }
+        #
+        #    this.FaceValue          = policySet.FaceValue;
+        #    this.Status             = RetailGiftCardStatus::Active;
+        #    this.OneTimeRedemption  = policySet.OneTimeRedemption;
+        #    this.NonReloadable      = policySet.NonReloadable;
+        #    this.MinReloadMST       = policySet.MinReloadMST;
+        #    this.MaxBalanceMST      = policySet.MaxBalanceMST;
+        #}
+      ENDSOURCE
+      SOURCE #maxBalanceCur
+        #/// <summary>
+        #/// Get a maximum balance limit in the gift card transaction currency.
+        #/// </summary>
+        #/// <param name="_transDate">
+        #/// Transaction date; optional.
+        #/// </param>
+        #/// <returns>
+        #/// Maximum balance limit in transaction currency.
+        #/// </returns>
+        #public display RetailGiftCardMaxBalanceMST maxBalanceCur(TransDate _transDate = systemDateGet())
+        #{
+        #    return Currency::curAmount2CurAmount(this.MaxBalanceMST, this.giftCardCompanyCurrencyCode(), this.currencyCode, _transDate);
+        #}
+      ENDSOURCE
+      SOURCE #minReloadCur
+        #/// <summary>
+        #/// Get a minimum reload amount in the gift card transaction currency.
+        #/// </summary>
+        #/// <param name="_transDate">
+        #/// Transaction date; optional.
+        #/// </param>
+        #/// <returns>
+        #/// Minimum reload amount in transaction currency.
+        #/// </returns>
+        #public display RetailGiftCardMinReloadMST minReloadCur(TransDate _transDate = systemDateGet())
+        #{
+        #    return Currency::curAmount2CurAmount(this.MinReloadMST, this.giftCardCompanyCurrencyCode(), this.currencyCode, _transDate);
+        #}
+      ENDSOURCE
+      SOURCE #policyDescription
+        #/// <summary>
+        #/// Shows policy of current gift card.
+        #/// </summary>
+        #/// <returns>
+        #/// Multiline string that descibes policy of current gift card.
+        #/// </returns>
+        #public RetailGiftCardPolicies policyDescription()
+        #{
+        #    str result;
+        #    TableId tableId = this.TableId;
+        #    SysDictTable dictTable;
+        #    SysDictFieldGroup dictFieldGroup;
+        #    SysDictField sysDictField;
+        #    SysDictMethod sysDictMethod;
+        #    int i, j;
+        #    SysDictEnum sysDictEnum;
+        #    SysDictType sysDictType;
+        #    FieldGroupName fieldGroupName = tableFieldgroupStr(RetailGiftCardTable, GiftCardPolicy);
+        #
+        #    str getLine(FieldId _fieldId)
+        #    {
+        #        anytype value;
+        #        LabelString label;
+        #
+        #        sysDictField = new SysDictField(dictFieldGroup.tableid(), _fieldId);
+        #        if (sysDictField)
+        #        {
+        #            value = this.(_fieldId);
+        #            label = sysDictField.label();
+        #        }
+        #        else
+        #        {
+        #            sysDictMethod  = new SysDictMethod(UtilElementType::TableInstanceMethod, dictFieldGroup.tableid(), dictFieldGroup.methodName(_fieldId));
+        #            if (sysDictMethod.returnType() == Types::Enum)
+        #            {
+        #                sysDictEnum = new SysDictEnum(sysDictMethod.returnId());
+        #                if (sysDictEnum)
+        #                {
+        #                    label = sysDictEnum.label();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                sysDictType = new SysDictType(sysDictMethod.returnId());
+        #                if (sysDictType)
+        #                {
+        #                    label = sysDictType.label();
+        #                }
+        #            }
+        #            new ExecutePermission().assert();
+        #            // BP Deviation Documented
+        #            value = dictTable.callObject(sysDictMethod.name(), this);
+        #            CodeAccessPermission::revertAssert();
+        #        }
+        #
+        #        return strFmt("%1 : %2", label , value);
+        #    }
+        #
+        #    dictTable = SysDictTable::newTableId(tableId);
+        #
+        #    for (i=1; i <= dictTable.fieldGroupCnt(); i++)
+        #    {
+        #        if (dictTable.fieldGroup(i) == fieldGroupName)
+        #        {
+        #            dictFieldGroup = new SysDictFieldGroup(dictTable.id(), dictTable.fieldGroup(i));
+        #            for (j=1; j <= dictFieldGroup.numberOfFields(); j++)
+        #            {
+        #                if (result)
+        #                {
+        #                    result += '\n';
+        #                }
+        #                result += getLine(dictFieldGroup.field(j));
+        #
+        #            }
+        #            break;
+        #        }
+        #    }
+        #
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #releaseCard
+        #/// <summary>
+        #/// Updates the reserve options for the gift card.
+        #/// </summary>
+        #/// <param name="_redeemed">
+        #/// One-time gift card was redeemed
+        #/// </param>
+        #public void releaseCard(boolean _redeemed = false)
+        #{
+        #    this.reserved             = NoYes::No;
+        #    this.reservedByTerminalId = "";
+        #    this.reservedByChannel = 0;
+        #
+        #    if (_redeemed)
+        #    {
+        #        this.Status = RetailGiftCardStatus::Expired;
+        #    }
+        #
+        #    this.doUpdate();
+        #}
+      ENDSOURCE
+      SOURCE #renamePrimaryKey
+        #/// <summary>
+        #/// Renames the record.
+        #/// </summary>
+        #/// <remarks>
+        #/// A prompt for renaming of the record.
+        #/// </remarks>
+        #public void renamePrimaryKey()
+        #{
+        #    ;
+        #    RetailConnActionManagement::errorOnRename(this);
+        #
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #reserveCard
+        #/// <summary>
+        #/// Updates the reserve options for the gift card.
+        #/// </summary>
+        #/// <param name="_terminalId">
+        #/// The ID number of POS terminal.
+        #/// </param>
+        #/// <param name="_channelId">
+        #/// The channel id.
+        #/// </param>
+        #public void reserveCard(RetailTerminalId _terminalId, RetailChannelRecId _channelId = 0)
+        #{
+        #    this.reserved             = NoYes::Yes;
+        #    this.reservedByTerminalId = _terminalId;
+        #    this.reservedByChannel = _channelId;
+        #
+        #    this.doUpdate();
+        #}
+      ENDSOURCE
+      SOURCE #setReplicationCounter
+        #/// <summary>
+        #/// Sets the replication counter for the gift card.
+        #/// </summary>
+        #void setReplicationCounter()
+        #{
+        #    if (!this.replicationCounter)
+        #    {
+        #        this.replicationCounter = (select maxof(replicationCounter) from RetailGiftCardTable).replicationCounter + 1;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validateDelete
+        #/// <summary>
+        #/// Determines whether the record can be deleted.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the record can be deleted; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// Issued gift cards with transactions cannot be deleted.
+        #/// </remarks>
+        #public boolean validateDelete()
+        #{
+        #    boolean ret = super();
+        #
+        #    if (ret)
+        #    {
+        #        ret = this.canDelete();
+        #        if (!ret)
+        #        {
+        #            warning("@RET5063");
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #voidCard
+        #/// <summary>
+        #/// Indicates whether the gift card is eligible for delete.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the gift card is eligible for delete; otherwise, false.
+        #/// </returns>
+        #public boolean voidCard()
+        #{
+        #    // Voiding of a card, deletes it from database so that plastic card can be reuesd.
+        #    boolean result = false;
+        #
+        #    if (this.canDelete())
+        #    {
+        #        this.delete();
+        #        this.doUpdate();
+        #        result = true;
+        #    }
+        #
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #createCard
+        #/// <summary>
+        #/// Creates a gift card with the specified gift card number.
+        #/// </summary>
+        #/// <param name="_entryId">
+        #/// The ID number of the gift card to be created.
+        #/// </param>
+        #/// <param name="_currencyCode">
+        #/// The current currency code
+        #/// </param>
+        #/// <param name="mcrGiftcardType">
+        #/// The mcr gift card type
+        #/// </param>
+        #/// <param name="_channelDateTime">
+        #/// Channel date and time.
+        #/// </param>
+        #/// <param name="_channelTimeZone">
+        #/// Channel time zone.
+        #/// </param>
+        #/// <returns>
+        #/// A <c>RetailGiftCardTable</c> record.
+        #/// </returns>
+        #public static RetailGiftCardTable createCard(RetailGiftCardId _entryId,
+        #                                             CurrencyCode     _currencyCode,
+        #                                             MCRGiftCardType  mcrGiftcardType     = MCRGiftCardType::Email,
+        #                                             utcDateTime      _channelDateTime    = DateTimeUtil::utcNow(),
+        #                                             Timezone         _channelTimeZone    = 0)
+        #{
+        #
+        #    RetailGiftCardTable tGiftCardTable;
+        #    ;
+        #
+        #    if (_entryId && (!RetailGiftCardTable::find(_entryId)))
+        #    {
+        #        select forUpdate tGiftCardTable;
+        #
+        #        tGiftCardTable.clear();
+        #        tGiftCardTable.entryId                  = _entryId;
+        #        tGiftCardTable.currencyCode             = _currencyCode;
+        #        tGiftCardTable.MCRGiftCardType          = mcrGiftcardType;
+        #        if (RetailParameters::find().UseGiftCardPolicies)
+        #        {
+        #            tGiftCardTable.initGiftCardPolicies(_entryId, _channelDateTime, _channelTimeZone);
+        #        }
+        #        tGiftCardTable.doInsert();
+        #    }
+        #
+        #    return tGiftCardTable;
+        #}
+      ENDSOURCE
+      SOURCE #exist
+        #/// <summary>
+        #/// Indicates whether the specified record in the <c>RetailGiftCardTable</c> table exists.
+        #/// </summary>
+        #/// <param name="_dataEntryId">
+        #/// The gift card number.
+        #/// </param>
+        #/// <returns>
+        #/// true if the specified record exists; otherwise, false.
+        #/// </returns>
+        #public static boolean exist(RetailGiftCardId _dataEntryId)
+        #{
+        #;
+        #    if (_dataEntryId)
+        #    {
+        #        return (select firstonly recId from RetailGiftCardTable
+        #                    where RetailGiftCardTable.entryId == _dataEntryId
+        #                   ).recId != 0;
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #/// <summary>
+        #/// Finds the specified record in the <c>RetailGiftCardTable</c> table.
+        #/// </summary>
+        #/// <param name="_dataEntryId">
+        #/// The ID number of the gift card in the table.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>RetailGiftCardTable</c> table; otherwise, an empty record.
+        #/// </returns>
+        #public static RetailGiftCardTable find(RetailGiftCardId _dataEntryId, boolean _forUpdate = false)
+        #{
+        #    RetailGiftCardTable tGiftCardTable;
+        #;
+        #    if (_dataEntryId)
+        #    {
+        #        tGiftCardTable.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly tGiftCardTable
+        #            where tGiftCardTable.entryId == _dataEntryId;
+        #    }
+        #
+        #    return tGiftCardTable;
+        #}
+      ENDSOURCE
+      SOURCE #findCrossCompany
+        #/// <summary>
+        #/// Finds the specified record in the <c>RetailGiftCardTable</c> table.
+        #/// </summary>
+        #/// <param name="_dataEntryId">
+        #/// The ID number of the gift card in the table.
+        #/// </param>
+        #/// <param name="_conCompanies">
+        #/// A container of campanies to search.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>RetailGiftCardTable</c> table; otherwise, an empty record.
+        #/// </returns>
+        #public static RetailGiftCardTable findCrossCompany(RetailGiftCardId _dataEntryId, container _conCompanies, boolean _forUpdate = false)
+        #{
+        #    RetailGiftCardTable tGiftCardTable;
+        #    container conCompanies = _conCompanies;
+        #;
+        #    if (_dataEntryId)
+        #    {
+        #        tGiftCardTable.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly crossCompany :conCompanies tGiftCardTable
+        #            where tGiftCardTable.entryId == _dataEntryId;
+        #    }
+        #
+        #    return tGiftCardTable;
+        #}
+      ENDSOURCE
+      SOURCE #mcrFindRecId
+        #/// <summary>
+        #/// Finds the specified record in the <c>RetailGiftCardTable</c> table.
+        #/// </summary>
+        #/// <param name="_recId">
+        #/// The RecID of the gift card in the table.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that indicates whether to read the record for update; optional.
+        #/// </param>
+        #/// <returns>
+        #/// A record in the <c>RetailGiftCardTable</c> table; otherwise, an empty record.
+        #/// </returns>
+        #public static RetailGiftCardTable mcrFindRecId(RecId _recId,
+        #                                             boolean _forUpdate = false)
+        #{
+        #    RetailGiftCardTable retailGiftCardTable;
+        #
+        #    if (_recId)
+        #    {
+        #        retailGiftCardTable.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly crossCompany retailGiftCardTable
+        #            where retailGiftCardTable.RecId == _recId;
+        #    }
+        #
+        #    return retailGiftCardTable;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

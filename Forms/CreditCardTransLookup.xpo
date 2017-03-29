@@ -1,0 +1,365 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardTransLookup
+  PROPERTIES
+    Name                #CreditCardTransLookup
+    Origin              #{E243A79F-4D66-4D7F-BF8F-ACBDA002F646}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    FormStringControl       callingNameControl;
+      #    SalesTableCC            salesTableCC;
+      #    SalesId                 salesId;
+      #    LedgerJournalTransCC    ledgerJournalTransCC;
+      #    LedgerJournalTrans      ledgerJournalTrans;
+      #    str                     nameCaller;
+      #}
+    ENDSOURCE
+    SOURCE #callingNameControl
+      #FormStringControl callingNameControl(FormStringControl _callingNameControl = callingNameControl)
+      #{
+      #    ;
+      #    callingNameControl = _callingNameControl;
+      #    return callingNameControl;
+      #}
+    ENDSOURCE
+    SOURCE #closeSelect
+      #void closeSelect(str p1)
+      #{
+      #    ;
+      #    CreditCardTrans_ds.leaveRecord();
+      #
+      #    if (element.callingNameControl().name() == "Transaction_TransID")
+      #    {
+      #        super(CreditCardTrans.TransID);
+      #    }
+      #    else
+      #    {
+      #        super(CreditCardTrans.PNRef);
+      #    }
+      #}
+      #
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    FormStringControl       formStringController;
+      #
+      #    ;
+      #
+      #    if (element.args().record())
+      #    {
+      #        if (element.args().record().TableId == tableNum(salesTableCC))
+      #        {
+      #            salesTableCC = element.args().record();
+      #            salesId = salesTableCC.SalesId;
+      #        }
+      #        else if (element.args().record().TableId == tableNum(LedgerJournalTransCC))
+      #        {
+      #            formStringController = element.args().caller();
+      #            element.callingNameControl(formStringController);
+      #            ledgerJournalTransCC = element.args().record();
+      #            ledgerJournalTrans = ledgerJournalTrans::find(ledgerJournalTransCC.JournalNum,ledgerJournalTransCC.Voucher,false);
+      #        }
+      #    }
+      #
+      #    super();
+      #
+      #
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTrans
+          Table               #CreditCardTrans
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    ;
+          #    super();
+          #
+          #    this.query().dataSourceNo(1).clearDynalinks();
+          #    if (salesTableCC)
+          #    {
+          #        if (salesTable::find(salesId).SalesType == SalesType::ReturnItem)
+          #        {
+          #            this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTrans,TrxType)).value('S,D');
+          #            this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTrans,CustAccount)).value(SalesTable::find(salesId).InvoiceAccount);
+          #        }
+          #        else
+          #        {
+          #            this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTrans,TrxType)).value('S,D');
+          #            this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTrans,SalesId)).value(salesId);
+          #        }
+          #    }
+          #    else
+          #    {
+          #        if (ledgerJournalTrans.Invoice)
+          #        {
+          #            this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTrans,TrxType)).value('S,D');
+          #            this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTrans,InvoiceId)).value(ledgerJournalTrans.invoice   );
+          #        }
+          #
+          #        else
+          #        {
+          #            this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTrans,TrxType)).value('S,D');
+          #            this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTrans,CustAccount)).value(ledgerJournalTrans.accountDisplay());
+          #        }
+          #    }
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@SYS27400
+      TitleDatasource     #CreditCardTrans
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741823
+          DataSource          #CreditCardTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTrans_CreditCardType
+          ElementPosition     #858993456
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #CreditCardType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTrans_TransType
+          ElementPosition     #644245092
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #TransType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_TransDate
+          ElementPosition     #429496728
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #TransDate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_AmountCur
+          ElementPosition     #1288490184
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #AmountCur
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_CreditCardNumSecure
+          ElementPosition     #1073741820
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #CreditCardNumSecure
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_CurrencyCode
+          ElementPosition     #1503238548
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #CurrencyCode
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_PNRef
+          ElementPosition     #1932735276
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #PNRef
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_SalesId
+          ElementPosition     #1717986912
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #SalesId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

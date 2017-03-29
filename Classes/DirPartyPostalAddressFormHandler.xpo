@@ -1,0 +1,1084 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #DirPartyPostalAddressFormHandler
+    PROPERTIES
+      Name                #DirPartyPostalAddressFormHandler
+      Extends             #LogisticsEntityPostalAddressFormHandler
+      Origin              #{2D200000-0000-1000-BFE1-FF4490798B8D}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #canEditCountryRegionId
+        #/// <summary>
+        #///    Determines whether the country region ID can be editable or not.
+        #/// </summary>
+        #/// <returns>
+        #///    true if the country region ID can be editable; otherwise, false.
+        #/// </returns>
+        #public boolean canEditCountryRegionId()
+        #{
+        #    boolean         res = true;
+        #    CompanyInfo     companyInfo;
+        #
+        #    // If primary address
+        #    if (isPrimary)
+        #    {
+        #        select firstonly RecId,DataArea from companyInfo where companyInfo.RecId == this.getEntity();
+        #        // If party is legal entity and country/region is already filled
+        #        if (companyInfo &&
+        #            LogisticsPostalAddress::findByLocation(this.parmLocation()).CountryRegionId)
+        #        {
+        #            //Check if posted financial transaction exist
+        #            res = res && !GeneralJournalEntry::existForLedger(Ledger::primaryLedger(companyInfo.RecId));
+        #        }
+        #
+        #    }
+        #    return res;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///    The <c>DirPartyPostalAddressFormHandler</c> class is the location form handler for the postal
+        #///    address for a party
+        #/// </summary>
+        #class DirPartyPostalAddressFormHandler extends LogisticsEntityPostalAddressFormHandler
+        #{
+        #    //<GEERU>
+        #    Args          args;
+        #    //</GEERU>
+        #
+        #    DirPartyRecId party;
+        #
+        #    #define.CurrentVersion(1)
+        #    #localmacro.CurrentList
+        #        party
+        #    #endmacro
+        #}
+      ENDSOURCE
+      SOURCE #defaultLocationRoles
+        #/// <summary>
+        #///    Determines the default <c>LogisticsLocationRole</c> records for the <c>LogisticsLocation</c> table.
+        #/// </summary>
+        #/// <returns>
+        #///    A map of the key and value pairs, in which the key is equal to the <c>recId</c> type and the value
+        #///    is equal to the name on the <c>LogisticsLocationRole</c> records.
+        #/// </returns>
+        #protected Map defaultLocationRoles()
+        #{
+        #    Map ret;
+        #    LogisticsLocationRole role;
+        #
+        #    if(this.parmIsTransaction())
+        #    {
+        #        ret = new Map(Types::Int64, Types::String);
+        #        role = LogisticsLocationRole::findBytype(
+        #            LogisticsLocationEntity::transactionNewAddressDefaultRole(this.getCallerRecord(true).TableId));
+        #        ret.insert(role.RecId, role.Name);
+        #        return ret;
+        #    }
+        #    else
+        #    {
+        #        return super();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getCallerRecord
+        #/// <summary>
+        #/// Gets the current caller's record
+        #/// </summary>
+        #/// <param name="_baseRecord">
+        #/// Return the value of getCallerRecord from the base class.
+        #/// </param>
+        #/// <returns>
+        #/// <c>Common</c> table buffer.
+        #/// </returns>
+        #public Common getCallerRecord(boolean _baseRecord = false)
+        #{
+        #    if (this.parmIsTransaction() && !_baseRecord)
+        #    {
+        #        // <GEERU>
+        #        if (args &&
+        #            args.parmEnumType() == enumNum(LogisticsLocationRoleType))
+        #        {
+        #            callerRecord = DirPartyPostalAddressFormHandler::getTransactionEntity(super(), args.parmEnum());
+        #        }
+        #        else
+        #        {
+        #        // </GEERU>
+        #            callerRecord = DirPartyPostalAddressFormHandler::getTransactionEntity(super());
+        #        // <GEERU>
+        #        }
+        #        // </GEERU>
+        #    }
+        #    else
+        #    {
+        #        callerRecord = super();
+        #    }
+        #
+        #    return callerRecord;
+        #}
+      ENDSOURCE
+      SOURCE #getEntity
+        #/// <summary>
+        #///    Gets the current party record ID of the entity.
+        #/// </summary>
+        #/// <returns>
+        #///    The party record ID of the current entity.
+        #/// </returns>
+        #public RecId getEntity()
+        #{
+        #    DirPartyMap partyMap;
+        #    //<GEERU>
+        #    InventLocation  inventLocation;
+        #    //</GEERU>
+        #
+        #    if (!party && this.getCallerRecord())
+        #    {
+        #        if (SysDictTable::isTableMapped(tableNum(DirPartyMap), callerRecord.TableId))
+        #        {
+        #            partyMap = callerRecord;
+        #        }
+        #
+        #        if (partyMap)
+        #        {
+        #            party = partyMap.Party;
+        #        }
+        #
+        #        // <GEERU>
+        #        if (tableNum(InventLocation) == callerRecord.TableId)
+        #        {
+        #            inventLocation = callerRecord;
+        #            party = inventLocation.RecId;
+        #        }
+        #        // </GEERU>
+        #    }
+        #
+        #    return party;
+        #}
+      ENDSOURCE
+      SOURCE #initValue
+        #/// <summary>
+        #///    Initializes the non-bound fields.
+        #/// </summary>
+        #public void initValue()
+        #{
+        #    super();
+        #    isPrimary = DirPartyLocation::primaryLocationForPartyExist(this.getEntity(), 0, true) == false;
+        #    // <GEERU>
+        #    isPrimaryTaxRegistration = isPrimary;
+        #    // </GEERU>
+        #}
+      ENDSOURCE
+      SOURCE #isParty
+        #/// <summary>
+        #///    Determines whether the location is related to a party or not
+        #/// </summary>
+        #/// <returns>
+        #///    Always returns true.
+        #/// </returns>
+        #public boolean isParty()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #pack
+        #/// <summary>
+        #///    Serializes the current instance of the <c>DirPartyPostalAddressFormHandler</c> class.
+        #/// </summary>
+        #/// <returns>
+        #///    A container that contains the current instance of the <c>DirPartyPostalAddressFormHandler</c> class.
+        #/// </returns>
+        #public container pack()
+        #{
+        #    return [#CurrentVersion, #CurrentList, super()];
+        #}
+      ENDSOURCE
+      SOURCE #parmArgs_RU
+        #//<GEERU>
+        #public Args parmArgs_RU(Args _args = args)
+        #{
+        #    args = _args;
+        #
+        #    return args;
+        #}
+        #//</GEERU>
+      ENDSOURCE
+      SOURCE #postValidatePostalAddress_BR
+        #private boolean postValidatePostalAddress_BR(LogisticsPostalAddress _postalAddressOrig,
+        #                                         LogisticsPostalAddress _postalAddress,
+        #                                         boolean                _origReturn)
+        #{
+        #    if (!_postalAddress.City)
+        #    {
+        #        return checkFailed("@GLS63438");
+        #    }
+        #
+        #    return _origReturn;
+        #}
+      ENDSOURCE
+      SOURCE #unpack
+        #/// <summary>
+        #///    Unpacks the class that has the values from the current list.
+        #/// </summary>
+        #/// <param name="packedClass">
+        #///    A <c>container</c> value of the current list to be unpacked.
+        #/// </param>
+        #/// <returns>
+        #///    A Boolean value if the unpack is successful or not.
+        #/// </returns>
+        #public boolean unpack(container packedClass)
+        #{
+        #    container   base;
+        #    boolean     ret;
+        #    int         version = conPeek(packedClass, #CurrentVersion);
+        #
+        #    switch (version)
+        #    {
+        #        case #CurrentVersion:
+        #            // Extract the packed values.
+        #            [version, #CurrentList, base] = packedClass;
+        #            ret = super(base);
+        #            break;
+        #
+        #        default:
+        #            return false;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #updateCallerPostalAddress
+        #/// <summary>
+        #/// Updates the address information about a caller.
+        #/// </summary>
+        #/// <param name="_callerForm">
+        #/// A caller form.
+        #/// </param>
+        #protected void updateCallerPostalAddress(FormRun _callerForm)
+        #{
+        #    FormDataSource          formDataSource;
+        #    Object                  callerObject;
+        #    //Refresh caller
+        #    formDataSource = _callerForm.dataSource(tableStr(DirPartyPostalAddressView));
+        #    if (formHasMethod(_callerForm, identifierStr(parmPostalAddressLocation)))
+        #    {
+        #        callerObject = _callerForm;
+        #        callerObject.parmPostalAddressLocation(this.parmLocation());
+        #        if (formDataSource)
+        #        {
+        #            formDataSource.research();
+        #        }
+        #        else if (formHasMethod(_callerForm, identifierStr(executePostalAddressQuery)))
+        #        {
+        #            callerObject.executePostalAddressQuery();
+        #        }
+        #    }
+        #
+        #    if(this.parmIsTransaction())
+        #    {
+        #        this.updateTransactionCaller(transaction);
+        #        if (tableHasMethod(transaction.dataSource() ,identifierStr(setDeliveryName)))
+        #        {
+        #            transaction.setDeliveryName();
+        #            formDataSourceRefresh(transaction);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateTransactionCaller
+        #/// <summary>
+        #///    Updates the current transaction record and updates the calling form data source.
+        #/// </summary>
+        #/// <param name="_transaction">
+        #///    A <c>Common</c> table buffer that contains the transaction record.
+        #/// </param>
+        #public void updateTransactionCaller(Common _transaction)
+        #{
+        #    FormDataSource  formDataSource;
+        #    FieldId         postalAddressFieldId;
+        #
+        #    // <GBR>
+        #    LogisticsPostalAddressRecId prevAddressRecId;
+        #
+        #    if (BrazilParameters::isEnabled())
+        #    {
+        #        prevAddressRecId = _transaction.(LogisticsLocationEntity::transactionPostalAddressFieldId(_transaction.TableId));
+        #    }
+        #    // </GBR>
+        #
+        #    //<GEEU>
+        #    if (args &&
+        #        args.parmEnumType() == enumNum(LogisticsLocationRoleType))
+        #    {
+        #        postalAddressFieldId = LogisticsLocationEntity::transactionPostalAddressFieldId(_transaction.TableId, args.parmEnum());
+        #        _transaction.(postalAddressFieldId) = this.postalAddress();
+        #    }
+        #    else
+        #    {
+        #    //</GEEU>
+        #         postalAddressFieldId = LogisticsLocationEntity::transactionPostalAddressFieldId(_transaction.TableId);
+        #        _transaction.(postalAddressFieldId) = this.postalAddress();
+        #
+        #        // <GBR>
+        #        if (BrazilParameters::isEnabled())
+        #        {
+        #            switch(_transaction.TableId)
+        #            {
+        #                case tableNum(SalesTable):
+        #                case tableNum(SalesQuotationTable):
+        #                case tableNum(CustInvoiceTable):
+        #                case tableNum(PurchTable):
+        #                case tableNum(PurchReqLine):
+        #                case tableNum(PurchRFQCaseTable):
+        #                case tableNum(PurchRFQCaseLine):
+        #                case tableNum(PurchRFQTable):
+        #                case tableNum(PurchRFQLine):
+        #                    this.validatePostalAddress_BR(_transaction, prevAddressRecId, transaction);
+        #                    break;
+        #            }
+        #        }
+        #        // </GBR>
+        #    //<GEEU>
+        #    }
+        #    //</GEEU>
+        #    _transaction.modifiedField(postalAddressFieldId);
+        #    // Dont do this for EP
+        #    if(_transaction.dataSource() && !webSession())
+        #    {
+        #        formDataSource = _transaction.dataSource();
+        #        formDataSource.rereadReferenceDataSources();
+        #        formDataSource.refresh();
+        #        // <GBR>
+        #        if (BrazilParameters::isEnabled())
+        #        {
+        #            switch(_transaction.TableId)
+        #            {
+        #                case tableNum(PurchTable):
+        #                    formDataSource.cacheCalculateMethod(tableMethodStr(PurchTable, deliveryCNPJCPFNUM_BR));
+        #                    formDataSource.cacheCalculateMethod(tableMethodStr(PurchTable, deliveryIENum_BR));
+        #                    break;
+        #            }
+        #        }
+        #        // </GBR>
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validatePostalAddress
+        #/// <summary>
+        #/// Determines whether the postal address change for a legal entity is valid.
+        #/// </summary>
+        #/// <param name="_postalAddressOrig">
+        #/// A <c>LogisticsPostalAddress</c> object record that contains the original record before modification.
+        #/// </param>
+        #/// <param name="_postalAddress">
+        #/// A <c>LogisticsPostalAddress</c> object record that contains the record with modification.
+        #/// </param>
+        #/// <returns>
+        #/// true if the postal address is correct; otherwise, false.
+        #/// </returns>
+        #public boolean validatePostalAddress(LogisticsPostalAddress _postalAddressOrig, LogisticsPostalAddress _postalAddress)
+        #{
+        #    boolean ret = true;
+        #
+        #    // If country/region is disabled but it has still changed
+        #    if (_postalAddressOrig.CountryRegionId && _postalAddressOrig.CountryRegionId != _postalAddress.CountryRegionId
+        #        && !this.canEditCountryRegionId())
+        #    {
+        #        // The process is trying to update the country code of the legal entity. The country code could not be changed when transactions exist in the system.
+        #        ret = checkFailed("@SYS329607");
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validatePostalAddress_BR
+        #/// <summary>
+        #/// Calls Brazilian specific validations for the postal address.
+        #/// </summary>
+        #/// <param name="_transaction">
+        #/// A <c>Common</c> table buffer that contains the current transaction record.
+        #/// </param>
+        #/// <param name="_prevAddressRecId">
+        #/// The <c>LogisticsPostalAddressRecId</c> of the previous addresss.
+        #/// </param>
+        #/// <param name="transactions">
+        #/// The transaction from the arguments passed by the calling menu item.
+        #/// </param>
+        #// <GBR>
+        #protected void validatePostalAddress_BR(Common _transaction, LogisticsPostalAddressRecId _prevAddressRecId, Common transactions)
+        #{
+        #    FieldId             transactionAddressFieldId;
+        #    PurchReqLine        purchReqLine;
+        #    PurchRFQCaseTable   purchRFQCaseTable;
+        #    PurchRFQCaseLine    purchRFQCaseLine;
+        #    PurchRFQTable       purchRFQTable;
+        #    PurchRFQLine        purchRFQLine;
+        #    boolean             check = true;
+        #
+        #    switch (_transaction.TableId)
+        #    {
+        #        case tableNum(PurchReqLine):
+        #            purchReqLine = transactions;
+        #            check = CFOPValidation_BR::validateDeliveryAddress(purchReqLine.inventDim().inventSite().fiscalEstablishment(), purchReqLine.DeliveryPostalAddress);
+        #            break;
+        #
+        #        case tableNum(PurchRFQCaseTable):
+        #            purchRFQCaseTable = transactions;
+        #            check = CFOPValidation_BR::validateDeliveryAddress(InventSite::find(purchRFQCaseTable.InventSiteId).fiscalEstablishment(), purchRFQCaseTable.DeliveryPostalAddress);
+        #            break;
+        #
+        #        case tableNum(PurchRFQCaseLine):
+        #            purchRFQCaseLine = transactions;
+        #            check = CFOPValidation_BR::validateDeliveryAddress(purchRFQCaseLine.inventDim().inventSite().fiscalEstablishment(), purchRFQCaseLine.DeliveryPostalAddress);
+        #            break;
+        #
+        #        case tableNum(PurchRFQTable):
+        #            purchRFQTable = transactions;
+        #            check = CFOPValidation_BR::validateDeliveryAddress(InventSite::find(purchRFQTable.InventSiteId).fiscalEstablishment(), purchRFQTable.DeliveryPostalAddress);
+        #            break;
+        #
+        #        case tableNum(PurchRFQLine):
+        #            purchRFQLine = transactions;
+        #            check = CFOPValidation_BR::validateDeliveryAddress(purchRFQLine.inventDim().inventSite().fiscalEstablishment(), purchRFQLine.DeliveryPostalAddress);
+        #            break;
+        #    }
+        #
+        #    transactionAddressFieldId = LogisticsLocationEntity::transactionPostalAddressFieldId(_transaction.TableId);
+        #
+        #    if (_transaction.validateField(transactionAddressFieldId) && check)
+        #    {
+        #        _transaction.modifiedField(transactionAddressFieldId);
+        #    }
+        #    else
+        #    {
+        #        _transaction.(transactionAddressFieldId) = _prevAddressRecId;
+        #    }
+        #}
+        #// </GBR>
+      ENDSOURCE
+      SOURCE #write
+        #public void write()
+        #{
+        #    FormDataSource fds;
+        #
+        #    super();
+        #
+        #    // Reread the DirPartyTable datasource after writing for primary since PrimaryAddressLocation is updated
+        #    if (isPrimary && callerDS)
+        #    {
+        #        if (SysDictTable::getRootTable(callerDS.table()) == tableNum(DirPartyTable))
+        #        {
+        #            callerDS.reread();
+        #        }
+        #        else if (SysDictTable::isTableMapped(tableNum(DirPartyMap), callerDS.table()))
+        #        {
+        #            fds = callerDS.formRun().dataSource(tableStr(DirPartyTable));
+        #            if (fds)
+        #            {
+        #                fds.reread();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getTransactionEntity
+        #// <GEERU>
+        #public static Common getTransactionEntity(
+        #    Common                    _common,
+        #    LogisticsLocationRoleType _roleType = LogisticsLocationRoleType::None)
+        #// </GEERU>
+        #{
+        #    SalesTable              salesTable;
+        #    SalesLine               salesLine;
+        #    PurchTable              purchTable;
+        #    SalesQuotationTable     salesQuotationTable;
+        #    SalesQuotationLine      salesQuotationLine;
+        #    LedgerJournalTrans      ledgerJournalTrans;
+        #    VendTrans               vendTrans;
+        #    VendInvoiceInfoTable    vendInvoiceInfoTable;
+        #    SalesAgreementHeader    salesAgreementHeader;
+        #    PurchAgreementHeader    purchAgreementHeader;
+        #    SalesCreateReleaseOrderTableTmp salesCreateReleaseOrderTableTmp;
+        #    TmpPurchTable           tmpPurchTable;
+        #    CustInvoiceTable        custInvoiceTable;
+        #    SMAServiceOrderTable    smaServiceOrderTable;
+        #    PurchReqLine            purchReqLine;
+        #    SMAAgreementTable       smaAgreementTable;
+        #    ProjTable               projTable;
+        #    SalesBasket             salesBasket;
+        #    AgreementHeaderDefault  agreementHeaderDefault;
+        #    AgreementHeader         agreementHeader;
+        #    //--> Advanced Credit Card
+        #    CreditCardTable         creditCardTable;
+        #    SalesTableCC            salesTableCC;
+        #    //<-- Advanced Credit Card
+        #    // <GEEU>
+        #    TransportationDocument  transportationDocument;
+        #    CzCustAdvanceInvoiceTable custAdvanceInvoiceTable;
+        #    CzVendAdvanceInvoiceTable vendAdvanceInvoiceTable;
+        #    // </GEEU>
+        #    // <GEERU>
+        #    InventTransferTable     inventTransferTable;
+        #    SalesParmTable          salesParmTable;
+        #    WMSBillOfLading         wmsBillOfLading;
+        #    // </GEERU>
+        #
+        #    switch(_common.TableId)
+        #    {
+        #        case tablenum(SalesBasket) :
+        #            salesBasket = _common;
+        #            return CustTable::find(salesBasket.CustAccount);
+        #
+        #        case tablenum(SalesTable) :
+        #            salesTable = _common;
+        #            // <GEERU>
+        #            switch (_roleType)
+        #            {
+        #                case LogisticsLocationRoleType::Lading_W :
+        #                    if (salesTable.salesTable_RU().ConsignorAccount_RU)
+        #                        return VendTable::find(salesTable.salesTable_RU().ConsignorAccount_RU);
+        #
+        #                    return CompanyInfo::find();
+        #            }
+        #            // </GEERU>
+        #            if(salesTable.ReturnStatus >= ReturnStatusHeader::Created
+        #               && !salesTable.returnExistReturnToCustLines())
+        #            {
+        #                return CompanyInfo::find();
+        #            }
+        #            else
+        #            {
+        #                return CustTable::find(salesTable.CustAccount);
+        #            }
+        #
+        #        case tablenum(SalesLine) :
+        #            salesLine = _common;
+        #            return CustTable::find(salesLine.CustAccount);
+        #
+        #        case tablenum(SalesQuotationTable) :
+        #            salesQuotationTable = _common;
+        #            if (salesQuotationTable.CustAccount)
+        #            {
+        #                return CustTable::find(salesQuotationTable.CustAccount);
+        #            }
+        #            else
+        #            {
+        #                return smmBusRelTable::find(salesQuotationTable.BusRelAccount);
+        #            }
+        #        case tablenum(SalesQuotationLine) :
+        #            salesQuotationLine = _common;
+        #            if (salesQuotationLine.CustAccount)
+        #            {
+        #                return CustTable::find(salesQuotationLine.CustAccount);
+        #            }
+        #            else
+        #            {
+        #                return smmBusRelTable::find(salesQuotationLine.salesQuotationTable().BusRelAccount);
+        #            }
+        #        case tablenum(LedgerJournalTrans) :
+        #            ledgerJournalTrans = _common;
+        #            if (ledgerJournalTrans.AccountType == LedgerJournalACType::Vend)
+        #            {
+        #                changecompany(ledgerJournalTrans.Company)
+        #                {
+        #                    return VendTable::findByLedgerDimension(ledgerJournalTrans.LedgerDimension);
+        #                }
+        #            }
+        #            break;
+        #
+        #        case tablenum(VendTrans) :
+        #            vendTrans = _common;
+        #            return VendTable::find(vendTrans.AccountNum);
+        #
+        #        case tablenum(VendInvoiceInfoTable) :
+        #            vendInvoiceInfoTable = _common;
+        #            return VendTable::find(vendInvoiceInfoTable.InvoiceAccount);
+        #
+        #        case tablenum(SalesAgreementHeader) :
+        #            salesAgreementHeader = _common;
+        #            return CustTable::findByCompany(CompanyInfo::findRecId(salesAgreementHeader.SellingLegalEntity).DataArea, salesAgreementHeader.CustAccount);
+        #
+        #        case tablenum(PurchAgreementHeader) :
+        #            purchAgreementHeader = _common;
+        #            return VendTable::findByCompany(CompanyInfo::findRecId(purchAgreementHeader.BuyingLegalEntity).DataArea, purchAgreementHeader.VendAccount);
+        #
+        #        case tablenum(SalesCreateReleaseOrderTableTmp) :
+        #            salesCreateReleaseOrderTableTmp = _common;
+        #            salesAgreementHeader = SalesAgreementHeader::find(salesCreateReleaseOrderTableTmp.AgreementHeader);
+        #            return (salesAgreementHeader.SellingLegalEntity) ?
+        #                        CustTable::findByCompany(CompanyInfo::findRecId(salesAgreementHeader.SellingLegalEntity).DataArea, salesAgreementHeader.CustAccount)
+        #                      : CustTable::find(salesCreateReleaseOrderTableTmp.CustAccount);
+        #
+        #
+        #        case tablenum(TmpPurchTable) :
+        #            tmpPurchTable = _common;
+        #            purchAgreementHeader = PurchAgreementHeader::find(tmpPurchTable.PurchAgreementHeader);
+        #            return (purchAgreementHeader.BuyingLegalEntity) ?
+        #                        VendTable::findByCompany(CompanyInfo::findRecId(purchAgreementHeader.BuyingLegalEntity).DataArea, purchAgreementHeader.VendAccount)
+        #                      : VendTable::find(tmpPurchTable.OrderAccount);
+        #
+        #        case tablenum(CustInvoiceTable) :
+        #            custInvoiceTable = _common;
+        #            return CustTable::find(custInvoiceTable.InvoiceAccount);
+        #
+        #        // <GEEU>
+        #        case tableNum(CzCustAdvanceInvoiceTable) :
+        #            custAdvanceInvoiceTable = _common;
+        #            return CustTable::find(custAdvanceInvoiceTable.InvoiceAccount);
+        #
+        #        case tableNum(CzVendAdvanceInvoiceTable) :
+        #            vendAdvanceInvoiceTable = _common;
+        #            return VendTable::find(vendAdvanceInvoiceTable.InvoiceAccount);
+        #        // </GEEU>
+        #
+        #        case tablenum(SMAServiceOrderTable) :
+        #            smaServiceOrderTable = _common;
+        #            return CustTable::find(smaServiceOrderTable.CustAccount);
+        #
+        #        // Used for service orders from EP during create
+        #        // We retrieve the customer record from this
+        #        case tablenum(SMAAgreementTable):
+        #            smaAgreementTable = _common;
+        #            // Get the project id
+        #            projTable = ProjTable::find(smaAgreementTable.ProjId, false);
+        #            // Get the customer from project
+        #            return CustTable::find(projTable.CustAccount, false);
+        #        case tableNum(PurchTable) :
+        #            purchTable = _common;
+        #            if(purchTable.PurchaseType == PurchaseType::ReturnItem)
+        #            {
+        #                return VendTable::find(purchTable.OrderAccount);
+        #            }
+        #            else
+        #            {
+        #                return CompanyInfo::find();
+        #            }
+        #        case tablenum(PurchRFQCaseTable) :
+        #        case tablenum(PurchRFQCaseLine) :
+        #        case tablenum(PurchRFQTable) :
+        #        case tablenum(PurchRFQLine) :
+        #        case tablenum(PurchLine) :
+        #            return CompanyInfo::find();
+        #
+        #        // <GEEU>
+        #        case tableNum(TransportationDocument) :
+        #            transportationDocument = _common;
+        #
+        #            return transportationDocument.getLoadedPostalAddressLookupRecord();
+        #        // </GEEU>
+        #
+        #        case tablenum(PurchReqLine) :
+        #            purchReqLine = _common;
+        #            return HcmWorker::find(purchReqLine.Requisitioner);
+        #
+        #        case tableNum(AgreementHeaderDefault) :
+        #            agreementHeaderDefault = _common;
+        #
+        #            select recId from agreementHeader
+        #                    where agreementHeader.RecId == agreementHeaderDefault.AgreementHeader
+        #                outer join VendAccount, BuyingLegalEntity from purchAgreementHeader
+        #                    where purchAgreementHeader.RecId == agreementHeader.RecId
+        #                outer join CustAccount, SellingLegalEntity from salesAgreementHeader
+        #                    where salesAgreementHeader.RecId == agreementHeader.RecId;
+        #
+        #            if (agreementHeader.RecId != 0)
+        #            {
+        #                if (purchAgreementHeader.VendAccount)
+        #                {
+        #                    return VendTable::findByCompany(CompanyInfo::findRecId(purchAgreementHeader.BuyingLegalEntity).DataArea,
+        #                                                    purchAgreementHeader.VendAccount);
+        #                }
+        #                else if (salesAgreementHeader.CustAccount)
+        #                {
+        #                    return CustTable::findByCompany(CompanyInfo::findRecId(salesAgreementHeader.SellingLegalEntity).DataArea,
+        #                                                    salesAgreementHeader.CustAccount);
+        #                }
+        #            }
+        #            break;
+        #        //--> Advanced Credit Card
+        #        case    tableNum(creditCardTable)   :
+        #            creditCardTable = _common;
+        #            if (creditCardTable.CustAccount)
+        #            {
+        #                return CustTable::find(creditCardTable.CustAccount);
+        #            }
+        #            break;
+        #        case    tableNum(SalesTableCC)   :
+        #            salesTableCC = _common;
+        #            if (salesTableCC.SalesId)
+        #            {
+        #                return CustTable::find(salesTable::find(SalesTableCC.SalesId).InvoiceAccount);
+        #            }
+        #            else if (SalesTableCC.ProjProposalId)
+        #            {
+        #                return CustTable::find(ProjProposalJour::find(SalesTableCC.ProjProposalId).InvoiceAccount);
+        #            }
+        #            break;
+        #        //<-- Advanced CreditCard
+        #        // <GEERU>
+        #        case tableNum(InventTransferTable) :
+        #            inventTransferTable = _common;
+        #            return inventTransferTable.getTransationEntity_RU(_roleType);
+        #        case tableNum(SalesParmTable) :
+        #            salesParmTable = _common;
+        #            return salesParmTable.getTransationEntity_RU(_roleType);
+        #        case tableNum(WMSBillOfLading) :
+        #            wmsBillOfLading = _common;
+        #            return wmsBillOfLading.getTransationEntity_RU(_roleType);
+        #        // </GEERU>
+        #    }
+        #
+        #    // Not a transaction that DirPartyPostalAddressForm can handle.
+        #    return _common;
+        #}
+      ENDSOURCE
+      SOURCE #isTransactionCommon
+        #/// <summary>
+        #///    Determines whether the location is related to a transaction or not.
+        #/// </summary>
+        #/// <param name="_common">
+        #///    A <c>Common</c> object record that contains the caller record.
+        #/// </param>
+        #/// <returns>
+        #///    true if the entity caller is transaction related; otherwise, false.
+        #/// </returns>
+        #public static boolean isTransactionCommon(Common _common)
+        #{
+        #    switch(_common.TableId)
+        #    {
+        #        case tablenum(SalesTable),              tablenum(SalesLine),
+        #            tablenum(SalesQuotationTable),      tablenum(SalesQuotationLine),
+        #            tablenum(PurchRFQCaseTable),        tablenum(PurchRFQCaseLine),
+        #            tablenum(PurchRFQTable),            tablenum(PurchRFQLine),
+        #            tablenum(PurchTable),               tablenum(PurchLine),
+        #            tablenum(PurchReqLine),
+        #            tablenum(LedgerJournalTrans),
+        #            tablenum(VendTrans),
+        #            tablenum(VendInvoiceInfoTable),
+        #            tablenum(AgreementHeaderDefault),
+        #            tablenum(SalesCreateReleaseOrderTableTmp),
+        #            tablenum(TmpPurchTable),
+        #            tablenum(CustInvoiceTable),
+        #            tablenum(SMAServiceOrderTable),
+        #            //--> Advancd Credit Card
+        #            tableNum(CreditCardTable),
+        #            tableNum(SalesTableCC)
+        #            //<-- Advanced Credit Card
+        #            :
+        #            return true;
+        #
+        #        default:
+        #            return false;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #/// <summary>
+        #///    Called by the menu items.
+        #/// </summary>
+        #/// <param name="_args">
+        #///    The <c>Args</c> object that is passed from the menu item.
+        #/// </param>
+        #/// <param name="_showForm">
+        #///    The Boolean value to indicate if the form can be shown or not.
+        #/// </param>
+        #public static void main(Args _args, boolean _showForm = true)
+        #{
+        #    #Task
+        #    Args                                args, callerArgs;
+        #    FormRun                             addressForm, callerForm;
+        #    Object                              callerObject;
+        #    DirPartyPostalAddressFormHandler    postalAddressForm;
+        #    Common                              transaction, callerRecord;
+        #    boolean                             isTransaction;
+        #
+        #    // determine the caller's args
+        #    if (_args.caller() && _args.caller().name() == classStr(LogisticsLocationSelectionLookup)
+        #        && _args.caller().args())
+        #    {
+        #        callerArgs = _args.caller().args();
+        #        callerArgs.openMode(_args.openMode());
+        #    }
+        #    else
+        #    {
+        #        callerArgs = _args;
+        #    }
+        #
+        #    if (DirPartyPostalAddressFormHandler::isTransactionCommon(callerArgs.record()))
+        #    {
+        #        // Form expects a party entity, so if we have a transaction, convert to an entity.
+        #        transaction = callerArgs.record();
+        #
+        #        // <GEERU>
+        #        if (callerArgs.parmEnumType() == enumNum(LogisticsLocationRoleType))
+        #        {
+        #            callerRecord = DirPartyPostalAddressFormHandler::getTransactionEntity(transaction, callerArgs.parmEnum());
+        #        }
+        #        else
+        #        {
+        #        // </GEERU>
+        #            callerRecord = DirPartyPostalAddressFormHandler::getTransactionEntity(transaction);
+        #        // <GEERU>
+        #        }
+        #        // </GEERU>
+        #        isTransaction = true;
+        #    }
+        #    else
+        #    {
+        #        callerRecord = callerArgs.record();
+        #        isTransaction = false;
+        #    }
+        #
+        #    postalAddressForm = DirPartyPostalAddressFormHandler::newParameters(callerArgs.record());
+        #    postalAddressForm.setOpenMode(_args.openMode());
+        #
+        #    //<GEERU>
+        #    postalAddressForm.parmArgs_RU(callerArgs);
+        #    //</GEERU>
+        #
+        #    if(isTransaction)
+        #    {
+        #        postalAddressForm.parmIsTransaction(isTransaction);
+        #        postalAddressForm.setTransaction(callerArgs.record());
+        #    }
+        #
+        #    // can't be called without a table buffer
+        #    if (!callerRecord)
+        #    {
+        #        throw error(strFmt("@SYS134996", tableId2pname(_args.dataset())));
+        #    }
+        #
+        #    callerForm = callerArgs.caller();
+        #
+        #    // Set the current selected location
+        #
+        #    // <GEERU>
+        #    switch (callerArgs.parmEnum())
+        #    {
+        #        case LogisticsLocationRoleType::Lading_W:
+        #            if (formHasMethod(callerForm, identifierStr(parmPostalAddressLocationLading_RU)))
+        #            {
+        #                callerObject = callerForm;
+        #                postalAddressForm.parmLocation(callerObject.parmPostalAddressLocationLading_RU());
+        #            }
+        #            break;
+        #        default:
+        #    // </GEERU>
+        #    if (formHasMethod(callerForm, identifierStr(parmPostalAddressLocation)))
+        #    {
+        #        callerObject = callerForm;
+        #        postalAddressForm.parmLocation(callerObject.parmPostalAddressLocation());
+        #    }
+        #
+        #    // <GEERU>
+        #    }
+        #    // </GEERU>
+        #
+        #    callerArgs.parmObject(postalAddressForm);
+        #
+        #    args = new Args();
+        #    args.name(formStr(LogisticsPostalAddress));
+        #    args.record(callerRecord);
+        #    args.openMode(callerArgs.openMode());
+        #    args.parmObject(callerArgs.parmObject());
+        #    args.menuItemName(callerArgs.menuItemName());
+        #
+        #    args.caller(callerArgs.caller());
+        #
+        #    addressForm = classfactory.formRunClass(args);
+        #
+        #    if (addressForm)
+        #    {
+        #        addressForm.init();
+        #        if (_showForm)
+        #        {
+        #            addressForm.run();
+        #            addressForm.wait();
+        #        }
+        #
+        #        if (addressForm.closed() && !addressForm.closedCancel())
+        #        {
+        #            postalAddressForm.updateCallerPostalAddress(callerForm);
+        #
+        #            if(_args.caller() && _args.caller().name() == classStr(LogisticsLocationSelectionLookup))
+        #            {
+        #                _args.caller().close();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #manageControls
+        #/// <summary>
+        #/// Handles the address component visibility that depends on the address format.
+        #/// </summary>
+        #/// <param name="_countryRegionId">
+        #/// The <c>LogisticsAddressCountryRegionId</c> extended data type of the active country of the record
+        #/// and region ID.
+        #/// </param>
+        #/// <param name="_formDataSource">
+        #/// The <c>FormDatasource</c> class of the postal address.
+        #/// </param>
+        #/// <returns>
+        #/// A <c>List</c> class of visible fields.
+        #/// </returns>
+        #
+        #public static client List manageControls(LogisticsAddressCountryRegionId _countryRegionId, FormDataSource _formDataSource)
+        #{
+        #    LogisticsAddressFormatLines formatLines;
+        #    LogisticsAddressCountryRegion countryRegion;
+        #    SysDictEnum     elementEnum = new SysDictEnum(enumNum(LogisticsAddressElement));
+        #    LogisticsAddressElement element;
+        #    FieldId         fieldId;
+        #    List            visibleFields = new List(Types::Integer);
+        #    LogisticsAddressParameters parameters = LogisticsAddressParameters::find();
+        #    boolean         showField;
+        #
+        #    select firstonly AddrFormat from countryRegion where countryRegion.CountryRegionId == _countryRegionId;
+        #
+        #    element = elementEnum.firstValue();
+        #
+        #    do
+        #    {
+        #        if (element != LogisticsAddressElement::CountryRegion
+        #            && element != LogisticsAddressElement::AddressFormat
+        #        // <GEERU>
+        #            && element != LogisticsAddressElement::CountryOKSMCode_RU)
+        #        // </GEERU>
+        #        {
+        #            fieldId = LogisticsPostalAddress::element2fieldId(element, _countryRegionId);
+        #
+        #            if (countryRegion.AddrFormat)
+        #            {
+        #                // <GEERU>
+        #                select Element, InActive from formatLines
+        #                // </GEERU>
+        #                    where formatLines.Element == element &&
+        #                        formatLines.AddrFormat == countryRegion.AddrFormat;
+        #
+        #                showField = formatLines.Element != 0 && formatLines.InActive == NoYes::No;
+        #                if (showField)
+        #                {
+        #                    visibleFields.addEnd(fieldId);
+        #                }
+        #                // Setting the visible property is much more expensive than reading it
+        #                // so only set when a change is needed.
+        #                if (showField != _formDataSource.object(fieldId).visible())
+        #                {
+        #                    _formDataSource.object(fieldId).visible(showField);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (!_formDataSource.object(fieldId).visible())
+        #                {
+        #                    _formDataSource.object(fieldId).visible(true);
+        #                }
+        #            }
+        #        }
+        #        element = elementEnum.nextValue(element);
+        #    } while (element != elementEnum.firstValue());
+        #
+        #    return visibleFields;
+        #}
+      ENDSOURCE
+      SOURCE #newParameters
+        #/// <summary>
+        #/// Initializes a new instance of the class that has the required parameters.
+        #/// </summary>
+        #/// <param name="_callerRecord">
+        #/// A <c>Common</c> object of the current caller record.
+        #/// </param>
+        #/// <returns>
+        #/// A new instance of the <c>DirPartyPostalAddressFormHandler</c> class.
+        #/// </returns>
+        #static DirPartyPostalAddressFormHandler newParameters(Common _callerRecord)
+        #{
+        #    DirPartyPostalAddressFormHandler postalAddressForm = DirPartyPostalAddressFormHandler::newWithCallerRecord(_callerRecord);
+        #
+        #    postalAddressForm.datasourceCaller(_callerRecord.dataSource());
+        #
+        #    return postalAddressForm;
+        #}
+      ENDSOURCE
+      SOURCE #newWithCallerRecord
+        #/// <summary>
+        #///    Initializes a new instance of the class that has parameters required.
+        #/// </summary>
+        #/// <param name="_callerRecord">
+        #///    A <c>Common</c> object of the current caller record.
+        #/// </param>
+        #/// <returns>
+        #///    A new instance of the <c>DirPartyPostalAddressFormHandler</c> class.
+        #/// </returns>
+        #static DirPartyPostalAddressFormHandler newWithCallerRecord(Common _callerRecord)
+        #{
+        #    DirPartyPostalAddressFormHandler postalAddressForm;
+        #
+        #    switch (_callerRecord.TableId)
+        #    {
+        #        case tableNum(SalesTable):
+        #            postalAddressForm = new DirPartyPostalAddressFormHnd_SalesTable();
+        #            break;
+        #        case tableNum(SalesLine):
+        #            postalAddressForm = new DirPartyPostalAddressFormHnd_SalesLine();
+        #            break;
+        #        default:
+        #            postalAddressForm = new DirPartyPostalAddressFormHandler();
+        #    }
+        #
+        #    postalAddressForm.setCallerRecord(_callerRecord);
+        #    return postalAddressForm;
+        #}
+      ENDSOURCE
+      SOURCE #postValidatePostalAddressHandler_BR
+        #/// <summary>
+        #/// Calls the method <c>DirPartyPostalAddressFormHandler.postValidatePostalAddress_BR</c> and uses its return value
+        #/// to set the <c>DirPartyPostalAddressFormHandler.validatePostalAddress</c> return value, if Brazilian context is enabled.
+        #/// </summary>
+        #/// <param name="_args">
+        #/// The arguments passed by the event hanlder.
+        #/// </param>
+        #public static void postValidatePostalAddressHandler_BR(XppPrePostArgs _args)
+        #{
+        #    DirPartyPostalAddressFormHandler thisObj;
+        #    boolean retVal;
+        #
+        #    if (!BrazilParameters::isEnabled())
+        #    {
+        #        return;
+        #    }
+        #
+        #    thisObj = _args.getThis();
+        #    retVal = _args.getReturnValue();
+        #    retVal = thisObj.postValidatePostalAddress_BR(_args.getArg('_postalAddressOrig'),
+        #                                                  _args.getArg('_postalAddress'),
+        #                                                  retVal);
+        #    _args.setReturnValue(retVal);
+        #}
+      ENDSOURCE
+    ENDMETHODS
+    EVENTS
+      METHOD #validatePostalAddress
+        EVENTHANDLERS
+          EVENTHANDLER #validatePostalAddressPost_BR
+            PROPERTIES
+              CalledWhen          #Post
+              Class               #DirPartyPostalAddressFormHandler
+              Method              #postValidatePostalAddressHandler_BR
+              AOTlink             #\Classes\DirPartyPostalAddressFormHandler\postValidatePostalAddressHandler_BR
+            ENDPROPERTIES
+            
+          ENDEVENTHANDLER
+        ENDEVENTHANDLERS
+      ENDMETHOD
+    ENDEVENTS
+  ENDCLASS
+
+***Element: END

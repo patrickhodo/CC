@@ -1,0 +1,1030 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardProcess
+    PROPERTIES
+      Name                #CreditCardProcess
+      RunOn               #Server
+      Origin              #{2D11384A-0000-1000-6AF9-3EB294EB1AFF}
+      LegacyId            #14410
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #checkForAddressVerification
+        #protected boolean checkForAddressVerification()
+        #{
+        #    // Should be overriden in the derived class if AVS is performed.
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #checkForCardVerificationValue
+        #protected boolean checkForCardVerificationValue()
+        #{
+        #    // Should be overriden in the derived class if CVV is performed.
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #checkFreight
+        #AmountCur checkFreight(AmountCur _amt = 0)
+        #{
+        #    AmountCur freight = 0;
+        #
+        #    if (mcrEnableOrderCompletion)
+        #    {
+        #        if (!mcrCustPaymTable)
+        #        {
+        #            throw error ("@MCR40414");
+        #        }
+        #    }
+        #    else if (!salesTable)
+        #    {
+        #        throw error("@SYS116917");     //"Sales Order not specified."
+        #    }
+        #
+        #    if (DlvTerm::find(salesTable.DlvTerm).ShipCarrierFreightApplied != ShipCarrierFreightApplied::None)
+        #    {
+        #        freight = salesTable.projectedFreightCharge(_amt);
+        #    }
+        #
+        #    return freight;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #abstract class CreditCardProcess
+        #{
+        #    SalesTable              salesTable;
+        #    SalesInvoiceId          salesInvoiceId;
+        #    CustInvoiceJour         custInvoiceJour;
+        #    CreditCardAuthTrans     creditCardTrans;
+        #    CreditCardOperation     operation;
+        #    AmountCur               totalAmountCur;
+        #    CurrencyCode            currencyCode;
+        #    boolean                 getCardVerificationValue;
+        #    CreditCardCVV           cardVerificationValue;
+        #    MCRCustPaymTable        mcrCustPaymTable;
+        #    RecId                   mcrCustPaymRecId;
+        #    CustInvoiceTable        custInvoiceTable;
+        #    LedgerJournalTrans      ledgerJournalTrans;
+        #    CustPaymSchedLine       custPaymSchedLine;
+        #    NoYes                   mcrEnableOrderCompletion;
+        #}
+      ENDSOURCE
+      SOURCE #createProcessResponse
+        #//must be overwrite in derived class
+        #abstract boolean createProcessResponse(str _successDescriptionOverride = "")
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #failedReason
+        #abstract str failedReason()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getCardVerificationValue
+        #protected boolean getCardVerificationValue()
+        #{
+        #    // Should be overriden in the derived class if CVV is performed.
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #protected void init(Common _record)
+        #{
+        #    switch(_record.TableId)
+        #    {
+        #    case tableNum(SalesTable):
+        #        salesTable = _record;
+        #        creditCardTrans = CreditCardAuthTrans::findValidPreApproval(salesTable.SalesId);
+        #        break;
+        #
+        #    case tableNum(CreditCardAuthTrans):
+        #        creditCardTrans = _record;
+        #        if (creditCardTrans.SalesId)
+        #        {
+        #            salesTable = SalesTable::find(creditCardTrans.SalesId);
+        #        }
+        #        if (creditCardTrans.MCRPaymRecId)
+        #        {
+        #            mcrCustPaymTable = mcrCustPaymTable::findByRecID(creditCardTrans.MCRPaymRecId);
+        #        }
+        #        break;
+        #    case tableNum(MCRCustPaymTable):
+        #        mcrCustPaymTable = _record;
+        #        creditCardTrans = CreditCardAuthTrans::mcrfindValidPreApproval(mcrCustPaymTable.RecId);
+        #        // Sales table is required to submit the authorization so set the sales table.
+        #        switch (mcrCustPaymTable.RefTableId)
+        #        {
+        #            case tableNum(salesTable):
+        #                salesTable = salesTable::findRecId(mcrCustPaymTable.RefRecId);
+        #                break;
+        #            case tableNum(CustInvoiceTable):
+        #                custInvoiceTable = CustInvoiceTable::findRecId(mcrCustPaymTable.RefRecId);
+        #                break;
+        #            case tableNum(ledgerJournalTrans):
+        #                ledgerJournalTrans = ledgerJournalTrans::findRecId(mcrCustPaymTable.RefRecId, false);
+        #                break;
+        #            case tableNum(custPaymSchedLine):
+        #                CustPaymSchedLine = custPaymSchedLine::mcrFindByRecID(mcrCustPaymTable.RefRecId, false);
+        #                break;
+        #        }
+        #        break;
+        #    }
+        #
+        #    // If credit card is for an order determine if order completion is enabled for it's channel
+        #    // otherwise use the channel for the current user.
+        #    if (salesTable)
+        #    {
+        #        mcrEnableOrderCompletion = RetailMCRChannelTable::mcrEnableOrderCompletion(salesTable);
+        #    }
+        #    else
+        #    {
+        #        mcrEnableOrderCompletion = RetailMCRChannelTable::mcrEnableOrderCompletionFindByUser();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #isValidCurrencyCodeForCreditCard
+        #public boolean isValidCurrencyCodeForCreditCard()
+        #{
+        #    CreditCardProcessors processors = CreditCardProcessors::find(this.parmCreditCardProcessor());
+        #    CreditCardTypeSetup  cardSetup;
+        #
+        #    if (MCROrderParameters::isCallCenterEnabledAndInUse())
+        #    {
+        #        if (salesTable.CreditCardCustRefId)
+        #        {
+        #            cardSetup = CreditCardTypeSetup::find(processors, CreditCardCust::find(salesTable.CreditCardCustRefId).CreditCardTypeName);
+        #        }
+        #        else if (mcrCustPaymTable)
+        #        {
+        #            cardSetup = CreditCardTypeSetup::find(processors, CreditCardCust::find(mcrCustPaymTable.PaymInfoRecId).CreditCardTypeName);
+        #            currencyCode = mcrCustPaymTable.CurrencyCode;
+        #        }
+        #        else if (creditCardTrans)
+        #        {
+        #            cardSetup = CreditCardTypeSetup::find(processors, creditCardTrans.CreditCardTypeName);
+        #            currencyCode = creditCardTrans.CurrencyCode;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        cardSetup = CreditCardTypeSetup::find(processors, CreditCardCust::find(salesTable.CreditCardCustRefId).CreditCardTypeName);
+        #    }
+        #
+        #    return CreditCardTypeCurrency::exist(cardSetup, currencyCode);
+        #}
+      ENDSOURCE
+      SOURCE #mcrSetRefundAmount
+        #/// <summary>
+        #///    Sets the amount to refund to the credit card.
+        #/// </summary>
+        #/// <param name="_amountToRefund">
+        #///    The amount to refund to the credit card.
+        #/// </param>
+        #private void mcrSetRefundAmount(AmountCur _amountToRefund)
+        #{
+        #    totalAmountCur  = _amountToRefund;
+        #    currencyCode    = mcrCustPaymTable.CurrencyCode;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #protected void new()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #parmCardVerificationValue
+        #protected CreditCardCVV parmCardVerificationValue(CreditCardCVV _cardVerificationValue = cardVerificationValue)
+        #{
+        #    cardVerificationValue = _cardVerificationValue;
+        #    return cardVerificationValue;
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardAuthTrans
+        #CreditCardAuthTrans parmCreditCardAuthTrans(CreditCardAuthTrans _creditCardTrans = creditCardTrans)
+        #{
+        #    creditCardTrans = _creditCardTrans;
+        #    return creditCardTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardProcessor
+        #public abstract CreditCardProcessorsId parmCreditCardProcessor()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #parmCustInvoiceJour
+        #public CustInvoiceJour parmCustInvoiceJour(CustInvoiceJour _custInvoiceJour = custInvoiceJour)
+        #{
+        #    custInvoiceJour = _custInvoiceJour;
+        #    return custInvoiceJour;
+        #}
+      ENDSOURCE
+      SOURCE #parmGetCardVerificationValue
+        #protected boolean parmGetCardVerificationValue(boolean _getCardVerificationValue = getCardVerificationValue)
+        #{
+        #    getCardVerificationValue = _getCardVerificationValue;
+        #    return getCardVerificationValue;
+        #}
+      ENDSOURCE
+      SOURCE #parmMCRCustInvoiceTable
+        #public CustInvoiceTable parmMCRCustInvoiceTable(CustInvoiceTable _custInvoiceTable = custInvoiceTable)
+        #{
+        #    custInvoiceTable = _custInvoiceTable;
+        #    return custInvoiceTable;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmMCRCustPaymRecId
+        #public RecId parmMCRCustPaymRecId(RecId _mcrCustPaymRecId = mcrCustPaymRecId)
+        #{
+        #    mcrCustPaymRecId = _mcrCustPaymRecId;
+        #    return mcrCustPaymRecId;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmMCRCustPaymSchedLine
+        #public CustPaymSchedLine parmMCRCustPaymSchedLine(CustPaymSchedLine _custPaymSchedLine = custPaymSchedLine)
+        #{
+        #    custPaymSchedLine = _custPaymSchedLine;
+        #    return custPaymSchedLine;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmMCRCustPaymTable
+        #protected MCRCustPaymTable parmMCRCustPaymTable(MCRCustPaymTable _mcrCustPaymTable = mcrCustPaymTable)
+        #{
+        #    mcrCustPaymTable = _mcrCustPaymTable;
+        #    return mcrCustPaymTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmMCRLedgerJournalTrans
+        #public ledgerJournalTrans  parmMCRLedgerJournalTrans(LedgerJournalTrans _ledgerJournalTrans = ledgerJournalTrans)
+        #{
+        #    ledgerJournalTrans = _ledgerJournalTrans;
+        #    return ledgerJournalTrans;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmOperation
+        #CreditCardOperation parmOperation(CreditCardOperation _operation = operation)
+        #{
+        #    operation = _operation;
+        #    return operation;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesInvoiceId
+        #public SalesInvoiceId parmSalesInvoiceId(SalesInvoiceId _salesInvoiceId = salesInvoiceId)
+        #{
+        #    salesInvoiceId = _salesInvoiceId;
+        #    return salesInvoiceId;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesTable
+        #SalesTable parmSalesTable()
+        #{
+        #    return salesTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmTotalAmountCur
+        #AmountCur parmTotalAmountCur(AmountCur _totalAmountCur = totalAmountCur)
+        #{
+        #    totalAmountCur = _totalAmountCur;
+        #    return totalAmountCur;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #prepareSubmission
+        #//must be overwrite in derived class
+        #abstract boolean prepareSubmission()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #presentResponse
+        #public void presentResponse(boolean _showSuccessMessage = true)
+        #{
+        #    if (this.processSucceed())
+        #    {
+        #        if (_showSuccessMessage)
+        #        {
+        #            if (salesTable.CreditCardCustRefId)
+        #            {
+        #                info(strFmt("@SYS327114", salesTable.SalesId));
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        error(strFmt("@SYS116935", this.failedReason()));
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #process
+        #/// <summary>
+        #///    Carries out all steps that are necessary to complete a credit card operation.
+        #/// </summary>
+        #/// <param name="_showSuccessMessage">
+        #///    A Boolean value that specifies whether to display a message upon successful completion of the
+        #///    operation.
+        #/// </param>
+        #/// <param name="_successDescriptionOverride">
+        #///    A description that is logged for successful completion.
+        #/// </param>
+        #/// <returns>
+        #///    true if the operation completed successfully; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///    The following methods are called, in order. If any of these methods return false, subsequent
+        #///    methods are not called.
+        #///    <list type="number">
+        #///       <item>
+        #///          <description>
+        #///             <c>prepareSubmission</c>
+        #///          </description>
+        #///       </item>
+        #///       <item>
+        #///          <description>
+        #///             <c>submit</c>
+        #///          </description>
+        #///       </item>
+        #///       <item>
+        #///          <description>
+        #///             <c>createProcessResponse</c>
+        #///          </description>
+        #///       </item>
+        #///       <item>
+        #///          <description>
+        #///             <c>doAddressVerification</c>
+        #///          </description>
+        #///       </item>
+        #///       <item>
+        #///          <description>
+        #///             <c>updateSalesTable</c>
+        #///          </description>
+        #///       </item>
+        #///    </list>
+        #/// </remarks>
+        #public boolean process(boolean _showSuccessMessage = true, str _successDescriptionOverride = "")
+        #{
+        #    boolean ok = true;
+        #
+        #    if (mcrEnableOrderCompletion)
+        #    {
+        #        _showSuccessMessage = false;
+        #    }
+        #
+        #    //--> Red Maple Begin
+        #    if (isConfigurationKeyEnabled(configurationkeynum(CreditCardAdv)))
+        #    {
+        #        return true;
+        #    }
+        #    //--> Red Maple End
+        #
+        #    if(!this.isValidCurrencyCodeForCreditCard())
+        #    {
+        #        // The credit card processor does not support the currency.
+        #        throw error(strFmt("@SYS327527", CreditCardProcessors::find(this.parmCreditCardProcessor()).Name, currencyCode));
+        #    }
+        #
+        #    if (!this.getCardVerificationValue())
+        #    {
+        #        // The pre-auth is not obtained since the CVV entry was canceled.
+        #        return false;
+        #    }
+        #
+        #    if(this.prepareSubmission())
+        #    {
+        #        this.submit();
+        #    }
+        #
+        #    this.createProcessResponse(_successDescriptionOverride);
+        #    this.validateTransaction();
+        #    this.updateSalesTable();
+        #    this.presentResponse(_showSuccessMessage);
+        #
+        #    if (this.processSucceed())
+        #    {
+        #        this.updateRelatedCCAuthTrans();
+        #    }
+        #
+        #    return this.processSucceed();
+        #}
+      ENDSOURCE
+      SOURCE #processSucceed
+        #//must be overwrite in derived class
+        #abstract public boolean processSucceed()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #setAmountFromAuthTrans
+        #/// <summary>
+        #/// Sets the amount to be processed on the credit card from a pre-authorization.
+        #/// </summary>
+        #/// <param name="_authTrans">
+        #/// A <c>CreditCardAuthTrans</c> record.
+        #/// </param>
+        #private void setAmountFromAuthTrans(CreditCardAuthTrans _authTrans)
+        #{
+        #    totalAmountCur = _authTrans.ApprovalAmountCur;
+        #    currencyCode = _authTrans.CurrencyCode;
+        #}
+      ENDSOURCE
+      SOURCE #setAmountFromSales
+        #/// <summary>
+        #/// Sets the amount to be charged to the credit card.
+        #/// </summary>
+        #/// <param name="_amountToPay">
+        #/// The amount to be charged to the credit card.
+        #/// </param>
+        #/// <param name="_currencyCode">
+        #/// The currency of amount to be charged to the credit card.
+        #/// </param>
+        #public void setAmountFromSales(AmountCur _amountToPay, CurrencyCode _currencyCode)
+        #{
+        #    totalAmountCur = _amountToPay;
+        #    currencyCode = _currencyCode;
+        #}
+      ENDSOURCE
+      SOURCE #setChargeAmount
+        #void setChargeAmount()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #setRefundAmountFromSales
+        #/// <summary>
+        #///    Sets the amount to refund to the credit card.
+        #/// </summary>
+        #/// <param name="_salesTotals">
+        #///    The amount to refund to the credit card.
+        #/// </param>
+        #private void setRefundAmountFromSales(SalesTotals_Sales _salesTotals)
+        #{
+        #    totalAmountCur  = -1 * _salesTotals.totalAmount();
+        #    currencyCode    = _salesTotals.currencyCode();
+        #}
+      ENDSOURCE
+      SOURCE #setSalesTotals
+        #void setSalesTotals()
+        #{
+        #    AmountCur               freightEstimate;
+        #
+        #    if (this.parmOperation() == CreditCardOperation::Authorize)
+        #    {
+        #        freightEstimate = this.checkFreight();
+        #    }
+        #
+        #    this.parmTotalAmountCur(this.parmTotalAmountCur() + freightEstimate);
+        #}
+      ENDSOURCE
+      SOURCE #submit
+        #//must be overwritten in derived class
+        #abstract boolean submit()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #updateRelatedCCAuthTrans
+        #public void updateRelatedCCAuthTrans()
+        #{
+        #    switch(this.parmOperation())
+        #    {
+        #    case CreditCardOperation::Void:
+        #        CreditCardAuthTrans::setVoidApproval(creditCardTrans.RecId);
+        #        creditCardTrans.reread();
+        #        break;
+        #
+        #    case CreditCardOperation::CaptureAfterAuthorize:
+        #        CreditCardAuthTrans::settlePreapprovalTransaction(creditCardTrans.RecId);
+        #        creditCardTrans.reread();
+        #        break;
+        #
+        #    case CreditCardOperation::Refund:
+        #        CreditCardAuthTrans::markRefundProcessed(creditCardTrans.RecId);
+        #        creditCardTrans.reread();
+        #        break;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSalesTable
+        #// must overwrite in derived class
+        #abstract boolean updateSalesTable()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #validateTransaction
+        #protected boolean validateTransaction()
+        #{
+        #    // Should be overriden in the derived class to validate the result transaction
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static CreditCardProcess construct(CreditCardOperation _operation, Common  _record)
+        #{
+        #    CreditCardProcess process = CreditCardProviderProcess::construct();
+        #
+        #    process.parmOperation(_operation);
+        #
+        #    process.init(_record);
+        #
+        #    return process;
+        #}
+      ENDSOURCE
+      SOURCE #doCapture
+        #[SysEntryPointAttribute]
+        #public static boolean doCapture(SalesTable _salesTable, SalesTotals_Sales _salesTotals, SalesInvoiceId _salesInvoiceId, CustInvoiceJour _custInvoiceJour)
+        #{
+        #    // Compiler/Security problem, see bug AX6:232082
+        #    CreditCardProcess process;
+        #    CreditCardAuthTrans authTrans;
+        #
+        #    process = CreditCardProcess::construct(CreditCardOperation::AuthorizeAndCapture, _salesTable);
+        #
+        #    process.setAmountFromSales(_custInvoiceJour.remainAmountToBePaid(), _salesTable.CurrencyCode);
+        #    process.parmSalesInvoiceId(_salesInvoiceId);
+        #    process.parmCustInvoiceJour(_custInvoiceJour);
+        #
+        #    authTrans = process.parmCreditCardAuthTrans();
+        #
+        #    if(authTrans)
+        #    {
+        #        // if authorization is already done, chech if the amount is sufficient
+        #        if(authTrans.ApprovalAmountCur >= process.parmTotalAmountCur())
+        #        {
+        #            // authorization is sufficient, just need to capture
+        #            process.parmOperation(CreditCardOperation::CaptureAfterAuthorize);
+        #        }
+        #        else
+        #        {
+        #            // authorization is insufficient, void the authorization and then authorize and capture.
+        #            info("@SYS116938");
+        #            if(!CreditCardProcess::doVoidAuth(authTrans, false))
+        #            {
+        #                return false;
+        #            }
+        #        }
+        #    }
+        #    return process.process();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #doPreAuth
+        #[SysEntryPointAttribute]
+        #public static boolean doPreAuth(SalesTable _salesTable, boolean _presentExtraMsg = true)
+        #{
+        #    // Compiler/Security problem, see bug AX6:232082
+        #    CreditCardProcess process;
+        #    CreditCardAuthTrans authTrans;
+        #    SalesTotals salesTotals;
+        #
+        #    // do nothing if no pre-authorize required
+        #    if(!CustParameters::find().CreditCardPreAuthorization)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    process = CreditCardProcess::construct(CreditCardOperation::Authorize, _salesTable);
+        #    salesTotals = SalesTotals_Sales::construct(_salesTable, SalesUpdate::All);
+        #    process.setAmountFromSales(salesTotals.totalAmount(), salesTotals.currencyCode());
+        #
+        #    process.parmGetCardVerificationValue(_presentExtraMsg);
+        #
+        #    // do nothing if pre-authorization is already done, and amount is sufficient
+        #    authTrans = process.parmCreditCardAuthTrans();
+        #    if(authTrans)
+        #    {
+        #        if(authTrans.ApprovalAmountCur >= process.parmTotalAmountCur())
+        #        {
+        #            if(_presentExtraMsg)
+        #            {
+        #                info("@SYS122586");
+        #            }
+        #            return true;
+        #        }
+        #        else
+        #        {
+        #            // void the existing pre-authorization if amount is insufficient
+        #            if(!CreditCardProcess::doVoidAuth(authTrans, false))
+        #            {
+        #                return false;
+        #            }
+        #        }
+        #    }
+        #
+        #    return process.process();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #doRefund
+        #[SysEntryPointAttribute]
+        #public static boolean doRefund(SalesTable _salesTable, SalesTotals_Sales _salesTotals, SalesInvoiceId _salesInvoiceId, CustInvoiceJour _custInvoiceJour)
+        #{
+        #    // Compiler/Security problem, see bug AX6:232082
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #    CreditCardProcess process;
+        #
+        #    creditCardAuthTrans = CreditCardAuthTrans::findRefundCharge(_salesTable.SalesId, true);
+        #    if(!creditCardAuthTrans)
+        #    {
+        #        throw error("@SYS328891"); // Credit card refunds can be processed only when the credit note is created from an existing sales order.
+        #    }
+        #
+        #    // Must refund using the same processor as was used for authorization
+        #    process = CreditCardProcess::construct(CreditCardOperation::Refund, creditCardAuthTrans);
+        #
+        #    process.setRefundAmountFromSales(_salesTotals);
+        #    process.parmSalesInvoiceId(_salesInvoiceId);
+        #    process.parmCustInvoiceJour(_custInvoiceJour);
+        #
+        #    return process.process();
+        #}
+      ENDSOURCE
+      SOURCE #doVoidAuth
+        #[SysEntryPointAttribute]
+        #// Misnamed, this is really voiding a pre-auth
+        #public static boolean doVoidAuth(CreditCardAuthTrans _creditCardAuthTrans2Void, boolean _showSuccessMessage = true, str _successDescriptionOverride = "")
+        #{
+        #    // Compiler/Security problem, see bug AX6:232082
+        #    CreditCardProcess process;
+        #
+        #    process = CreditCardProcess::construct(CreditCardOperation::Void, _creditCardAuthTrans2Void);
+        #
+        #    process.setAmountFromAuthTrans(_creditCardAuthTrans2Void);
+        #
+        #    return process.process(_showSuccessMessage, _successDescriptionOverride);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args _args)
+        #{
+        #    SalesTable          salesTable;
+        #    MCRCustPaymTable    mcrCustPaymTable;
+        #
+        #    switch(_args.parmEnum())
+        #    {
+        #    case CreditCardOperation::Authorize:
+        #        if (_args.record().TableId == tableNum(MCRCustPaymTable))
+        #        {
+        #            mcrCustPaymTable = _args.record();
+        #
+        #            CreditCardProcess::mcrDoPreAuth(mcrCustPaymTable);
+        #
+        #            mcrCustPaymTable.reread();
+        #        }
+        #        else
+        #        {
+        #            salesTable = _args.record();
+        #
+        #            CreditCardProcess::doPreAuth(salesTable);
+        #
+        #            salesTable.reread();
+        #        }
+        #        break;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #mcrDoCapture
+        #/// <summary>
+        #/// Captures the amount of the passed in record.
+        #/// </summary>
+        #/// <param name="_record">
+        #/// <c>MCRCustPaymTable</c> or <c>CreditCardAuthTrans</c> record to be captured.
+        #/// </param>
+        #/// <param name="_salesInvoiceId">
+        #/// Invoice ID of the related <c>CustInvoiceJour</c> record; optional.
+        #/// </param>
+        #/// <param name="_custInvoiceJour">
+        #/// Invoice record generated during the invoicing process; optional.
+        #/// </param>
+        #/// <param name="_amount">
+        #///     The postivie amount to post.
+        #/// </param>
+        #/// <returns>
+        #/// true if capture was successful; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// <c>SalesInvoiceId</c> and <c>CustInvoiceJour</c> are both passed in
+        #/// to improve usability of method.
+        #/// </remarks>
+        #/// <exception cref="Exception::Error">
+        #/// Require record for processing; throw error if not proivded.
+        #/// </exception>
+        #/// <exception cref="Exception::Error">
+        #/// Related table of payment must be <c>CustInvoiceTable</c>,<c>LedgerJournalTrans</c>, or <c>SalesTable</c>;
+        #/// throw error if not the case.
+        #/// </exception>
+        #
+        #[SysEntryPointAttribute]
+        #public static boolean mcrDoCapture(Common  _record,
+        #                                    SalesInvoiceId  _salesInvoiceId = "",
+        #                                    CustInvoiceJour _custInvoiceJour = null,
+        #                                    Amount _amount = 0)
+        #{
+        #    CreditCardProcess       process;
+        #    CreditCardAuthTrans     authTrans;
+        #    MCRCustPaymTable        mcrCustPaymTable;
+        #
+        #    if (_record)
+        #    {
+        #        process = CreditCardProcess::construct(CreditCardOperation::AuthorizeAndCapture, _record);
+        #
+        #        if (_record.TableId == tableNum(CreditCardAuthTrans))
+        #        {
+        #            authTrans = _record;
+        #            mcrCustPaymTable = MCRCustPaymTable::findByRecID(authTrans.MCRPaymRecId);
+        #        }
+        #        else if (_record.TableId == tableNum(MCRCustPaymTable))
+        #        {
+        #            mcrCustPaymTable = _record;
+        #        }
+        #        if (mcrCustPaymTable)
+        #        {
+        #            process.setAmountFromSales(_amount, mcrCustPaymTable.CurrencyCode);
+        #            switch (mcrCustPaymTable.RefTableId)
+        #            {
+        #                case tableNum(SalesTable):
+        #                    process.parmSalesInvoiceId(_salesInvoiceId);
+        #                    process.parmCustInvoiceJour(_custInvoiceJour);
+        #                break;
+        #                case tableNum(custInvoiceTable):
+        #                    process.parmMCRCustInvoiceTable(custInvoiceTable::findRecId(mcrCustPaymTable.RefRecId));
+        #                break;
+        #                case tableNum(ledgerJournalTrans):
+        #                    process.parmMCRLedgerJournalTrans(ledgerJournalTrans::findRecId(mcrCustPaymTable.RefRecId, false));
+        #                break;
+        #                case tableNum(custPaymSchedLine):
+        #                    process.parmMCRCustPaymSchedLine(custPaymSchedLine::mcrFindByRecID(mcrCustPaymTable.RefRecId, false));
+        #                    break;
+        #                default:
+        #                    throw error(strFmt("@MCR40412",int642str(mcrCustPaymTable.RefTableId)));
+        #            }
+        #            process.parmMCRCustPaymRecId(mcrCustPaymTable.RecId);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR40413");
+        #    }
+        #
+        #    authTrans = process.parmCreditCardAuthTrans();
+        #
+        #    if(authTrans)
+        #    {
+        #        // if authorization is already done, chech if the amount is sufficient
+        #        if(authTrans.ApprovalAmountCur >= process.parmTotalAmountCur())
+        #        {
+        #            // authorization is sufficient, just need to capture
+        #            process.parmOperation(CreditCardOperation::CaptureAfterAuthorize);
+        #        }
+        #        else
+        #        {
+        #            // authorization is insufficient, void the authorization and then authorize and capture.
+        #            info("@SYS116938");
+        #            if(!CreditCardProcess::doVoidAuth(authTrans, false))
+        #            {
+        #                return false;
+        #            }
+        #        }
+        #    }
+        #    return process.process();
+        #}
+        #
+      ENDSOURCE
+      SOURCE #mcrDoPreAuth
+        #/// <summary>
+        #/// Authorizes the amount on the passed in record.
+        #/// </summary>
+        #/// <param name="_record">
+        #/// <c>MCRCustPaymTable</c> or <c>CreditCardAuthTrans</c> record to be authorized.
+        #/// </param>
+        #/// <param name="_presentExtraMsg">
+        #/// Determines whether or not messages are displayed.
+        #/// </param>
+        #/// <returns>
+        #/// true if authorization was successful; otherwise, false.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// Passed in common must be either a <c>MCRCustPaymTable</c> or <c>CreditCardAuthTrans</c>,
+        #/// throw error if not.
+        #/// </exception>
+        #
+        #[SysEntryPointAttribute]
+        #public static boolean mcrDoPreAuth(Common _record,
+        #                                boolean _presentExtraMsg = true)
+        #{
+        #    CreditCardProcess       process;
+        #    CreditCardAuthTrans     authTrans;
+        #    MCRCustPaymTable        mcrCustPaymTable;
+        #    CreditCardAuthTrans     creditCardAuthTrans;
+        #    //--> Red Maple Begin
+        #    SalesTableCC            salesTableCC;
+        #    //<-- Red Maple Edn
+        #
+        #    // do nothing if no pre-authorize required
+        #    if(!CustParameters::find().CreditCardPreAuthorization)
+        #    {
+        #        return true;
+        #    }
+        #    if (_record)
+        #    {
+        #        process = CreditCardProcess::construct(CreditCardOperation::Authorize, _record);
+        #        if (_record.TableId == tableNum(mcrCustPaymTable))
+        #        {
+        #            mcrCustPaymTable = _record;
+        #            process.setAmountFromSales(mcrCustPaymTable.getUnpostedAmount(),mcrCustPaymTable.CurrencyCode);
+        #        }
+        #        else if (_record.TableId == tableNum(CreditCardAuthTrans))
+        #        {
+        #            creditCardAuthTrans = _record;
+        #            process.setAmountFromSales(creditCardAuthTrans.ApprovalAmountCur,creditCardAuthTrans.CurrencyCode);
+        #        }
+        #        else
+        #        {
+        #            throw error (error::wrongUseOfFunction(funcName()));
+        #        }
+        #    }
+        #    else
+        #    {
+        #        throw error (error::wrongUseOfFunction(funcName()));
+        #    }
+        #
+        #    process.parmGetCardVerificationValue(_presentExtraMsg);
+        #
+        #    //--> Red Maple Begin
+        #    if (mcrCustPaymTable && mcrCustPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #    {
+        #        salesTableCC = salesTableCC::findRecId(mcrCustPaymTable.PaymInfoRecId);
+        #
+        #        if (salesTableCC.Captured && salesTableCC.Processed)
+        #        {
+        #            info("@SYS122586");
+        #        }
+        #
+        #        if (salesTableCC.Cancelled)
+        #        {
+        #            return false;
+        #        }
+        #
+        #        if (salesTableCC::processMCRCustPaymTable(salesTableCC,mcrCustPaymTable))
+        #        {
+        #            return true;
+        #        }
+        #        else
+        #        {
+        #            return false;
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        // do nothing if pre-authorization is already done, and amount is sufficient
+        #        authTrans = process.parmCreditCardAuthTrans();
+        #        if(authTrans)
+        #        {
+        #            if(authTrans.ApprovalAmountCur >= process.parmTotalAmountCur())
+        #            {
+        #                if(_presentExtraMsg)
+        #                {
+        #                    info("@SYS122586");
+        #                }
+        #                return true;
+        #            }
+        #            else
+        #            {
+        #                // void the existing pre-authorization if amount is insufficient
+        #                if(!CreditCardProcess::doVoidAuth(authTrans, false))
+        #                {
+        #                    return false;
+        #                }
+        #            }
+        #        }
+        #        return process.process();
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #mcrDoRefund
+        #/// <summary>
+        #/// Refunds the amount on the passed in <c>MCRCustPaymTable</c> record.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymTable">
+        #/// Payment record to be refunded.
+        #/// </param>
+        #/// <returns>
+        #/// true if refund was successful; otherwise, false.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// <c>MCRCustPaymTable</c> record required for processing, throw error if not provided.
+        #/// </exception>
+        #/// <exception cref="Exception::Error">
+        #/// <c>CreditCardAuthTrans</c> record required for refund, throw error if not found.
+        #/// </exception>
+        #
+        #[SysEntryPointAttribute]
+        #public static boolean mcrDoRefund(MCRCustPaymTable _mcrCustPaymTable)
+        #{
+        #
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #    CreditCardProcess   process;
+        #    McrCustPaymTable originalPayment;
+        #    //--> Red Maple Begin
+        #    SalesTableCC            salesTableCC;
+        #    creditCardTrans         ccTrans;
+        #    boolean                 ret;
+        #    //<-- Red Maple End
+        #
+        #    if (!_mcrCustPaymTable)
+        #    {
+        #        throw error (error::wrongUseOfFunction(funcName()));
+        #    }
+        #
+        #    //--> Red Maple Begin
+        #    if (_mcrCustPaymTable && _mcrCustPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #    {
+        #        salesTableCC = salesTableCC::findRecId(_mcrCustPaymTable.PaymInfoRecId);
+        #        if (_mcrCustPaymTable.OrigRefundRecID && salesTableCC)
+        #        {
+        #            ccTrans = CreditCardTrans::createTransforRefCredit(salesTableCC);
+        #
+        #            //<-- create Credit Card Transaction
+        #            //--> We remove the tts portion to make sure errors are captured in the try/catch blocks
+        #            ccTrans = CreditCardAdv::processCreditCard(ccTrans);
+        #
+        #            ttsBegin;
+        #            salesTableCC.selectForUpdate(true);
+        #            if (CreditCardAdv::checkReturn(ccTrans,ccTrans.Result))
+        #            {
+        #                salesTableCC.PNRef     = ccTrans.pNRef;
+        #                salesTableCC.Processed = NoYes::Yes;
+        #                salesTableCC.TransID   = ccTrans.TransID;
+        #
+        #                salesTableCC.update();
+        #                ret = true;
+        #
+        #                info(strFmt("@ACC144",ccTrans.pnRef ? ccTrans.PNRef : ccTrans.OrbitalTxRefNum));
+        #            }
+        #            else
+        #            {
+        #                salesTableCC.TransID = ccTrans.TransID;
+        #                salesTableCC.update();
+        #                info(strfmt("@ACC143",ccTrans.result,ccTrans.RepMsg));
+        #                ret = false;
+        #            }
+        #            ttsCommit;
+        #            return ret;
+        #        }
+        #        else
+        #        {
+        #            return true;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        if (_mcrCustPaymTable.OrigRefundRecID)
+        #        {
+        #            creditCardAuthTrans = CreditCardAuthTrans::mcrFindRefundCharge(_mcrCustPaymTable.OrigRefundRecID, true);
+        #        }
+        #        else
+        #        {
+        #            // Find the original payment record using the same card
+        #            select firstOnly RecId from originalPayment
+        #            where originalPayment.RefTableId == _mcrCustPaymTable.RefTableId
+        #               && originalPayment.RefRecId == _mcrCustPaymTable.RefRecId
+        #               && originalPayment.PaymInfoTableId == _mcrCustPaymTable.PaymInfoTableId
+        #               && originalPayment.PaymInfoRecId == _mcrCustPaymTable.PaymInfoRecId
+        #               && originalPayment.Amount > 0
+        #               && originalPayment.Status == MCRCustPaymStatus::Paid;
+        #
+        #            // Find the capture trans of the original payment record
+        #            creditCardAuthTrans = CreditCardAuthTrans::mcrFindRefundCharge(originalPayment.RecId, true);
+        #        }
+        #
+        #        if (!creditCardAuthTrans)
+        #        {
+        #            throw error("@SYS328891");
+        #        }
+        #
+        #        // Must refund using the same processor as was used for authorization
+        #        process = CreditCardProcess::construct(CreditCardOperation::Refund,creditCardAuthTrans);
+        #        process.parmMCRCustPaymTable(_mcrCustPaymTable);
+        #        process.mcrSetRefundAmount(-_mcrCustPaymTable.getUnpostedAmount());
+        #
+        #        //Currently only return orders are supported for refunds.
+        #        if (_mcrCustPaymTable.RefTableId == tableNum(salesTable))
+        #        {
+        #            process.parmSalesInvoiceId(_mcrCustPaymTable.displayOrderID());
+        #        }
+        #
+        #
+        #        return process.process();
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

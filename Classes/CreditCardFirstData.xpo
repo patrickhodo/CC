@@ -1,0 +1,659 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardFirstData
+    PROPERTIES
+      Name                #CreditCardFirstData
+      Origin              #{68B59830-C98C-4507-8CFD-0B48D147F87B}
+      LegacyId            #20012
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzePingResponse
+        #NumberOfWorkItems analyzePingResponse(CreditCardStr     msg)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild;
+        #    XMLNamedNodeMap                 nodeMap;
+        #    Counter                         cnt,childCnt;
+        #    Counter                         i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   errMsg;
+        #    NoYes                           accepted;
+        #    NumberOfWorkItems               transactionTime;
+        #    ;
+        #    i = strScan(msg,'<!DOCTYPE',1,10);
+        #
+        #    if (i>0)
+        #    {
+        #        throw error(msg);
+        #    }
+        #
+        #    //xmlResult = xmlDocument::newFile('c:\\fd.xml');
+        #    xmlResult = xmlDocument::newXml(msg);
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    tmpStr = xmlResult.toString();
+        #
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be one node "Response"
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.nodeName();
+        #
+        #        if (elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = elementParent.childNodes().length();
+        #            node = elementparent.nodeName();
+        #
+        #            switch (elementParent.nodeName())
+        #            {
+        #                case    'RespClientID','DID'    :
+        #                    break;
+        #                case    'Status':
+        #                    nodeMap = elementParent.attributes();
+        #                    i = nodeMap.length();
+        #                    elementChild2 = nodeMap.getNamedItem('StatusCode');
+        #                    tmpStr = elementChild2.text();
+        #                    if (tmpStr == 'Retry')
+        #                    {
+        #                        accepted = false;
+        #                        errMsg = elementParent.innerText();
+        #                    }
+        #                    else if (tmpStr == 'OK')
+        #                    {
+        #                        accepted = true;
+        #                    }
+        #                    else
+        #                    {
+        #                        accepted = false;
+        #                        errMsg = elementParent.innerText();
+        #                    }
+        #                    break;
+        #                case    'PingResponse':
+        #                    for(childCnt =0; childCnt < i;childCnt++)
+        #                    {
+        #                        elementChild2 = childNodeList.item(childCnt);
+        #                        node = elementChild2.nodeName();
+        #
+        #                        tmpStr = elementChild2.innerXML();
+        #
+        #                        switch (node)
+        #                        {
+        #                            case    'ServiceCost'   :
+        #                                elementChild = elementChild2.getNamedElement('TransactionTimeMs');
+        #                                transactionTime = str2int64(elementChild.innerText());
+        #                                break;
+        #                        }
+        #                    }
+        #                    break;
+        #                default     :
+        #                    throw error("@ACC1509");
+        #            }
+        #
+        #        }
+        #        else
+        #        {
+        #            switch (elementParent.nodeName())
+        #            {
+        #                case    'Status'   :
+        #                    nodeMap = elementParent.attributes();
+        #                    i = nodeMap.length();
+        #                    elementChild2 = nodeMap.getNamedItem('StatusCode');
+        #                    tmpStr = elementChild2.text();
+        #                    if (tmpStr == 'Retry')
+        #                    {
+        #                        accepted = false;
+        #                        errMsg = 'Retry';
+        #                    }
+        #                    else if (tmpStr == 'OK')
+        #                    {
+        #                        accepted = true;
+        #                    }
+        #
+        #                    break;
+        #            }
+        #        }
+        #    }
+        #
+        #    if (accepted == false)
+        #    {
+        #        throw error(strFmt("@ACC1507",errMsg));
+        #    }
+        #
+        #    return transactionTime;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeResponse
+        #CreditCardTRans analyzeResponse(CreditCardStr           msg,
+        #                                CreditCardTrans                    _ccTrans)
+        #{
+        #    return _ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeServiceResponse
+        #Map analyzeServiceResponse(TempStr     msg)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild;
+        #    XMLNamedNodeMap                 nodeMap;
+        #    Counter                         cnt,childCnt;
+        #    Counter                         i;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   errMsg;
+        #    NoYes                           accepted;
+        #    Counter                         mapCount;
+        #    Map                             urlMap = new Map(Types::Integer,types::String);
+        #    ;
+        #    i = strScan(msg,'<!DOCTYPE',1,10);
+        #
+        #    if (i>0)
+        #    {
+        #        throw error(msg);
+        #    }
+        #
+        #    //xmlResult = xmlDocument::newFile('c:\\fd.xml');
+        #    xmlResult = xmlDocument::newXml(msg);
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    tmpStr = xmlResult.toString();
+        #
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be one node "Response"
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.nodeName();
+        #
+        #        if (elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = elementParent.childNodes().length();
+        #            if (i>1)
+        #            {
+        #
+        #                for(childCnt =0; childCnt < i;childCnt++)
+        #                {
+        #                    elementChild2 = childNodeList.item(childCnt);
+        #                    node = elementChild2.nodeName();
+        #
+        #                    tmpStr = elementChild2.innerXML();
+        #
+        #                    switch (node)
+        #                    {
+        #                        case    'ServiceProvider'   :
+        #                            elementChild = elementChild2.childNodes().item(0);
+        #                            if (elementChild.nodeName() == 'URL')
+        #                            {
+        #                                urlMap.insert(mapCount,elementChild.innerText());
+        #                                mapCount++;
+        #                            }
+        #                            break;
+        #                    }
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (elementParent.nodeName() == 'Status')
+        #                {
+        #                    nodeMap = elementParent.attributes();
+        #                    i = nodeMap.length();
+        #                    elementChild2 = nodeMap.getNamedItem('StatusCode');
+        #                    tmpStr = elementChild2.text();
+        #                    if (tmpStr == 'Retry')
+        #                    {
+        #                        accepted = false;
+        #                        errMsg = elementParent.innerText();
+        #                    }
+        #                    else if (tmpStr == 'OK')
+        #                    {
+        #                        accepted = true;
+        #                    }
+        #                    else
+        #                    {
+        #                        accepted = false;
+        #                        errMsg = elementParent.innerText();
+        #                    }
+        #
+        #                }
+        #            }
+        #        }
+        #        else
+        #        {
+        #            switch (elementParent.nodeName())
+        #            {
+        #                case    'Status'   :
+        #                    nodeMap = elementParent.attributes();
+        #                    i = nodeMap.length();
+        #                    elementChild2 = nodeMap.getNamedItem('StatusCode');
+        #                    tmpStr = elementChild2.text();
+        #                    if (tmpStr == 'Retry')
+        #                    {
+        #                        accepted = false;
+        #                        errMsg = 'Retry';
+        #                    }
+        #                    else if (tmpStr == 'OK')
+        #                    {
+        #                        accepted = true;
+        #                    }
+        #
+        #                    break;
+        #            }
+        #        }
+        #    }
+        #
+        #    if (accepted == false)
+        #    {
+        #        throw error(strFmt("@ACC1507",errMsg));
+        #    }
+        #
+        #    return urlMap;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #xml build()
+        #{
+        #    XML             xml;
+        #    ;
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #    //instruction = xmlDocument.createProcessingInstruction('xml-stylesheet',
+        #        //'type="text/xsl" href="www.redmaple.com"');
+        #
+        #    //xmlDocument.appendChild(instruction);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildRegister
+        #xml buildRegister(CreditCardMerchantFirstData     ccfirstData)
+        #{
+        #    CreditCardStr                   ParmList,parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #
+        #    XMLElement                      request;
+        #    XMLElement                      reqClient;
+        #    XMLElement                      xmlGen;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccfirstData.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    parmAll = '<?xml version="1.0" encoding="UTF-8"?>';
+        #
+        #    //--> Request item
+        #    request = xmlDocument.createElement('Request');
+        #    request.setAttribute('Version','3');
+        #    parmList = request.xml();
+        #
+        #    //--> Client noden
+        #    reqClient = xmlDocument.createElement('ReqClientID');
+        #    //request.appendChild(reqClient);
+        #
+        #    //--> Merchant information
+        #    xmlGen = xmlDocument.createElement('DID');
+        #    reqClient.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('App');
+        #    xmlGen.innerText('REDMAPLECREDTXML');
+        #    reqClient.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('Auth');
+        #    xmlGen.innerText(ccFirstData.MerchantId + '|' + ccFirstData.TerminalId);
+        #    reqClient.appendChild(xmlGen);
+        #
+        #    xmlGen = xmlDocument.createElement('ClientRef');
+        #    xmlGen.innerText(this.getClientRef());
+        #    reqClient.appendChild(xmlGen);
+        #
+        #    request.appendChild(reqClient);
+        #
+        #    reqClient = xmlDocument.createElement('Registration');
+        #    xmlGen = xmlDocument.createElement('ServiceID');
+        #    //--> This is hard coded.
+        #    xmlGen.innerText(this.parmServiceId());
+        #    reqClient.appendChild(xmlGen);
+        #
+        #    request.appendChild(reqClient);
+        #
+        #    parmAll += request.xml();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantFirstData
+        #boolean checkMerchantFirstData(CreditCardMerchantFirstData  ccMerchantFirstData)
+        #{
+        #    ;
+        #    if (ccMerchantFirstData.Plaform == CreditCardFirstDataPlaform::Linkpoint)
+        #    {
+        #        if (!ccMerchantFirstData.MerchantId)
+        #           throw error("@ACC617");
+        #    }
+        #
+        #    if (!ccMerchantFirstData.URL)
+        #        throw error("@ACC56");
+        #    else if (!ccMerchantFirstData.Pwd)
+        #        throw error("@ACC54");
+        #    if (ccMerchantFirstData.Plaform == CreditCardFirstDataPlaform::Linkpoint)
+        #    {
+        #        if (!ccMerchantFirstData.UserId)
+        #            throw error("@ACC53");
+        #    }
+        #    else
+        #    {
+        #        if (!ccMerchantFirstData.MerchantId)
+        #            throw error("@ACC617");
+        #    }
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardFirstData
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardTrans                 ccTrans;
+        #    CreditCardMerchantFirstData     merchantFirstData;
+        #    LogisticsPostalAddress          postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #fillLeftValue
+        #creditCardStr fillLeftValue(CreditCardStr value,
+        #                   Counter  len,
+        #                   creditCardStr  fill)
+        #{
+        #    Counter     i;
+        #    creditCardStr     ret = value;
+        #    Counter     initLength = strLen(value);
+        #    ;
+        #    for (i=0;i<(len-initLength);i++)
+        #    {
+        #        ret = fill + ret;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #getClientRef
+        #str getClientRef()
+        #{
+        #    UTCDateTime     dt = DateTimeUtil::getSystemDateTime();
+        #    TempStr         ret;
+        #    ;
+        #    ret = int2str(DateTimeUtil::hour(dt)) + int2str(DateTimeUtil::minute(dt)) + int2str(DateTimeUtil::second(dt));
+        #    ret = this.fillLeftValue(ret,6,'0');
+        #    ret += 'V501000';
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #getDigitalCertificate
+        #public System.Security.Cryptography.X509Certificates.X509Certificate2Collection getDigitalCertificate(str serial)
+        #{
+        #    Counter                                                                     certificatesFound;
+        #    System.Security.Cryptography.X509Certificates.X509Store                     certificateStore;
+        #    System.Security.Cryptography.X509Certificates.X509Certificate2Collection    certificateCollection;
+        #    ;
+        #
+        #    new InteropPermission(InteropKind::ClrInterop).assert();
+        #
+        #
+        #    //BP Deviation documented
+        #    certificateStore = new System.Security.Cryptography.X509Certificates.X509Store('MY', System.Security.Cryptography.X509Certificates.StoreLocation::LocalMachine);
+        #
+        #    certificateStore.Open(System.Security.Cryptography.X509Certificates.OpenFlags::ReadOnly);
+        #    certificateCollection = certificateStore.get_Certificates();
+        #
+        #    certificateCollection = certificateCollection.Find(System.Security.Cryptography.X509Certificates.X509FindType::FindBySerialNumber, serial, false);
+        #    certificatesFound = certificateCollection.get_Count();
+        #    if (certificatesFound == 0)
+        #    {
+        #        throw Error("@ACC191");
+        #    }
+        #
+        #
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return certificateCollection;
+        #}
+      ENDSOURCE
+      SOURCE #getUIDPWD
+        #str getUIDPWD(CreditCardMerchantFirstData         ccFirstData)
+        #{
+        #    ClrObject                           clearBytes;
+        #    System.String                       encodedUIPWD;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    clearBytes = System.Text.Encoding::get_ASCII().GetBytes(ccFirstData.UserId + ':' + ccFirstData.Pwd);
+        #    encodedUIPWD = ClrInterop::staticInvoke('System.Convert', 'ToBase64String', clearBytes);
+        #
+        #    return encodedUIPWD;
+        #}
+      ENDSOURCE
+      SOURCE #parmccAmountStr
+        #TempStr parmccAmountStr(AmountMST _ccAmount)
+        #{
+        #    AmountCur       ccAmount;
+        #    TempStr         ccAmountStr;
+        #    ;
+        #    //<-- If the number is a negative and the trans type is
+        #    //<-- is a credit.  Change
+        #    if (_ccAmount < 0)
+        #    {
+        #        _ccAmount = -(ccAmount);
+        #    }
+        #
+        #    ccAmount = _ccAmount;
+        #    ccAmountStr = num2str(ccAmount,9,2,1,0);
+        #    ccamountStr = strReplace(ccAmountStr,',','');
+        #    ccAmountStr = strReplace(ccAmountStr,'.','');
+        #    return ccAmountStr;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCTrans
+        #CreditCardTrans parmCCTrans(CreditCardTrans _ccTrans = ccTrans)
+        #{
+        #    ;
+        #    ccTrans = _ccTrans;
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantFirstData
+        #CreditCardMerchantFirstData parmMerchantFirstData(CreditCardMerchantFirstData _merchantFirstData = merchantFirstData)
+        #{
+        #    ;
+        #    merchantFirstData = _merchantFirstData;
+        #    return merchantFirstData;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmServiceId
+        #TempStr parmServiceId()
+        #{
+        #    ;
+        #    //--> Left blank
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #processResponse
+        #CreditCardStr processResponse(CreditCardStr  msg)
+        #{
+        #    return msg;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #TempStr run()
+        #{
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #toHex
+        #TempStr toHex(int v)
+        #{
+        #    TempStr hex  = '0123456789abcdef';
+        #    return subStr(hex, (v / 16)+1, 1) + subStr(hex, (v mod 16)+1, 1);
+        #}
+      ENDSOURCE
+      SOURCE #analyzeTransResponse
+        #static CreditCardTrans analyzeTransResponse(CreditCardStr        msg,
+        #                                            CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardMerchantFirstData         ccFirstData = CreditCardMerchantFirstData::find(ccTrans.TerminalId);
+        #    CreditCardFirstData                 xmlBuilder;
+        #    switch (ccFirstData.Plaform)
+        #    {
+        #        case    CreditCardFirstDataPlaform::Linkpoint:
+        #            xmlBuilder = new CreditCardFirstDataLinkpointXMLBuilder();
+        #            ccTrans = xmlBuilder.analyzeResponse(msg,ccTrans);
+        #            break;
+        #        case    CreditCardFirstDataPlaform::Gatewaye4   :
+        #            xmlBuilder = new CreditCardFDMSE4XMLBuilder();
+        #            ccTrans = xmlBuilder.analyzeResponse(msg,ccTrans);
+        #            break;
+        #
+        #    }
+        #
+        #
+        #    return ccTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static CreditCardFirstData construct(CreditCardMerchantFirstData ccFirstData)
+        #{
+        #    CreditCardFirstData         creditCardFirstData;
+        #    ;
+        #    switch (ccFirstData.Plaform)
+        #    {
+        #        case    CreditCardFirstDataPlaform::Compass :
+        #            creditCardFirstData = new CreditCardFirstDataCompass();
+        #            break;
+        #        case    CreditCardFirstDataPlaform::Linkpoint   :
+        #            creditCardFirstData = new CreditCardFirstDataLinkpointXMLBuilder();
+        #            break;
+        #        case    CreditCardFirstDataPlaform::Gatewaye4   :
+        #            creditCardFirstData = new CreditCardFDMSE4XMLBuilder();
+        #            break;
+        #    }
+        #
+        #    return creditCardFirstData;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #createToken
+        #server static CreditCardStr createToken(CreditCardTable     ccTable)
+        #{
+        #    CreditCardMerchantFirstData         ccFirstData = CreditCardMerchantFirstData::find(ccTable.ProfileTerminalId);
+        #    CreditCardStr                       response;
+        #    ;
+        #    switch (ccFirstData.Plaform)
+        #    {
+        #        case    CreditCardFirstDataPlaform::Compass :
+        #            throw error("@ACC1379");
+        #        case    CreditCardFirstDataPlaform::Linkpoint   :
+        #            throw error("@ACC1379");
+        #        case    CreditCardFirstDataPlaform::Gatewaye4   :
+        #            ccTable = CreditCardFDMSE4XMLBuilder::createProfile(ccTable);
+        #            break;
+        #    }
+        #
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processFirstData
+        #server static CreditCardStr processFirstData(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardMerchantFirstData         ccFirstData = CreditCardMerchantFirstData::find(ccTrans.TerminalId);
+        #    CreditCardStr                       response;
+        #    ;
+        #    switch (ccFirstData.Plaform)
+        #    {
+        #        case    CreditCardFirstDataPlaform::Compass :
+        #            throw error("@SYS91571");
+        #        case    CreditCardFirstDataPlaform::Linkpoint   :
+        #            response = CreditCardFirstDataLinkpointXMLBuilder::processFirstData(ccTrans);
+        #            break;
+        #        case    CreditCardFirstDataPlaform::Gatewaye4   :
+        #            response = CreditCardFDMSE4XMLBuilder::processFirstData(ccTrans);
+        #            break;
+        #    }
+        #
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #serviceDiscovery
+        #static Map serviceDiscovery(CreditCardTerminalId       terminalId)
+        #{
+        #    HttpRequest                         request;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::COMInterop);
+        #    CreditCardMerchantFirstData         ccFirstData = CreditCardMerchantFirstData::find(terminalId);
+        #    CreditCardTerminalTable             ccTerminal;
+        #    CreditCardFirstData                 xmlBuilder = CreditCardFirstData::conStruct(ccFirstData);
+        #    CreditCardStr                           response;
+        #    CreditCardStr                           parmList;
+        #    Map                                 urlMap;
+        #    URL                                 url;
+        #    ;
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccfirstData.TerminalId);
+        #
+        #    request = new HTTPRequest();
+        #
+        #    url = ccFirstData.ServiceURL + '/' + xmlBuilder.parmServiceId();
+        #    request.open('GET',url);
+        #    request.setRequestHeader('Cache-Control','no-cache');
+        #    request.setRequestHeader('User-Agent','vnxapi_xml_3_2_0_19');
+        #    request.setRequestHeader('Content-Length',int2Str(StrLen(ParmList)));
+        #    request.setRequestHeader('Content-Type','text/xml');
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    urlMap = xmlBuilder.analyzeServiceResponse(response);
+        #
+        #    return urlMap;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

@@ -1,0 +1,326 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardIndustryData
+    PROPERTIES
+      Name                #CreditCardIndustryData
+      Origin              #{FCB2572F-BB84-4057-9362-39666871F2E4}
+      LegacyId            #20009
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardIndustryData
+        #{
+        #    /*
+        #    COPYRIGHT 2004, Red Maple Press, Inc.
+        #    ALL RIGHTS RESERVED
+        #
+        #    For information on the license or copyright of this software, please
+        #    contact our offices at +1 972 980 6963
+        #    or at www.redmaple.com
+        #
+        #    This class will determine what Entry Codes are valid for the industry
+        #    type given
+        #    */
+        #}
+      ENDSOURCE
+      SOURCE #getIndustryCode
+        #TempStr getIndustryCode(CreditCardIndustryHCS ccIndustry)
+        #{
+        #    TempStr     ret;
+        #    ;
+        #
+        #    switch (ccIndustry)
+        #    {
+        #        case CreditCardIndustryHCS::Retail :
+        #            ret = '004';
+        #            break;
+        #        case CreditCardIndustryHCS::ElectronicCom  :
+        #            ret = '013';
+        #            break;
+        #        case CreditCardIndustryHCS::Direct  :
+        #            ret = '007';
+        #            break;
+        #        default    :
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getIndustryCodeHCS
+        #TempStr getIndustryCodeHCS(CreditCardIndustryHCS ccIndustry)
+        #{
+        #    TempStr     ret;
+        #    ;
+        #    switch (ccIndustry)
+        #    {
+        #        case CreditCardIndustryHCS::Retail :
+        #            ret = '004';
+        #            break;
+        #        case CreditCardIndustryHCS::ElectronicCom  :
+        #            ret =  '013';
+        #            break;
+        #        case CreditCardIndustryHCS::Direct  :
+        #            ret =  '007';
+        #            break;
+        #        default    :
+        #            break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #returnDirect
+        #TempStr returnDirect(SalesId    salesId)
+        #{
+        #    //--> This method returns valid industry invofartion for the industry
+        #    //--> type for Paymentech
+        #    TempStr     parmList;
+        #    Counter     sLen;
+        #    Counter     initLen;
+        #    ;
+        #    //loc = strnFind(salesId, '0123456789', 1, 999);
+        #
+        #    parmList = '1';  //Invoice number is hard coded
+        #
+        #    initLen = strLen(parmList);
+        #
+        #    if (initLen > 9)
+        #    {
+        #        parmList = subStr(parmList,1,9);
+        #    }
+        #    else if (initLen < 9)
+        #    {
+        #        for (sLen=initLen;sLen<=9;sLen++)
+        #        {
+        #            parmList += ' ';
+        #            sLen = strLen(parmList);
+        #        }
+        #    }
+        #
+        #    parmList += '1';    //Single purchase hardcoded for now
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #returnDirectHCS
+        #TempStr returnDirectHCS(SalesId    salesId)
+        #{
+        #    //--> This method returns valid industry invofartion for the industry
+        #    //--> type for Paymentech
+        #    TempStr     parmList;
+        #    Counter     sLen;
+        #    Counter     initLen;
+        #    ;
+        #    //loc = strnFind(salesId, '0123456789', 1, 999);
+        #    //parmList = '007';
+        #    sLen = strLen(salesId);
+        #
+        #    if (strFind(salesId,'_', 1,sLen) >0)
+        #    {
+        #          salesId = strReplace(salesId,'_','')+' ';
+        #    }
+        #
+        #    parmList += salesId;  //Invoice number is hard coded
+        #
+        #    initLen = strLen(salesId);
+        #
+        #    if (initLen > 9)
+        #    {
+        #        parmList = subStr(parmList,1,9);
+        #    }
+        #    else if (initLen < 9)
+        #    {
+        #        for (sLen=initLen;sLen<=9;sLen++)
+        #        {
+        #            parmList += ' ';
+        #            sLen = strLen(parmList);
+        #        }
+        #    }
+        #
+        #    parmList += '1';    //Single purchase hardcoded for now
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #returnElectCommerce
+        #TempStr returnElectCommerce()
+        #{
+        #    //--> This method returns valid industry invofartion for the industry
+        #    //--> type for Paymentech
+        #    TempStr     parmList;
+        #    ;
+        #    parmList = '0000000000000000';  //Invoice number is hard coded
+        #
+        #    parmList += '00000000000000000000';    //Item code is hard coded 20 characters
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #returnElectCommerceHCS
+        #TempStr returnElectCommerceHCS()
+        #{
+        #    //--> This method returns valid industry invofartion for the industry
+        #    //--> type for Paymentech
+        #    TempStr     parmList;
+        #    ;
+        #    parmList = '013';
+        #    parmList += '0000000000000000';  //Invoice number is hard coded
+        #
+        #    parmList += '00000000000000000000';    //Item code is hard coded 20 characters
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #returnRetail
+        #TempStr returnRetail()
+        #{
+        #    //--> This method returns valid industry invofartion for the industry
+        #    //--> type for Paymentech
+        #    TempStr     parmList;
+        #    ;
+        #    parmList = '000000';  //Order number is hard coded
+        #
+        #    parmList += '00000000000000000000';    //Item code is hard coded 20 characters
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #returnRetailHCS
+        #TempStr returnRetailHCS()
+        #{
+        #    //--> This method returns valid industry invofartion for the industry
+        #    //--> type for Paymentech
+        #    TempStr     parmList;
+        #    ;
+        #    //parmList = '004';
+        #    parmList += '000000';  //Order number is hard coded
+        #
+        #    parmList += '00000000000000000000';    //Item code is hard coded 20 characters
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #returnRetailTCS
+        #TempStr returnRetailTCS()
+        #{
+        #    //--> This method returns valid industry invofartion for the industry
+        #    //--> type for Paymentech
+        #    TempStr     parmList;
+        #    ;
+        #    parmList = '004';
+        #    parmList += '000000';  //Order number is hard coded
+        #
+        #    parmList += '00000000000000000000';    //Item code is hard coded 20 characters
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #server static TempStr construct(CreditCardTrans ccTrans)
+        #{
+        #    TempStr                 returnStr;
+        #    CreditCardIndustryData  ccIndustryData;
+        #    CreditCardTerminalTable ccTerminal;
+        #    ;
+        #    ccIndustryData = new CreditCardIndustryData();
+        #
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #
+        #    switch (ccTerminal.SystemIndicator)
+        #    {
+        #        case CreditCardSystemIndicator::HCS   :
+        #            returnStr = ccIndustryData.getIndustryCodeHCS(ccTerminal.IndustryHCS);
+        #
+        #            switch (ccTerminal.IndustryHCS)
+        #            {
+        #                //<-- Retail
+        #                case CreditCardIndustryHCS::Retail         :
+        #                    returnStr += ccIndustryData.returnRetailHCS();
+        #                    break;
+        #                //<-- Direct
+        #                case CreditCardIndustryHCS::Direct         :
+        #                    returnStr += ccIndustryData.returnDirectHCS(ccTrans.salesId);
+        #                    break;
+        #                //<-- Electronic Commerce
+        #                case CreditCardIndustryHCS::ElectronicCom  :
+        #                    returnSTr += ccIndustryData.returnElectCommerceHCS();
+        #                    break;
+        #                default:
+        #                    throw error(strFmt("@ACC640"));
+        #            }
+        #            break;
+        #
+        #
+        #        case CreditCardSystemIndicator::del_TCS   :
+        #            throw error(strFmt("@ACC640"));
+        #    }
+        #    return returnStr;
+        #}
+      ENDSOURCE
+      SOURCE #returnCitibankTCS
+        #static TempStr returnCitibankTCS(SalesId            salesId,
+        #                             CreditCardTrans    ccTrans)
+        #{
+        #    //--> This method returns valid Citibank card information
+        #    TempStr     parmList;
+        #    TempStr     tmpParmList;
+        #    Counter     sLen;
+        #    Counter     initLen;
+        #    ;
+        #    parmList = '004';
+        #    parmList += 'CF';  //Citibank Prefix
+        #
+        #    parmList += '09900';    //Sale Term  ccTrans.citiplan;
+        #
+        #    parmList += ' ';    // Spaces
+        #
+        #    parmList += '0000'; // Department number
+        #
+        #    parmList += ' ';    //Sapces
+        #
+        #    initLen = strLen(salesId);  //Sales Id
+        #
+        #    if (initLen > 9)
+        #    {
+        #        parmList = subStr(salesId,1,9);
+        #    }
+        #    else
+        #    {
+        #        for (sLen=initLen;sLen<9;sLen++)
+        #        {
+        #            tmpparmList += ' ';
+        #            sLen = strLen(tmpParmList);
+        #        }
+        #
+        #        parmList += tmpParmList;
+        #    }
+        #
+        #    parmList += ' ';  //Spaces
+        #
+        #    parmList += '                    ';
+        #
+        #    return parmList;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

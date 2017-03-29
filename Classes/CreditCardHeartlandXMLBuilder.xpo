@@ -1,0 +1,3675 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardHeartlandXMLBuilder
+    PROPERTIES
+      Name                #CreditCardHeartlandXMLBuilder
+      Origin              #{FC5DC305-0FF2-482B-B3D4-02EDA89CB61C}
+      LegacyId            #20077
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #build
+        #xml build(CreditCardTrans   ccTrans)
+        #{
+        #    xml                     xml;
+        #    CreditCardTrans         origCCTrans;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                xml = this.buildNewProfileAuth(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                xml= this.buildNewAuth(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.OrigID)
+        #            {
+        #                xml = this.buildFollowOnCredit(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                if (ccTrans.Profile == NoYes::Yes)
+        #                {
+        #                     xml = this.BuildNewProfileReturn(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                     xml = this.buildNewReturn(ccTrans);
+        #                }
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D     :
+        #            if (ccTrans.VoiceAuth == NoYes::Yes)
+        #            {
+        #                xml = this.buildNewOfflineAuth(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                xml = this.buildCapture(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                 xml = this.BuildNewProfileSale(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                 xml = this.buildNewSale(ccTrans);
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            select transtype from origCCTrans
+        #                where origCCTrans.PNRef == ccTrans.OrigID;
+        #
+        #            if (origCCTrans.TransType == CreditCardTrxType::A
+        #                || origCCTrans.TransType == CreditCardTrxType::S)
+        #            {
+        #                xml = this.buildCreditReversal(ccTrans);
+        #            }
+        #            else
+        #            {
+        #                xml = this.buildCreditVoid(ccTrans);
+        #            }
+        #            break;
+        #
+        #    }
+        #
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #xml buildCapture(CreditCardTrans     ccTrans)
+        #{
+        #    //--> HPS refers to captures as "Credit Add to Batch"
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002728');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('0960');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditAddToBatch','');
+        #
+        #    //--> GatewayTxnId
+        #    xmlTextWriter.writeStartElement('hps:GatewayTxnId');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End CreditAddToBatch
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCPCEdit
+        #xml buildCPCEdit(CreditCardTrans     ccTrans)
+        #{
+        #    //--> CPCEdit is a transation for Corporate or Level II transactions
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    DictEnum                        dictEnum = new DictEnum(enumnum(CreditCardCommercialTaxFlag));
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditCPCEdit','');
+        #
+        #    //--> GatewayTxnId
+        #    xmlTextWriter.writeStartElement('hps:GatewayTxnId');
+        #    xmlTextWriter.writeString(ccTrans.PNRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Beging CPCData node
+        #    xmlTextWriter.writeStartElement('hps:CPCData');
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderPONbr');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:TaxType');
+        #    switch (ccTrans.CommercialLocalTax)
+        #    {
+        #        case CreditCardCommercialTaxFlag::NonTaxable    :
+        #            xmlTextWriter.writeString('TAXEXEMPT');
+        #            break;
+        #        case CreditCardCommercialTaxFlag::TaxIncluded   :
+        #            xmlTextWriter.writeString('SALESTAX');
+        #            break;
+        #        case CreditCardCommercialTaxFlag::TaxNotProvided    :
+        #            xmlTextWriter.writeString('NOTUSED');
+        #            break;
+        #    }
+        #
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (ccTrans.CommercialSalesTax != 0)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:TaxAmt');
+        #        xmlTextWriter.writeString(strLRTrim(num2str(ccTrans.CommercialSalesTax,9,2,0,1)));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End CreditAddToBatch
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCreditReversal
+        #xml buildCreditReversal(CreditCardTrans     ccTrans)
+        #{
+        #    //--> HPS refers to auth and sale voids as "Credit Reversal"
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditReversal','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> GatewayTxnId
+        #    xmlTextWriter.writeStartElement('hps:GatewayTxnId');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Block1
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End CreditReversal
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCreditVoid
+        #xml buildCreditVoid(CreditCardTrans     ccTrans)
+        #{
+        #    //--> Voids are refered to as CreditVoids.
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditVoid','');
+        #
+        #    //--> GatewayTxnId
+        #    xmlTextWriter.writeStartElement('hps:GatewayTxnId');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End CreditAddToBatch
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #    //instruction = xmlDocument.createProcessingInstruction('xml-stylesheet',
+        #        //'type="text/xsl" href="www.redmaple.com"');
+        #
+        #    //xmlDocument.appendChild(instruction);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelope
+        #CreditCardStr buildEnvelope()
+        #{
+        #    CreditCardStr                   tmpstr;
+        #    ;
+        #
+        #    tmpStr = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"';
+        #    tmpStr +=' xmlns:hps="http://Hps.Exchange.PosGateway">';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelopeHeader
+        #CreditCardStr buildEnvelopeHeader()
+        #{
+        #    CreditCardStr                   tmpstr;
+        #    ;
+        #
+        #    tmpStr = '<soapenv:Header/>';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildFollowOnCredit
+        #xml buildFollowOnCredit(CreditCardTrans     ccTrans)
+        #{
+        #    //--> HPS refers to captures as "Credit Add to Batch"
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #   //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditReturn','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> GatewayTxnId
+        #    xmlTextWriter.writeStartElement('hps:GatewayTxnId');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Creditreturn
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuth
+        #xml buildNewAuth(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('2459');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditAuth','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> Card data
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardData','');
+        #
+        #    xmlTextWriter.writeStartElement3('hps','hps:ManualEntry','');
+        #
+        #    //--> Manual entry here. No swipe.
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardNbr','');
+        #    xmlTextWriter.writeString(this.returnAccount(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpMonth
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpMonth','');
+        #    xmlTextWriter.writeString(this.returnMonth(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpYear
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpYear','');
+        #    xmlTextWriter.writeString(this.returnYear(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV2
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement3('hps','hps:CVV2','');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> CVV2 Status
+        #        switch (ccTrans.CVDSent)
+        #        {
+        #            case creditCardCVDValues::NotReadable   :
+        #                xmlTextWriter.writeStartElement3('hps','hps:CVV2Status','');
+        #                xmlTextWriter.writeString('ILLEGIBLE');
+        #                xmlTextWriter.writeEndElement();
+        #                break;
+        #            default :
+        #                xmlTextWriter.writeStartElement3('hps','hps:CVV2Status','');
+        #                xmlTextWriter.writeString('NOTPRESENT');
+        #                xmlTextWriter.writeEndElement();
+        #                break;
+        #        }
+        #    }
+        #
+        #    //--> Attache to card data
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CPCReq');
+        #    xmlTextWriter.writeString('Y');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Card Holder Data
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:CardHolderData');
+        #    xmlTextWriter.writeStartElement('hps:CardHolderFirstName');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderLastName');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress().Street && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderAddr');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderCity');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderState');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode && (ccParameters.AVS || ccParameters.AVSZipOnly))
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderZip');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSPhone)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderPhone');
+        #        xmlTextWriter.writeString(ccTrans.AVSPhone);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderEmail');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> End cardholder data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Begin DirectMktData
+        #    xmlTextWriter.writeStartElement('hps:DirectMktData');
+        #    xmlTextWriter.writestartElement('hps:DirectMktInvoiceNbr');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:DirectMktShipMonth');
+        #    xmlTextWriter.writeString(this.returnMonthFromDate(ccTrans.TransDate));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:DirectMktShipDay');
+        #    xmlTextWriter.writeString(this.returnDayFromDate(ccTrans.TransDate));
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //->> eCommerce
+        #    xmlTextWriter.writeStartElement3('hps','hps:Ecommerce','');
+        #    if (this.parmMerchantHeartland().Industry == CreditCardIndustryHeartland::EC)
+        #    {
+        #        xmlTextWriter.writeString('ECOM');
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeString('MOTO');
+        #    }
+        #
+        #
+        #    //--> End ecommerce
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End CreditCardAuth
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewOfflineAuth
+        #xml buildNewOfflineAuth(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditOfflineAuth','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> Card data
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardData','');
+        #
+        #    xmlTextWriter.writeStartElement3('hps','hps:ManualEntry','');
+        #
+        #    //--> Manual entry here. No swipe.
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardNbr','');
+        #    xmlTextWriter.writeString(this.returnAccount(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpMonth
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpMonth','');
+        #    xmlTextWriter.writeString(this.returnMonth(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpYear
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpYear','');
+        #    xmlTextWriter.writeString(this.returnYear(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV2
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement3('hps','hps:CVV2','');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //--> CVV2 Status
+        #
+        #        switch (ccTrans.CVDSent)
+        #        {
+        #            case creditCardCVDValues::NotReadable   :
+        #                xmlTextWriter.writeStartElement3('hps','hps:CVV2Status','');
+        #                xmlTextWriter.writeString('ILLEGIBLE');
+        #                xmlTextWriter.writeEndElement();
+        #                break;
+        #            case creditCardCVDValues::NotProvided :
+        #                xmlTextWriter.writeStartElement3('hps','hps:CVV2Status','');
+        #                xmlTextWriter.writeString('NOTPRESENT');
+        #                xmlTextWriter.writeEndElement();
+        #                break;
+        #        }
+        #
+        #    }
+        #
+        #    //--> Attache to card data
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Voice authorization
+        #    xmlTextWriter.writeStartElement('hps:Amt');
+        #    xmlTextWriter.writeString(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:OfflineAuthCode');
+        #    xmlTextWriter.writeString(ccTrans.AuthCode);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #    //--> Card Holder Data
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:CardHolderData');
+        #    xmlTextWriter.writeStartElement('hps:CardHolderFirstName');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderLastName');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress().Street && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderAddr');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderCity');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderState');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode && (ccParameters.AVS || ccParameters.AVSZipOnly))
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderZip');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSPhone)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderPhone');
+        #        xmlTextWriter.writeString(ccTrans.AVSPhone);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderEmail');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> End cardholder data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Begin DirectMktData
+        #    xmlTextWriter.writeStartElement('hps:DirectMktData');
+        #    xmlTextWriter.writestartElement('hps:DirectMktInvoiceNbr');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:DirectMktShipMonth');
+        #    xmlTextWriter.writeString(this.returnMonthFromDate(ccTrans.TransDate));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:DirectMktShipDay');
+        #    xmlTextWriter.writeString(this.returnDayFromDate(ccTrans.TransDate));
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //->> eCommerce
+        #    xmlTextWriter.writeStartElement3('hps','hps:Ecommerce','');
+        #    if (this.parmMerchantHeartland().Industry == CreditCardIndustryHeartland::EC)
+        #    {
+        #        xmlTextWriter.writeString('ECOM');
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeString('MOTO');
+        #    }
+        #
+        #
+        #    //--> End ecommerce
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End CreditCardAuth
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewProfileAuth
+        #xml buildNewProfileAuth(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditAuth','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> Card data
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardData','');
+        #
+        #    xmlTextWriter.writeStartElement3('hps','hps:TokenData','');
+        #
+        #    //--> Token information
+        #    xmlTextWriter.writeStartElement3('hps','hps:TokenValue','');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpMonth
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpMonth','');
+        #    xmlTextWriter.writeString(this.returnMonth(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpYear
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpYear','');
+        #    xmlTextWriter.writeString(this.returnYear(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #    //--> Card Holder Data
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:CardHolderData');
+        #    xmlTextWriter.writeStartElement('hps:CardHolderFirstName');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderLastName');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress().Street && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderAddr');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderCity');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderState');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode && (ccParameters.AVS || ccParameters.AVSZipOnly))
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderZip');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSPhone)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderPhone');
+        #        xmlTextWriter.writeString(ccTrans.AVSPhone);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderEmail');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> End cardholder data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Begin DirectMktData
+        #    xmlTextWriter.writeStartElement('hps:DirectMktData');
+        #    xmlTextWriter.writestartElement('hps:DirectMktInvoiceNbr');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:DirectMktShipMonth');
+        #    xmlTextWriter.writeString(this.returnMonthFromDate(ccTrans.TransDate));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:DirectMktShipDay');
+        #    xmlTextWriter.writeString(this.returnDayFromDate(ccTrans.TransDate));
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //->> eCommerce
+        #    xmlTextWriter.writeStartElement3('hps','hps:Ecommerce','');
+        #    if (this.parmMerchantHeartland().Industry == CreditCardIndustryHeartland::EC)
+        #    {
+        #        xmlTextWriter.writeString('ECOM');
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeString('MOTO');
+        #    }
+        #
+        #
+        #    //--> End ecommerce
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End CreditCardAuth
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewProfileReturn
+        #xml buildNewProfileReturn(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditReturn','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> Card data
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardData','');
+        #
+        #    xmlTextWriter.writeStartElement3('hps','hps:TokenData','');
+        #
+        #    //--> Token information
+        #    xmlTextWriter.writeStartElement3('hps','hps:TokenValue','');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpMonth
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpMonth','');
+        #    xmlTextWriter.writeString(this.returnMonth(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpYear
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpYear','');
+        #    xmlTextWriter.writeString(this.returnYear(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV2
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement3('hps','hps:CVV2','');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //--> CVV2 Status
+        #        xmlTextWriter.writeStartElement3('hps','hps:CVV2Status','');
+        #        switch (ccTrans.CVDSent)
+        #        {
+        #            case creditCardCVDValues::NotReadable   :
+        #                xmlTextWriter.writeString('ILLEGIBLE');
+        #                break;
+        #            default :
+        #                xmlTextWriter.writeString('NOTPRESENT');
+        #        }
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Attache to card data
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #    //--> Card Holder Data
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:CardHolderData');
+        #    xmlTextWriter.writeStartElement('hps:CardHolderFirstName');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderLastName');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress().Street && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderAddr');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderCity');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderState');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode && (ccParameters.AVS || ccParameters.AVSZipOnly))
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderZip');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSPhone)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderPhone');
+        #        xmlTextWriter.writeString(ccTrans.AVSPhone);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderEmail');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> End cardholder data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //->> eCommerce
+        #    xmlTextWriter.writeStartElement3('hps','hps:Ecommerce','');
+        #    if (this.parmMerchantHeartland().Industry == CreditCardIndustryHeartland::EC)
+        #    {
+        #        xmlTextWriter.writeString('ECOM');
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeString('MOTO');
+        #    }
+        #
+        #
+        #    //--> End ecommerce
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End CreditCardAuth
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewProfileSale
+        #xml buildNewProfileSale(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditSale','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> Card data
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardData','');
+        #
+        #    xmlTextWriter.writeStartElement3('hps','hps:TokenData','');
+        #
+        #    //--> Token information
+        #    xmlTextWriter.writeStartElement3('hps','hps:TokenValue','');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpMonth
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpMonth','');
+        #    xmlTextWriter.writeString(this.returnMonth(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpYear
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpYear','');
+        #    xmlTextWriter.writeString(this.returnYear(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End token data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #    //--> Attache to card data
+        #    //xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(ccTrans.AmountMST,9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #    //--> Card Holder Data
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:CardHolderData');
+        #    xmlTextWriter.writeStartElement('hps:CardHolderFirstName');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderLastName');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress().Street && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderAddr');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderCity');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderState');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode && (ccParameters.AVS || ccParameters.AVSZipOnly))
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderZip');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSPhone)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderPhone');
+        #        xmlTextWriter.writeString(ccTrans.AVSPhone);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderEmail');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> End cardholder data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //->> eCommerce
+        #    xmlTextWriter.writeStartElement3('hps','hps:Ecommerce','');
+        #    if (this.parmMerchantHeartland().Industry == CreditCardIndustryHeartland::EC)
+        #    {
+        #        xmlTextWriter.writeString('ECOM');
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeString('MOTO');
+        #    }
+        #
+        #
+        #    //--> End ecommerce
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End CreditCardAuth
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewReturn
+        #xml buildNewReturn(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditReturn','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> Card data
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardData','');
+        #
+        #    xmlTextWriter.writeStartElement3('hps','hps:ManualEntry','');
+        #
+        #    //--> Manual entry here. No swipe.
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardNbr','');
+        #    xmlTextWriter.writeString(this.returnAccount(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpMonth
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpMonth','');
+        #    xmlTextWriter.writeString(this.returnMonth(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpYear
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpYear','');
+        #    xmlTextWriter.writeString(this.returnYear(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV2
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement3('hps','hps:CVV2','');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //--> CVV2 Status
+        #        xmlTextWriter.writeStartElement3('hps','hps:CVV2Status','');
+        #        switch (ccTrans.CVDSent)
+        #        {
+        #            case creditCardCVDValues::NotReadable   :
+        #                xmlTextWriter.writeString('ILLEGIBLE');
+        #                break;
+        #            default :
+        #                xmlTextWriter.writeString('NOTPRESENT');
+        #        }
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Attache to card data
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(abs(ccTrans.AmountMST),9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #    //--> Card Holder Data
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:CardHolderData');
+        #    xmlTextWriter.writeStartElement('hps:CardHolderFirstName');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderLastName');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress().Street && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderAddr');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderCity');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderState');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode && (ccParameters.AVS || ccParameters.AVSZipOnly))
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderZip');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSPhone)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderPhone');
+        #        xmlTextWriter.writeString(ccTrans.AVSPhone);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderEmail');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> End cardholder data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //->> eCommerce
+        #    xmlTextWriter.writeStartElement3('hps','hps:Ecommerce','');
+        #    if (this.parmMerchantHeartland().Industry == CreditCardIndustryHeartland::EC)
+        #    {
+        #        xmlTextWriter.writeString('ECOM');
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeString('MOTO');
+        #    }
+        #
+        #
+        #    //--> End ecommerce
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End CreditCardAuth
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewSale
+        #xml buildNewSale(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(ccTrans.WorkerProcessor).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditSale','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> Card data
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardData','');
+        #
+        #    xmlTextWriter.writeStartElement3('hps','hps:ManualEntry','');
+        #
+        #    //--> Manual entry here. No swipe.
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardNbr','');
+        #    xmlTextWriter.writeString(this.returnAccount(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpMonth
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpMonth','');
+        #    xmlTextWriter.writeString(this.returnMonth(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpYear
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpYear','');
+        #    xmlTextWriter.writeString(this.returnYear(ccTrans));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV2
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement3('hps','hps:CVV2','');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //--> CVV2 Status
+        #
+        #        switch (ccTrans.CVDSent)
+        #        {
+        #            case creditCardCVDValues::NotReadable   :
+        #                xmlTextWriter.writeStartElement3('hps','hps:CVV2Status','');
+        #                xmlTextWriter.writeString('ILLEGIBLE');
+        #                xmlTextWriter.writeEndElement();
+        #                break;
+        #            case creditCardCVDValues::NotProvided :
+        #                xmlTextWriter.writeStartElement3('hps','hps:CVV2Status','');
+        #                xmlTextWriter.writeString('NOTPRESENT');
+        #                xmlTextWriter.writeEndElement();
+        #                break;
+        #        }
+        #    }
+        #
+        #    //--> Attache to card data
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement3('hps','hps:Amt','');
+        #    xmlTextWriter.writeString(num2str(ccTrans.AmountMST,9,2,1,0));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CPCReq');
+        #    xmlTextWriter.writeString('Y');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> Card Holder Data
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:CardHolderData');
+        #    xmlTextWriter.writeStartElement('hps:CardHolderFirstName');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderLastName');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress().Street && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderAddr');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderCity');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderState');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode && (ccParameters.AVS || ccParameters.AVSZipOnly))
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderZip');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSPhone)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderPhone');
+        #        xmlTextWriter.writeString(ccTrans.AVSPhone);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderEmail');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> End cardholder data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Begin DirectMktData
+        #    xmlTextWriter.writeStartElement('hps:DirectMktData');
+        #    xmlTextWriter.writestartElement('hps:DirectMktInvoiceNbr');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:DirectMktShipMonth');
+        #    xmlTextWriter.writeString(this.returnMonthFromDate(ccTrans.TransDate));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:DirectMktShipDay');
+        #    xmlTextWriter.writeString(this.returnDayFromDate(ccTrans.TransDate));
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //->> eCommerce
+        #    xmlTextWriter.writeStartElement3('hps','hps:Ecommerce','');
+        #    if (this.parmMerchantHeartland().Industry == CreditCardIndustryHeartland::EC)
+        #    {
+        #        xmlTextWriter.writeString('ECOM');
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeString('MOTO');
+        #    }
+        #
+        #
+        #    //--> End ecommerce
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End CreditCardAuth
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildProfile
+        #xml buildProfile(CreditCardTable       ccTable)
+        #{
+        #    CreditCardStr                   parmHeader,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantHeartland     ccHeartland;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #    documentNameSpace = 'hps';
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(this.parmMerchantHeartland().TerminalId);
+        #    ccHeartland = this.parmMerchantHeartland();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmHeader = this.buildEnvelope();
+        #
+        #    //--> build envelope header
+        #    parmHeader += this.buildEnvelopeHeader();
+        #    parmAll += parmHeader;
+        #
+        #    parmAll += '<soapenv:Body>';
+        #
+        #    xmlTextWriter.writeStartElement('hps:PosRequest');
+        #    xmlTextWriter.writeAttributeString('clientType','PosGatewayClient');
+        #    xmlTextWriter.writeAttributeString('clientVer','2.2.1.0');
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Version node
+        #    xmlTextWriter.writeStartElement('hps:Ver1.0');
+        #
+        #    //--> Header node
+        #    xmlTextWriter.writeStartElement('hps:Header');
+        #
+        #    //--> Header information
+        #    //--> License Id
+        #    xmlTextWriter.writeStartElement('hps:LicenseId');
+        #    xmlTextWriter.writeString(ccHeartland.LicenseId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteId','');
+        #    xmlTextWriter.writeString(ccHeartland.SiteId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Device Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeviceId','');
+        #    xmlTextWriter.writeString(ccHeartland.DeviceId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Username
+        #    xmlTextWriter.writeStartElement3('hps','hps:UserName','');
+        #    xmlTextWriter.writeString(ccHeartland.UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement3('hps','hps:Password','');
+        #    xmlTextWriter.writeString(ccHeartland.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Site trace
+        #    xmlTextWriter.writeStartElement3('hps','hps:SiteTrace','');
+        #    xmlTextWriter.writeString(int642str(ccTable.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Developer Id
+        #    xmlTextWriter.writeStartElement3('hps','hps:DeveloperID','');
+        #    xmlTextWriter.writeString('002914');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Devloper version
+        #    xmlTextWriter.writeStartElement3('hps','hps:VersionNbr','');
+        #    xmlTextWriter.writeString('1359');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Clerk id
+        #    xmlTextWriter.writeStartElement3('hps','hps:ClerkID','');
+        #    xmlTextWriter.writeString(DirPerson::find(currentWorker()).Name);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End header
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transactions
+        #    xmlTextWriter.writeStartElement3('hps','hps:Transaction','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:CreditAccountVerify','');
+        #    xmlTextWriter.writeStartElement3('hps','hps:Block1','');
+        #
+        #    //--> Card data
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardData','');
+        #
+        #    xmlTextWriter.writeStartElement3('hps','hps:ManualEntry','');
+        #
+        #    //--> Manual entry here. No swipe.
+        #    xmlTextWriter.writeStartElement3('hps','hps:CardNbr','');
+        #    xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpMonth
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpMonth','');
+        #    xmlTextWriter.writeString(this.returnMonthCC(ccTable));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> ExpYear
+        #    xmlTextWriter.writeStartElement3('hps','hps:ExpYear','');
+        #    xmlTextWriter.writeString(this.returnYearCC(ccTable));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #    //--> Attache to card data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Token request
+        #    xmlTextWriter.writeStartElement('hps:TokenRequest');
+        #    xmlTextWriter.writeString('Y');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #    //--> End CardData
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmTest = xmlTextWriter.writeToString();
+        #
+        #    //--> Card Holder Data
+        #    //--> Amt (using cardData node as a way of efficacy)
+        #    xmlTextWriter.writeStartElement('hps:CardHolderData');
+        #    xmlTextWriter.writeStartElement('hps:CardHolderFirstName');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTable.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('hps:CardHolderLastName');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTable.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress().Street && ccParameters.AVS)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderAddr');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderCity');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('hps:CardHolderState');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress().ZipCode && (ccParameters.AVS || ccParameters.AVSZipOnly))
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderZip');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTable.Phone)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderPhone');
+        #        xmlTextWriter.writeString(ccTable.Phone);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTable.Email)
+        #    {
+        #        xmlTextWriter.writeStartElement('hps:CardHolderEmail');
+        #        xmlTextWriter.writeString(ccTable.Email);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    //--> End cardholder data
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End block1
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End CreditCardAuth
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End Transaction
+        #    xmlTextWriter.writeEndElement();
+        #    //==> End Version
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End POSREquest
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    //--> End Body
+        #    parmAll += '</soapenv:Body>';
+        #    parmAll += '</soapenv:Envelope>';
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantHeartland
+        #NoYes checkMerchantHeartland(CreditCardMerchantHeartland  ccMerchantHeartland)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantHeartland.UserId)
+        #       throw error("@ACC53");
+        #    else if (!ccMerchantHeartland.HostAddress)
+        #        throw error("@ACC56");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardHeartlandXMLBuilder
+        #{
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardMerchantHeartland     h;
+        #    SalesPrice                      salesPrice;
+        #    SalesQty                        salesQty;
+        #    ItemName                        itemName;
+        #    TaxAmount                       taxAmount;
+        #    SalesUnit                       salesUnit;
+        #    Percent                         taxRate;
+        #    LineAmount                      lineAmount;
+        #    LogisticsPostalAddress          postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #getError
+        #CreditCardStr getError(URL               url,
+        #              CreditCardStr     parmList)
+        #{
+        #    InteropPermission                   comPermission = new InteropPermission(InteropKind::COMInterop);
+        #    HttpRequest                         request = new HTTPRequest();
+        #    CreditCardStr                       response;
+        #    ;
+        #    comPermission.assert();
+        #
+        #    request.open('POST',url);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #firstName parmFirstName(Name     _name)
+        #{
+        #    CreditCardStr     tmpStr;
+        #    Counter     marker;
+        #    Counter     len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmLastName
+        #firstName parmLastName(Name     _name)
+        #{
+        #    CreditCardStr     tmpStr;
+        #    CreditCardStr     reduction;
+        #    Counter     marker;
+        #    Counter     len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker+1);
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantHeartland
+        #CreditCardMerchantHeartland parmMerchantHeartland(CreditCardMerchantHeartland _h = h)
+        #{
+        #    ;
+        #    h = _h;
+        #    return h;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #CreditCardStr retrieveValue(CreditCardTrans   ccTrans)
+        #{
+        #    CreditCardStr     returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(ccTrans.CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #CreditCardStr returnAccount(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    CreditCardStr           ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue(ccTrans);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue(ccTrans);
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumSecure)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue(ccTrans);
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnDayFromDate
+        #CreditCardStr returnDayFromDate(date        dateTrans)
+        #{
+        #    CreditCardStr           ParmList;
+        #    CreditCardStr           day;
+        #    ;
+        #    day =  int2str(DayofMth(dateTrans));
+        #    if (strlen(day)==1)
+        #    {
+        #        day = '0' + day;
+        #    }
+        #
+        #    ParmList =  day;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonth
+        #CreditCardStr returnMonth(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    CreditCardStr           ParmList;
+        #    CreditCardStr           month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(ccTrans.OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthCC
+        #CreditCardStr returnMonthCC(CreditCardTable         ccTable)
+        #{
+        #    CreditCardStr           ParmList;
+        #    CreditCardStr           month;
+        #    ;
+        #
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthFromDate
+        #CreditCardStr returnMonthFromDate(date        dateTrans)
+        #{
+        #    CreditCardStr           ParmList;
+        #    CreditCardStr           month;
+        #    ;
+        #    month =  int2str(Mthofyr(dateTrans));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear
+        #CreditCardStr returnYear(CreditCardTrans      ccTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    CreditCardStr           ParmList;
+        #    CreditCardStr           ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(ccTrans.OneTimeDateExp));
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYearCC
+        #CreditCardStr returnYearCC(CreditCardTable         ccTable)
+        #{
+        #    CreditCardStr           ParmList;
+        #    CreditCardStr           ccYear;
+        #    ;
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #
+        #
+        #    ParmList =  ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeHPSResponse
+        #static creditCardTrans analyzeHPSResponse(CreditCardStr          msg,
+        #                                    CreditCardTrans ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2,childNodeLst3;
+        #    XMLNodeList                     ProcessNodeList;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3,elementChild4;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    Counter                         cnt,childCnt,childCnt2,childCnt3;
+        #    Counter                         i,j;
+        #    CreditCardStr                         tmpStr;
+        #    CreditCardStr                         node;
+        #    CreditCardStr                         errMsg;
+        #
+        #    ;
+        #    ttsBegin;
+        #    ccTrans.selectForUpdate(true);
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #        //--> Second node should be the soap envelope body
+        #        if (cnt == 1)
+        #        {
+        #            //--> store in comment
+        #            ccTrans.Comment1 = tmpStr;
+        #        }
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'Ver1.0'       :
+        #                        childNodeLst2 = elementChild2.childNodes();
+        #                        j = childNodeLst2.length();
+        #                        //--> Transaction
+        #                        for (childCnt3=0;childCnt3 < childNodeLst2.length();childCnt3++)
+        #                        {
+        #                            elementChild3 = childNodeLst2.item(childCnt3);
+        #                            tmpStr = elementChild3.nodeName();
+        #                            if (elementChild3.nodeName() == 'Header')
+        #                            {
+        #                                childNodeLst3 = elementChild3.childNodes();
+        #                                for (childCnt2=0;childCnt2<childNodeLst3.length();childCnt2++)
+        #                                {
+        #                                    elementChild4 = childNodeLst3.item(childCnt2);
+        #                                    tmpStr = elementChild4.nodeName();
+        #                                    switch(elementChild4.nodeName())
+        #                                    {
+        #                                        case 'GatewayTxnId'   :
+        #                                            if (!ccTrans.PNRef)
+        #                                            {
+        #                                                ccTrans.PNRef = elementChild4.innerText();
+        #                                            }
+        #                                            break;
+        #                                        case 'GatewayRspCode'   :
+        #                                            ccTrans.Result = elementChild4.innerText();
+        #                                            break;
+        #                                        case 'GatewayRspMsg'   :
+        #                                            ccTrans.RepMsg = elementChild4.innerText();
+        #                                            ccTrans.Comment1    = elementChild4.innerText();
+        #                                            break;
+        #                                    }
+        #                                }
+        #                            }
+        #                            else
+        #                            {
+        #                                childNodeLst3 = elementChild3.childNodes();
+        #                                //--> "Process", this can be "CreditAuth", etc.
+        #                                elementChild4 = childNodeLst3.item(0);
+        #                                tmpStr = elementChild4.nodeName();
+        #                                ProcessNodeList = elementChild4.childNodes();
+        #
+        #                                for (childCnt2 = 0;childCnt2 < ProcessNodeList.length();childCnt2++)
+        #                                {
+        #                                    elementChild4 = ProcessNodeList.item(childCnt2);
+        #                                    tmpStr = elementChild4.nodeName();
+        #                                    switch (elementChild4.nodeName())
+        #                                    {
+        #                                        case 'RspCode' :
+        #                                            tmpStr = elementChild4.innerXml();
+        #                                            if (elementChild4.innerXML() != '00')
+        #                                            {
+        #                                                errMsg = elementChild3.innerXML();
+        #                                            }
+        #                                            else
+        #                                            {
+        #                                                ccTrans.Result = '0';
+        #                                            }
+        #                                            break;
+        #                                        case    'AuthCode'       :
+        #                                            cctrans.AuthCode = elementChild4.innerXML();
+        #                                            break;
+        #                                        case    'AVSRsltCode' :
+        #                                            ccTrans.AvsAddr = elementChild4.innerXML();
+        #                                            break;
+        #                                        case    'RspText'       :
+        #                                            ccTrans.RepMsg = elementChild4.innerXML();
+        #                                            break;
+        #                                        case    'RefNbr'          :
+        #                                            ccTrans.Comment1 = elementChild4.innerXml();
+        #                                            break;
+        #                                        case    'CPCInd'            :
+        #                                            ccTrans.CommercialCard = NoYes::Yes;
+        #                                            break;
+        #                                    }
+        #                                }
+        #                            }
+        #                        }
+        #                        break;
+        #
+        #                    case 'SOAP:Reason'  :
+        #                        ccTrans.Result = '500';
+        #                        childNodeLst2 = elementChild2.childNodes();
+        #                        j = childNodeLst2.length();
+        #                        //--> Transaction
+        #                        for (childCnt3=0;childCnt3 < childNodeLst2.length();childCnt3++)
+        #                        {
+        #                            elementChild3 = childNodeLst2.item(childCnt3);
+        #                            tmpStr = elementChild3.nodeName();
+        #
+        #                            if (tmpStr == 'soap:Text')
+        #                            {
+        #                                ccTrans.RepMsg = elementChild3.innerText();
+        #                                ccTrans.Comment2 = elementChild3.innerText();
+        #                            }
+        #                        }
+        #                        break;
+        #
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    ccTrans.update();
+        #
+        #    ttsCommit;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeHPSTokenResponse
+        #static void analyzeHPSTokenResponse(CreditCardStr          msg,
+        #                                    CreditCardTable             ccTable)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2,childNodeLst3,childNodeLst4;
+        #    XMLNodeList                     ProcessNodeList;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3,elementChild4,elementChild5;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    Counter                         cnt,childCnt,childCnt2,childCnt3,childCnt4;
+        #    Counter                         i,j;
+        #    CreditCardStr                         tmpStr;
+        #    CreditCardStr                         node;
+        #    CreditCardStr                         errMsg,errMsgTxt;
+        #    NoYes                           accepted;
+        #
+        #    ;
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #
+        #    xmlNSManager = new XMLNamespaceManager(xmlResult.nameTable());
+        #    xmlNSManager.addNamespace('soap','http://schemas.xmlsoap.org/soap/envelope/');
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be two nodes > Header and Body
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        tmpStr = elementParent.toString();
+        #
+        #
+        #        if (elementParent && elementParent.hasChildNodes())
+        #        {
+        #            childNodeList = elementParent.childNodes();
+        #            i = childNodeList.item(0).childNodes().length();
+        #            for(childCnt =0; childCnt < i;childCnt++)
+        #            {
+        #                elementChild2 = childNodeList.item(0).childNodes().item(childCnt);
+        #                node = elementChild2.nodeName();
+        #
+        #                tmpStr = elementChild2.innerXML();
+        #
+        #                switch (node)
+        #                {
+        #                    case    'Ver1.0'       :
+        #                        childNodeLst2 = elementChild2.childNodes();
+        #                        j = childNodeLst2.length();
+        #                        //--> Transaction
+        #                        for (childCnt3=0;childCnt3 < childNodeLst2.length();childCnt3++)
+        #                        {
+        #                            elementChild3 = childNodeLst2.item(childCnt3);
+        #                            tmpStr = elementChild3.nodeName();
+        #                            if (elementChild3.nodeName() == 'Header')
+        #                            {
+        #                                childNodeLst3 = elementChild3.childNodes();
+        #                                for (childCnt2=0;childCnt2<childNodeLst3.length();childCnt2++)
+        #                                {
+        #                                    elementChild4 = childNodeLst3.item(childCnt2);
+        #                                    tmpStr = elementChild4.nodeName();
+        #                                    switch(elementChild4.nodeName())
+        #                                    {
+        #                                        case 'GatewayTxnId'   :
+        #                                            break;
+        #                                        case 'GatewayRspCode'   :
+        #                                            if (elementChild4.innerText() == '0')
+        #                                            {
+        #                                                accepted = true;
+        #                                            }
+        #                                            break;
+        #                                        case 'TokenData'  :
+        #                                            childNodeLst4 = elementChild4.childNodes();
+        #                                            for (childCnt4=0;childCnt4<childNodeLst4.length();childCnt4++)
+        #                                            {
+        #                                                elementChild5 = childNodeLst4.item(childCnt4);
+        #                                                tmpStr = elementCHild5.nodeName();
+        #                                                switch (elementChild5.nodeName())
+        #                                                {
+        #                                                    case    'TokenRspCode' :
+        #                                                        if (elementChild5.innerText() != '0')
+        #                                                        {
+        #                                                            errMsg = elementChild5.innerText();
+        #                                                        }
+        #                                                        break;
+        #                                                    case    'TokenRspMsg'   :
+        #                                                        if (errMsg)
+        #                                                        {
+        #                                                            errMsgTxt = elementChild5.innerText();
+        #                                                        }
+        #                                                        break;
+        #                                                    case    'TokenValue'    :
+        #                                                        if (errMsg == '')
+        #                                                        {
+        #                                                            ccTable.Profile = NoYes::Yes;
+        #                                                            ccTable.ProfileId = elementChild5.innerText();
+        #                                                        }
+        #                                                        break;
+        #                                                }
+        #                                            }
+        #
+        #                                    }
+        #                                }
+        #                            }
+        #                            else
+        #                            {
+        #                                childNodeLst3 = elementChild3.childNodes();
+        #                                //--> "Process", this can be "CreditAuth", etc.
+        #                                elementChild4 = childNodeLst3.item(0);
+        #                                tmpStr = elementChild4.nodeName();
+        #                                ProcessNodeList = elementChild4.childNodes();
+        #
+        #                                for (childCnt2 = 0;childCnt2 < ProcessNodeList.length();childCnt2++)
+        #                                {
+        #                                    elementChild4 = ProcessNodeList.item(childCnt2);
+        #                                    tmpStr = elementChild4.nodeName();
+        #                                    switch (elementChild4.nodeName())
+        #                                    {
+        #                                        case 'RspCode' :
+        #                                            tmpStr = elementChild4.innerXml();
+        #                                            switch  (elementChild4.innerXML())
+        #                                            {
+        #                                                case    '00','85'   :
+        #                                                    break;
+        #
+        #                                                default :
+        #                                                    errMsg = elementChild4.innerXML();
+        #                                            }
+        #
+        #                                            break;
+        #                                        case    'AuthCode'       :
+        #                                            break;
+        #                                        case    'AVSRsltCode' :
+        #                                            break;
+        #                                        case    'RspText'       :
+        #                                            if (errMsgTxt == '')
+        #                                            {
+        #                                                errMsgTxt = elementChild4.innerXML();
+        #                                            }
+        #                                            break;
+        #                                        case    'RefNbr'          :
+        #                                            break;
+        #                                    }
+        #                                }
+        #                            }
+        #                        }
+        #                        break;
+        #                    //--> In case of errors or rejections
+        #
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    if (errMsg)
+        #    {
+        #        throw error(strFmt("@ACC143",errmsg,errmsgTxt));
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static CreditCardStr construct(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantHeartland       ccMerchantHeartland;
+        #
+        #    //--> Cybersource Specific variables
+        #    CreditCardHeartlandXMLBuilder       xmlBuilder = new CreditCardHeartlandXMLBuilder();
+        #
+        #    CreditCardStr                       response;
+        #    CreditCardStr                       parmList;
+        #
+        #    XMLDocument                         xmlResult;
+        #    XmlElement                          element;
+        #    XmlNodeList                         nodeList;
+        #    XmlNode                             elementParent;
+        #    Counter                             cnt;
+        #    CreditCardStr                       node;
+        #    CreditCardStr                       cpcInd;
+        #
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantHeartland
+        #        where ccMerchantHeartland.TerminalId == ccTrans.TerminalId;
+        #
+        #    xmlBuilder.parmMerchantHeartland(ccMerchantHeartland);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantHeartland(ccMerchantHeartland);
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build(ccTrans);
+        #
+        #    try
+        #    {
+        #        //--> TLS 1.2
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantHeartland.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml; charset=utf-8');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(webResponse.GetResponseStream());
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #
+        #
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #
+        #        if (strFind(response,'500',1,strLen(response)))
+        #        {
+        #
+        #            response = CreditCardHeartlandXMLBuilder::constructCOM(ccTrans);
+        #        }
+        #        else
+        #        {
+        #            throw error(response);
+        #        }
+        #
+        #
+        #
+        #        webRequest.Abort();
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(response);
+        #    nodeList = xmlResult.getElementsByTagName('Transaction');
+        #    //--> Get transaction list
+        #    nodeList = nodeList.item(0).childNodes();
+        #    //--> Get transaction type list (Auth/Sale/etc)
+        #    nodeList = nodeList.item(0).childNodes();
+        #    cnt = nodeList.length();
+        #    //--> This should be one node <TXN>
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        if (node == 'CPCInd')
+        #        {
+        #            ccTrans.CommercialCard = NoYes::Yes;
+        #            cpcInd = elementParent.innerText();
+        #        }
+        #
+        #    }
+        #
+        #    if (ccTrans.CommercialCard && (ccTrans.TransType == CreditCardTrxType::S
+        #        || ccTrans.TransType == CreditCardTrxType::A))
+        #    {
+        #        ccTrans = CreditCardHeartlandXMLBuilder::analyzeHPSResponse(response,ccTrans);
+        #        response = CreditCardHeartlandXMLBuilder::constructCPCEdit(ccTrans);
+        #        ccTrans = CreditCardHeartlandXMLBuilder::analyzeHPSResponse(response,ccTrans);
+        #
+        #        if (ccTrans.Result != '0')
+        #        {
+        #            throw error(strfmt("@ACC1705",ccTrans.result,ccTrans.RepMsg));
+        #        }
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #constructCOM
+        #static CreditCardStr constructCOM(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantHeartland       ccMerchantHeartland;
+        #
+        #    //--> Cybersource Specific variables
+        #    CreditCardHeartlandXMLBuilder       xmlBuilder = new CreditCardHeartlandXMLBuilder();
+        #
+        #    CreditCardStr                             response;
+        #    CreditCardStr                             parmList;
+        #
+        #    COM                                 request;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantHeartland
+        #        where ccMerchantHeartland.TerminalId == ccTrans.TerminalId;
+        #
+        #    xmlBuilder.parmMerchantHeartland(ccMerchantHeartland);
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantHeartland(ccMerchantHeartland);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.build(ccTrans);
+        #
+        #    request = new COM('WinHttp.WinHttpRequest.5.1');
+        #    request.open('POST',ccMerchantHeartland.HostAddress, FALSE);
+        #    request.setRequestHeader('Content-length',int2str(strLen(ParmList)));
+        #    request.setRequestHeader('Content-Type','text/xml');
+        #
+        #    request.send(ParmList);
+        #
+        #    response = request.responseText();
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #constructCPCEdit
+        #static CreditCardStr constructCPCEdit(CreditCardTrans        ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantHeartland       ccMerchantHeartland;
+        #
+        #    //--> Cybersource Specific variables
+        #    CreditCardHeartlandXMLBuilder       xmlBuilder = new CreditCardHeartlandXMLBuilder();
+        #
+        #    CreditCardStr                             response;
+        #    CreditCardStr                             parmList;
+        #
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantHeartland
+        #        where ccMerchantHeartland.TerminalId == ccTrans.TerminalId;
+        #
+        #    xmlBuilder.parmMerchantHeartland(ccMerchantHeartland);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantHeartland(ccMerchantHeartland);
+        #
+        #    //--> Build  Node
+        #    parmList  = xmlBuilder.buildCPCEdit(ccTrans);
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantHeartland.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml; charset=utf-8');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(webResponse.GetResponseStream());
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #
+        #
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #
+        #        if (strFind(response,'500',1,strLen(response)))
+        #        {
+        #
+        #            response = CreditCardHeartlandXMLBuilder::constructCOM(ccTrans);
+        #        }
+        #        else
+        #        {
+        #            throw error(response);
+        #        }
+        #
+        #
+        #
+        #        webRequest.Abort();
+        #    }
+        #    catch (Exception::Error)
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #static void createProfile(CreditCardTable      ccTable)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM objects used in this method do NOT violate the security standards
+        #    CreditCardMerchantHeartland       ccMerchantHeartland;
+        #
+        #    //--> Cybersource Specific variables
+        #    CreditCardHeartlandXMLBuilder       xmlBuilder = new CreditCardHeartlandXMLBuilder();
+        #
+        #    CreditCardStr                             response;
+        #    CreditCardStr                             parmList;
+        #
+        #    System.Net.WebRequest               webRequest;
+        #    System.Net.HttpWebResponse          webResponse;
+        #    System.IO.Stream                    stream;
+        #    System.IO.StreamWriter              streamWriter = null;
+        #    System.IO.StreamReader              streamReader = null;
+        #    InteropPermission                   clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //--> Retrieve Parameters
+        #    select ccMerchantHeartland
+        #        where ccMerchantHeartland.TerminalId == CreditCardTerminalTable::find().TerminalId;
+        #
+        #    if (!ccMerchantHeartland)
+        #    {
+        #        throw error("@ACC1331");
+        #    }
+        #
+        #    xmlBuilder.parmMerchantHeartland(ccMerchantHeartland);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTable.Location));
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantHeartland(ccMerchantHeartland);
+        #
+        #    parmList  = xmlBuilder.buildProfile(ccTable);
+        #
+        #    try
+        #    {
+        #        //--> TLS 1.2
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccMerchantHeartland.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('text/xml; charset=utf-8');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #    CreditCardHeartlandXMLBuilder::analyzeHPSTokenResponse(response,ccTable);
+        #
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #readHeaderField
+        #static private str readHeaderField(XmlTextReader xmlReader, CreditCardStr fieldName, NoYes isRequired, CreditCardStr defaultValue)
+        #{
+        #    CreditCardStr     fieldValue;
+        #
+        #    #Aif;
+        #
+        #    xmlReader.moveToContent();
+        #
+        #    if (isRequired || ((xmlReader.namespaceURI() == #MessageNamespace) && (xmlReader.localName() == fieldName)))
+        #        fieldValue = xmlReader.readElementString3(fieldName, #MessageNamespace);
+        #
+        #    return fieldValue? fieldValue : defaultValue;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

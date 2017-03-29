@@ -1,0 +1,1645 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SalesPackingSlipJournalPost
+    PROPERTIES
+      Name                #SalesPackingSlipJournalPost
+      Extends             #FormletterJournalPost
+      RunOn               #Server
+      Origin              #{2D1B0000-0000-1000-1FE5-55E0288C464C}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #addToInventReportDimHistory
+        #/// <summary>
+        #/// Adds a record to the <c>InventReportDimHistory</c> table.
+        #/// </summary>
+        #/// <param name="_journalline">
+        #/// A journal line record.
+        #/// </param>
+        #protected void addToInventReportDimHistory(Common _journalline)
+        #{
+        #    InventTrackingRegisterTransDimIterator  trackingDimIterator;
+        #    InventTransOrigin                       inventTransOrigin;
+        #    InventTrans                             inventTrans;
+        #    CustPackingSlipTrans                    localCustPackingSlipTrans = _journalline as CustPackingSlipTrans;
+        #    InventQty                               qtyRemain                 = localCustPackingSlipTrans.InventQty;
+        #    InventDim                               transInventDim;
+        #    InventDim                               newInventDim;
+        #    InventQty                               currentQty;
+        #    InventQty                               remainingInventTransQty;
+        #    boolean                                 isSalesProcessEnabled;
+        #
+        #
+        #    void createInventReportDimHistory(InventQty _qty, InventDimId _inventDimId)
+        #    {
+        #        qtyRemain = this.createInventReportDimHistory(localCustPackingSlipTrans.InventTransId,
+        #                                                    _inventDimId,
+        #                                                    custPackingSlipVersion.InternalPackingSlipId,
+        #                                                    _qty, qtyRemain);
+        #    }
+        #
+        #    if (salesLine.isStocked())
+        #    {
+        #        isSalesProcessEnabled = localCustPackingSlipTrans.inventTable().isActiveInSalesProcess();
+        #        if (isSalesProcessEnabled)
+        #        {
+        #            trackingDimIterator = InventTrackingRegisterTransDimIterator::newFromPhysicalJournalLine(localCustPackingSlipTrans);
+        #        }
+        #
+        #        while select TableId from inventTransOrigin
+        #            where inventTransOrigin.InventTransId       == localCustPackingSlipTrans.InventTransId
+        #               && inventTransOrigin.ReferenceCategory   == InventTransType::Sales
+        #            join InventDimId, Qty from inventTrans
+        #            where inventTrans.InventTransOrigin         == inventTransOrigin.RecId
+        #               && ((inventTrans.PackingSlipId           == localCustPackingSlipTrans.PackingSlipId && salesLine.SalesType != SalesType::ItemReq) ||
+        #                  (inventTrans.InvoiceId                == localCustPackingSlipTrans.PackingSlipId && salesLine.SalesType == SalesType::ItemReq))
+        #               && inventTrans.DatePhysical              == localCustPackingSlipTrans.DeliveryDate
+        #               && inventTrans.PackingSlipReturned       == NoYes::No
+        #            join transInventDim
+        #                where transInventDim.InventDimId        == inventTrans.InventDimId
+        #        {
+        #            if (qtyRemain)
+        #            {
+        #                if (!isSalesProcessEnabled)
+        #                {
+        #                    createInventReportDimHistory(inventTrans.Qty, inventTrans.InventDimId);
+        #                }
+        #                else
+        #                {
+        #                    newInventDim = trackingDimIterator.nextTrackingDim(transInventDim);
+        #                    remainingInventTransQty = inventTrans.Qty;
+        #
+        #                    // we need to split inventTrans to several lines with qty=-1 to include tracking dimensions
+        #                    while (newInventDim && remainingInventTransQty != 0)
+        #                    {
+        #                        currentQty = trackingDimIterator.currentQty();
+        #                        createInventReportDimHistory(currentQty, newInventDim.InventDimId);
+        #                        remainingInventTransQty -= currentQty;
+        #                        newInventDim = trackingDimIterator.nextTrackingDim(transInventDim);
+        #                    }
+        #
+        #                    if (remainingInventTransQty)
+        #                    {
+        #                        createInventReportDimHistory(remainingInventTransQty, inventTrans.InventDimId);
+        #                    }
+        #                }
+        #            }
+        #            else
+        #                break;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        this.createInventReportDimHistory(localCustPackingSlipTrans.InventTransId,
+        #                                          localCustPackingSlipTrans.InventDimId,
+        #                                          custPackingSlipVersion.InternalPackingSlipId,
+        #                                          localCustPackingSlipTrans.Qty,
+        #                                          localCustPackingSlipTrans.Qty);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #canPostLedger
+        #/// <summary>
+        #/// Determines whether ledger postings can occur.
+        #/// </summary>
+        #/// <returns>
+        #/// true if ledger postings can occur; otherwise, false.
+        #/// </returns>
+        #protected boolean canPostLedger()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #checkBeforePostingLine
+        #protected void checkBeforePostingLine()
+        #{
+        #    RecId    psdsRecId;
+        #
+        #    super();
+        #
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(PdsMRC)))
+        #    {
+        #        psdsRecId = PdsMRCRegulated_Sales_PackingSlip::checkWarnBreakAndPrint(
+        #            mrcPostingErr,
+        #            this.pdsMRCParameters().RegulationWarningOnPack,
+        #            mrcPrintOnPack,
+        #            salesLine);
+        #        if ( mrcPrintOnPack )
+        #        {
+        #            docuRefRecIdList.addEnd(psdsRecId);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class SalesPackingSlipJournalPost
+        #extends FormletterJournalPost
+        #{
+        #    SalesParmTable          salesParmTable;
+        #    SalesParmLine           salesParmLine;
+        #
+        #    CustPackingSlipVersion      previousCustPackingSlipVersion;
+        #    CustPackingSlipTransHistory previousCustPackingSlipTransHistory;
+        #
+        #    CustPackingSlipVersion  custPackingSlipVersion;
+        #    CustPackingSlipJour     custPackingSlipJour;
+        #    CustPackingSlipTrans    custPackingSlipTrans;
+        #    SalesLine               salesLine;
+        #    SalesTable              salesTable;
+        #
+        #    SalesTotals             salesTotals;
+        #
+        #    SalesQty                updateNow;
+        #
+        #    RecordInsertList        recordInsertListCustPackingSlipBackorderLine;
+        #
+        #    AmountCur               cashDiscountAmount;
+        #    AmountCur               totalAmountCashDiscOnInvoice;
+        #
+        #    InventMovement          inventMovement;
+        #    boolean                 mrcPostingErr;
+        #    boolean                 mrcPrintOnPack;
+        #    PdsMRCParameters        pdsMRCParameters;
+        #
+        #    // <GBR>
+        #    List                    journalLines_BR;
+        #    DeliverySlipTotals_BR   deliverySlipTotals;
+        #    boolean                 isCountryRegion_BR;
+        #    // </GBR>
+        #    // <GEERU>
+        #    boolean                 isCountryRegion_RU;
+        #    // </GEERU>
+        #    SalesParameters         salesParameters;
+        #    TaxParameters           taxParameters;
+        #}
+      ENDSOURCE
+      SOURCE #createBackorderLines
+        #protected void createBackorderLines()
+        #{
+        #    SalesLine       localSalesLine;
+        #    LogisticsPostalAddress postalAddress;
+        #
+        #    if (!previousCustPackingSlipVersion)
+        #    {
+        #
+        #        ttsbegin;
+        #
+        #        while select localSalesLine
+        #              exists join postalAddress
+        #                where localSalesLine.DeliveryPostalAddress  == postalAddress.RecId
+        #                   && localSalesLine.SalesId                == salesTable.SalesId
+        #                   && localSalesLine.SalesStatus            == SalesStatus::Backorder
+        #                   && localSalesLine.RemainInventPhysical   != 0
+        #                   && (localSalesLine.SalesType             != SalesType::Subscription  ||  // Only create backorders for subscriptions
+        #                       localSalesLine.RemainInventPhysical  != localSalesLine.QtyOrdered)   // if the remaining quantity is different from the ordered quantity
+        #                   && (salesParameters.SplitDeliveryPackingSlip == NoYes::No            ||  // Only check the address if there is a split per address
+        #                       (postalAddress.RecId                 == custPackingSlipJour.DeliveryPostalAddress &&
+        #                        localSalesLine.DeliveryName         == custPackingSlipJour.DeliveryName      &&
+        #                        localSalesLine.DlvMode              == custPackingSlipJour.DlvMode))
+        #        {
+        #            if (salesParameters.splitSite(this.documentStatus())) // if split on site
+        #            {
+        #                if (localSalesLine.inventDim().InventSiteId == salesParmTable.InventSiteId) // check for same site
+        #                {
+        #                    this.insertBackorderLine(localSalesLine);
+        #                }
+        #            }
+        #            else
+        #            {
+        #                this.insertBackorderLine(localSalesLine);
+        #            }
+        #        }
+        #        ttscommit;
+        #    }
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #createBackorderLinesHistory
+        #/// <summary>
+        #/// Creates <c>CustPackingSlipBackorderLineHistory</c> records for the current packing slip version.
+        #/// </summary>
+        #protected void createBackorderLinesHistory()
+        #{
+        #    CustPackingSlipBackorderLine custPackingSlipBackorderLine;
+        #    CustPackingSlipBackorderLineHistory custPackingSlipBackorderLineHistory;
+        #    CustPackingSlipBackorderLineHistory previousCustPackingSlipBackorderLineHistory;
+        #    VersioningTimeStamp         validFrom, validTo;
+        #
+        #    validFrom = custPackingSlipVersion.VersionDateTime;
+        #    validTo = DateTimeUtil::maxValue();
+        #
+        #    ttsbegin;
+        #    if (!previousCustPackingSlipVersion.RecId)
+        #    {
+        #        insert_recordset custPackingSlipBackorderLineHistory(CustPackingSlipBackorderLine,  ValidFrom, ValidTo, QtyBackorderSales, QtyBackorderInvent
+        #            , PdsCWQtyBackorder
+        #            )
+        #            select RecId, validFrom, validTo, QtyBackorderSales, QtyBackorderInvent
+        #                , PdsCWQtyBackorder
+        #                from custPackingSlipBackorderLine
+        #                where custPackingSlipBackorderLine.SalesId == custPackingSlipJour.SalesId
+        #                   && custPackingSlipBackorderLine.PackingSlipId == custPackingSlipJour.PackingSlipId
+        #                   && custPackingSlipBackorderLine.DeliveryDate == custPackingSlipJour.DeliveryDate;
+        #    }
+        #    else
+        #    {
+        #        insert_recordset custPackingSlipBackorderLineHistory(CustPackingSlipBackorderLine,  ValidFrom, ValidTo, QtyBackorderSales, QtyBackorderInvent
+        #            , PdsCWQtyBackorder
+        #            )
+        #            select RecId, validFrom, validTo, QtyBackorderSales, QtyBackorderInvent
+        #                , PdsCWQtyBackorder
+        #                from custPackingSlipBackorderLine
+        #                where custPackingSlipBackorderLine.SalesId == custPackingSlipJour.SalesId
+        #                   && custPackingSlipBackorderLine.PackingSlipId == custPackingSlipJour.PackingSlipId
+        #                   && custPackingSlipBackorderLine.DeliveryDate == custPackingSlipJour.DeliveryDate
+        #            notexists join previousCustPackingSlipBackorderLineHistory
+        #                where previousCustPackingSlipBackorderLineHistory.CustPackingSlipBackorderLine == custPackingSlipBackorderLine.RecId
+        #                   && previousCustPackingSlipBackorderLineHistory.QtyBackorderSales == custPackingSlipBackorderLine.QtyBackorderSales
+        #                   && previousCustPackingSlipBackorderLineHistory.QtyBackorderInvent == custPackingSlipBackorderLine.QtyBackorderInvent;
+        #    }
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #createNotStockedPostCheck
+        #/// <summary>
+        #/// Retrieves a <c>TradeNotStockedPostCheck</c> object that is used to verify order lines during
+        #/// posting.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>TradeNotStockedPostCheck</c> object that is used to verify order lines during posting.
+        #/// </returns>
+        #/// <remarks>
+        #/// This method can return null if no verification should be performed.
+        #/// </remarks>
+        #protected TradeNotStockedPostCheck createNotStockedPostCheck()
+        #{
+        #    return TradeNotStockedPostCheck::newSalesLine(salesLine, custPackingSlipTrans.Qty, custPackingSlipTrans.Remain, salesParmLine.RemainBefore);
+        #}
+      ENDSOURCE
+      SOURCE #createReportData
+        #public boolean createReportData(FormletterJournalPrint _formletterJournalPrint)
+        #{
+        #    SalesPackingSlipDP salesPackingSlipDP;
+        #    CustPackingSlipVersion localCustPackingSlipVersion;
+        #    TradeDocumentReportContract  tradeDocumentReportContract;
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU])
+        #     || BrazilParameters::isEnabled())
+        #    {//other reports are printed in this case. they do not support new way of printing proforma yet.
+        #        return false;
+        #    }
+        #
+        #    localCustPackingSlipVersion = CustPackingSlipVersion::findLatest(formletterJournal.RecId);
+        #    if (localCustPackingSlipVersion)
+        #    {
+        #        tradeDocumentReportContract = new TradeDocumentReportContract();
+        #        tradeDocumentReportContract.parmRecordId(localCustPackingSlipVersion.RecId);
+        #
+        #        salesPackingSlipDP = new SalesPackingSlipDP();
+        #        salesPackingSlipDP.createData(tradeDocumentReportContract);
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #createTransLink_RU
+        #private void createTransLink_RU()
+        #{
+        #    LedgerTransLink_RU      ledgerTransLink;
+        #    CustPackingSlipTrans    packingSlipTrans;
+        #    InventTrans             inventTrans;
+        #    InventTransOrigin       inventTransOrigin;
+        #    InventTrans             inventTransOrig;
+        #    TransLink_RU            transLink;
+        #
+        #    while select inventTrans
+        #        join RefPri from transLink
+        #            where transLink.RefTableId  == tablenum(InventTrans)
+        #               && transLink.RefSec      == inventTrans.RecId
+        #        exists join inventTransOrigin
+        #            where inventTransOrigin.RecId == inventTrans.InventTransOrigin
+        #        exists join packingSlipTrans
+        #            where packingSlipTrans.InventTransId    == inventTransOrigin.InventTransId
+        #               && packingSlipTrans.SalesId          == custPackingSlipJour.SalesId
+        #               && packingSlipTrans.PackingSlipId    == custPackingSlipJour.PackingSlipId
+        #               && packingSlipTrans.DeliveryDate     == custPackingSlipJour.DeliveryDate
+        #    {
+        #        inventTransOrig = InventTrans::findRecId(transLink.RefPri);
+        #        ledgerTransLink = LedgerTransLink_RU::newTrans(inventTrans, inventTransOrig);
+        #        ledgerTransLink.parmVoucherField(fieldnum(InventTrans, VoucherPhysical));
+        #        ledgerTransLink.parmAccountingDateField(fieldnum(InventTrans, DatePhysical));
+        #        ledgerTransLink.parmReportingDate(inventTransOrig.DatePhysical);
+        #        ledgerTransLink.run();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #creditNote
+        #/// <summary>
+        #/// Determines whether the posting is for a credit note.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the posting is for a credit note; otherwise, false.
+        #/// </returns>
+        #protected NoYes creditNote()
+        #{
+        #    NoYes creditNote;
+        #
+        #    if (taxParameters.CashDiscOnInvoice)
+        #    {
+        #        if (totalAmountCashDiscOnInvoice < 0)
+        #            creditNote = NoYes::Yes;
+        #        else
+        #            creditNote = NoYes::No;
+        #    }
+        #    else
+        #    {
+        #        if (salesTotals.isCreditNote())
+        #            creditNote = NoYes::Yes;
+        #        else
+        #            creditNote = NoYes::No;
+        #    }
+        #    return creditNote;
+        #}
+      ENDSOURCE
+      SOURCE #documentStatus
+        #/// <summary>
+        #/// Gets the type of document
+        #/// </summary>
+        #/// <returns>
+        #/// An element of <c>DocumentStatus</c> enumeration
+        #/// </returns>
+        #protected DocumentStatus  documentStatus()
+        #{
+        #    // <GBR>
+        #    if (isCountryRegion_BR)
+        #    {
+        #        return salesParmTable.Ordering;
+        #    }
+        #    // </GBR>
+        #
+        #    return DocumentStatus::PackingSlip;
+        #}
+      ENDSOURCE
+      SOURCE #endLedgerVoucher
+        #protected void endLedgerVoucher()
+        #{
+        #    super();
+        #
+        #    if (isCountryRegion_RU)
+        #    {
+        #        this.createTransLink_RU();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #endLines
+        #protected void endLines()
+        #{
+        #    if (!this.postMarkupLineBeforeInventory())
+        #    {
+        #        this.postMarkupOnSalesLine();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #endPost
+        #/// <summary>
+        #/// Ends the posting.
+        #/// </summary>
+        #protected void endPost()
+        #{
+        #    this.updateWMSShipment();
+        #    this.updateWHSLoadTable();
+        #    this.shipCarrierSendShippingInfo();
+        #    this.updateSalesShippingStat();
+        #    this.updateBankLC();
+        #    this.createBackorderLinesHistory();
+        #
+        #    // <GBR>
+        #    if (isCountryRegion_BR)
+        #    {
+        #        this.postEndPost_BR();
+        #    }
+        #    // </GBR>
+        #}
+      ENDSOURCE
+      SOURCE #endPostLine
+        #/// <summary>
+        #/// Ends the posting of a journal line.
+        #/// </summary>
+        #protected void endPostLine()
+        #{
+        #    inventMovement = null; //Ensures that the internal recordViewCache in inventMovement is deactivated again.
+        #    previousCustPackingSlipTransHistory = null;
+        #    super();
+        #
+        #    // <GBR>
+        #    if (isCountryRegion_BR)
+        #    {
+        #        this.postEndPostLine_BR();
+        #    }
+        #    // </GBR>
+        #}
+      ENDSOURCE
+      SOURCE #endUpdate
+        #/// <summary>
+        #/// Ends the update of selected records.
+        #/// </summary>
+        #/// <remarks>
+        #/// The <c>endUpdate</c> method in the derived classes contains the code for ending the posting of the
+        #/// selected records posted by the derived <c>FormLetter</c> class. For example the <c>endUpdate</c>
+        #/// method in the <c>SalesFormLetter</c> class ends the update for the selected sales orders. The
+        #/// <c>endUpdate</c> method is added to the <c>FormLetter</c> class so that you can run the
+        #/// <c>endUpdate</c> method when you post in batch. The <c>endUpdate</c> method is called from the
+        #/// <c>run</c> method in the abstract classes derived from the <c>FormLetter</c> class, and from the
+        #/// <c>run</c> method in the <c>FormLetterEndMultiThread</c> class.
+        #/// </remarks>
+        #protected void endUpdate()
+        #{
+        #    super();
+        #    this.interCompanyPost();
+        #    if (isConfigurationkeyEnabled(configurationKeyNum(MCRCallCenter)))
+        #    {
+        #        this.mcrValidateGiftCardSerialNumber();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #formletterType
+        #/// <summary>
+        #/// Determines the form letter type.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>FormletterType</c> enumeration value.
+        #/// </returns>
+        #protected FormletterType formletterType()
+        #{
+        #    return FormletterType::Sales;
+        #}
+      ENDSOURCE
+      SOURCE #getVoucher
+        #/// <summary>
+        #/// Gets a voucher number.
+        #/// </summary>
+        #/// <returns>
+        #/// A voucher number.
+        #/// </returns>
+        #protected Num getVoucher()
+        #{
+        #    return custPackingSlipVersion.LedgerVoucher;
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #/// <summary>
+        #/// Initializes the class.
+        #/// </summary>
+        #public void init()
+        #{
+        #    custPackingSlipVersion = CustPackingSlipVersion::findLatest(custPackingSlipJour.RecId);
+        #    salesParameters        = SalesParameters::find();
+        #    taxParameters          = TaxParameters::find();
+        #    // <GBR>
+        #    isCountryRegion_BR     = BrazilParameters::isEnabled();
+        #    // </GBR>
+        #    // <GEERU>
+        #    isCountryRegion_RU     = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #    // </GEERU>
+        #    super();
+        #    salesTable = custPackingSlipJour.salesTable();
+        #
+        #    if (this.parmTotals())
+        #    {
+        #        salesTotals = this.parmTotals() as SalesTotals;
+        #    }
+        #    else
+        #    {
+        #        salesTotals = SalesTotals::construct(salesParmTable, this.parmSpecQty(), this.parmSumBy(), custPackingSlipJour.ParmId, this.parmSumOrderId(), this.documentStatus());
+        #    }
+        #
+        #    this.tax(salesTotals.tax());
+        #    cashDiscountAmount = salesTotals.cashDiscAmount();
+        #    totalAmountCashDiscOnInvoice = salesTotals.totalAmountCashDiscOnInvoice(true);
+        #
+        #    this.initPreviousVersionDateTime();
+        #
+        #    // <GBR>
+        #    if (isCountryRegion_BR)
+        #    {
+        #        this.postInit_BR();
+        #    }
+        #    // </GBR>
+        #}
+      ENDSOURCE
+      SOURCE #initLedgerVoucher
+        #/// <summary>
+        #/// Initializes a <c>LedgerVoucherObject</c> object.
+        #/// </summary>
+        #protected void initLedgerVoucher()
+        #{
+        #    super();
+        #
+        #    if (isCountryRegion_RU)
+        #    {
+        #        ledgerVoucher.findLedgerVoucherObject(voucher).parmCorrection(this.creditNote() ? salesParmTable.salesParmUpdate().StornoPhysical_RU : NoYes::No);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initPreviousVersionDateTime
+        #/// <summary>
+        #/// Finds the previous packing slip version.
+        #/// </summary>
+        #protected void initPreviousVersionDateTime()
+        #{
+        #    select previousCustPackingSlipVersion
+        #        order by VersionDateTime desc
+        #        where previousCustPackingSlipVersion.CustPackingSlipJour == custPackingSlipJour.RecId
+        #           && previousCustPackingSlipVersion.RecId != custPackingSlipVersion.RecId;
+        #}
+      ENDSOURCE
+      SOURCE #initRecordLists
+        #/// <summary>
+        #/// Initializes the record lists.
+        #/// </summary>
+        #protected void initRecordLists()
+        #{
+        #    super();
+        #    recordInsertListCustPackingSlipBackorderLine = new RecordInsertList(tableNum(CustPackingSlipBackorderLine));
+        #}
+      ENDSOURCE
+      SOURCE #initRelatedLineTables
+        #/// <summary>
+        #/// Initializes the records that are related to the current journal line.
+        #/// </summary>
+        #protected void initRelatedLineTables()
+        #{
+        #    super();
+        #
+        #    salesLine = custPackingSlipTrans.salesLine(true);
+        #    this.initRelatedParmLine();
+        #
+        #    if (previousCustPackingSlipVersion)
+        #    {
+        #        previousCustPackingSlipTransHistory = CustPackingSlipTransHistory::find(
+        #            custPackingSlipTrans.RecId,
+        #            false,
+        #            previousCustPackingSlipVersion.VersionDateTime);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initRelatedParmLine
+        #/// <summary>
+        #/// Initializes an instance of the <c>SalesParmLine</c> class.
+        #/// </summary>
+        #protected void initRelatedParmLine()
+        #{
+        #    select firstonly forupdate salesParmLine
+        #            where salesParmLine.ParmId          == custPackingSlipVersion.ParmId
+        #               && salesParmLine.TableRefId      == salesParmTable.TableRefId
+        #               && salesParmLine.OrigSalesId     == salesLine.SalesId
+        #               && salesParmLine.LineNum         == salesLine.LineNum
+        #               && salesParmLine.SalesLineRecId  == salesLine.RecId;
+        #}
+      ENDSOURCE
+      SOURCE #initTransactionTxt
+        #/// <summary>
+        #/// Initializes the <c>TransactionTxt</c> object.
+        #/// </summary>
+        #/// <param name="_ledgerTransTxt">
+        #/// A ledger transaction text.
+        #/// </param>
+        #/// <returns>
+        #/// An instance of the <c>TransactionTxt</c> object.
+        #/// </returns>
+        #protected  TransactionTxt initTransactionTxt(LedgerTransTxt  _ledgerTransTxt)
+        #{
+        #    TransactionTextContext          transactionTextContext;
+        #    transactionTxt = new TransactionTxt();
+        #    transactionTxt.setType          (LedgerTransTxt::SalesPackingSlipLedger);
+        #    transactionTxt.setLanguage      (custPackingSlipJour.LanguageId);
+        #    transactionTxt.setVoucher       (voucher);
+        #    transactionTxt.setFormLetter    (custPackingSlipVersion.InternalPackingSlipId);
+        #    transactionTxt.setKey1          (custPackingSlipJour.SalesId);
+        #    transactionTxt.setKey2          (custPackingSlipJour.OrderAccount);
+        #    transactionTxt.setKey3          (CustTable::groupId(custPackingSlipJour.OrderAccount));
+        #    if (SysCountryRegionCode::isLegalEntityInConsolidatedCountryRegion())
+        #    {
+        #        transactionTextContext = TransactionTextContext::newForTransactionType(LedgerTransTxt::SalesPackingSlipLedger);
+        #        transactionTextContext.setTableBuffer(custPackingSlipJour);
+        #        transactionTextContext.setTableBuffer(custPackingSlipJour.salesTable());
+        #        transactionTxt.setTransactionTextContext(transactionTextContext);
+        #    }
+        #
+        #    // <GBR>
+        #    if (isCountryRegion_BR)
+        #    {
+        #        transactionTxt.setName_BR(CustTable::find(custPackingSlipJour.OrderAccount).name());
+        #    }
+        #    // </GBR>
+        #
+        #    return transactionTxt;
+        #}
+      ENDSOURCE
+      SOURCE #insertBackorderLine
+        #protected void  insertBackorderLine(SalesLine  _salesLine)
+        #{
+        #    CustPackingSlipBackorderLine  custPackingSlipBackorderLine;
+        #
+        #    custPackingSlipBackorderLine.initValue();
+        #    custPackingSlipBackorderLine.initFromSalesLine              (_salesLine);
+        #    custPackingSlipBackorderLine.initFromCustPackingSlipJour    (custPackingSlipJour);
+        #    recordInsertListCustPackingSlipBackorderLine.add(custPackingSlipBackorderLine);
+        #}
+      ENDSOURCE
+      SOURCE #insertRecordList
+        #/// <summary>
+        #/// Inserts records in the record lists into the database.
+        #/// </summary>
+        #protected void insertRecordList()
+        #{
+        #    super();
+        #    recordInsertListCustPackingSlipBackorderLine.insertDatabase();
+        #}
+      ENDSOURCE
+      SOURCE #interCompanyPost
+        #protected void interCompanyPost()
+        #{
+        #    RecordSortedList journalList;
+        #    SalesPackingSlipJournalPrint journalPrint;
+        #
+        #    if (custPackingSlipJour.interCompanyDoInternalPosting()
+        #    || (custPackingSlipJour.InterCompanyCompanyId && custPackingSlipJour.interCompanyDoExternalPosting()))
+        #    {
+        #        journalPrint = SalesPackingSlipJournalPrint::construct();
+        #        journalList = journalPrint.newJournalList();
+        #        journalList.ins(custPackingSlipJour);
+        #        InterCompanyPostPurch::post(this.parmChainFormletterContract(), custPackingSlipJour, journalList);
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #inventReportDimHistoryLogType
+        #/// <summary>
+        #/// Gets the inventory report dimension history type.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>InventReportDimHistoryLogType</c> enumeration value.
+        #/// </returns>
+        #protected InventReportDimHistoryLogType inventReportDimHistoryLogType()
+        #{
+        #    return InventReportDimHistoryLogType::SalesPackingSlip;
+        #}
+      ENDSOURCE
+      SOURCE #isConfigkeyEnabledShipCarrier
+        #protected boolean isConfigkeyEnabledShipCarrier()
+        #{
+        #    return Global::isConfigurationkeyEnabled(configurationKeyNum(ShipCarrier));
+        #}
+      ENDSOURCE
+      SOURCE #journalLine
+        #/// <summary>
+        #/// Gets or sets the current journal line record.
+        #/// </summary>
+        #/// <param name="_journalLine">
+        #/// A journal line record.
+        #/// </param>
+        #/// <returns>
+        #/// A journal line record.
+        #/// </returns>
+        #protected Common journalLine(Common _journalLine = custPackingSlipTrans)
+        #{
+        #    custPackingSlipTrans = _journalLine as CustPackingSlipTrans;
+        #    return custPackingSlipTrans;
+        #}
+      ENDSOURCE
+      SOURCE #journalLineTableId
+        #/// <summary>
+        #/// Gets the table ID for the journal line table.
+        #/// </summary>
+        #/// <returns>
+        #/// A table ID.
+        #/// </returns>
+        #protected TableId journalLineTableId()
+        #{
+        #    return tableNum(CustPackingSlipTrans);
+        #}
+      ENDSOURCE
+      SOURCE #ledgerVoucherObjectDocument
+        #/// <summary>
+        #/// Gets the document values from the <c>LedgervoucherObject</c> object.
+        #/// </summary>
+        #/// <param name="_ledgerVoucherObject">
+        #/// A <c>LedgerVoucherObject</c> object.
+        #/// </param>
+        #/// <returns>
+        #/// A container that contains document values.
+        #/// </returns>
+        #protected container ledgerVoucherObjectDocument(LedgerVoucherObject _ledgerVoucherObject)
+        #{
+        #    return custPackingSlipJour.DocumentDate ? [custPackingSlipJour.DocumentDate] : [custPackingSlipJour.DeliveryDate, custPackingSlipJour.PackingSlipId];
+        #}
+      ENDSOURCE
+      SOURCE #mcrValidateGiftCardSerialNumber
+        #private void mcrValidateGiftCardSerialNumber()
+        #{
+        #    SalesLine                   localSalesLine;
+        #    MCRSalesLine                localMCRSalesLine;
+        #    RetailGiftCardTransactions  retailGiftCardTransactions;
+        #    RetailParameters            retailParameters;
+        #
+        #    retailParameters = RetailParameters::find();
+        #
+        #    if (retailParameters.GiftcardItem &&
+        #        !(RetailStoreTable::findRecId(salesTable.retailSalesTable().RetailChannel)))
+        #    {
+        #        select firstonly localSalesLine
+        #            where localSalesLine.SalesId == salesTable.SalesId
+        #                && localSalesLine.ItemId == retailParameters.GiftcardItem
+        #            exists join localMCRSalesLine
+        #            where localMCRSalesLine.SalesLine == localSalesLine.RecId
+        #                && !localMCRSalesLine.GiftCardNumber
+        #                && localMCRSalesLine.GiftCardType == MCRGiftCardType::Physical
+        #            notexists join retailGiftCardTransactions
+        #            where retailGiftCardTransactions.mcrInventTransId == localSalesLine.InventTransId;
+        #        if (localSalesLine)
+        #        {
+        #            throw error("@MCR40294");
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #moveFiscalDataToPackingSlip_BR
+        #/// <summary>
+        #/// Moves fiscal references and legal texts from <c>SalesParmTable</c> table record to <c>CustPackingSlipJour</c> table record.
+        #/// </summary>
+        #protected void moveFiscalDataToPackingSlip_BR()
+        #{
+        #    CFOPTable_BR                    deliveryCFOP;
+        #    FiscalDocumentTextUpdate_BR     fiscalDocumentTextUpdate;
+        #
+        #    // Move legal texts to CustPackigSlipJour
+        #    deliveryCFOP = CFOPTable_BR::find(salesTable.deliveryCFOPTable_BR());
+        #    if (deliveryCFOP)
+        #    {
+        #        // Delivery CFOP legal texts
+        #        fiscalDocumentTextUpdate = FiscalDocumentTextUpdate_BR::newFromRecord(custPackingSlipJour);
+        #        fiscalDocumentTextUpdate.updateTexts(FiscalDocumentTextType_BR::CFOP);
+        #
+        #        // Fiscal references legal texts
+        #        fiscalDocumentTextUpdate = FiscalDocumentTextUpdate_BR::newFromRecord(custPackingSlipJour);
+        #        fiscalDocumentTextUpdate.copy(salesParmTable);
+        #    }
+        #
+        #    // Move fiscal references from SalesParmTable to custPackingSlipJour
+        #    FiscalReferenceParm_BR::move(salesParmTable, custPackingSlipJour);
+        #}
+      ENDSOURCE
+      SOURCE #parmJournalTable
+        #public Common parmJournalTable(Common _journalTable = custPackingSlipJour)
+        #{
+        #    custPackingSlipJour = _journalTable as CustPackingSlipJour;
+        #    return custPackingSlipJour;
+        #}
+      ENDSOURCE
+      SOURCE #parmMrcPostingErr
+        #public boolean parmMrcPostingErr(boolean _mrcPostingErr = mrcPostingErr)
+        #{
+        #    mrcPostingErr = _mrcPostingErr;
+        #
+        #    return mrcPostingErr;
+        #}
+      ENDSOURCE
+      SOURCE #parmMrcPrintOnPack
+        #public boolean parmMrcPrintOnPack(boolean _mrcPrintOnPack = mrcPrintOnPack)
+        #{
+        #    mrcPrintOnPack = _mrcPrintOnPack;
+        #
+        #    return mrcPrintOnPack;
+        #}
+      ENDSOURCE
+      SOURCE #parmParmTable
+        #public Common parmParmTable(Common _parmTable = salesParmTable)
+        #{
+        #    salesParmTable = _parmTable as SalesParmTable;
+        #    return salesParmTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmShipmentId
+        #public WMSShipmentId parmShipmentId(WMSShipmentId _shipmentId = shipmentId)
+        #{
+        #    shipmentId = _shipmentId;
+        #    return shipmentId;
+        #}
+      ENDSOURCE
+      SOURCE #pdsMRCParameters
+        #/// <summary>
+        #/// Retrieves the <c>PdsMCRParameters</c> record.
+        #/// </summary>
+        #/// <returns>
+        #/// The <c>PdsMCRParameters</c> record.
+        #/// </returns>
+        #protected PdsMRCParameters pdsMRCParameters()
+        #{
+        #    if (!pdsMRCParameters.RecId)
+        #    {
+        #        pdsMRCParameters = PdsMRCParameters::find();
+        #    }
+        #
+        #    return pdsMRCParameters;
+        #}
+      ENDSOURCE
+      SOURCE #postDeliverySlip_BR
+        #/// <summary>
+        #/// Starts delivery slip post process
+        #/// </summary>
+        #// <GBR>
+        #protected void postDeliverySlip_BR()
+        #{
+        #    TmpTaxWorkTrans         tmpTaxWorkTrans ;
+        #
+        #    deliverySlipTotals.calc();
+        #    tmpTaxWorkTrans         = deliverySlipTotals.tax().tmpTaxWorkTrans();
+        #
+        #    while select salesLine
+        #        where salesLine.SalesId == custPackingSlipJour.SalesId
+        #    {
+        #        TaxDeliverySlip_BR::moveFromDeliverySlip(tmpTaxWorkTrans, custPackingSlipJour, salesLine);
+        #    }
+        #}
+        #// </GBR>
+      ENDSOURCE
+      SOURCE #postEndPost_BR
+        #/// <summary>
+        #/// Executes Brazilian localization logic after the <c>endPost</c> method.
+        #/// </summary>
+        #protected void postEndPost_BR()
+        #{
+        #    SalesParmUpdate         salesParmUpdate;
+        #    FiscalDocument_BR       fiscalDocument;
+        #    FiscalDocumentPost_BR   fiscalDocumentPost;
+        #
+        #    // Only creates Fiscal Documents for delivery slips. Regular packing slips don't generate Fiscal Documents
+        #    if (custPackingSlipJour.canDeliverySlipBeUpdatedBR())
+        #    {
+        #        this.moveFiscalDataToPackingSlip_BR();
+        #
+        #        select salesParmUpdate
+        #                where salesParmUpdate.ParmId == salesParmTable.ParmId;
+        #
+        #        deliverySlipTotals = DeliverySlipTotals_BR::construct(salesParmTable, this.parmSpecQty(), this.parmSumBy(),
+        #                                                              custPackingSlipJour.ParmId, this.parmSumOrderId(), this.documentStatus());
+        #        this.postDeliverySlip_BR();
+        #
+        #        fiscalDocument = FiscalDocument_BR::findByRef(custPackingSlipJour.TableId, custPackingSlipJour.RecId, true);
+        #        if (fiscalDocument)
+        #        {
+        #            FiscalDocumentPost_BR::cancelFiscalDocument(fiscalDocument,
+        #                                                        custPackingSlipJour.LedgerVoucher,
+        #                                                        custPackingSlipJour.DeliveryDate,
+        #                                                        '',
+        #                                                        ReasonTableRef::find(custPackingSlipJour.ReasonTableRef_BR).ReasonComment);
+        #        }
+        #        else
+        #        {
+        #            fiscalDocumentPost = new FiscalDocumentPost_BR(
+        #                    FiscalDocumentParmDataCreator_BR::fromPackingSlip(custPackingSlipJour,
+        #                                                                      salesParmTable,
+        #                                                                      salesTotals,
+        #                                                                      salesParmUpdate,
+        #                                                                      salesTable,
+        #                                                                      journalLines_BR));
+        #            fiscalDocumentPost.run();
+        #
+        #            if (this.parmWHSLoadId())
+        #            {
+        #                WHSLoadLineFiscalDocument_BR::insertLoadLinesForCustPackingSlipJour(this.parmWHSLoadId(), custPackingSlipJour, fiscalDocumentPost.getFiscalDocument().RecId);
+        #            }
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postEndPostLine_BR
+        #/// <summary>
+        #/// Executes Brazilian localization logic after the <c>endPostLine</c> method.
+        #/// </summary>
+        #protected void postEndPostLine_BR()
+        #{
+        #    journalLines_BR.addEnd(custPackingSlipTrans);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postInit_BR
+        #/// <summary>
+        #/// Create new list of journal lines.
+        #/// </summary>
+        #public void postInit_BR()
+        #{
+        #    journalLines_BR = new List(Types::Record);
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postInventory
+        #/// <summary>
+        #/// Posts to inventory.
+        #/// </summary>
+        #protected void postInventory()
+        #{
+        #    // <GEERU>
+        #    InventUpd_Estimated    estimated;
+        #    InventMov_AssetSale_ru assetMovement;
+        #    InventUpd_Financial    financial;
+        #
+        #    if (salesLine.AssetId_RU)
+        #    {
+        #        assetMovement = new InventMov_AssetSale_ru(salesLine);
+        #
+        #        if(assetMovement.canDisposal())
+        #        {
+        #            estimated = InventUpd_Estimated::newInventMovement(assetMovement);
+        #            estimated.updateNow();
+        #
+        #            financial = InventUpd_Financial::newPostAsset_RU(assetMovement, ledgerVoucher);
+        #            financial.parmCurrencyCode(CompanyInfo::standardCurrency());
+        #            financial.updateNow();
+        #        }
+        #    }
+        #    // </GEERU>
+        #
+        #    inventMovement = InventMovement::construct(salesLine);
+        #
+        #    // <GEERU>
+        #    inventMovement.parmStorno_RU(this.creditNote() && this.parmStorno());
+        #    inventMovement.parmStornoPhysical_RU(salesParmTable.salesParmUpdate().StornoPhysical_RU);
+        #    // </GEERU>
+        #    this.updateInventory(inventMovement);
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupOnJour
+        #protected void postMarkupOnJour(SalesTable _salesTableMarkup)
+        #{
+        #    Markup::updateMarkupAsPosted(_salesTableMarkup,this.documentStatus());
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupOnSalesLine
+        #/// <summary>
+        #/// Posts the markup for the journal lines.
+        #/// </summary>
+        #protected void postMarkupOnSalesLine()
+        #{
+        #    MarkupTrans     markupTrans;
+        #    SalesLine       localSalesLine;
+        #    SalesParmLine   localSalesParmLine;
+        #
+        #    if (salesTotals.lineMarkupTransExist())
+        #    {
+        #        ttsbegin;
+        #        markupTrans.skipDataMethods(true);
+        #
+        #        update_recordset markupTrans
+        #            setting DocumentStatus = DocumentStatus::PackingSlip
+        #            where  markupTrans.TransTableId      == tableNum(SalesLine)
+        #                && markupTrans.Keep              == NoYes::No
+        #                && markupTrans.DocumentStatus    != DocumentStatus::PackingSlip
+        #        exists join localSalesLine
+        #            where localSalesLine.RecId              == markupTrans.TransRecId
+        #        exists join localSalesParmLine
+        #            where  localSalesParmLine.ParmId        == salesParmTable.ParmId
+        #                && localSalesParmLine.TableRefId    == salesParmTable.TableRefId
+        #                && localSalesParmLine.OrigSalesId   == localSalesLine.SalesId
+        #                && localSalesParmLine.InventTransId == localSalesLine.InventTransId
+        #                && localSalesParmLine.DeliverNow    != 0;
+        #
+        #        ttscommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postMarkupTable
+        #/// <summary>
+        #/// Posts the markup for the journal header.
+        #/// </summary>
+        #protected void postMarkupTable()
+        #{
+        #    SalesTable          salesTableMarkup;
+        #    SalesParmSubTable   localSalesParmSubTable;
+        #
+        #    while select RecId from localSalesParmSubTable
+        #        where localSalesParmSubTable.ParmId     == salesParmTable.ParmId
+        #           && localSalesParmSubTable.TableRefId == salesParmTable.TableRefId
+        #    join salesTableMarkup
+        #        where salesTableMarkup.SalesId == localSalesParmSubTable.OrigSalesId
+        #    {
+        #        this.postMarkupOnJour(salesTableMarkup);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postNotStocked
+        #/// <summary>
+        #/// Performs posting routines for order lines that cannot be posted to inventory.
+        #/// </summary>
+        #protected void postNotStocked()
+        #{
+        #    SalesQty                            varianceSalesQty;
+        #    SalesQty                            registerQty;
+        #    TradeNonStockedRegistrationHelper   tradeNonStockedRegistrationHelper;
+        #
+        #    if (salesLine.SalesQty < 0)
+        #    {
+        #        if (!previousCustPackingSlipVersion) // SalesParmLine is already selected on corrections
+        #        {
+        #            this.initRelatedParmLine();
+        #        }
+        #        varianceSalesQty = salesParmLine.DeliverNow + salesParmLine.RemainAfter - salesParmLine.RemainBefore;
+        #        registerQty      = custPackingSlipTrans.Qty - previousCustPackingSlipTransHistory.Qty - varianceSalesQty;
+        #
+        #        tradeNonStockedRegistrationHelper = TradeNonStockedRegistrationHelper::newFromSalesPurchLine(salesLine);
+        #        if (registerQty < 0)
+        #        {
+        #            //Delete the pending receipt and pending registration records for the quantity being posted.
+        #            tradeNonStockedRegistrationHelper.updatePendingQuantityOnPosting(-registerQty);
+        #        }
+        #        else
+        #        {
+        #            tradeNonStockedRegistrationHelper.synchronizePendingRegistration(registerQty,false);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postTaxOnProforma
+        #/// <summary>
+        #/// Indicates whether the tax should be considered when a proforma journal is posted.
+        #/// </summary>
+        #/// <returns>
+        #/// true if tax should be considered on the proforma journals; otherwise, false.
+        #/// </returns>
+        ##ISOCountryRegionCodes
+        #protected boolean postTaxOnProforma()
+        #{
+        #    boolean ret;
+        #
+        #    if (SysCountryRegionCode::isLegalEntityInCountryRegion([ #isoCZ, #isoEE, #isoHU, #isoLT, #isoLV, #isoPL, #isoRU ]))
+        #    {
+        #        ret = true;
+        #    }
+        #    else
+        #    {
+        #        ret = super();
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #recalcTotals
+        #/// <summary>
+        #/// Recalculates the totals.
+        #/// </summary>
+        #/// <remarks>
+        #/// If the quantity is reduced by inventory, use this method.
+        #/// </remarks>
+        #protected void recalcTotals()
+        #{
+        #    salesTotals = SalesTotals::construct(salesTable, this.parmSpecQty(), this.parmSumBy(), custPackingSlipJour.ParmId, this.parmSumOrderId(), this.documentStatus());
+        #    salesTotals.calc();
+        #    this.tax(salesTotals.tax());
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #public void run()
+        #{
+        #    super();
+        #
+        #    //--> Advanced credit card begin
+        #    if (this.isProforma() == NoYes::No)
+        #    {
+        #        if (!CreditCardPosting::construct(this,this.documentStatus()))
+        #        {
+        #            throw error("@ACC1060");
+        #        }
+        #    }
+        #    //<-- Advanced credit card end
+        #}
+      ENDSOURCE
+      SOURCE #selectFormletterJournalTrans
+        #/// <summary>
+        #/// Selects a journal line.
+        #/// </summary>
+        #protected void selectFormletterJournalTrans()
+        #{
+        #    CustPackingSlipTransHistory custPackingSlipTransHistory;
+        #    CustPackingSlipTrans        localCustPackingSlipTrans;
+        #
+        #    if (!previousCustPackingSlipVersion)
+        #    {
+        #        super();
+        #    }
+        #    else
+        #    {
+        #        formletterJournalTrans = localCustPackingSlipTrans;
+        #        select forupdate localCustPackingSlipTrans
+        #            where localCustPackingSlipTrans.PackingSlipId   == custPackingSlipJour.PackingSlipId
+        #               && localCustPackingSlipTrans.SalesId         == custPackingSlipJour.SalesId
+        #               && localCustPackingSlipTrans.DeliveryDate    == custPackingSlipJour.DeliveryDate
+        #            exists join custPackingSlipTransHistory
+        #                where custPackingSlipTransHistory.CustPackingSlipTrans  == localCustPackingSlipTrans.RecId
+        #                   && custPackingSlipTransHistory.Qty                   != localCustPackingSlipTrans.Qty;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #shipCarrierSendShippingInfo
+        #/// <summary>
+        #///    Saves information to the Intermedia <c>ShipCarrierShippingRequest</c> table.
+        #/// </summary>
+        #/// <remarks>
+        #///    Also creates records in the <c>ShipCarrierCODPackage</c> table for each sales order with a cash on
+        #///    delivery (COD) payment type.Called after a packing slip has been posted.
+        #/// </remarks>
+        #private void shipCarrierSendShippingInfo()
+        #{
+        #    boolean     calledFromShipment;
+        #
+        #    if (!this.isConfigkeyEnabledShipCarrier() || previousCustPackingSlipVersion)
+        #    {
+        #        return;
+        #    }
+        #
+        #    if (custPackingSlipJour)
+        #    {
+        #        calledFromShipment = (this.parmShipmentId() != '');
+        #        ShipCarrierShippingRequest::createShippingRequest(
+        #            custPackingSlipJour,
+        #            salesTable,
+        #            salesLine,
+        #            this.parmShipmentId(),
+        #            salesTotals.totalAmount());
+        #
+        #        if (calledFromShipment && SalesTable::find(custPackingSlipJour.SalesId).hasCODPaymentMethod())
+        #        {
+        #            ShipCarrierCODPackage::createCODPackage(custPackingSlipJour, this.parmShipmentId());
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #sourceLine
+        #/// <summary>
+        #/// Gets the source line record for the current journal line.
+        #/// </summary>
+        #/// <returns>
+        #/// A source line record.
+        #/// </returns>
+        #protected Common sourceLine()
+        #{
+        #    return salesLine;
+        #}
+      ENDSOURCE
+      SOURCE #sourceTable
+        #/// <summary>
+        #/// Gets the source header record for the journal header.
+        #/// </summary>
+        #/// <returns>
+        #/// A source header record.
+        #/// </returns>
+        #protected Common sourceTable()
+        #{
+        #    return salesTable;
+        #}
+      ENDSOURCE
+      SOURCE #startLines
+        #protected void startLines()
+        #{
+        #    if (this.postMarkupLineBeforeInventory())
+        #    {
+        #        this.postMarkupOnSalesLine();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogTxt
+        #/// <summary>
+        #/// Gets an instance of the <c>TransTxt</c> object.
+        #/// </summary>
+        #/// <returns>
+        #/// An instance of the <c>TransTxt</c> object.
+        #/// </returns>
+        #protected TransTxt  transactionLogTxt()
+        #{
+        #    return "@SYS7934";
+        #}
+      ENDSOURCE
+      SOURCE #transactionLogType
+        #/// <summary>
+        #/// Gets the transaction log type.
+        #/// </summary>
+        #/// <returns>
+        #/// A <c>TransactionLogType</c> enumeration value.
+        #/// </returns>
+        #protected TransactionLogType  transactionLogType()
+        #{
+        #    return TransactionLogType::SalesPckSlp;
+        #}
+      ENDSOURCE
+      SOURCE #updateBankLC
+        #/// <summary>
+        #/// Updates the Letter of Credit after the journal is posted.
+        #/// </summary>
+        #private void updateBankLC()
+        #{
+        #    BankLCExportType bankLCExportType;
+        #
+        #    if (BankLCExportFeatureChecker::checkBankLCExportEnabled()
+        #        && salesParmTable.BankLCExportLine != 0)
+        #    {
+        #        bankLCExportType = BankLCExportType::constructBySalesId(salesParmTable.SalesId, true, true);
+        #
+        #        if (this.parmChainFormletterContract())
+        #        {
+        #            bankLCExportType.parmVersioningUpdateType(this.parmChainFormletterContract().parmVersioningUpdateType());
+        #        }
+        #
+        #        bankLCExportType.updatePackingSlipPosted(salesParmTable.BankLCExportLine);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateDate
+        #/// <summary>
+        #/// Gets the transaction date.
+        #/// </summary>
+        #/// <returns>
+        #/// A transaction date.
+        #/// </returns>
+        #TransDate  updateDate()
+        #{
+        #    return custPackingSlipVersion.AccountingDate;
+        #}
+      ENDSOURCE
+      SOURCE #updateInventory
+        #protected void updateInventory(InventMovement _inventMovement)
+        #{
+        #    InventUpd_Physical      inventUpd_Physical;
+        #    SalesParmSubLine        salesParmSubLine;
+        #    List                    list;
+        #    ListEnumerator          le;
+        #    Counter                 subLines;
+        #    InventQty               inventQtyTotalRemain;
+        #    SalesQty                salesQtyTotalRemain;
+        #    PdsCWInventQty          cwInventQtyTotalRemain;
+        #    SalesQty                localUpdateNow;
+        #    InventQty               localUpdateNowInvent;
+        #    CustPackingSlipTrans    localCustPackingSlipTrans;
+        #    CostControlPostingItem  costControlPostingItem;
+        #
+        #    void updateInventory(WMSRouteId _wmsRouteId = '')
+        #    {
+        #        inventUpd_Physical = InventUpd_Physical::newSalesPackingSlip(_inventMovement,
+        #                                                                     localCustPackingSlipTrans,
+        #                                                                     custPackingSlipJour.PackingSlipId,
+        #                                                                     salesParmLine.physicalReduction(this.parmReduceOnHand()),
+        #                                                                     previousCustPackingSlipTransHistory,
+        #                                                                     custPackingSlipJour.LedgerVoucher,
+        #                                                                     salesParmLine.InventDimId);
+        #
+        #        inventUpd_Physical.parmPickingRouteId(_wmsRouteId);
+        #        inventUpd_Physical.updateNow(ledgerVoucher);
+        #        localUpdateNow       += -inventUpd_Physical.updPhysicalUnit();
+        #        localUpdateNowInvent += -inventUpd_Physical.updPhysical();
+        #
+        #        cwUpdateNow     = -inventUpd_Physical.pdsCWUpdPhysical();
+        #
+        #        if (_inventMovement.projId() &&
+        #            (!ProjLineProperty::find(salesLine.ProjLinePropertyId).ToBeInvoiced) &&
+        #            _inventMovement.mustBeCostControlled()  &&
+        #            _inventMovement.canCommittedCostBeReversed())
+        #        {
+        #            costControlPostingItem= CostControlPosting::newCostControlPostingItem(_inventMovement);
+        #            costControlPostingItem.run(ProjCommittedCostUpdateAction::Delete);
+        #        }
+        #    }
+        #
+        #    localCustPackingSlipTrans = this.journalLine().data();
+        #    list = SalesParmSubLine::buildSalesParmSubLineList(salesParmLine.RecId);
+        #    subLines = list.elements();
+        #    if (subLines > 0)
+        #    {
+        #        le                     = list.getEnumerator();
+        #        salesQtyTotalRemain    = localCustPackingSlipTrans.Qty + localCustPackingSlipTrans.Remain;
+        #        inventQtyTotalRemain   = localCustPackingSlipTrans.Qty + localCustPackingSlipTrans.RemainInvent;
+        #        cwInventQtyTotalRemain = localCustPackingSlipTrans.PdsCWQty + localCustPackingSlipTrans.PdsCWRemain;
+        #
+        #        while (le.moveNext())
+        #        {
+        #            salesParmSubLine = le.current();
+        #
+        #            localCustPackingSlipTrans.Qty          = salesParmSubLine.DeliverNow;
+        #            localCustPackingSlipTrans.InventQty    = salesParmSubLine.InventNow;
+        #            localCustPackingSlipTrans.PdsCWQty     = salesParmSubLine.PdsCWDeliverNow;
+        #            salesQtyTotalRemain                   -= salesParmSubLine.DeliverNow;
+        #            inventQtyTotalRemain                  -= salesParmSubLine.InventNow;
+        #            cwInventQtyTotalRemain                -= salesParmSubLine.PdsCWDeliverNow;
+        #            localCustPackingSlipTrans.Remain       = salesQtyTotalRemain;
+        #            localCustPackingSlipTrans.RemainInvent = inventQtyTotalRemain;
+        #            localCustPackingSlipTrans.PdsCWRemain  = cwInventQtyTotalRemain;
+        #
+        #            updateInventory(salesParmSubLine.wmsRouteId);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        updateInventory();
+        #    }
+        #
+        #    updateNow           = localUpdateNow;
+        #    updateNowInvent     = localUpdateNowInvent;
+        #}
+      ENDSOURCE
+      SOURCE #updateJournalLine
+        #/// <summary>
+        #///    Updates the customer packing slip journal line.
+        #/// </summary>
+        #/// <remarks>
+        #///    The update of the journal line is only for stocked order lines because inventory can reduce
+        #///    updated quantity to on-hand quantity for the item.
+        #/// </remarks>
+        #protected void updateJournalLine()
+        #{
+        #    if (!previousCustPackingSlipVersion
+        #        && salesLine.isStocked() && (custPackingSlipTrans.Qty != updateNow || custPackingSlipTrans.InventQty != updateNowInvent))
+        #    {
+        #        this.initRelatedParmLine();
+        #        info(strFmt("@SYS26397",updateNow));
+        #        this.setRecalcTotals();
+        #
+        #        salesParmLine.RemainAfter  += salesParmLine.DeliverNow - updateNow;
+        #        salesParmLine.setRemainAfterInvent();
+        #        salesParmLine.PdsCWRemainAfterInvent += salesParmLine.PdsCWDeliverNow - cwUpdateNow;
+        #
+        #        salesParmLine.DeliverNow    = updateNow;
+        #        salesParmLine.InventNow     = updateNowInvent;
+        #        salesParmLine.PdsCWDeliverNow = cwUpdateNow;
+        #        salesParmLine.setLineAmount(salesLine);
+        #
+        #        salesParmLine.update();
+        #
+        #        custPackingSlipTrans.Qty             = updateNow;
+        #        custPackingSlipTrans.InventQty       = updateNowInvent;
+        #        custPackingSlipTrans.Remain          = salesParmLine.RemainAfter;
+        #        custPackingSlipTrans.Ordered         = salesParmLine.RemainBefore;
+        #        custPackingSlipTrans.PdsCWQty        = cwUpdateNow;
+        #        custPackingSlipTrans.PdsCWRemain     = salesParmLine.PdsCWRemainAfterInvent;
+        #
+        #        custPackingSlipTrans.ValueMST        = salesParmLine.lineAmountExclTax(custPackingSlipJour.DeliveryDate, salesTotals.tax());
+        #
+        #        if (salesTable.CurrencyCode)
+        #        {
+        #            custPackingSlipTrans.ValueMST = Currency::mstAmount(custPackingSlipTrans.ValueMST, salesTable.CurrencyCode,custPackingSlipJour.DeliveryDate,
+        #                                                                Currency::noYes2UnknownNoYes(salesTable.euroTriangulation(custPackingSlipJour.DeliveryDate)),
+        #                                                                salesTable.exchRate(custPackingSlipJour.DeliveryDate),
+        #                                                                salesTable.exchRateSecondary(custPackingSlipJour.DeliveryDate));
+        #
+        #            custPackingSlipTrans.StatValueMST = Currency::mstAmount(custPackingSlipTrans.StatValueMST, salesTable.CurrencyCode,custPackingSlipJour.DeliveryDate,
+        #                                                                    Currency::noYes2UnknownNoYes(salesTable.euroTriangulation(custPackingSlipJour.DeliveryDate)),
+        #                                                                    salesTable.exchRate(custPackingSlipJour.DeliveryDate),
+        #                                                                    salesTable.exchRateSecondary(custPackingSlipJour.DeliveryDate));
+        #        }
+        #        custPackingSlipTrans.update();
+        #    }
+        #    else if (custPackingSlipTrans.FullyMatched && custPackingSlipTrans.isStocked())
+        #    {
+        #        custPackingSlipTrans.update();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateJournalTable
+        #/// <summary>
+        #/// Updates the journal header.
+        #/// </summary>
+        #protected void updateJournalTable()
+        #{
+        #    WMSBillOfLading         wmsBillOfLading;
+        #    SalesParmUpdate         localSalesParmUpdate;
+        #
+        #    super();
+        #
+        #    if (this.useBillOfLading())
+        #    {
+        #        localSalesParmUpdate = salesParmTable.salesParmUpdate();
+        #        // <GEERU>
+        #        if (isCountryRegion_RU)
+        #        {
+        #            wmsBillOfLading = WMSBillOfLading::constructFromPackingSlip(custPackingSlipJour, localSalesParmUpdate, salesParmTable);
+        #            custPackingSlipJour.OffSessionId_RU = salesParmTable.OffSessionId_RU;
+        #        }
+        #        else
+        #        {
+        #        // </GEERU>
+        #             wmsBillOfLading = WMSBillOfLading::constructFromPackingSlip(custPackingSlipJour, localSalesParmUpdate);
+        #        // <GEERU>
+        #        }
+        #        // </GEERU>
+        #        custPackingSlipJour.BillOfLadingId       = wmsBillOfLading.BillOfLadingId;
+        #        custPackingSlipJour.bolPackageAppearance = localSalesParmUpdate.bolPackageAppearance;
+        #        custPackingSlipJour.bolCarrierName       = localSalesParmUpdate.bolCarrierName;
+        #        custPackingSlipJour.bolAddress           = LogisticsLocationEntity::location2PostalAddress(SalesCarrier::find(localSalesParmUpdate.bolCarrierName).Location).Address;
+        #        custPackingSlipJour.bolFreightedBy       = localSalesParmUpdate.bolFreightedBy;
+        #    }
+        #
+        #    custPackingSlipJour.update();
+        #
+        #    if (   CustParameters::find().EntryCertificateIssuingEnabled_W
+        #        && salesParmTable.IssueOwnEntryCertificate_W
+        #        && ! this.isProforma())
+        #    {
+        #        CustEntryCertificateJour_W::constructFromPackingSlip(custPackingSlipJour);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSalesShippingStat
+        #protected void  updateSalesShippingStat()
+        #{
+        #    SalesShippingStat  salesShippingStat;
+        #
+        #    if (salesParameters.useShippingStatOnPackingSlip() && !previousCustPackingSlipVersion.RecId)
+        #    {
+        #        ttsbegin;
+        #        delete_from salesShippingStat
+        #            where salesShippingStat.TableRefId  == salesParmTable.TableRefId   &&
+        #                  salesShippingStat.ParmId      == salesParmTable.ParmId       &&
+        #                  salesShippingStat.Quantity    == 0;
+        #
+        #        update_recordset salesShippingStat
+        #            setting PackingSlipId = custPackingSlipJour.PackingSlipId,
+        #                    DeliveryDate  = salesParmTable.Transdate,
+        #                    ParmId        = ''
+        #            where salesShippingStat.TableRefId  == salesParmTable.TableRefId   &&
+        #                  salesShippingStat.ParmId      == salesParmTable.ParmId;
+        #
+        #        ttscommit;
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #updateSourceLine
+        #/// <summary>
+        #/// Updates the source line for the current journal line.
+        #/// </summary>
+        #protected void updateSourceLine()
+        #{
+        #    SalesLineType       salesLineType;
+        #    SalesLine           salesLineOrderLine;
+        #
+        #    if (!salesLine.isStocked()) //Values are set by the invenposting for inventtoried sales lines (InventMov_sales).
+        #    {
+        #        salesLine.RemainSalesPhysical  = custPackingSlipTrans.Remain;
+        #        salesLine.RemainSalesFinancial += custPackingSlipTrans.Qty - previousCustPackingSlipTransHistory.Qty;
+        #    }
+        #
+        #    salesLineType = SalesLineType::construct(salesLine);
+        #    salesLineType.updateSalesLine(inventMovement ? inventMovement.transIdSum() : null);
+        #    if (salesTable.InterCompanyCompanyId)
+        #    {
+        #        salesLineType.interCompanyResetDeliverNow();
+        #        if (!salesTable.InterCompanyDirectDeliveryOrig)
+        #        {
+        #            InterCompanyTransferInventDim::doTransfer(salesLine.DataAreaId,
+        #                                                      salesLine.InventTransId,
+        #                                                      salesTable.InterCompanyCompanyId,
+        #                                                      salesLine.InterCompanyInventTransId,
+        #                                                      salesTable.interCompanyEndpointActionPolicy().getOrCreateInterCompanyPolicyTransfer(InterCompanyFieldTransferType::External),
+        #                                                      StatusIssue::Deducted,
+        #                                                      custPackingSlipJour.PackingSlipId);
+        #        }
+        #    }
+        #
+        #    if (salesLine.returnItem())
+        #    {
+        #        salesLine = salesLine.returnLineUpdate(this.documentStatus());
+        #    }
+        #    else
+        #    {
+        #        salesLine.doUpdate();
+        #    }
+        #
+        #    if (salesLine.LineDeliveryType == LineDeliveryType::DeliveryLine)
+        #    {
+        #        salesLineOrderLine = SalesDeliverySchedule::findOrderLineForDeliveryLine(salesLine.InventTransId, true);
+        #        salesLineOrderLine.setSalesStatus();
+        #        salesLineOrderLine.doUpdate();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSourceLineBeforePosting
+        #/// <summary>
+        #///  Overridden to perform packing slip related pre-posting updates of the source line.
+        #/// </summary>
+        #protected void updateSourceLineBeforePosting()
+        #{
+        #    super();
+        #
+        #    if (salesLine.returnItem())
+        #    {
+        #        if (salesLine.returnUpdateLinePrePosting(this.documentStatus()))
+        #        {
+        #            salesLine = SalesLine::findInventTransId(salesLine.InventTransId, true);
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateSourceTable
+        #/// <summary>
+        #/// Updates the source table for the journal header.
+        #/// </summary>
+        #protected void updateSourceTable()
+        #{
+        #    SetEnumerator   se = ordersPosted.getEnumerator();
+        #    boolean         setEstimate = CustParameters::find().CreditMaxCheck == TypeOfCreditmaxCheck::BalanceDelivered;
+        #
+        #    ttsbegin;
+        #    while (se.moveNext())
+        #    {
+        #        salesTable = SalesTable::find(se.current(),true);
+        #        if (salesTable)
+        #        {
+        #            salesTable.updateDocumentStatus(this.documentStatus());
+        #            salesTable.updateBackStatus();
+        #            salesTable.updateSalesType();
+        #            this.createBackorderLines();
+        #            if (setEstimate)
+        #            {
+        #                salesTable.reread();
+        #
+        #                if (salesTable.setEstimate())
+        #                {
+        #                    salesTable.doUpdate();
+        #                }
+        #            }
+        #        }
+        #    }
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #updateWHSLoadTable
+        #/// <summary>
+        #/// Updates the warehouse load record relating to the packing slip.
+        #/// </summary>
+        #protected void updateWHSLoadTable()
+        #{
+        #    WHSLoadTable                    whsLoadTable;
+        #    WHSLoadTableCustPackingSlipJour whsLoadTableCustPackingSlipJour;
+        #    if (!previousCustPackingSlipVersion && this.parmWHSLoadId())
+        #    {
+        #        whsLoadTable = WHSLoadTable::find(this.parmWHSLoadId());
+        #
+        #        whsLoadTableCustPackingSlipJour.whsLoadTableLoadId       = whsLoadTable.LoadId;
+        #        whsLoadTableCustPackingSlipJour.whsLoadTableDataAreaId   = whsLoadTable.DataAreaId;
+        #        whsLoadTableCustPackingSlipJour.CustPackingSlipJourRecId = custPackingSlipJour.RecId;
+        #        whsLoadTableCustPackingSlipJour.insert();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateWMSShipment
+        #protected void updateWMSShipment()
+        #{
+        #    ShipCarrierShipmentPackingSlip  shipCarrierShipmentPackingSlip;
+        #    SetEnumerator                   se;
+        #    WMSShipmentId                   wmsShipmentId;
+        #
+        #    if (!this.parmPackedLineIdSet() || previousCustPackingSlipVersion)
+        #        return ;
+        #
+        #    se = Set::create(this.parmPackedLineIdSet()).getEnumerator();
+        #    while (se.moveNext())
+        #    {
+        #        wmsShipmentId = se.current();
+        #        if (!ShipCarrierShipmentPackingSlip::exist(wmsShipmentId, custPackingSlipJour.PackingSlipId))
+        #        {
+        #            shipCarrierShipmentPackingSlip.clear();
+        #            shipCarrierShipmentPackingSlip.wmsShipmentId = wmsShipmentId;
+        #            shipCarrierShipmentPackingSlip.SalesPackingSlipId = custPackingSlipJour.PackingSlipId;
+        #            shipCarrierShipmentPackingSlip.insert();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #useBillOfLading
+        #/// <summary>
+        #/// Indicates whether the bill of lading can be created and populated.
+        #/// </summary>
+        #/// <returns>
+        #/// true if bill of lading can be used; 
+        #/// </returns>
+        #protected boolean useBillOfLading()
+        #{
+        #    return !this.isProforma() && salesParameters.useBillOfLadingOnPackingSlip();
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #public static SalesPackingSlipJournalPost construct()
+        #{
+        #    return new SalesPackingSlipJournalPost();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

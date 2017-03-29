@@ -1,0 +1,141 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SysCheckList_CreditCardAdv
+    PROPERTIES
+      Name                #SysCheckList_CreditCardAdv
+      Extends             #SysCheckList
+      RunOn               #Client
+      Origin              #{14778255-9A07-401C-8C19-C495B4264111}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #/// <summary>
+        #/// Checklist for Credit card upgrade.
+        #/// </summary>
+        #// This is a framework class. Customizing this class may cause problems with future upgrades to the software.
+        #class SysCheckList_CreditCardAdv extends SysCheckList
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #doInit
+        #protected void doInit(boolean _silent = false, boolean _ignoreEmpty = false)
+        #{
+        #    Args         args;
+        #    Object       formRun;
+        #    FormDesign   formDesign;
+        #    str          id; //used in both form and class to identify the activeX html cacheobject
+        #    str          infoText;
+        #    ;
+        #
+        #    //Create list
+        #    this.init();
+        #
+        #    if (_ignoreEmpty || !this.isEmpty())
+        #    {
+        #        //Show list
+        #        if (_silent && this.canRunSilent())
+        #        {
+        #            this.runSilent();
+        #        }
+        #        else
+        #        {
+        #            //Save checklist in cache - we do not allow more than one instance of each list
+        #            infolog.globalCache().set(this.getName(),
+        #                                      this.getName(),
+        #                                      this);
+        #
+        #            //init form
+        #            id = this.getName() + '|' + int2str(WinAPI::getTickCount());
+        #            args = new Args(formstr(DOCommoncheckList));
+        #            args.parm(id);
+        #            args.caller(this);
+        #
+        #            formRun = classfactory.formRunClass(args);
+        #
+        #            infoText = this.infoText();
+        #            if (infoText)
+        #            {
+        #                formRun.parmInfoText(infoText);
+        #            }
+        #
+        #            formRun.init(); //Save control in cache
+        #            formDesign = formRun.design();
+        #            formDesign.caption(this.getCheckListCaption());
+        #
+        #            this.initHtmlControl(id);
+        #            this.initCheckBoxControl(id);
+        #            // display the checkbox only if the checklist requires it
+        #            if (this.canBePreventedAtStartup() && checkBoxPreventAtStartup.visible())
+        #            {
+        #                checkBoxPreventAtStartup.visible(true);
+        #            }
+        #            else
+        #            {
+        #                checkBoxPreventAtStartup.visible(false);
+        #            }
+        #
+        #            this.updateHtml(false);
+        #
+        #            formRun.run();
+        #            formRun.detach();
+        #        }
+        #    }
+        #    else
+        #    {
+        #        //Finalize list - eg. make list not runnable
+        #        this.finalizeChecklist();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #public boolean find(identifierName   _name,
+        #                 ClassDescription _description = '')
+        #{
+        #;
+        #    return SysSetupLog::findEx(_name, _description).RecId != 0;
+        #}
+      ENDSOURCE
+      SOURCE #getCheckListCaption
+        #protected str getCheckListCaption()
+        #{
+        #    return "@SYS61107";
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlHeaderHelp
+        #protected str getHtmlHeaderHelp()
+        #{
+        #    return strFmt('<A href="Dynamics://DynamicsHelp/Topic?Id=4411f276-5555-4b7c-9fa8-5e000156e57c">%1</A>', "@SYS60385");
+        #}
+      ENDSOURCE
+      SOURCE #getInterfaceId
+        #protected classId getInterfaceId()
+        #{
+        #    return classnum(SysCheckListInterfaceDOCommConfig);
+        #}
+      ENDSOURCE
+      SOURCE #isRunnable
+        #protected boolean isRunnable()
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #save
+        #public void save(identifierName   _name,
+        #                 ClassDescription _description = '')
+        #{
+        #;
+        #    SysSetupLog::saveEx(_name, _description);
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

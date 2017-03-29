@@ -1,0 +1,649 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardAdhocCreate
+  PROPERTIES
+    Name                #CreditCardAdhocCreate
+    Origin              #{485D68C4-935E-4BBD-96EC-E7B4204169F0}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    SalesId                 salesId;
+      #    SalesTableCC            salesTableCC;
+      #    LedgerJournalTrans      ledgerJournalTrans;
+      #    CustAccount             custAccount;
+      #    CreditCardParameters    ccParameters;
+      #    ProjFundingSource       projFundingSource;
+      #    ProjTable               projTable;
+      #}
+    ENDSOURCE
+    SOURCE #closeOk
+      #public void closeOk()
+      #{
+      #    FormRun                 callingForm;
+      #    Object                  formObject;
+      #    ;
+      #    callingForm = element.args().caller();
+      #
+      #    if (!callingForm)
+      #    {
+      #        throw error("@SYS54101");
+      #    }
+      #
+      #    super();
+      #
+      #    if (CreditCardTable)
+      #    {
+      #        if (callingForm != null)
+      #        {
+      #            if (SysFormRun::hasMethod(callingForm, identifierStr(refreshCCID)))
+      #            {
+      #
+      #                formObject = callingForm;
+      #
+      #                formObject.refreshCCID(CreditCardTable.CreditCardId);
+      #            }
+      #        }
+      #
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #createHostedEntry
+      #void createHostedEntry(custAccount _custAccount)
+      #{
+      #    URL                         url = ccParameters.HostedURL;
+      #    System.Exception            e;
+      #    dialog                      dlg;
+      #    dialogGroup                 dlgGroup;
+      #    dialogField                 dlgField;
+      #    CreditCardTerminalTable     terminal = CreditCardTerminalTable::findTerminalWithId(ccParameters.TerminalId);
+      #    CreditCardMerchantFirstData fdMerchant;
+      #    CreditCardMerchantWorldPay  fdWorldPay;
+      #    ;
+      #    if (!custAccount)
+      #    {
+      #        dlg = new dialog("@ACC1861");
+      #        dlgGroup = dlg.addGroup("@SYS316441");
+      #        dlgField = dlg.addField(extendedTypeStr(custAccount));
+      #
+      #        if (dlg.run())
+      #        {
+      #            custAccount = dlgField.value();
+      #        }
+      #
+      #    }
+      #
+      #    if (!terminal)
+      #        throw error(strFmt("@ACC1845",ccParameters.TerminalId));
+      #
+      #    if (strFind(url,"/",strLen(url)-1,1))
+      #    {
+      #        url = subStr(url,1,strLen(url)-1);
+      #    }
+      #
+      #    //--> Add values needed to url.  Will need to this based on processor soon.
+      #    url += '?Accountnum=' + custAccount;
+      #    url += '&DATAAREAID=' + creditCardTable.dataAreaId;
+      #    url += '&TERMINALID=' + ccParameters.TerminalId;
+      #    if (terminal.Processor == CreditCardProcessor::FirstData)
+      #    {
+      #        fdMerchant = CreditCardMerchantFirstData::find(terminal.TerminalId);
+      #        url += '&TransactionKey=' + fdMerchant.TransactionKey;
+      #        url += '&HostedPageID=' + fdMerchant.HostPayPageId;
+      #        url += '&AXCONFIG=' + fdMerchant.HostPayConfiguration;
+      #    }
+      #    else if (terminal.Processor == CreditCardProcessor::WorldPay)
+      #    {
+      #        fdWorldPay = CreditCardMerchantWorldPay::find(terminal.TerminalId);
+      #        url += '&TransactionKey=' + fdMerchant.TransactionKey;
+      #        url += '&HostedPageID=' + fdMerchant.HostPayPageId;
+      #        url += '&AXCONFIG=' + fdMerchant.HostPayConfiguration;
+      #    }
+      #
+      #    try
+      #    {
+      #        System.Diagnostics.Process::Start(url);
+      #    }
+      #    catch (Exception::CLRError)
+      #    {
+      #        e = CLRInterop::getLastException();
+      #        while( e )
+      #        {
+      #            info( e.get_Message() );
+      #            e = e.get_InnerException();
+      #        }
+      #    }
+      #
+      #    //--> Reset custAccount for next time
+      #    custAccount = "";
+      #
+      #    element.close();
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    boolean         visible;
+      #    ;
+      #    if (element.args().record().TableId == tableNum(salesTableCC))
+      #    {
+      #        salesTableCC = element.args().record();
+      #        custAccount = CreditCardTable::getPrimaryCustomer(salesTableCC);
+      #
+      #        if (!salesTableCC)
+      #        {
+      #            throw error(Error::missingFormActiveBuffer(element.name(), tablePName(SalesTableCC)));
+      #        }
+      #    }
+      #    else if (element.args().record().TableId == tableNum(LedgerJournalTrans))
+      #    {
+      #        ledgerJournalTrans = element.args().record();
+      #        CustAccount = ledgerJournalTrans.accountDisplay();
+      #    }
+      #    else if (element.args().record().TableId == tableNum(ProjFundingSource))
+      #    {
+      #        ProjFundingSource = element.args().record();
+      #        CustAccount = ProjFundingSource.CustAccount;
+      #    }
+      #    else if (element.args().record().TableId == tableNum(projTable))
+      #    {
+      #        projTable = element.args().record();
+      #        CustAccount = projTable.CustAccount;
+      #    }
+      #    else
+      #    {
+      #        throw error(Error::missingFormActiveBuffer(element.name(), tablePName(SalesTableCC)));
+      #    }
+      #
+      #    this.parmCustAccount(custAccount);
+      #
+      #    super();
+      #
+      #    ccParameters = CreditCardParameters::findParameter();
+      #    if (ccParameters.UseHostedEntry)
+      #    {
+      #        this.createHostedEntry(custAccount);
+      #    }
+      #
+      #    if (element.args().record().TableId == tableNum(salesTableCC))
+      #    {
+      #        if (salesTableCC.SalesId != '' || salesTableCC.ProjProposalId != ''
+      #            || salesTableCC.ServiceOrderId != '' || salesTableCC.CustInvoiceRefRecId != 0)
+      #        {
+      #            visible = true;
+      #        }
+      #        //RMCC_Bug_5_CCAdHoc_OneTimePaymentVisible, 3.29.2016, VOT >
+      #        OrderOnly.visible(visible);
+      #        OrderOnly.value(CustTable::find(CreditCardTable::getPrimaryCustomer(salesTableCC)).OneTimeCustomer);
+      #        //RMCC_Bug_5_CCAdHoc_OneTimePaymentVisible, 3.29.2016, VOT <
+      #    }
+      #    else
+      #    {
+      #        OrderOnly.visible(true);
+      #        OrderOnly.value(CustTable::find(custAccount).OneTimeCustomer);
+      #    }
+      #}
+    ENDSOURCE
+    SOURCE #parmCustAccount
+      #CustAccount parmCustAccount(CustAccount _custAccount = CustAccount)
+      #{
+      #    ;
+      #    custAccount = _custAccount;
+      #    return custAccount;
+      #}
+    ENDSOURCE
+    SOURCE #setAddress
+      #void setAddress()
+      #{
+      #    DirPartyLocation            partyLocation;
+      #    DirPartyLocationRole        partyLocationRole;
+      #    LogisticsLocationRole       locationRole;
+      #    ;
+      #    ccParameters = CreditCardParameters::findParameter();
+      #
+      #    if (CreditCardTable.Location)
+      #    {
+      #        if (Box::yesNo("@ACC1683", DialogButton::Yes, "@SYS54006") == DialogButton::No)
+      #        {
+      #            throw error("@SYS110943");
+      #        }
+      #    }
+      #
+      #    if (ccParameters)
+      #    {
+      #        if (ccParameters.AutoAddress)
+      #        {
+      #            if (CreditCardTable.CustAccount)
+      #            {
+      #                while select party,RecId,IsPostalAddress from partyLocation
+      #                    join partyLocationRole
+      #                    where partyLocation.Party == CustTable::find(CreditCardTable.CustAccount).Party
+      #                    && partyLocation.RecId == partyLocationRole.PartyLocation
+      #                    && partyLocation.IsPostalAddress == NoYes::Yes
+      #                {
+      #                    select locationRole
+      #                        where locationRole.RecId == partyLocationRole.LocationRole
+      #                        && locationRole.Name == ccParameters.LocationRoleName;
+      #
+      #                    if (locationRole)
+      #                    {
+      #                        CreditCardTable.Location = LogisticsPostalAddress::findByLocation(partyLocation.Location).Location;
+      #                    }
+      #                }
+      #            }
+      #            else
+      #            {
+      #                while select party,RecId,IsPostalAddress from partyLocation
+      #                    join partyLocationRole
+      #                    where partyLocation.Party == smmBusRelTable::find(CreditCardTable.BusRelAccount).Party
+      #                    && partyLocation.RecId == partyLocationRole.PartyLocation
+      #                {
+      #                    select locationRole
+      #                        where locationRole.RecId == partyLocationRole.LocationRole
+      #                        && locationRole.Name == ccParameters.LocationRoleName;
+      #
+      #                    if (locationRole)
+      #                    {
+      #                        CreditCardTable.Location = LogisticsPostalAddress::findByLocation(partyLocation.Location).Location;
+      #
+      #                    }
+      #                }
+      #            }
+      #        }
+      #    }
+      #
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+          AutoSearch          #No
+          AutoQuery           #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    super();
+          #
+          #    creditCardTable_ds.create();
+          #}
+        ENDSOURCE
+        SOURCE #active
+          #public int active()
+          #{
+          #    int ret;
+          #
+          #    if (!CreditCardTable.RecId)
+          #    {
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNum)).visible(true);
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNumSecure)).visible(false);
+          #    }
+          #    else
+          #    {
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNum)).visible(false);
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNumSecure)).visible(true);
+          #        creditCardTable_ds.object(fieldNum(CreditCardTable,CreditCardNumSecure)).allowEdit(false);
+          #    }
+          #
+          #    ret = super();
+          #
+          #    return ret;
+          #}
+        ENDSOURCE
+        SOURCE #write
+          #public void write()
+          #{
+          #    container       c;
+          #    ;
+          #    CreditCardTable.Location = SalesTable::find(salesTableCC.SalesId).DeliveryPostalAddress;
+          #
+          #    //RMCC_Bug_3_CCAdHoc_OneTimePaymentSave, 3.29.2016, VOT >
+          #    if (OrderOnly.value())
+          #    {
+          #        CreditCardTable.SalesId = salesTableCC.SalesId;
+          #    }
+          #    //RMCC_Bug_3_CCAdHoc_OneTimePaymentSave, 3.29.2016, VOT <
+          #
+          #    CreditCardTable.Name = CreditCardTable.NameOnCard;
+          #
+          #    if (salesTableCC.SalesId)
+          #    {
+          #        CreditCardTable.CustAccount = SalesTable::find(salesTableCC.SalesId).InvoiceAccount;
+          #    }
+          #    else if (salesTableCC.ServiceOrderId)
+          #    {
+          #        CreditCardTable.CustAccount = SMAServiceOrderTable::find(salesTableCC.ServiceOrderId).CustAccount;
+          #    }
+          #    else if (salesTableCC.ProjProposalId)
+          #    {
+          #        CreditCardTable.CustAccount = ProjProposalJour::find(salesTableCC.ProjProposalId).OrderAccount;
+          #    }
+          #    else if (salesTableCC.CustInvoiceRefRecId)
+          #    {
+          #        CreditCardTable.CustAccount = CustInvoiceTable::findRecId(SalesTableCC.CustInvoiceRefRecId).InvoiceAccount;
+          #    }
+          #    else
+          #    {
+          #        CreditCardTable.CustAccount = custAccount;
+          #    }
+          #
+          #    if (CreditCardTable.Location == 0)
+          #    {
+          #        element.setAddress();
+          #    }
+          #
+          #    if (salesTableCC)
+          #    {
+          #        c = CreditCardTable::getPrimaryRecord(salesTableCC);
+          #        CreditCardTable.OneTimeRefRecId = conPeek(c,2);
+          #        CreditCardTable.OneTimeRefTableId = conPeek(c,1);
+          #    }
+          #
+          #    //--> LedgerJournal
+          #    if (ledgerJournalTrans)
+          #    {
+          #        CreditCardTable.CustAccount = ledgerJournalTrans.accountDisplay();
+          #        CreditCardTable.OneTimeRefRecId = ledgerJournalTrans.recId;
+          #        CreditCardTable.OneTimeRefTableId = ledgerJournalTrans.TableId;
+          #    }
+          #
+          #    if (ProjFundingSource)
+          #    {
+          #        CreditCardTable.CustAccount = custAccount;
+          #        CreditCardTable.OneTimeRefRecId = ProjFundingSource.recId;
+          #        CreditCardTable.OneTimeRefTableId = ProjFundingSource.TableId;
+          #    }
+          #
+          #    if (ProjTable)
+          #    {
+          #        CreditCardTable.CustAccount = custAccount;
+          #        CreditCardTable.OneTimeRefRecId = ProjTable.recId;
+          #        CreditCardTable.OneTimeRefTableId = ProjTable.TableId;
+          #    }
+          #
+          #    super();
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Frame               #Dialog
+      WindowType          #Popup
+      HideToolbar         #Yes
+      BackgroundColor     #Window background
+      Style               #DropDialog
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #DialogCommit
+          Style               #DialogCommitContainer
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CreditCard
+          ElementPosition     #1717986916
+          HierarchyParent     #DialogContent
+          DataSource          #CreditCardTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DialogCommit
+          ElementPosition     #1431655764
+          Style               #DialogCommit
+          AlignChild          #No
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #DialogContent
+          ElementPosition     #715827882
+          Style               #DialogContent
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #OrderOnly
+          AutoDeclaration     #Yes
+          HelpText            #@ACC1877
+          ElementPosition     #1840700268
+          HierarchyParent     #CreditCard
+          Label               #@SYS4002640
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardType
+          ElementPosition     #613566756
+          HierarchyParent     #CreditCard
+          DataSource          #CreditCardTable
+          DataField           #CreditCardType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMMANDBUTTON
+        PROPERTIES
+          Name                #OKButton
+          ElementPosition     #1431655764
+          HierarchyParent     #ButtonGroup
+          DefaultButton       #Yes
+          SaveRecord          #No
+          Command             #263
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #CreditCardTable_ExpirationDate
+          ElementPosition     #1227133512
+          HierarchyParent     #CreditCard
+          DataSource          #CreditCardTable
+          DataField           #ExpirationDate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #MainInstruction
+          ElementPosition     #858993458
+          HierarchyParent     #DialogContent
+          Text                #@ACC115
+          Style               #MainInstruction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STATICTEXT
+        PROPERTIES
+          Name                #SupplementalInstruction
+          Width               #Column width
+          ElementPosition     #1288490187
+          HierarchyParent     #DialogContent
+          Text                #@ACC1882
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardNum
+          ElementPosition     #920350134
+          HierarchyParent     #CreditCard
+          DataSource          #CreditCardTable
+          DataField           #CreditCardNum
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_NameOnCard
+          ElementPosition     #1533916890
+          HierarchyParent     #CreditCard
+          DataSource          #CreditCardTable
+          DataField           #NameOnCard
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

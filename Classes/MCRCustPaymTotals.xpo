@@ -1,0 +1,2496 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #MCRCustPaymTotals
+    PROPERTIES
+      Name                #MCRCustPaymTotals
+      RunOn               #Server
+      Origin              #{7FECDC03-34B5-42B9-9C40-8DC8518D8E4E}
+      LegacyId            #30055
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #allowEdit
+        #/// <summary>
+        #///     Determines if payments may be edited by the user.
+        #/// </summary>
+        #/// <returns>
+        #/// true if payments may be edited by the user; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     If the return value is true, then payments are allowed to be modified,
+        #///     including amounts and associated data such as credit card or check data.
+        #///     The class <c>MCRCustPaym</c> is responsible for restricting the ability to edit
+        #///     individual payment fields on on each payment.
+        #///     If false, then the user is not allowed to edit any payment data.
+        #/// </remarks>
+        #public  abstract boolean allowEdit()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #allowEditCurrency
+        #/// <summary>
+        #///     Determines if the currency should be allowed to be modified for the entity
+        #///     associated with the payments (such as a sales order or free-text invoice).
+        #/// </summary>
+        #/// <returns>
+        #/// true if the currency should be allowed to be modified for the entity
+        #/// associated with the payments; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// This base implementation simply checks each payment.  If the currency is
+        #///     not allowed to be changed for any payment, then the return value is false.
+        #///     Otherwise, the return value is true.
+        #///     NOTE:  The currency for all payments is always the same as the currency for
+        #///     the entity associated with the payments.  The currency must not change if,
+        #///     for example, financial transactions exist for one or more payments.
+        #/// </remarks>
+        #public boolean allowEditCurrency()
+        #{
+        #    boolean allowEdit = true;
+        #
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    MCRCustPaym custPaym;
+        #
+        #    while select custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #    {
+        #        if (custPaymTable.CustPaymType)
+        #        {
+        #            custPaym = MCRCustPaym::construct(custPaymTable);
+        #
+        #            if (!custPaym.allowEditCurrency())
+        #            {
+        #                allowEdit = false;
+        #                break;
+        #            }
+        #        }
+        #    }
+        #
+        #    return allowEdit;
+        #}
+      ENDSOURCE
+      SOURCE #allowEditInvoiceAccount
+        #/// <summary>
+        #///     Determines if the invoice account should be allowed to be modified for the
+        #///     entity associated with the payments (such as a sales order or free-text
+        #///     invoice).
+        #/// </summary>
+        #/// <returns>
+        #/// true if the invoice account should be allowed to be modified for the entity
+        #/// associated with the payments; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// This base implementation simply checks each payment.  If the invoice
+        #///     account is not allowed to be changed for any payment, then the return value
+        #///     is false.  Otherwise, the return value is true.
+        #///     NOTE:  The invoice account for all payments must always be the same as the
+        #///     invoice account for the entity associated with the payments.  The invoice
+        #///     account must not change if, for example, financial transactions exist for
+        #///     one or more payments.  The invoice account is stored in the payment table
+        #///     (for efficient table joins), but is not allowed to be directly edited by
+        #///     the user.  The invoice account must be updated on each payment if changed
+        #///     on the entity associated with the payments.
+        #/// </remarks>
+        #public boolean allowEditInvoiceAccount()
+        #{
+        #    boolean allowEdit = true;
+        #
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    MCRCustPaym custPaym;
+        #
+        #    while select custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #    {
+        #        if (custPaymTable.CustPaymType)
+        #        {
+        #            custPaym = MCRCustPaym::construct(custPaymTable);
+        #
+        #            if (!custPaym.allowEditInvoiceAccount())
+        #            {
+        #                allowEdit = false;
+        #                break;
+        #            }
+        #        }
+        #    }
+        #
+        #    return allowEdit;
+        #}
+      ENDSOURCE
+      SOURCE #allPaymentsApproved
+        #/// <summary>
+        #/// Determines if all payments are in an approved status.
+        #/// </summary>
+        #/// <param name="_ignore">
+        #/// Indicates that some of the normal checks should be ignored in this particular case; optional.
+        #/// </param>
+        #/// <returns>
+        #/// true if all payments are in an approved status; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// Due to the reduction in payment statuses it is
+        #///     uncertain whether or not all payments are in
+        #///     an approved status.  Which impacts what status
+        #///     the related record
+        #///     can be updated to.
+        #///     This method is intended to allow exceptions to payment status rules
+        #///     Ex: Most payments can be considered approved if in a posted status
+        #///     however, checks are an exception as this means they are
+        #///     considered "On hold" until released.
+        #/// Added _ignore flag because this method is used to set the
+        #///     sales order status and to determine if the order recap
+        #///     screen should close.  Cases have arisen where we want it
+        #///     to be pending but we also want the recap to close.
+        #///     _ignore is true when determining if recap should close.
+        #/// </remarks>
+        #public boolean allPaymentsApproved(boolean _ignore = false)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #
+        #    // retrieve all payment statuses
+        #    while select mcrCustPaymTable
+        #        where mcrCustPaymTable.RefTableId == refTableID
+        #              && mcrCustPaymTable.RefRecId == refRecID
+        #    {
+        #        if (mcrCustPaymTable.Amount != 0 || mcrCustPaymTable.getUnpostedAmount())
+        #        {
+        #            if (mcrCustPaymTable.Status == MCRCustPaymStatus::Declined)
+        #            {
+        #                return false;
+        #            }
+        #
+        #            // Not submitted is considered approved for refunds
+        #            if (mcrCustPaymTable.Status == MCRCustPaymStatus::NotSubmitted
+        #                && mcrCustPaymTable.Amount > 0)
+        #            {
+        #                return false;
+        #            }
+        #
+        #            if (mcrCustPaymTable.CustPaymType == MCRCustPaymType::Check
+        #                && !_ignore
+        #                && mcrCustPaymTable.Status == MCRCustPaymStatus::Posted)
+        #            {
+        #                return false;
+        #            }
+        #        }
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #allPaymentsSubmitted
+        #/// <summary>
+        #/// Determines if all payments have been submitted.
+        #/// </summary>
+        #/// <returns>
+        #/// true if all payments have been submitted; otherwise, false.
+        #/// </returns>
+        #public boolean allPaymentsSubmitted()
+        #{
+        #    MCRCustPaymTable            mcrCustPaymTable;
+        #    RetailGiftCardTransactions  retailGiftCardTransactions;
+        #    RetailGiftCardId            retailGiftCardId;
+        #    SalesId                     salesId;
+        #    CreditCardAuthTrans         creditCardAuthTrans;
+        #
+        #    // No need to consider payments in other statuses
+        #    while select mcrCustPaymTable
+        #        where mcrCustPaymTable.RefTableId == refTableID
+        #              && mcrCustPaymTable.RefRecId == refRecID
+        #              && mcrCustPaymTable.Status == MCRCustPaymStatus::NotSubmitted
+        #    {
+        #        if (mcrCustPaymTable.Amount != 0
+        #            || mcrCustPaymTable.getUnpostedAmount())
+        #        {
+        #            switch (mcrCustPaymTable.CustPaymType)
+        #            {
+        #                case MCRCustPaymType::Cash:
+        #                    return true;
+        #                case MCRCustPaymType::Check:
+        #                    return false;
+        #                case MCRCustPaymType::CreditCard:
+        #                    // Only check for charges
+        #                    if (mcrCustPaymTable.Amount > 0)
+        #                    {
+        #                        select firstonly RecId from creditCardAuthTrans
+        #                            where creditCardAuthTrans.mcrPaymRecId == mcrCustPaymTable.RecId;
+        #
+        #                        if (!creditCardAuthTrans)
+        #                        {
+        #                            return false;
+        #                        }
+        #                    }
+        #                    break;
+        #                case MCRCustPaymType::GiftCard:
+        #                    // Only have a reference to sales orders if a gift card is used.
+        #                    if (refTableID == tableNum(SalesTable))
+        #                    {
+        #                        retailGiftCardId = mcrCustPaymTable.getGiftCardNumber();
+        #                        salesId = mcrCustPaymTable.displaySalesId();
+        #                        select firstonly RecId from retailGiftCardTransactions
+        #                            where retailGiftCardTransactions.CardNumber == retailGiftCardId
+        #                               && retailGiftCardTransactions.mcrSalesId == salesId;
+        #
+        #                        if (!retailGiftCardTransactions)
+        #                        {
+        #                            return false;
+        #                        }
+        #                    }
+        #                case MCRCustPaymType::OnAccount:
+        #                    return false;
+        #                case MCRCustPaymType::RefundCheck:
+        #                    if (!MCRRCAuthTable::findByCustPaymRecId(mcrCustPaymTable.RecId)
+        #                        && !MCRRCSettlementTable::findByCustPaymRecID(mcrCustPaymTable.RecId))
+        #                    {
+        #                        return false;
+        #                    }
+        #                default:
+        #                    throw error(strFmt("@MCR30889", mcrCustPaymTable.CustPaymType));
+        #            }
+        #        }
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #calcInvoiceAmounts
+        #/// <summary>
+        #///     Calculates and returns the posted payment amount that can be applied toward the
+        #///     specified invoice and the amount remaining due for the specified invoice.
+        #///
+        #/// </summary>
+        #/// <param name="custInvoiceJour">
+        #/// The customer invoice journal record used to find the posted payment amount.
+        #/// </param>
+        #/// <returns>
+        #///     A container containing two values:
+        #///     The posted payment amount that can be applied toward the
+        #///     specified invoice and the amount due for the specified invoice.
+        #///     Both amounts are in the payment currency.
+        #/// </returns>
+        #/// <remarks>
+        #/// The amount due will in most cases equal the difference between the invoice
+        #///     total and the applied payment amount.  If, however, the difference is
+        #///     expected to be "written off" as an over-/underpayment, then the amount
+        #///     due is 0.0.
+        #/// </remarks>
+        #public final container calcInvoiceAmounts(CustInvoiceJour custInvoiceJour)
+        #{
+        #    AmountCur amountDue;
+        #
+        #    AmountCur invoicePaymAmount = this.calcInvoicePaymAmount(custInvoiceJour);
+        #
+        #    boolean isOverUnderPaymAmount = false;
+        #
+        #    // if the customer is not paying "On account", then an over-/underpayment
+        #    //  might apply
+        #    if (this.getTotalPaymAmount_OnAccount() == 0.0 && mcrInstallmentPlanSalesTable_RecID == 0)
+        #    {
+        #        if (abs(this.getTotalPaymAmount() - this.getTotalSalesAmount())
+        #                    <= this.getMaxOverUnderPaymAmount())
+        #        {
+        #            isOverUnderPaymAmount = true;
+        #        }
+        #    }
+        #    // if the sales balance is expected to be written off as an
+        #    //  over-/underpayment, the amount due is 0.0
+        #    if (isOverUnderPaymAmount)
+        #    {
+        #        amountDue = 0.0;
+        #    }
+        #    // otherwise, the amount due is the difference between the amount invoiced
+        #    //  and the payment amount applied to the invoice
+        #    else
+        #    {
+        #        amountDue = custInvoiceJour.InvoiceAmount + custInvoiceJour.mcrGiftCardAmount_RU() - invoicePaymAmount;
+        #    }
+        #
+        #    return [invoicePaymAmount, amountDue];
+        #}
+      ENDSOURCE
+      SOURCE #calcInvoicePaymAmount
+        #/// <summary>
+        #///     Calculates the posted payment amount that can be applied toward the
+        #///     specified invoice.
+        #/// </summary>
+        #/// <param name="custInvoiceJour">
+        #/// The customer invoice journal record used to find the posted payment amount.
+        #/// </param>
+        #/// <returns>
+        #/// The posted payment amount that can be applied toward the
+        #///     specified invoice.
+        #/// </returns>
+        #protected abstract AmountCur calcInvoicePaymAmount(
+        #    CustInvoiceJour custInvoiceJour)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///     The class <c>MCRCustPaymTotals</c> is an abstract base class responsible for managing a list of payments
+        #///     associated with an entity (such as a sales order or free-text invoice).
+        #/// </summary>
+        #/// <remarks>
+        #/// This class defines a common interface and implements common functionality.
+        #///     Extending classes provide specialized functionality for each type of entity
+        #///     with which payments can be associated.
+        #///     The factory method "construct" should be used to construct an instance of
+        #///     the appropriate extending class.
+        #/// </remarks>
+        #abstract class McrCustPaymTotals
+        #{
+        #    TableId                         refTableID;
+        #    RecId                           refRecID;
+        #    MCRSalesOrderTotals             mcrSalesOrderTotals;
+        #    // Installment payments need to be considered when validating
+        #    RecId                           mcrInstallmentPlanSalesTable_RecID;
+        #    LedgerJournalTable              ledgerJournalTable;
+        #    MCRLedgerJournal                mcrLedgerJournal;
+        #    CustInvoiceJour                 custInvoiceJourSettle;
+        #    SalesInvoiceId                  salesInvoiceId;
+        #    CustInvoiceId                   custInvoiceId;
+        #    LedgerJournalTrans              ledgerJournalTransPaym;
+        #    boolean                         settleNow;
+        #}
+      ENDSOURCE
+      SOURCE #existPaym
+        #/// <summary>
+        #///     Determines if at least one payment exists that does not have an amount of zero.
+        #/// </summary>
+        #/// <returns>
+        #/// true if a payment exists that does not have an amount of zero; otherwise, false.
+        #/// </returns>
+        #public final boolean existPaym()
+        #{
+        #    return MCRCustPaymTable::exists(refTableID, refRecID);
+        #}
+      ENDSOURCE
+      SOURCE #existPaym_installment
+        #/// <summary>
+        #///     Returns true if there is a payment record associated with
+        #///     the installment plan or if there is no installment plan
+        #///     associated with this.
+        #/// </summary>
+        #/// <returns>
+        #/// true if there is a payment record associated with
+        #///     the installment plan or if there is no installment plan
+        #///     associated with this; otherwise, false.
+        #/// </returns>
+        #protected boolean existPaym_installment()
+        #{
+        #    if (mcrInstallmentPlanSalesTable_RecID)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    return false;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getCurrency
+        #/// <summary>
+        #///     Returns the currency for all payments.
+        #/// </summary>
+        #/// <returns>
+        #/// The currency for all payments.
+        #/// </returns>
+        #/// <remarks>
+        #/// The currency is retrieved from the record with which the payments are
+        #///     associated (such as a sales order or free-text invoice).
+        #/// </remarks>
+        #public abstract CurrencyCode getCurrency()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getDimension
+        #/// <summary>
+        #///     Returns the financial dimensions for all payments.
+        #/// </summary>
+        #/// <returns>
+        #/// The financial dimensions for all payments.
+        #/// </returns>
+        #public abstract DimensionDefault getDimension()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getInvoiceAccount
+        #/// <summary>
+        #///     Returns the invoice account for all payments.
+        #/// </summary>
+        #/// <returns>
+        #/// The invoice account for all payments.
+        #/// </returns>
+        #public abstract CustAccount getInvoiceAccount()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getMaxOverUnderPaymAmount
+        #/// <summary>
+        #///     Returns the maximum allowed over-/underpayment amount, in the payment
+        #///     currency.
+        #/// </summary>
+        #/// <returns>
+        #/// The maximum allowed over-/underpayment amount, in the payment
+        #///     currency.
+        #/// </returns>
+        #public AmountCur getMaxOverUnderPaymAmount()
+        #{
+        #    return Currency::curAmount(
+        #        MCRCustPaymTotals::getMaxOverUnderPaymAmountMST(), this.getCurrency());
+        #}
+      ENDSOURCE
+      SOURCE #getOrderID
+        #/// <summary>
+        #///     Returns the order ID for all payments.
+        #/// </summary>
+        #/// <returns>
+        #/// The order ID for all payments.
+        #/// </returns>
+        #/// <remarks>
+        #/// The "order ID" is the unique ID
+        #///     for the entity with which the payments are associated (for example, the
+        #///     "sales ID" for a sales order, or the "invoice ID" for a free-text invoice).
+        #/// </remarks>
+        #public abstract Num getOrderID()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getOverallPaymStatus
+        #/// <summary>
+        #///     Calculates and returns an overall payment status.
+        #///
+        #/// </summary>
+        #/// <returns>
+        #/// The overall payment status.
+        #/// </returns>
+        #/// <remarks>
+        #/// The overall payment status is calculated by applying a hierarchy to the
+        #///     individual payment statuses.  The overall payment status is the
+        #///     highest-ranked status that exists on one or more payments. The
+        #///     hierarchy, from highest to lowest, is as follows:
+        #///     MCRCustPaymStatus::NotSubmitted
+        #///     MCRCustPaymStatus::Declined
+        #///     MCRCustPaymStatus::Authorized
+        #///     MCRCustPaymStatus::Posted
+        #///     MCRCustPaymStatus::Paid
+        #///     If no payments exist, then the overall payment status is
+        #///     MCRCustPaymStatus::NotSubmitted.
+        #/// </remarks>
+        #public MCRCustPaymStatus getOverallPaymStatus()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    Set paymentStatuses = new Set(Types::Enum);
+        #
+        #    MCRCustPaymStatus overallStatus;
+        #    MCRSalesTable mcrSalesTable;
+        #
+        #    // retrieve all payment statuses
+        #    while select Status from custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.Amount != 0
+        #    {
+        #        paymentStatuses.add(custPaymTable.Status);
+        #    }
+        #
+        #    mcrSalesTable = MCRSalesTable::find(refRecID);
+        #    // determine the overall status by the following hierarchy
+        #    if (paymentStatuses.in(MCRCustPaymStatus::NotSubmitted))
+        #    {
+        #        overallStatus = MCRCustPaymStatus::NotSubmitted;
+        #    }
+        #    else if (paymentStatuses.in(MCRCustPaymStatus::Declined))
+        #    {
+        #        overallStatus = MCRCustPaymStatus::Declined;
+        #    }
+        #    // Do a find on the SalesTable to find the record of this type
+        #    //      using the rec ID of this order
+        #    else if (mcrSalesTable.PaymOutOfBalance == MCRPaymOutOfBalance::Overpaid
+        #          || mcrSalesTable.PaymOutOfBalance == MCRPaymOutOfBalance::Underpaid)
+        #    {
+        #        overallStatus = MCRCustPaymStatus::NotSubmitted;
+        #    }
+        #    else if (paymentStatuses.in(MCRCustPaymStatus::Authorized))
+        #    {
+        #        overallStatus = MCRCustPaymStatus::Authorized;
+        #    }
+        #    else if (paymentStatuses.in(MCRCustPaymStatus::Posted))
+        #    {
+        #        overallStatus = MCRCustPaymStatus::Posted;
+        #    }
+        #    else if (paymentStatuses.in(MCRCustPaymStatus::Paid))
+        #    {
+        #        overallStatus = MCRCustPaymStatus::Paid;
+        #    }
+        #    else    // no payments
+        #    {
+        #        overallStatus = MCRCustPaymStatus::NotSubmitted;
+        #    }
+        #
+        #    return overallStatus;
+        #}
+      ENDSOURCE
+      SOURCE #getPaymListSorted
+        #/// <summary>
+        #///     Returns a sorted list containing all payments.
+        #/// </summary>
+        #/// <returns>
+        #/// A sorted list containing all payments.
+        #/// </returns>
+        #/// <remarks>
+        #/// "On account" payments are all listed after payments of other types.
+        #///     Within each of the two groups ("on account" and "others"), payments are
+        #///     sorted first by line number and then by creation date and time, ascending.
+        #/// </remarks>
+        #protected RecordLinkList getPaymListSorted()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    RecordLinkList custPaymTableList = new RecordLinkList();
+        #    while select custPaymTable
+        #        order by LineNum asc, CreatedDateTime asc
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.CustPaymType != MCRCustPaymType::OnAccount
+        #    {
+        #        custPaymTableList.ins(custPaymTable);
+        #    }
+        #    while select custPaymTable
+        #        order by LineNum asc, CreatedDateTime asc
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.CustPaymType == MCRCustPaymType::OnAccount
+        #    {
+        #        custPaymTableList.ins(custPaymTable);
+        #    }
+        #
+        #    return custPaymTableList;
+        #}
+      ENDSOURCE
+      SOURCE #getPostingProfile
+        #/// <summary>
+        #/// Gets the posting profile for the payment.
+        #/// </summary>
+        #/// <param name="_recalc">
+        #/// A boolean that determiens whether to recalculate the payment.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>PostingProfile</c> object.
+        #/// </returns>
+        #public abstract PostingProfile getPostingProfile(boolean _recalc = false)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getRefRecId
+        #/// <summary>
+        #///     Returns the reference record ID of the payment.
+        #/// </summary>
+        #/// <returns>
+        #/// The reference record ID of the payment.
+        #/// </returns>
+        #public RecId getRefRecId()
+        #{
+        #    return refRecID;
+        #}
+      ENDSOURCE
+      SOURCE #getTotalDiscount
+        #/// <summary>
+        #/// Gets the total <c>AmountCur</c> amount of the discount on the customer payment.
+        #/// </summary>
+        #/// <returns>
+        #/// The total discount applied to a customer payment.
+        #/// </returns>
+        #protected abstract  AmountCur getTotalDiscount()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getTotalFixedPaymAmount
+        #/// <summary>
+        #///     Calculates and returns the sum of payment amounts, including only payments
+        #///     that are fixed amounts (not calculated as percentages of total sales
+        #///     amount.
+        #/// </summary>
+        #/// <returns>
+        #/// The sum of payment amounts, including only payments
+        #///     that are fixed amounts.
+        #/// </returns>
+        #protected AmountCur getTotalFixedPaymAmount()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    select sum(Amount) from custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.PercentAmount == 0.0;
+        #
+        #    return custPaymTable.Amount;
+        #}
+      ENDSOURCE
+      SOURCE #getTotalInvoicedAmount
+        #/// <summary>
+        #///     Calculates and returns the total invoiced amount, in the payment currency.
+        #/// </summary>
+        #/// <returns>
+        #/// The total invoiced amount, in the payment currency.
+        #/// </returns>
+        #/// <remarks>
+        #/// The total invoiced amount is the sum of all amounts invoiced so far.
+        #/// </remarks>
+        #public abstract AmountCur getTotalInvoicedAmount()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getTotalPaymAmount
+        #/// <summary>
+        #///     Calculates and returns the sum of all payment amounts, in the payment currency.
+        #/// </summary>
+        #/// <param name="includeInstallment">
+        #/// Indicates whether to include installment payments or not.
+        #/// </param>
+        #/// <returns>
+        #/// The sum of all payment amounts, in the payment currency.
+        #/// </returns>
+        #public AmountCur getTotalPaymAmount(boolean includeInstallment = false)
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    select sum(Amount) from custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID;
+        #
+        #    return custPaymTable.Amount;
+        #}
+      ENDSOURCE
+      SOURCE #getTotalPaymAmount_notOnAccount
+        #/// <summary>
+        #///     Gets the total amount of payments that is not on account.
+        #/// </summary>
+        #/// <returns>
+        #/// The total amount of payments that is not on account.
+        #/// </returns>
+        #public AmountCur getTotalPaymAmount_notOnAccount()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    select sum(Amount) from custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.CustPaymType != MCRCustPaymType::OnAccount;
+        #
+        #    return custPaymTable.Amount;
+        #}
+      ENDSOURCE
+      SOURCE #getTotalPaymAmount_OnAccount
+        #/// <summary>
+        #///     Returns the total payment amount for all payments of type on account,
+        #///     in the payment currency.
+        #/// </summary>
+        #/// <returns>
+        #/// The total payment amount for all payments of type on account,
+        #///     in the payment currency.
+        #/// </returns>
+        #/// <remarks>
+        #/// Note that at most one "On account" payment is allowed to be processed;
+        #///     however, multiple "On account" payments can exist prior to submission for
+        #///     processing.
+        #/// </remarks>
+        #public AmountCur getTotalPaymAmount_OnAccount()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    select sum(Amount) from custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.CustPaymType == MCRCustPaymType::OnAccount;
+        #
+        #    return custPaymTable.Amount;
+        #}
+      ENDSOURCE
+      SOURCE #getTotalPaymAmountNoneInst
+        #/// <summary>
+        #///     Gets the total payment amount entered,
+        #///     excluding the inst billing amount and the lines that are
+        #///     entered in a percent format.
+        #/// </summary>
+        #/// <returns>
+        #/// The total payment amount entered,
+        #///     excluding the inst billing amount and the lines that are
+        #///     entered in a percent format.
+        #/// </returns>
+        #public AmountCur getTotalPaymAmountNoneInst()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    select sum(Amount) from custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.PercentAmount == 0;
+        #
+        #    return custPaymTable.Amount;
+        #}
+      ENDSOURCE
+      SOURCE #getTotalPercentAmount
+        #/// <summary>
+        #///     Returns the sum of percent amounts for all payments.
+        #/// </summary>
+        #/// <returns>
+        #/// The sum of percent amounts for all payments.
+        #/// </returns>
+        #public Percent getTotalPercentAmount()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    select sum(PercentAmount) from custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID;
+        #
+        #    if (custPaymTable.RecId)
+        #        return custPaymTable.PercentAmount;
+        #    else
+        #        return(0.0);
+        #}
+      ENDSOURCE
+      SOURCE #getTotalPostedPaymAmount
+        #/// <summary>
+        #///     Calculates and returns the sum of amounts posted for all payments,
+        #///     in the payment currency.
+        #/// </summary>
+        #/// <param name="_includeOnAccount">
+        #/// Indicates whether to include on account payments or not.
+        #/// </param>
+        #/// <returns>
+        #/// The sum of amounts posted for all payments,
+        #///     in the payment currency.
+        #/// </returns>
+        #public AmountCur getTotalPostedPaymAmount(boolean _includeOnAccount = true)
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    if (_includeOnAccount)
+        #    {
+        #        select sum(PostedAmount) from custPaymTable
+        #            where custPaymTable.RefTableId == refTableID
+        #                  && custPaymTable.RefRecId == refRecID;
+        #    }
+        #    else
+        #    {
+        #        select sum(PostedAmount) from custPaymTable
+        #            where custPaymTable.RefTableId == refTableID
+        #                  && custPaymTable.RefRecId == refRecID
+        #                  && custPaymTable.CustPaymType != MCRCustPaymType::OnAccount;
+        #    }
+        #
+        #    return custPaymTable.PostedAmount;
+        #}
+      ENDSOURCE
+      SOURCE #getTotalSalesAmount
+        #/// <summary>
+        #///     Calculates and returns the total sales amount, in the payment currency.
+        #/// </summary>
+        #/// <returns>
+        #/// The total sales amount, in the payment currency.
+        #/// </returns>
+        #/// <remarks>
+        #/// The total sales amount is the total amount that will have been invoiced
+        #///     after invoicing has completed.  Thus, the returned value is the sum
+        #///     of non-invoiced amounts and amounts that have already been invoiced.
+        #///     The payment currency is the currency used for payment, which might differ
+        #///     from the company default currency.
+        #/// </remarks>
+        #public abstract AmountCur getTotalSalesAmount()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getTotalUnpostedPaymAmount
+        #/// <summary>
+        #///     Calculates and returns the sum of unposted amounts for all payments,
+        #///     in the payment currency.
+        #/// </summary>
+        #/// <param name="_includeOnAccount">
+        #/// Indicates whether to include on account payments or not.
+        #/// </param>
+        #/// <returns>
+        #/// The sum of unposted amounts for all payments,
+        #///     in the payment currency.
+        #/// </returns>
+        #protected AmountCur getTotalUnpostedPaymAmount(boolean _includeOnAccount = true)
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    AmountCur totalUnpostedAmount;
+        #
+        #    while select custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #    {
+        #        if (!_includeOnAccount
+        #            && custPaymTable.CustPaymType == MCRCustPaymType::OnAccount)
+        #        {
+        #            continue;
+        #        }
+        #
+        #        totalUnpostedAmount += custPaymTable.getUnpostedAmount();
+        #    }
+        #
+        #    return totalUnpostedAmount;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #/// <summary>
+        #///     Creates a new instance of this class.
+        #/// </summary>
+        #/// <param name="_refTableID">
+        #/// References the table ID of the table the payment is associated with.
+        #/// </param>
+        #/// <param name="_refRecID">
+        #/// References the record ID of the record the payment is associated with.
+        #/// </param>
+        #/// <param name="_mcrSalesOrderTotals">
+        #/// An instance of the sales order totals class related to this payment.
+        #/// </param>
+        #/// <remarks>
+        #/// All operations on this class will act on payments associated with the record
+        #///     specified by _refTableID and _refRecID.
+        #///     Sales order totals object can be passed to improve performance.
+        #/// </remarks>
+        #public void new(TableId _refTableID, RecId _refRecID, MCRSalesOrderTotals _mcrSalesOrderTotals = null)
+        #{
+        #    refTableID = _refTableID;
+        #    refRecID = _refRecID;
+        #
+        #    if (_mcrSalesOrderTotals)
+        #    {
+        #        mcrSalesOrderTotals = _mcrSalesOrderTotals;
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmCustInvoiceJour
+        #/// <summary>
+        #///     Gets or sets the <c>CustInvoiceJour</c> table buffer.
+        #/// </summary>
+        #/// <param name="_custInvoiceJour">
+        #/// The <c>CustInvoiceJour</c> table buffer to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>CustInvoiceJour</c> table buffer on the object.
+        #/// </returns>
+        #public CustInvoiceJour parmCustInvoiceJour(CustInvoiceJour _custInvoiceJour = custInvoiceJourSettle)
+        #{
+        #    custInvoiceJourSettle = _custInvoiceJour;
+        #    return custInvoiceJourSettle;
+        #}
+      ENDSOURCE
+      SOURCE #parmLedgerJournalTable
+        #/// <summary>
+        #///     Gets or sets the <c>LedgerJournalTable</c> table buffer.
+        #/// </summary>
+        #/// <param name="_ledgerJournalTable">
+        #/// The <c>LedgerJournalTable</c> table buffer to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>LedgerJournalTable</c> table buffer on the object.
+        #/// </returns>
+        #public LedgerJournalTable parmLedgerJournalTable(LedgerJournalTable _ledgerJournalTable = ledgerJournalTable)
+        #{
+        #    ledgerJournalTable = _ledgerJournalTable;
+        #    return ledgerJournalTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmLedgerJournalTrans
+        #/// <summary>
+        #///     Gets or sets the <c>LedgerJournalTrans</c> table buffer.
+        #/// </summary>
+        #/// <param name="_ledgerJournalTrans">
+        #/// The <c>LedgerJournalTable</c> table buffer to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>LedgerJournalTrans</c> table buffer on the object.
+        #/// </returns>
+        #public LedgerJournalTrans parmLedgerJournalTrans(LedgerJournalTrans _ledgerJournalTrans = ledgerJournalTransPaym)
+        #{
+        #    ledgerJournalTransPaym = _ledgerJournalTrans;
+        #    return ledgerJournalTransPaym;
+        #}
+      ENDSOURCE
+      SOURCE #parmMCRLedgerJournal
+        #/// <summary>
+        #///     Gets or sets the <c>MCRLedgerJournal</c> table buffer.
+        #/// </summary>
+        #/// <param name="_mcrLedgerJournal">
+        #/// The <c>MCRLedgerJournal</c> table buffer to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>MCRLedgerJournal</c> table buffer on the object.
+        #/// </returns>
+        #protected MCRLedgerJournal parmMCRLedgerJournal(MCRLedgerJournal _mcrLedgerJournal = mcrLedgerJournal)
+        #{
+        #    mcrLedgerJournal = _mcrLedgerJournal;
+        #    return mcrLedgerJournal;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesInvoiceId
+        #/// <summary>
+        #///     Gets or sets the <c>SalesInvoiceId</c>.
+        #/// </summary>
+        #/// <param name="_salesInvoiceId">
+        #/// The <c>SalesInvoiceId</c> to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>SalesInvoiceId</c> table buffer on the object.
+        #/// </returns>
+        #public SalesInvoiceId parmSalesInvoiceId(SalesInvoiceId _salesInvoiceId = salesInvoiceId)
+        #{
+        #    salesInvoiceId = _salesInvoiceId;
+        #    return salesInvoiceId;
+        #}
+      ENDSOURCE
+      SOURCE #parmSettleNow
+        #/// <summary>
+        #///     Indicates if the customer transactions need to be settled.
+        #/// </summary>
+        #/// <param name="_settleNow">
+        #/// The boolean value to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// A true if the customer transactions have to be settled; otherwise, false.
+        #/// </returns>
+        #public boolean parmSettleNow(boolean _settleNow = settleNow)
+        #{
+        #    settleNow = _settleNow;
+        #    return settleNow;
+        #}
+      ENDSOURCE
+      SOURCE #postPaymAmount
+        #/// <summary>
+        #///     Posts payments in the amount specified.
+        #/// </summary>
+        #/// <param name="_totalPostAmount">
+        #/// The amount to be posted.
+        #/// </param>
+        #/// <param name="_isPrepay">
+        #/// Indicates the payment amount is pre-paid.
+        #/// </param>
+        #/// <remarks>
+        #/// One or more payments are posted, in part or in full, until the specified
+        #///     total amount is posted.  If sufficient unposted payment amounts do not exist,
+        #///     a warning is written to the infolog.
+        #/// </remarks>
+        #protected void postPaymAmount(Amount _totalPostAmount, boolean _isPrepay)
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    MCRCustPaym custPaym;
+        #
+        #    Amount postAmount;           // amount to post for the current payment
+        #    Amount sumAmountPosted;      // amount posted so far
+        #
+        #    RecordLinkList custPaymTableList;
+        #
+        #    setPrefix(strFmt("@MCR31273", num2str(_totalPostAmount, 1, 2, -1, -1)));
+        #
+        #    // get the list of payment records
+        #    custPaymTableList = this.getPaymListSorted();
+        #
+        #    // post payments until total amount has been posted.
+        #    while (custPaymTableList.next(custPaymTable))
+        #    {
+        #        // skip payments with nothing to post or with the opposite sign
+        #        if (custPaymTable.getUnpostedAmount() == 0.0
+        #            || sign(custPaymTable.getUnpostedAmount()) != sign(_totalPostAmount))
+        #        {
+        #            continue;
+        #        }
+        #
+        #        // calculate the amount to post for this payment
+        #        if (abs(_totalPostAmount - sumAmountPosted) > abs(custPaymTable.getUnpostedAmount()))
+        #        {
+        #            postAmount = custPaymTable.getUnpostedAmount();
+        #        }
+        #        else
+        #        {
+        #            postAmount = _totalPostAmount - sumAmountPosted;
+        #        }
+        #
+        #        sumAmountPosted += postAmount;
+        #
+        #        try
+        #        {
+        #            // post the payment
+        #            if (custPaymTable.CustPaymType)
+        #            {
+        #                ttsbegin;
+        #
+        #
+        #                custPaym = MCRCustPaym::construct(custPaymTable);
+        #
+        #                custPaym.post(postAmount, _isPrepay);
+        #
+        #                // select payment for update, and update the posted amount
+        #                custPaymTable = MCRCustPaymTable::findByRecID(custPaymTable.RecId, true);
+        #
+        #                custPaymTable.PostedAmount += postAmount;
+        #
+        #                if (custPaymTable.validateWrite())
+        #                {
+        #                    custPaymTable.update();
+        #                }
+        #                else
+        #                {
+        #                    throw error("@SYS104318");
+        #                }
+        #
+        #
+        #                ttscommit;
+        #            }
+        #        }
+        #        catch (Exception::Deadlock)
+        #        {
+        #            retry;
+        #        }
+        #        catch
+        #        {
+        #            // if an exception is thrown while posting, continue with
+        #            //  next payment
+        #            continue;
+        #        }
+        #
+        #        // check if full amount has been posted
+        #        if (_totalPostAmount == sumAmountPosted)
+        #        {
+        #            break;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postPayments
+        #/// <summary>
+        #///     Posts payments such that the sum of amounts posted is equal to or greater
+        #///     than the sum of amounts invoiced so far.
+        #/// </summary>
+        #/// <param name="_isPrepay">
+        #/// Indicates the payment is pre-paid; optional.
+        #/// </param>
+        #/// <remarks>
+        #/// If the sum of payment amounts posted so far is equal to or greater than
+        #///     the sum of amounts invoiced so far (due to posting prepayments, etc.),
+        #///     then nothing new is posted.  Otherwise, one or more payments are posted,
+        #///     in part or in full, until the sum of posted amounts is equal to the sum
+        #///     of amounts invoiced so far.
+        #/// </remarks>
+        #protected void postPayments(boolean _isPrepay = false)
+        #{
+        #    Amount      totalInstallInvoicedAmount;
+        #    Amount      totalInstallPostAmount;
+        #    Amount      totalSalesAmount = this.getTotalSalesAmount();
+        #    Amount      totalPostedAmount = this.getTotalPostedPaymAmount();
+        #    Amount      totalInvoicedAmount = this.getTotalInvoicedAmount();
+        #    // calculate amount to post
+        #    Amount      totalPostAmount = totalInvoicedAmount - totalPostedAmount;
+        #
+        #    if (mcrSalesOrderTotals)
+        #    {
+        #        totalInstallInvoicedAmount = mcrSalesOrderTotals.getInstallmentInvoiceTotal();
+        #    }
+        #
+        #    totalInstallPostAmount = totalInstallInvoicedAmount - mcrSalesOrderTotals.getTotalInstallProduct();
+        #
+        #    totalPostAmount -= totalInstallInvoicedAmount;
+        #
+        #    if (totalInstallPostAmount > 0)
+        #    {
+        #        totalPostAmount += totalInstallPostAmount;
+        #
+        #        if (totalPostAmount > totalInvoicedAmount - totalPostedAmount)
+        #        {
+        #            totalPostAmount = totalInvoicedAmount - totalPostedAmount;
+        #        }
+        #    }
+        #
+        #    // if the post amount has the same sign as the sales amount (the signs can
+        #    //  be opposites due to prepayments), and if there is an amount to post.
+        #    if (sign(totalPostAmount) == sign(totalSalesAmount)
+        #        && totalPostAmount != 0.0)
+        #    {
+        #        // post payments for the calculated amount
+        #        this.postPaymAmount(totalPostAmount, _isPrepay);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #postPaymentsMultipleOrders
+        #/// <summary>
+        #///     Posts the payments if invoicing is occuring in summary mode.
+        #/// </summary>
+        #/// <param name="_custInvoiceJour">
+        #/// The customer invoice journal used in posting the payments.
+        #/// </param>
+        #/// <remarks>
+        #///     Only appropriate for MCRCustPaymTotals_Sales context.  Throw error if called
+        #///     for any other context.  Less than ideal.  Other alternatives include:
+        #///     1) Move MCRCPT_Sales code here and assume always called for sales context.
+        #///     2) Make method abstract and each subclass does nothing, warns, or errors.
+        #///     3) Method defined for MCRCPT_Sales only and caller of the method (currently
+        #///     only SalesFormLetter_Invoice) required to construct a MCRCPT_Sales object.
+        #/// </remarks>
+        #public void postPaymentsMultipleOrders(CustInvoiceJour _custInvoiceJour)
+        #{
+        #    throw error(Error::wrongUseOfFunction(funcName()));
+        #}
+        #
+      ENDSOURCE
+      SOURCE #postPrepayments
+        #/// <summary>
+        #///     Posts all payments that are marked as prepayments, as well as any
+        #///     payments with an un-posted amount with a sign other than the sign of the
+        #///     total sales amount.
+        #/// </summary>
+        #/// <remarks>
+        #/// If the total sales amount is 0.0, then all payments
+        #///     are posted.
+        #///     Each payment that is posted is posted in full.
+        #///     NOTE:  Posting non-prepay payments with a sign other than the sign of the
+        #///     total sales amount ensures that all amounts will be posted by the time the
+        #///     order has been completely invoiced.  If un-posted payment amounts of
+        #///     opposite sign exist at the time of invoicing, it would be challenging to
+        #///     determine when to post them.
+        #/// </remarks>
+        #protected void postPrepayments()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #    MCRCustPaymTable custPaymTableUpdate;
+        #
+        #    MCRCustPaym custPaym;
+        #
+        #    Amount postAmount;
+        #
+        #    Amount totalSalesAmount = this.getTotalSalesAmount();
+        #
+        #    setPrefix("@MCR10830");
+        #
+        #    // post each prepayment, and update the payment's posted amount
+        #    //  If an order had an NSF canceled check and an on account
+        #    //  payment.  It would post the full sales order amount for the
+        #    //  canceled check.
+        #    while select custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.Status != MCRCustPaymStatus::Declined
+        #              && custPaymTable.IsPrepay == NoYes::Yes // Only post pre-pays
+        #    {
+        #        postAmount = custPaymTable.getUnpostedAmount();
+        #
+        #        if (postAmount != 0.0
+        #            && (custPaymTable.IsPrepay
+        #                || totalSalesAmount == 0.00
+        #                || sign(postAmount) != sign(totalSalesAmount)))
+        #        {
+        #            try
+        #            {
+        #                if (custPaymTable.CustPaymType)
+        #                {
+        #                    ttsbegin;
+        #
+        #                    custPaym = MCRCustPaym::construct(custPaymTable);
+        #
+        #                    // post the payment
+        #                    //  (payments should not be considered to be prepayments if the
+        #                    //  total sales amount is 0.0 -- in such a case, this order has
+        #                    //  been completely invoiced or cancelled, so these payments are
+        #                    //  not being posted prior to invoicing)
+        #                    custPaym.post(postAmount, totalSalesAmount != 0.0);
+        #
+        #                    // select payment for update, and update the posted amount
+        #                    custPaymTableUpdate = MCRCustPaymTable::findByRecID(custPaymTable.RecId, true);
+        #
+        #                    if (custPaymTableUpdate.validateWrite())
+        #                    {
+        #                        custPaymTableUpdate.update();
+        #                    }
+        #                    else
+        #                    {
+        #                        throw error("@SYS104318");
+        #                    }
+        #
+        #
+        #                    ttscommit;
+        #                }
+        #            }
+        #            catch (Exception::Deadlock)
+        #            {
+        #                retry;
+        #            }
+        #            catch
+        #            {
+        #                // if an exception is thrown while posting, continue with
+        #                //  next payment
+        #                continue;
+        #            }
+        #        }
+        #    }
+        #
+        #    // settle payment and invoice transactions
+        #    this.settlePayments();
+        #}
+      ENDSOURCE
+      SOURCE #preProcessCashCheck
+        #/// <summary>
+        #///     Processes cash and check payments for authorization and posting.
+        #/// </summary>
+        #/// <remarks>
+        #///     This is primarily used for orders that go on hold before
+        #///     they are submitted.
+        #/// </remarks>
+        #public void preProcessCashCheck()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #    MCRCustPaym mcrCustPaym;
+        #
+        #    Amount postedAmount = 0;       // amount to post for the current payment
+        #
+        #    setPrefix("@MCR30350");
+        #
+        #    this.setRequiredValues();
+        #
+        #    startLengthyOperation();
+        #
+        #    while select forupdate custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && (custPaymTable.CustPaymType == MCRCustPaymType::Cash
+        #              || custPaymTable.CustPaymType == MCRCustPaymType::Check)
+        #    {
+        #        try
+        #        {
+        #            // Don't process if there is nothing to post
+        #            // Manually Canceled payments are zeroed out, but only if
+        #            //  not posted.
+        #            if (custPaymTable.getUnpostedAmount() != 0 && custPaymTable.CustPaymType)
+        #            {
+        #                mcrCustPaym = MCRCustPaym::construct(custPaymTable);
+        #                mcrCustPaym.processPaym(custPaymTable.getUnpostedAmount());
+        #                custPaymTable.reread();
+        #                postedAmount += custPaymTable.PostedAmount;
+        #            }
+        #        }
+        #        catch
+        #        {
+        #            // if an exception is thrown during authorization,
+        #            //   continue with next payment
+        #            continue;
+        #        }
+        #    }
+        #    endLengthyOperation();
+        #    // Only call settlement if something was posted
+        #    if (postedAmount)
+        #    {
+        #        this.settlePayments();
+        #        this.setTransStatus();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #processPayments
+        #/// <summary>
+        #///     Processes all payments for authorization and/or posting.
+        #/// </summary>
+        #/// <param name="_paymAction">
+        #/// Indicates what action should be taken.
+        #/// </param>
+        #/// <param name="_allowUserInput">
+        #/// Indicates that the system can allow user interaction with this process.
+        #/// </param>
+        #/// <param name="_paymentsCalcAndValid">
+        #/// Indicates that the payments should be calculated and validated.
+        #/// </param>
+        #/// <param name="_custPaymRecID">
+        #/// The single payment to process; optional.
+        #/// </param>
+        #/// <returns>
+        #/// true if the payments were processed; otherwise, false.
+        #/// </returns>
+        #public boolean processPayments(MCRProcessPaymAction _paymAction,
+        #                    boolean _allowUserInput = false,
+        #                    boolean _paymentsCalcAndValid = true,
+        #                    RecId _custPaymRecID = 0)
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #    MCRCustPaym mcrCustPaym;
+        #
+        #    Amount totalPostedAmount;
+        #    Amount totalInvoicedAmount;
+        #    Amount totalPostAmount;
+        #
+        #    Amount postAmount = 0;       // amount to post for the current payment
+        #    Amount sumAmountPosted;      // amount posted so far
+        #
+        #    boolean retVal = true;
+        #    boolean skipJournalPost = (true ? _paymAction == MCRProcessPaymAction::PostNone: false);
+        #    //--> Credit Card Begin
+        #    boolean skipProcesPayment = false;
+        #    //<-- Credit Card End
+        #
+        #    setPrefix("@MCR30350");
+        #
+        #    // Only recalculate and validate payments if it has not been done before.
+        #    if (_paymentsCalcAndValid)
+        #    {
+        #        // if payments are not valid for authorization, do nothing
+        #        if (!this.validateAuthorize())
+        #        {
+        #            retVal = false;
+        #        }
+        #    }
+        #
+        #    // only continue if there are not already errors
+        #    if (retVal)
+        #    {
+        #        this.setRequiredValues();
+        #
+        #        if (_paymAction == MCRProcessPaymAction::PostAll)
+        #        {
+        #            totalPostedAmount = this.getTotalPostedPaymAmount();
+        #            totalInvoicedAmount = this.getTotalInvoicedAmount();
+        #            totalPostAmount = totalInvoicedAmount - totalPostedAmount;
+        #        }
+        #
+        #        startLengthyOperation();
+        #
+        #        while select forupdate custPaymTable
+        #            where custPaymTable.RefTableId == refTableID
+        #                  && custPaymTable.RefRecId == refRecID
+        #                  || (custPaymTable.RecId == _custPaymRecID
+        #                  && _custPaymRecID != 0)
+        #        {
+        #            try
+        #            {
+        #                if (custPaymTable.IsPrepay)
+        #                {
+        #                    postAmount = custPaymTable.getUnpostedAmount();
+        #                }
+        #                else if (_paymAction != MCRProcessPaymAction::PostOnlyPrepays && totalPostAmount != 0)
+        #                {
+        #                    // calculate the amount to post for this payment
+        #                    if (abs(totalPostAmount - sumAmountPosted)
+        #                           > abs(custPaymTable.getUnpostedAmount())
+        #                           || sign(totalPostAmount - sumAmountPosted)
+        #                           != sign(custPaymTable.getUnpostedAmount()))
+        #                    {
+        #                        postAmount = custPaymTable.getUnpostedAmount();
+        #                    }
+        #                    else
+        #                    {
+        #                        postAmount = totalPostAmount - sumAmountPosted;
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    postAmount = 0;
+        #                }
+        #
+        #                sumAmountPosted += postAmount;
+        #
+        #                if (custPaymTable.CustPaymType)
+        #                {
+        #                    mcrCustPaym = MCRCustPaym::construct(custPaymTable, _allowUserInput);
+        #                    if (ledgerJournalTable)
+        #                    {
+        #                        mcrCustPaym.parmLedgerJournalTable(ledgerJournalTable);
+        #                    }
+        #                    //--> Credit Card Begin
+        #                    if (custPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #                    {
+        #                        mcrCustPaym.parmSkipJournalPost(true);
+        #                        mcrCustPaym.parmSkipJournalCreate(true);
+        #                        settleNow = false;
+        #                        skipProcesPayment = true;
+        #                    }
+        #                    else
+        #                    {
+        #                        mcrCustPaym.parmSkipJournalPost(skipJournalPost);
+        #                    }
+        #                    //<-- Credit Card End
+        #
+        #                    mcrCustPaym.parmDefaultDimension(RetailChannelTable::findByRecId(MCRChannelUser::find().Channel).DefaultDimension);
+        #                    switch(custPaymTable.RefTableId)
+        #                    {
+        #                        case tableNum(SalesTable):
+        #                            mcrCustPaym.parmCustInvoiceJour(custInvoiceJourSettle);
+        #                            mcrCustPaym.parmSalesInvoiceId(salesInvoiceId);
+        #                            mcrCustPaym.parmPaymReference(SalesTable::findRecId(custPaymTable.RefRecId).SalesId);
+        #                            mcrCustPaym.parmDefaultDimension(SalesTable::findRecId(custPaymTable.RefRecId).DefaultDimension);
+        #                        break;
+        #                        case tableNum(CustInvoiceTable):
+        #                            mcrCustPaym.parmCustInvoiceTable(CustInvoiceTable::findRecId(custPaymTable.RefRecId));
+        #                        break;
+        #                        case tableNum(LedgerJournalTrans):
+        #                            mcrCustPaym.parmLedgerJournalTrans(LedgerJournalTrans::findRecId(custPaymTable.RefRecId, false));
+        #                        break;
+        #                        case tableNum(CustPaymSchedLine):
+        #                            mcrCustPaym.parmCustPaymSchedLine(CustPaymSchedLine::mcrFindByRecID(custPaymTable.RefRecId, false));
+        #                        break;
+        #                        default:
+        #                            throw error(Error::wrongUseOfFunction(funcName()));
+        #                    }
+        #
+        #                    mcrCustPaym.processPaym(postAmount);
+        #                }
+        #            }
+        #            catch
+        #            {
+        #                // if an exception is thrown during authorization,
+        #                //   continue with next payment
+        #                continue;
+        #            }
+        #        }
+        #
+        #        endLengthyOperation();
+        #
+        #        // If action indicates that we should
+        #        // Only need to settle if something has posted.
+        #        if (_paymAction != MCRProcessPaymAction::PostNone
+        #            && settleNow)
+        #        {
+        #            this.settlePayments(false);
+        #        }
+        #
+        #        this.setTransStatus();
+        #
+        #        // Return true if all the payments for the current transaction
+        #        // have been approved, otherwise return false.
+        #        retVal = this.allPaymentsApproved();
+        #    }
+        #    return retVal;
+        #}
+      ENDSOURCE
+      SOURCE #promptOverUnderPaym
+        #/// <summary>
+        #///     Gives the user the option to allow or cancel authorization of payments
+        #///     when an over-/underpayment will result.
+        #/// </summary>
+        #/// <returns>
+        #///     true if the user is not prompted or if the user is prompted and chooses ok; otherwise false.
+        #/// </returns>
+        #/// <remarks>
+        #/// The user is only prompted if processing payments will result in an
+        #///     over-/underpayment. And the user has chosen to be prompted in order
+        #///     parameters.
+        #///     If the difference between the total payment amount and the total sales
+        #///     amount is non-zero but falls within the allowed range for
+        #///     over-/underpayment,
+        #///     then the user is prompted to confirm the over-/underpayment.  Under all
+        #///     other conditions, the user is not prompted.
+        #/// </remarks>
+        #public boolean promptOverUnderPaym()
+        #{
+        #    AmountCur overUnderPaymAmount;
+        #
+        #    str promptMessage;
+        #
+        #    // make sure that payment amounts are updated
+        #    this.recalculatePaymAmounts();
+        #
+        #    // calculate the over-/underpayment amount
+        #    overUnderPaymAmount = this.getTotalPaymAmount() - this.getTotalSalesAmount();
+        #
+        #    // if over-/underpayment amount is within allowed range.
+        #    // Parameterized call to MCRCustPaymTotals promptOverUnderPaym
+        #    // If the user has not checked the box, payments will always
+        #    // be processed if they're within the thresholds.
+        #    if (overUnderPaymAmount != 0.0)
+        #    {
+        #        if (abs(overUnderPaymAmount) <= this.getMaxOverUnderPaymAmount())
+        #        {
+        #            if (SalesParameters::find().mcrOverUnderPaymentPrompt == NoYes::Yes)
+        #            {
+        #                // if underpayment:
+        #                if (sign(overUnderPaymAmount) == -1)
+        #                {
+        #                    // prompt user
+        #                    promptMessage =
+        #                        strFmtLB(strFmt("@MCR11271", abs(overUnderPaymAmount),
+        #                                        this.getCurrency()));
+        #
+        #                    if (DialogButton::No
+        #                        == Box::yesNo(promptMessage, DialogButton::No, "@MCR11273"))
+        #                    {
+        #                        return false;
+        #                    }
+        #                }
+        #                // else if overpayment.
+        #                else if (sign(overUnderPaymAmount) == 1)
+        #                {
+        #                    // prompt user
+        #                    promptMessage =
+        #                        strFmtLB(strFmt("@MCR11272", abs(overUnderPaymAmount),
+        #                                        this.getCurrency()));
+        #
+        #                    if (DialogButton::No
+        #                        == Box::yesNo(promptMessage, DialogButton::No, "@MCR11274"))
+        #                    {
+        #                        return false;
+        #                    }
+        #                }
+        #            }
+        #        }
+        #        //  If out of balance orders are not allowed return false
+        #        else if (SalesParameters::find().mcrAllowOutOfBalance == NoYes::No)
+        #        {
+        #            info(strFmt("@MCR11263", this.getMaxOverUnderPaymAmount(),
+        #                this.getCurrency()));
+        #            error(strFmt("@MCR10655"));
+        #            return false;
+        #        }
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #recalculatePaymAmounts
+        #/// <summary>
+        #///     Updates payment amounts by calculating the payment amount as a
+        #///     percentage of the balance.
+        #/// </summary>
+        #/// <returns>
+        #///     true if one or more payment amounts are updated.
+        #///     false if no updates are performed.
+        #/// </returns>
+        #/// <remarks>
+        #/// New amounts are calculated only for payments that have non-zero
+        #///     percentage amounts. If the newly calculated amount is different from the
+        #///     current amount for the payment, then the payment is updated.
+        #///     The balance that is divided among the payments is calculated as the
+        #///     difference between the total sales amount and the sum of payment amounts
+        #///     for all payments with zero percentage amounts (sum of fixed payment
+        #///     amounts).
+        #///     If the sum of all percentage amounts is 100, then the resulting total
+        #///     payment amount is guaranteed to equal the total sales amount.  If rounding
+        #///     of individual payment amounts causes a discrepancy in the total payment
+        #///     amount, then one of the payment amounts is adjusted to eliminate the
+        #///     rounding error.
+        #/// </remarks>
+        #public boolean recalculatePaymAmounts()
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    Amount sumPercentagePaymentAmounts;
+        #    Amount newAmount;
+        #    Amount sumAmounts;
+        #
+        #    Amount totalSalesAmt;
+        #    Amount totalPaymAmt;
+        #
+        #    RecordLinkList custPaymTableList = new RecordLinkList();
+        #
+        #    // track whether a database update has been performed
+        #    boolean hasPaymBeenUpdated = false;
+        #    AmountCur fixedAmount;
+        #
+        #    // if payments are not editable, do not update the amounts
+        #    if (!this.allowEdit())
+        #    {
+        #        return false;
+        #    }
+        #
+        #    totalSalesAmt = this.getTotalSalesAmount();
+        #    totalPaymAmt = this.getTotalPaymAmount();
+        #
+        #    startLengthyOperation();
+        #
+        #    // Used multiple times so saving it off
+        #    fixedAmount = this.getTotalFixedPaymAmount();
+        #    // calculate the total amount that should be split among those payments
+        #    //  that have non-zero percentage amounts
+        #    sumPercentagePaymentAmounts = totalSalesAmt
+        #                                  - fixedAmount;
+        #
+        #
+        #    // for each payment with a non-zero percentage amount.
+        #    // Added an order by so the payments are recalculated in the same
+        #    //      sequence every time
+        #    while select custPaymTable
+        #        order by LineNum asc
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.PercentAmount != 0.0
+        #    {
+        #        // calculate what the amount should be
+        #        newAmount = custPaymTable.PercentAmount * 0.01 // 0.01 for percent
+        #                    * sumPercentagePaymentAmounts;
+        #
+        #        // round the amount appropriately for the currency
+        #        newAmount = Currency::amount(newAmount, custPaymTable.getCurrency());
+        #
+        #        // update the amount
+        #        custPaymTable.Amount = newAmount;
+        #
+        #        // store updated payment record
+        #        custPaymTableList.ins(custPaymTable);
+        #    }
+        #
+        #    // calculate the sum of updated amounts
+        #    while (custPaymTableList.next(custPaymTable))
+        #    {
+        #        sumAmounts += custPaymTable.Amount;
+        #    }
+        #
+        #    // if a rounding error has occurred.
+        #    if (this.getTotalPercentAmount() == 100
+        #        && sumPercentagePaymentAmounts - sumAmounts != 0.0)
+        #    {
+        #        // add the error amount to the first payment
+        #        custPaymTableList.first(custPaymTable);
+        #
+        #        custPaymTable.Amount += sumPercentagePaymentAmounts - sumAmounts;
+        #
+        #        // update the record in the list
+        #        //  (cannot update record in list -- delete and re-insert)
+        #        custPaymTableList.del();     // delete it
+        #        custPaymTableList.ins(custPaymTable);   // insert the updated record
+        #    }
+        #
+        #    // save modified payments to the database
+        #    hasPaymBeenUpdated = this.updateModifiedPayments(custPaymTableList);
+        #
+        #    endLengthyOperation();
+        #
+        #    return hasPaymBeenUpdated;
+        #}
+      ENDSOURCE
+      SOURCE #setRequiredValues
+        #/// <summary>
+        #/// Sets required values for the customer payment.
+        #/// </summary>
+        #protected void setRequiredValues()
+        #{
+        #
+        #}
+      ENDSOURCE
+      SOURCE #settleBillUpFrontContChildren
+        #/// <summary>
+        #/// Settles bill up front continuity children orders.
+        #/// </summary>
+        #public abstract void settleBillUpFrontContChildren()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #settleByOrderID
+        #/// <summary>
+        #/// Settles debits and credits that have
+        #///  related <c>ledgerJournalTrans</c> records that have the
+        #///  same order ID.
+        #/// </summary>
+        #/// <param name="_orderID">
+        #/// Order number to be settled.
+        #/// </param>
+        #/// <remarks>
+        #/// Originally created to settle credit card order credits
+        #/// Settle the credit card charge against the credit so this
+        #///   does not affect the customers balance.
+        #/// </remarks>
+        #public  void settleByOrderID(Num _orderID)
+        #{
+        #    CustTable custTable;
+        #
+        #    LedgerJournalTable ledgerJournalTableLocal;
+        #    LedgerJournalTrans ledgerJournalTrans;
+        #
+        #    CustTrans custTrans;
+        #    CustTransOpen custTransOpen;
+        #
+        #    SpecTransManager specTransManager;
+        #
+        #    AmountCur sumTransAmountCur;
+        #
+        #    custTable = CustTable::find(this.getInvoiceAccount());
+        #
+        #    // create a specification offset voucher for the current customer
+        #    specTransManager = SpecTransManager::construct(custTable, false);
+        #
+        #    // clear any marked transactions
+        #    specTransManager.deleteAll();
+        #
+        #    // Add open payment transactions to the offset voucher.
+        #    while select RecId, AmountCur from custTransOpen
+        #        join CurrencyCode from custTrans
+        #        join Voucher, Prepayment from ledgerJournalTrans
+        #        join JournalNum from ledgerJournalTableLocal
+        #        where ledgerJournalTrans.mcrPaymOrderID == _orderID
+        #              && ledgerJournalTrans.JournalNum == ledgerJournalTableLocal.JournalNum
+        #              && custTrans.AccountNum == custTable.AccountNum
+        #              && custTrans.Voucher == ledgerJournalTrans.Voucher
+        #              && custTransOpen.RefRecId == custTrans.RecId
+        #              && custTransOpen.AccountNum == custTable.AccountNum
+        #    {
+        #        sumTransAmountCur += abs(custTransOpen.AmountCur);
+        #
+        #        specTransManager.insert(custTransOpen.DataAreaId,
+        #                                 custTransOpen.TableId,
+        #                                 custTransOpen.RecId,
+        #                                 custTransOpen.AmountCur,
+        #                                 custTrans.CurrencyCode);
+        #
+        #    }
+        #
+        #    // settle the transactions
+        #    if (sumTransAmountCur)
+        #    {
+        #        CustTrans::settleTransact(custTable);
+        #    }
+        #    else
+        #    {
+        #        specTransManager.deleteAll();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #settleInstallmentsOrder
+        #/// <summary>
+        #/// Settles installment order payments.
+        #/// </summary>
+        #/// <param name="_instalAdjs">
+        #/// A boolean that determines whether initial adjustments are required; optional.
+        #/// </param>
+        #protected abstract void settleInstallmentsOrder(boolean _instalAdjs = false)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #settleOnAccountPayments
+        #/// <summary>
+        #/// Settles payments of type on account.
+        #/// </summary>
+        #public abstract void settleOnAccountPayments()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #settlePayments
+        #/// <summary>
+        #///     Attempts to settle payments with invoices.
+        #/// </summary>
+        #/// <param name="_paymAdjs">
+        #/// Indicates payment adjustments are occuring; optional.
+        #/// </param>
+        #/// <remarks>
+        #/// Open payment and invoice transactions are first found and marked.
+        #///     The marked transactions are closed under either of the following
+        #///     conditions:
+        #///     1: The sum of the open transaction amounts is 0.0 (they balance).
+        #///     2: The full sales amount has been invoiced.  This case occurs when
+        #///     all payments have been posted, and all invoicing will has been
+        #///     completed.
+        #///     Note that as a result of settling transactions that do not balance, an amount
+        #///     might be written to the penny-difference or customer cash discount account.
+        #/// </remarks>
+        #public  void settlePayments(boolean _paymAdjs = false)
+        #{
+        #    CustTable custTable;
+        #    LedgerJournalTable ledgerJournalTableLocal;
+        #    LedgerJournalTrans ledgerJournalTrans;
+        #
+        #    CustTrans custTrans;
+        #    CustTransOpen custTransOpen;
+        #
+        #    CustInvoiceJour custInvoiceJour;
+        #
+        #    SpecTransManager specTransManager;
+        #
+        #    Num orderID = this.getOrderID();
+        #
+        #    AmountCur sumTransAmountCur;     // sum of marked transactions
+        #    AmountCur   sumInvAmountCur;
+        #    CustInvoiceSalesLink custInvoiceSalesLink;
+        #
+        #    // Need to settle the new credits, those
+        #    //                      that did not result from the order credit process
+        #    MCRCustCreditTable mcrCustCreditTable;
+        #    // Refund amount handling
+        #    AmountCur refundAmount;
+        #
+        #    // find the custTable record
+        #    custTable = CustTable::find(this.getInvoiceAccount());
+        #
+        #    // create a specification offset voucher for the current customer
+        #    specTransManager = SpecTransManager::construct(custTable, false);
+        #
+        #    // clear any marked transactions
+        #    specTransManager.deleteAll();
+        #
+        #    // add open payment transactions to the offset voucher
+        #    while select RecId, AmountCur from custTransOpen
+        #        join CurrencyCode from custTrans
+        #        join Voucher, Prepayment from ledgerJournalTrans
+        #        join JournalNum from ledgerJournalTableLocal
+        #        where ledgerJournalTrans.mcrPaymOrderID == orderID
+        #              && ledgerJournalTrans.JournalNum == ledgerJournalTableLocal.JournalNum
+        #              && custTrans.AccountNum == custTable.AccountNum
+        #              && custTrans.Voucher == ledgerJournalTrans.Voucher
+        #              && custTransOpen.RefRecId == custTrans.RecId
+        #              && custTransOpen.AccountNum == custTable.AccountNum
+        #    {
+        #        // Save the refund amount, required to determine settlement.
+        #        // Cancels were not settling the refund amount.
+        #        if (custTransOpen.AmountCur < 0)
+        #        {
+        #            refundAmount = custTransOpen.AmountCur;
+        #        }
+        #        sumTransAmountCur += custTransOpen.AmountCur;
+        #
+        #        specTransManager.insert(custTransOpen.DataAreaId,
+        #                                 custTransOpen.TableId,
+        #                                 custTransOpen.RecId,
+        #                                 custTransOpen.AmountCur,
+        #                                 custTrans.CurrencyCode);
+        #
+        #    }
+        #
+        #    // Clear the table buffers.
+        #    custTransOpen = null;
+        #    custTrans = null;
+        #    custInvoiceJour = null;
+        #
+        #    // Return credits do not have a LedgerJournalTrans
+        #    //        record, so they must be dealt with seperately
+        #    while select RecId, AmountCur from custTransOpen
+        #        join CurrencyCode from custTrans
+        #        join Voucher, OrigSalesID from mcrCustCreditTable
+        #        where custTrans.mcrPaymOrderID == orderID
+        #              && custTrans.AccountNum == custTable.AccountNum
+        #              && custTransOpen.RefRecId == custTrans.RecId
+        #              && custTransOpen.AccountNum == custTable.AccountNum
+        #              && mcrCustCreditTable.Voucher == custTrans.Voucher
+        #              && mcrCustCreditTable.OrigSalesID == ''
+        #              // Credits created through returns do not have a LedgerJournalTrans record,
+        #              // but credits created through payment journals do.
+        #              && mcrCustCreditTable.JournalNum == ''
+        #    {
+        #        if (!specTransManager.exist(custTransOpen.DataAreaId, custTransOpen.TableId, custTransOpen.RecId))
+        #        {
+        #            sumTransAmountCur += custTransOpen.AmountCur;
+        #            specTransManager.insert(custTransOpen.DataAreaId,
+        #                                     custTransOpen.TableId,
+        #                                     custTransOpen.RecId,
+        #                                     custTransOpen.AmountCur,
+        #                                     custTrans.CurrencyCode);
+        #        }
+        #    }
+        #
+        #    // Clear the table buffers.
+        #    custTransOpen = null;
+        #    custTrans = null;
+        #    custInvoiceJour = null;
+        #
+        #    // add open invoice transactions to the offset voucher
+        #    while select RecId, AmountCur from custTransOpen
+        #        join CurrencyCode from custTrans
+        #        join LedgerVoucher, SalesId from custInvoiceJour
+        #        join SalesId, OrigSalesId from custInvoiceSalesLink
+        #        where custInvoiceSalesLink.OrigSalesId == orderID
+        #                &&  custInvoiceJour.SalesId == custInvoiceSalesLink.SalesId
+        #                &&  custTrans.AccountNum == custTable.AccountNum
+        #                &&  custTrans.Voucher == custInvoiceJour.LedgerVoucher
+        #                &&  custTrans.mcrPaymOrderID == orderID
+        #                &&  custTransOpen.RefRecId == custTrans.RecId
+        #    {
+        #        sumInvAmountCur += custTransOpen.AmountCur;
+        #        // check to see if the record already exists in the specManager before
+        #        // adding it again - this will help from having over settlement issues.
+        #        if (!specTransManager.exist(custTransOpen.DataAreaId, custTransOpen.TableId, custTransOpen.RecId))
+        #        {
+        #            specTransManager.insert(custTransOpen.DataAreaId,
+        #                                    custTransOpen.TableId,
+        #                                    custTransOpen.RecId,
+        #                                    custTransOpen.AmountCur,
+        #                                    custTrans.CurrencyCode);
+        #        }
+        #    }
+        #
+        #    // settle the transactions
+        #    if ((abs(sumTransAmountCur) != 0 && abs(sumInvAmountCur) != 0)
+        #        || refundAmount < 0 )
+        #    {
+        #        CustTrans::settleTransact(custTable);
+        #    }
+        #    else
+        #    {
+        #        specTransManager.deleteAll();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #setTransStatus
+        #/// <summary>
+        #///     Updates the related record based on the status of the
+        #///     payments.
+        #/// </summary>
+        #/// <remarks>
+        #///     Abstract because the logic is case specific.
+        #/// </remarks>
+        #public abstract void setTransStatus()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #updateInvoiceAccount
+        #/// <summary>
+        #///     Updates the invoice account on all payments to be the specified account.
+        #/// </summary>
+        #/// <param name="_invoiceAccount">
+        #/// The invouce account to set on all the payments.
+        #/// </param>
+        #public void updateInvoiceAccount(CustAccount _invoiceAccount)
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #
+        #    // verify that it is okay to update the invoice account
+        #    if (!this.allowEditInvoiceAccount())
+        #    {
+        #        throw error("@MCR11248");
+        #    }
+        #
+        #    // update the invoice account on all payments
+        #    ttsbegin;
+        #
+        #    update_recordset custPaymTable
+        #        setting CustAccount = _invoiceAccount
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID;
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #updateModifiedPayments
+        #/// <summary>
+        #///     Updates modified payments in the database.
+        #/// </summary>
+        #/// <param name="_paymentList">
+        #/// The list of payments to update in the database.
+        #/// </param>
+        #/// <returns>
+        #///     Returns true if one or more payments are updated in the database; else,
+        #///     returns false.
+        #/// </returns>
+        #/// <remarks>
+        #/// For each payment in the list, if the payment amount has changed, the
+        #///     payment is updated in the database.  Only the amount and payment status
+        #///     fields are updated.  The status is updated to be not submitted.
+        #/// </remarks>
+        #protected boolean updateModifiedPayments(RecordLinkList _paymentList)
+        #{
+        #    // NOTE: When a record is inserted into and retrieved from a list,
+        #    //       certain functionality appears to fail.
+        #    //
+        #    //       Specifically, calling  "orig()" on the buffer will not
+        #    //       provide the actual original values as retrieved from the
+        #    //       database;  likely, the original values are those present when
+        #    //       retrieved from the list.  Also, even if the record was selected
+        #    //       for update, calling "update()" does not appear to result in
+        #    //       database updates (but it does not result in an error, either).
+        #    //
+        #    //       So, the approach taken here is to compare each record with
+        #    //       a fresh record from the database, and update the fresh record
+        #    //       if necessary.
+        #
+        #    MCRCustPaymTable custPaymTable;      // from list
+        #    MCRCustPaymTable custPaymTableFromDatabase;     // from database
+        #
+        #    boolean isRecord = false;    // for looping through list
+        #
+        #    boolean hasPaymBeenUpdated = false;
+        #
+        #    ttsbegin;
+        #
+        #    // for each record in the list.
+        #    isRecord = _paymentList.first(custPaymTable);
+        #
+        #    while (isRecord)
+        #    {
+        #        // select for update
+        #        custPaymTableFromDatabase =
+        #            MCRCustPaymTable::findByRecID(custPaymTable.RecId, true);
+        #
+        #        // if amount has changed.
+        #        if (custPaymTable.Amount != custPaymTableFromDatabase.Amount)
+        #        {
+        #            hasPaymBeenUpdated = true;
+        #
+        #            // update amount
+        #            custPaymTableFromDatabase.Amount = custPaymTable.Amount;
+        #
+        #            custPaymTableFromDatabase.Status = MCRCustPaymStatus::NotSubmitted;
+        #
+        #            // update in database
+        #            custPaymTableFromDatabase.update();
+        #        }
+        #
+        #        isRecord = _paymentList.next(custPaymTable);
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    return hasPaymBeenUpdated;
+        #}
+      ENDSOURCE
+      SOURCE #validateAuthorize
+        #/// <summary>
+        #///     Validates all payments for authorization.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #/// Indicates that if errors occur they should be displayed to the user; optional.
+        #/// </param>
+        #/// <returns>
+        #///     Returns true if payments are allowed to be submitted for authorization.
+        #///     Returns false if one or more errors exist.
+        #/// </returns>
+        #/// <remarks>
+        #/// Payments are valid for authorization if at least one payment exists,
+        #///     if the total payment amount equals the total sales amount, if all payments
+        #///     contain required data, and if the payment methods for the payments are
+        #///     properly configured.
+        #///     If the return value is false, then payments are not allowed to be
+        #///     submitted for authorization.
+        #/// </remarks>
+        #public boolean validateAuthorize(boolean _showErrors = true)
+        #{
+        #    MCRCustPaymTable    custPaymTable;
+        #    MCRCustPaym         custPaym;
+        #    Percent             totalPercentAmount;
+        #    real                totalSalesAmount = this.getTotalSalesAmount();
+        #    boolean             isValid = true;
+        #    boolean             instPaymExists = false;
+        #
+        #    setPrefix("@MCR10662");
+        #
+        #    // Payment is required only if the total payment amount is not equal to zero.
+        #    if (totalSalesAmount != 0.0)
+        #    {
+        #        // at least one payment is required
+        #        if (!this.existPaym()
+        #            && !this.existPaym_installment())
+        #        {
+        #            isValid = false;
+        #            if (_showErrors)
+        #            {
+        #                error("@MCR10915");
+        #            }
+        #        }
+        #    }
+        #
+        #    // at most one payment of type "on account" is allowed
+        #    select count(RecId) from custPaymTable
+        #        where custPaymTable.RefTableId == refTableID
+        #              && custPaymTable.RefRecId == refRecID
+        #              && custPaymTable.CustPaymType == MCRCustPaymType::OnAccount;
+        #
+        #    if (custPaymTable.RecId > 1)
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error(strFmt("@MCR11205", MCRCustPaymType::OnAccount));
+        #        }
+        #    }
+        #
+        #    // percents must total 0.0 or 100.0
+        #    totalPercentAmount = round(this.getTotalPercentAmount(), 2);
+        #
+        #    if (totalPercentAmount != 0.0
+        #        && totalPercentAmount != 100.0)
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error("@MCR11160");
+        #        }
+        #    }
+        #
+        #    // payment total must be within allowed over-/underpayment range
+        #    if (isValid
+        #        && !this.validateTotalPaymAmount(_showErrors))
+        #    {
+        #        isValid = false;
+        #    }
+        #
+        #    if (isValid)
+        #    {
+        #        // validate each payment
+        #        // Removed a condition that only validated if it was
+        #        //  not submitted, certain cases weren't caught.
+        #        //  Ex: Expired Ccard
+        #        //  However, Paid is a safe status, payment is finalized
+        #        //      if it's paid
+        #        while select custPaymTable
+        #            where custPaymTable.RefTableId == refTableID
+        #                  && custPaymTable.RefRecId == refRecID
+        #                  && custPaymTable.Status != MCRCustPaymStatus::Paid
+        #                  && custPaymTable.Amount != 0
+        #        {
+        #            // Don't validate fully posted payments
+        #            if (custPaymTable.CustPaymType
+        #                && custPaymTable.getUnpostedAmount())
+        #            {
+        #                custPaym = MCRCustPaym::construct(custPaymTable);
+        #
+        #                if (!custPaym.validateAuthorize(_showErrors))
+        #                {
+        #                    isValid = false;
+        #                }
+        #            }
+        #        }
+        #    }
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validateTotalPaymAmount
+        #/// <summary>
+        #///     Validates that the difference between the total payment amount and the
+        #///     total sales amount is within the allowed over-/underpayment range.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #/// Indicates that if errors occur they should be displayed to the user; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if the difference between the total payment amount and the
+        #///     total sales amount is within the allowed over-/underpayment range; otherwise false.
+        #/// </returns>
+        #/// <remarks>
+        #/// The total payment amount is always valid if the total payment amount equals
+        #///     the total sales amount.
+        #///     The total payment amount is also valid if:
+        #///     the difference between the total payment amount and the total sales
+        #///     amount is within the allowed over-/underpayment range.
+        #/// </remarks>
+        #public boolean validateTotalPaymAmount(boolean _showErrors = true)
+        #{
+        #    boolean isValid = true;
+        #
+        #    AmountCur overUnderPaymAmount;
+        #
+        #    overUnderPaymAmount =
+        #        this.getTotalPaymAmount() - this.getTotalSalesAmount();
+        #
+        #    // over-/underpayment must be within allowed range
+        #    if (abs(overUnderPaymAmount) > this.getMaxOverUnderPaymAmount())
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            info(strFmt("@MCR11263", this.getMaxOverUnderPaymAmount(),
+        #                        this.getCurrency()));
+        #            warning(strFmt("@MCR10655"));
+        #        }
+        #    }
+        #
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #arePaymentsSubmitable
+        #/// <summary>
+        #///     Checks to see if the payments can be submitted.
+        #/// </summary>
+        #/// <param name="_custPaymRefRecId">
+        #/// The reference to the customer payment record ID of the payment to submit.
+        #/// </param>
+        #/// <returns>
+        #/// true if the payments can be submitted; otherwise, false.
+        #/// </returns>
+        #public static boolean arePaymentsSubmitable(RecId _custPaymRefRecId)
+        #{
+        #    MCRCustPaymTable custPaymTable;
+        #    MCRCustPaym_CreditCard custPaymCreditCard;
+        #    boolean retValue;
+        #    SalesTable salesTable = SalesTable::findRecId(_custPaymRefRecId);
+        #    MCRSalesTable mcrSalesTable = salesTable.mcrSalesTable();
+        #    MCROrderParameters mcrOrderParameters  = MCROrderParameters::find(false);
+        #
+        #    // If the sales order is a continuity child check the MCRAuthContinuityChild flag
+        #    // on the MCROrderParameters table.
+        #    // 1. If the flag is ON, then the child sales order is submittable
+        #    // 2. if the flag is OFF then do not submit for online authorization. Continuity children
+        #    //  order payment records will be updated to a status of "pending payments" so when the
+        #    //  transaction batch is created these records will be picked up.This will speed up the
+        #    //  creation of children orders.
+        #    //  if the continuity order is being paid for by credit card then apply this logic
+        #    //  if it is being paid for by on account then it should be submitted.
+        #    //  Note: Customers who run continuity should set up the online authorization method in the
+        #    //  credit card set up to "online and batch".
+        #    if (mcrSalesTable.ContinuityChild
+        #        && mcrSalesTable.ContinuityLineEval != MCRContinuityLineEval::Paid)
+        #    {
+        #        if (mcrOrderParameters.mcrAuthContinuityChild == NoYes::No)
+        #        {
+        #            // Update payment status to pending and return a false
+        #            // so that the payment is not submitted for online authorization
+        #            // Continuity children that were paid for by on account
+        #            // were also not being submitted.
+        #            ttsbegin;
+        #                while select forupdate custPaymTable
+        #                    where custPaymTable.RefTableId == salesTable.TableId
+        #                       && custPaymTable.RefRecId == salesTable.RecId
+        #                {
+        #                    if (custPaymTable.CustPaymType == MCRCustPaymType::CreditCard)
+        #                    {
+        #                        if (custPaymTable.Amount > 0)
+        #                        {
+        #                            // update the custpaymtable status
+        #                            custPaymTable.Status = MCRCustPaymStatus::NotSubmitted;
+        #                            custPaymTable.update();
+        #                            // Insert auth record since one does not exist for
+        #                            // cards that are in Not submitted status.
+        #                            // call parent class , do not instantiate the child directly
+        #                            custPaymCreditCard = MCRCustPaym::construct(custPaymTable, false);
+        #                            custPaymCreditCard.processPaym(custPaymTable.getUnpostedAmount());
+        #                            retValue = false;
+        #                        }
+        #                        else
+        #                        {
+        #                            retValue = true;
+        #                        }
+        #                    }
+        #                    else
+        #                    {
+        #                        retValue = true;
+        #                    }
+        #                }
+        #            ttscommit;
+        #            return retValue;
+        #        }
+        #        else
+        #        {
+        #            return true;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        // If not a continuity child or is a bill up front i.e paid order then
+        #        // payments are submittable
+        #        // Set the return value to true instead of returning true
+        #        // this will then check to see if the order is a future order or not.
+        #        retValue = true;
+        #    }
+        #    // Before submitting for authorization, need to ensure that the
+        #    // caller if a sales order is not a future order. If future order
+        #    // several other checks and balances need to be made before the
+        #    // record is submitted.
+        #    retValue =  MCRCustPaymTotals::submitPaymFutureOrder(_custPaymRefRecId);
+        #
+        #    return retValue;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #/// <summary>
+        #///     Constructs a new instance of this class.
+        #/// </summary>
+        #/// <param name="_refTableId">
+        #/// References the table ID of the table the payment is associated with.
+        #/// </param>
+        #/// <param name="_refRecId">
+        #/// References the record ID of the record the payment is associated with.
+        #/// </param>
+        #/// <param name="_mcrSalesOrderTotals">
+        #/// An instance of the sales order totals class related to this payment.
+        #/// </param>
+        #/// <returns>
+        #///     A new instance of this class. null if a new instance cannot
+        #///     be created.
+        #/// </returns>
+        #/// <remarks>
+        #/// All operations on this class will act on payments associated with the
+        #///     specified record.  The actual type of the instance that is constructed
+        #///     is determined by the type of the specified record.
+        #///     Whenever a new class extends this class, this method should be modified to
+        #///     instantiate the new class when appropriate.
+        #///     The order totals object is optionally passed to allow it to be reused.
+        #/// </remarks>
+        #public static MCRCustPaymTotals construct(  RefTableId _refTableId,
+        #                                    RefRecId _refRecId,
+        #                                    MCRSalesOrderTotals _mcrSalesOrderTotals = null)
+        #{
+        #    MCRCustPaymTotals custPaymTotals = null;
+        #
+        #    if (_refRecId)
+        #    {
+        #        switch (_refTableId)
+        #        {
+        #            case tableNum(SalesTable):
+        #                custPaymTotals = new MCRCustPaymTotals_Sales(_refRecId, _mcrSalesOrderTotals);
+        #            break;
+        #            case tableNum(CustInvoiceTable):
+        #                custPaymTotals = new MCRCustPaymTotals_CustInvoice(_refRecId);
+        #            break;
+        #            // Add continuity customer header.
+        #            case tableNum(MCRContinuityCustHeader):
+        #                custPaymTotals = new MCRCustPaymTotals_ContinuityCustHeader(_refRecId);
+        #            break;
+        #            // Add payment schedule line - continuity related.
+        #            case tableNum(CustPaymSchedLine):
+        #                custPaymTotals = new MCRCustPaymTotals_PaymSched(_refRecId);
+        #            break;
+        #            //  Allow for processing of PaymentJournals
+        #            case tableNum(LedgerJournalTrans):
+        #               custPaymTotals = new MCRCustPaymTotals_PaymJournal(_refRecId);
+        #            break;
+        #            case tableNum(MCRCustCreditTable):
+        #                custPaymTotals = new MCRCustPaymTotals_CustCredit(_refRecId);
+        #            break;
+        #            case tableNum(RetailGiftCardTable):
+        #                custPaymTotals = new MCRCustPaymTotals_GiftCard(_refRecId);
+        #            break;
+        #        }
+        #    }
+        #
+        #    return custPaymTotals;
+        #}
+      ENDSOURCE
+      SOURCE #getMaxOverUnderPaymAmountMST
+        #/// <summary>
+        #///     Returns the maximum allowed over-/underpayment amount, in the company's
+        #///     default currency.
+        #/// </summary>
+        #/// <returns>
+        #/// The maximum allowed over-/underpayment amount, in the company's
+        #///     default currency.
+        #/// </returns>
+        #public static AmountMST getMaxOverUnderPaymAmountMST()
+        #{
+        #    CustParameters custParameters = CustParameters::find();
+        #
+        #    // use the maximum of the over-/underpayment and penny-difference amounts
+        #    return max(custParameters.MaxMSTOverUnder, custParameters.MaxMSTDiff);
+        #}
+      ENDSOURCE
+      SOURCE #reprocessPayment
+        #/// <summary>
+        #///     Re-processes a payment
+        #///     for authorizatoin, which primarily applies
+        #///     to declined payments.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymTable">
+        #/// The customer payment record to re-process.
+        #/// </param>
+        #/// <param name="_allowUserInput">
+        #/// Indicates that the system can allow user interaction within this process; optional.
+        #/// </param>
+        #public static void reprocessPayment(MCRCustPaymTable _mcrCustPaymTable, boolean _allowUserInput = false)
+        #{
+        #    MCRCustPaymTable        mcrCustPaymTable    = _mcrCustPaymTable;
+        #    CreditCardAuthTrans     creditCardAuthTrans = CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId, true);
+        #    MCRCustPaymTotals       mcrCustPaymTotals   = MCRCustPaymTotals::construct(mcrCustPaymTable.RefTableId,
+        #                                                                                mcrCustPaymTable.RefRecId);
+        #
+        #    ttsbegin;
+        #    if (creditCardAuthTrans)
+        #    {
+        #        creditCardAuthTrans.ProcessorStatus = CreditCardProcessorStatus::NA;
+        #        if (creditCardAuthTrans.validateWrite())
+        #        {
+        #            creditCardAuthTrans.update();
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS104318");
+        #        }
+        #
+        #    }
+        #    mcrCustPaymTable.selectForUpdate(true);
+        #    mcrCustPaymTable.Status = MCRCustPaymStatus::NotSubmitted;
+        #    if (mcrCustPaymTable.validateWrite())
+        #    {
+        #        mcrCustPaymTable.update();
+        #    }
+        #    else
+        #    {
+        #        throw error("@SYS104318");
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    mcrCustPaymTotals.processPayments(MCRProcessPaymAction::PostOnlyPrepays, _allowUserInput, false, mcrCustPaymTable.RecId);
+        #}
+      ENDSOURCE
+      SOURCE #submitPaymFutureOrder
+        #/// <summary>
+        #/// Submits payments for futute orders.
+        #/// </summary>
+        #/// <param name="_custPaymRefRecId">
+        #/// The record ID of the <c>SalesTable</c> for which this method submits payments.
+        #/// </param>
+        #/// <returns>
+        #/// treu if future order payments should be submitted; otherwise, false.
+        #/// </returns>
+        #public static boolean submitPaymFutureOrder(RecId _custPaymRefRecId)
+        #{
+        #    SalesTable          salesTable;
+        #    MCROrderParameters   mcrOrderParameters;
+        #    boolean             orderInFuture;
+        #    InventTrans         inventTrans;
+        #    InventTransOrigin   inventTransOrigin;
+        #
+        #    // Check if future orders processing is on
+        #    mcrOrderParameters = MCROrderParameters::find();
+        #
+        #    // If future order processing is on do the rest of the checks
+        #    if (mcrOrderParameters.mcrFutureOrder)
+        #    {
+        #        salesTable = SalesTable::findRecId(_custPaymRefRecId);
+        #        orderInFuture = salesTable.mcrIsOrderInFuture();
+        #        // If this order is in the future
+        #        if (orderInFuture)
+        #        {
+        #            if (!mcrOrderParameters.mcrFutureOrderAuth)
+        #            {
+        #                return true;
+        #            }
+        #            else
+        #            {
+        #                if (mcrOrderParameters.mcrFutureReleaseReserved)
+        #                {
+        #                    // see if inventory is reserved for this order
+        #                    select firstonly RecId from inventTrans
+        #                        where inventTrans.StatusIssue == StatusIssue::ReservPhysical
+        #                        join RecId, ReferenceId, ReferenceCategory from  inventTransOrigin
+        #                            where inventTransOrigin.RecId             == inventTrans.InventTransOrigin
+        #                               && inventTransOrigin.ReferenceId       == salesTable.SalesId
+        #                               && inventTransOrigin.ReferenceCategory == InventTransType::Sales;
+        #                    if (inventTrans.RecId)
+        #                    {
+        #                        return true;
+        #                    }
+        #                    else
+        #                    {
+        #                        return false;
+        #                    }
+        #                }
+        #                else
+        #                {   // Do not submit if order is in the future and none of the flags are set to
+        #                    // submit
+        #                    return false;
+        #                }
+        #            }
+        #        }
+        #        else
+        #        {
+        #            // order not in future so submit payments
+        #            return true;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        // future order processing is not on so submit payments
+        #        return true;
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

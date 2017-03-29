@@ -1,0 +1,3731 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #MCRCustPaymTable
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #MCRCustPaymTable
+      Label               #@SYS10719
+      TitleField1         #TenderTypeId
+      TitleField2         #CustPaymType
+      ConfigurationKey    #MCRPayment
+      SecurityKey         #CustTables
+      CacheLookup         #NotInTTS
+      CreateRecIdIndex    #Yes
+      TableGroup          #Transaction
+      PrimaryIndex        #RecId
+      ClusterIndex        #Key
+      ModifiedDateTime    #Yes
+      DEL_modifiedTime    #Yes
+      ModifiedBy          #Yes
+      ModifiedTransactionId #Yes
+      CreatedDateTime     #Yes
+      DEL_createdTime     #Yes
+      CreatedBy           #Yes
+      CreatedTransactionId #Yes
+      DeveloperDocumentation  #@SYS10719
+      EntityRelationshipType  #Relationship
+      Origin              #{696CC33F-6D50-4FC4-9B9D-FCCA36FC7AB4}
+      LegacyId            #30030
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Amount
+        REAL
+        PROPERTIES
+          Name                #Amount
+          Label               #@SYS1943
+          HelpText            #@MCR24236
+          Table               #MCRCustPaymTable
+          Origin              #{36C92090-28FE-4673-BA44-B7A80400E3F4}
+          LegacyId            #30003
+          ExtendedDataType    #AmountCur
+        ENDPROPERTIES
+        
+      FIELD #CardTypeId
+        STRING
+        PROPERTIES
+          Name                #CardTypeId
+          HelpText            #@SYS101307
+          Table               #MCRCustPaymTable
+          IgnoreEDTRelation   #Yes
+          Origin              #{E2243F9E-E12B-4820-82A8-FEA53110C501}
+          ExtendedDataType    #RetailStoreCardTypeId
+        ENDPROPERTIES
+        
+      FIELD #Channel
+        INT64
+        PROPERTIES
+          Name                #Channel
+          Mandatory           #Yes
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Visible             #No
+          Table               #MCRCustPaymTable
+          Origin              #{34C27F4E-E6B5-4D86-9C60-97CC2AFD3725}
+          ExtendedDataType    #RetailChannelRecId
+        ENDPROPERTIES
+        
+      FIELD #CheckAuthorized
+        ENUM
+        PROPERTIES
+          Name                #CheckAuthorized
+          Label               #@MCR25035
+          HelpText            #@MCR25036
+          Table               #MCRCustPaymTable
+          Origin              #{89D28830-4A42-4A8B-A508-B53A2CB4753D}
+          LegacyId            #30025
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #CheckNumber
+        STRING
+        PROPERTIES
+          Name                #CheckNumber
+          Table               #MCRCustPaymTable
+          Origin              #{AD8EF20B-6C48-4ABE-A18F-B171DA2FFF2C}
+          LegacyId            #30011
+          ExtendedDataType    #MCRCheckNumber
+        ENDPROPERTIES
+        
+      FIELD #CurrencyCode
+        STRING
+        PROPERTIES
+          Name                #CurrencyCode
+          HelpText            #@SYS24068
+          Table               #MCRCustPaymTable
+          Origin              #{C2831015-61BD-4003-90E3-067C635711F3}
+          LegacyId            #30024
+          ExtendedDataType    #CustCurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #CustAccount
+        STRING
+        PROPERTIES
+          Name                #CustAccount
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #MCRCustPaymTable
+          Origin              #{03B625A9-3AD2-4B4B-BA50-EFB62B7382E9}
+          LegacyId            #30017
+          ExtendedDataType    #CustAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #CustPaymType
+        ENUM
+        PROPERTIES
+          Name                #CustPaymType
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #MCRCustPaymTable
+          Origin              #{F91D822E-42FC-4DD1-9642-78F03565710A}
+          LegacyId            #30013
+          EnumType            #MCRCustPaymType
+        ENDPROPERTIES
+        
+      FIELD #isPlanRefund
+        ENUM
+        PROPERTIES
+          Name                #isPlanRefund
+          Label               #@MCR30649
+          HelpText            #@MCR30650
+          Table               #MCRCustPaymTable
+          Origin              #{DE089244-2F33-4F7C-BB9D-ABD9E6BA8BF1}
+          LegacyId            #30037
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #IsPrepay
+        ENUM
+        PROPERTIES
+          Name                #IsPrepay
+          Table               #MCRCustPaymTable
+          Origin              #{EAB4D435-A246-4405-A307-AE15B37E5F2E}
+          LegacyId            #30016
+          ExtendedDataType    #MCRIsPrePay
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #LineNum
+        REAL
+        PROPERTIES
+          Name                #LineNum
+          Table               #MCRCustPaymTable
+          Origin              #{98965EDF-B236-4270-9B53-BAACAF71A797}
+          LegacyId            #30012
+          ExtendedDataType    #LineNum
+        ENDPROPERTIES
+        
+      FIELD #NumAuthRetry
+        INT
+        PROPERTIES
+          Name                #NumAuthRetry
+          Table               #MCRCustPaymTable
+          Origin              #{47C9F0B2-9E4A-4B88-9F38-1A94CB494C44}
+          ExtendedDataType    #MCRCCNumAuthRetries
+        ENDPROPERTIES
+        
+      FIELD #OnAccountAuthorized
+        ENUM
+        PROPERTIES
+          Name                #OnAccountAuthorized
+          Label               #@MCR25047
+          HelpText            #@MCR25048
+          Table               #MCRCustPaymTable
+          Origin              #{31F33AC8-875F-44CA-AF84-51E0A2066D2C}
+          LegacyId            #30026
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #OrigRefundRecID
+        INT64
+        PROPERTIES
+          Name                #OrigRefundRecID
+          Label               #@MCR39869
+          HelpText            #@MCR39870
+          Table               #MCRCustPaymTable
+          Origin              #{C0980E87-91D3-4AAF-817A-8DA74526AC94}
+          ExtendedDataType    #MCRCustPaymTableRefRecId
+        ENDPROPERTIES
+        
+      FIELD #PaymInfoRecId
+        INT64
+        PROPERTIES
+          Name                #PaymInfoRecId
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #MCRCustPaymTable
+          Origin              #{4BD2AC7A-ECA2-4196-93B8-7018F2C3D1F2}
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #PaymInfoTableId
+        INT
+        PROPERTIES
+          Name                #PaymInfoTableId
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Visible             #No
+          Table               #MCRCustPaymTable
+          Origin              #{002B6F6E-62C1-4540-9376-2D00D3662A49}
+          ExtendedDataType    #RefTableId
+        ENDPROPERTIES
+        
+      FIELD #PaymSchedID
+        STRING
+        PROPERTIES
+          Name                #PaymSchedID
+          Visible             #No
+          Table               #MCRCustPaymTable
+          Origin              #{67CDB602-AF55-4235-9B01-D846858C55C4}
+          LegacyId            #30021
+          ExtendedDataType    #PaymSchedId
+          StringSize          #30
+        ENDPROPERTIES
+        
+      FIELD #PercentAmount
+        REAL
+        PROPERTIES
+          Name                #PercentAmount
+          Label               #@MCR10571
+          HelpText            #@MCR10572
+          Table               #MCRCustPaymTable
+          Origin              #{4D19442A-2DE2-4212-B418-71E8A8C1ADE1}
+          LegacyId            #30002
+          ExtendedDataType    #Percent
+        ENDPROPERTIES
+        
+      FIELD #PostedAmount
+        REAL
+        PROPERTIES
+          Name                #PostedAmount
+          Label               #@MCR10574
+          HelpText            #@MCR30447
+          Table               #MCRCustPaymTable
+          Origin              #{9FC06AD6-D9E4-4779-B1FA-E41B4F75D166}
+          LegacyId            #30035
+          ExtendedDataType    #AmountCur
+        ENDPROPERTIES
+        
+      FIELD #RefRecId
+        INT64
+        PROPERTIES
+          Name                #RefRecId
+          Label               #@SYS3676
+          Mandatory           #Yes
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #MCRCustPaymTable
+          Origin              #{003C81C6-C175-42EF-81E1-774C097967FB}
+          LegacyId            #30022
+          ExtendedDataType    #MCRRelatedTableRefRecId
+        ENDPROPERTIES
+        
+      FIELD #RefTableId
+        INT
+        PROPERTIES
+          Name                #RefTableId
+          Label               #@SYS22596
+          Mandatory           #Yes
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #MCRCustPaymTable
+          Origin              #{9027A9F2-C7E7-4B8C-AB33-69787A59ADE4}
+          LegacyId            #30001
+          ExtendedDataType    #RefTableId
+        ENDPROPERTIES
+        
+      FIELD #Status
+        ENUM
+        PROPERTIES
+          Name                #Status
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #MCRCustPaymTable
+          Origin              #{0013CE6B-822C-49CD-8661-4D161BB9FDC6}
+          LegacyId            #30005
+          EnumType            #MCRCustPaymStatus
+        ENDPROPERTIES
+        
+      FIELD #TenderTypeId
+        STRING
+        PROPERTIES
+          Name                #TenderTypeId
+          HelpText            #@SYS84040
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #MCRCustPaymTable
+          IgnoreEDTRelation   #Yes
+          Origin              #{E0978AB8-23FA-4137-A033-3243BCF6FA1D}
+          ExtendedDataType    #MCRRetailStoreTenderTypeId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #RefTableId
+          #PercentAmount
+          #Amount
+          #Status
+          #CheckNumber
+          #LineNum
+          #CustPaymType
+          #IsPrepay
+          #CustAccount
+          #PaymSchedID
+          #RefRecId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Authorization
+        PROPERTIES
+          Name                #Authorization
+          Label               #@SYS76375
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Status
+          #NumAuthRetry
+          #OnAccountAuthorized
+          #CheckAuthorized
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #CreditCardGroup
+        PROPERTIES
+          Name                #CreditCardGroup
+          Label               #@SYS101746
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TenderTypeId
+          #displayName
+          #CardTypeId
+          #displayCCNumMasked
+          #displayExpiryDate
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS53631
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TenderTypeId
+          #displayName
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Main
+        PROPERTIES
+          Name                #Main
+          Label               #@SYS14234
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TenderTypeId
+          #displayName
+          #PercentAmount
+          #Amount
+          #Status
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #MCRInstallments
+        PROPERTIES
+          Name                #MCRInstallments
+          Label               #@MCR30647
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #isPlanRefund
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Payment
+        PROPERTIES
+          Name                #Payment
+          Label               #@SYS55132
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #RefTableId
+          #PercentAmount
+          #Amount
+          #Status
+          #CheckNumber
+          #LineNum
+          #CustPaymType
+          #IsPrepay
+          #CustAccount
+          #PaymSchedID
+          #RefRecId
+          #CurrencyCode
+          #CheckAuthorized
+          #OnAccountAuthorized
+          #PostedAmount
+          #OrigRefundRecID
+          #PaymInfoRecId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #Key
+      PROPERTIES
+        Name                #Key
+        Origin              #{6F1412FA-1B77-49FC-9D1F-116DF19C5BDA}
+        LegacyId            #30001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #RefTableId
+        #RefRecId
+        #CustPaymType
+        #Status
+      ENDINDEXFIELDS
+      
+      #CustIndex
+      PROPERTIES
+        Name                #CustIndex
+        Origin              #{8C64E7DB-47B3-483C-ABF3-C615F4AA31A6}
+        LegacyId            #30002
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CustAccount
+      ENDINDEXFIELDS
+      
+      #PaymInfoIdx
+      PROPERTIES
+        Name                #PaymInfoIdx
+        Origin              #{BEA75AE8-F2C1-4C2E-8F1C-D5B0FA2A7E44}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #PaymInfoTableId
+        #PaymInfoRecId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardCust
+        PROPERTIES
+          Name                #CreditCardCust
+          Table               #CreditCardCust
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #PaymInfoTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #PaymInfoRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CurrencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CustCurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustInvoiceTable
+        PROPERTIES
+          Name                #CustInvoiceTable
+          Table               #CustInvoiceTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustPaymSchedLine
+        PROPERTIES
+          Name                #CustPaymSchedLine
+          Table               #CustPaymSchedLine
+          Validate            #No
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustTable
+        PROPERTIES
+          Name                #CustTable
+          Table               #CustTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #AccountNum
+            SourceEDT           #CustAccount
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #InvoiceAccount
+        PROPERTIES
+          Name                #InvoiceAccount
+          Table               #SalesTable
+          Validate            #No
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #InvoiceAccount
+          Role                #MCRCustPaymTable
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #InvoiceAccount
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #LedgerJournalTrans
+        PROPERTIES
+          Name                #LedgerJournalTrans
+          Table               #LedgerJournalTrans
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE EXTERNFIXED
+          PROPERTIES
+            Value               #1
+            Table               #LedgerJournalTrans
+            RelatedField        #AccountType
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRContinuityCustHeader
+        PROPERTIES
+          Name                #MCRContinuityCustHeader
+          Table               #MCRContinuityCustHeader
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRCustCreditTable
+        PROPERTIES
+          Name                #MCRCustCreditTable
+          Table               #MCRCustCreditTable
+          Validate            #No
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustAccount
+            RelatedField        #CustAccount
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRCustPaymTable_OrigRefund
+        PROPERTIES
+          Name                #MCRCustPaymTable_OrigRefund
+          Table               #MCRCustPaymTable
+          Validate            #No
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #MCRCustPaymTable_OrigRefund
+          Role                #MCRCustPaymTable_OrigRefund
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #OrigRefundRecID
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRInstallmentPlanSalesTable
+        PROPERTIES
+          Name                #MCRInstallmentPlanSalesTable
+          Table               #MCRInstallmentPlanSalesTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #RefRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #PaymSched
+        PROPERTIES
+          Name                #PaymSched
+          Table               #PaymSched
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #PaymSchedID
+            RelatedField        #Name
+            SourceEDT           #PaymSchedId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailChannelTable
+        PROPERTIES
+          Name                #RetailChannelTable
+          Table               #RetailChannelTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #RetailChannelTable
+          Role                #RetailChannelTable
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE EXTERNFIXED
+          PROPERTIES
+            Value               #4
+            Table               #RetailChannelTable
+            RelatedField        #ChannelType
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #Channel
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailGiftCardTable
+        PROPERTIES
+          Name                #RetailGiftCardTable
+          Table               #RetailGiftCardTable
+          Validate            #No
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #PaymInfoRecId
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #PaymInfoTableId
+            RelatedField        #TableId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailStoreTenderTypeCardTable
+        PROPERTIES
+          Name                #RetailStoreTenderTypeCardTable
+          Table               #RetailStoreTenderTypeCardTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CardTypeId
+            RelatedField        #cardTypeId
+          ENDPROPERTIES
+          
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #TenderTypeId
+            RelatedField        #tenderTypeId
+          ENDPROPERTIES
+          
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #Channel
+            RelatedField        #Channel
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailStoreTenderTypeTable
+        PROPERTIES
+          Name                #RetailStoreTenderTypeTable
+          Table               #RetailStoreTenderTypeTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #TenderTypeId
+            RelatedField        #tenderTypeId
+          ENDPROPERTIES
+          
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #Channel
+            RelatedField        #Channel
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #MCRContinuityPayment(MCRCustPaymTableRecId)
+      PROPERTIES
+        Table               #MCRContinuityPayment
+        DeleteAction        #Restricted
+        Relation            #MCRCustPaymTableRecId
+      ENDPROPERTIES
+      
+      #MCRCustCreditTable(MCRCustPaymTableApplied)
+      PROPERTIES
+        Table               #MCRCustCreditTable
+        DeleteAction        #Restricted
+        Relation            #MCRCustPaymTableApplied
+      ENDPROPERTIES
+      
+      #MCRCustCreditTable(MCRCustPaymTableOrig)
+      PROPERTIES
+        Table               #MCRCustCreditTable
+        DeleteAction        #Restricted
+        Relation            #MCRCustPaymTableOrig
+      ENDPROPERTIES
+      
+      #MCRCustPaymEvent(MCRCustPaymTable)
+      PROPERTIES
+        Table               #MCRCustPaymEvent
+        DeleteAction        #Cascade
+        Relation            #MCRCustPaymTable
+      ENDPROPERTIES
+      
+      #MCRInstallmentPayment(MCRCustPaymTable)
+      PROPERTIES
+        Table               #MCRInstallmentPayment
+        DeleteAction        #Restricted
+        Relation            #MCRCustPaymTable
+      ENDPROPERTIES
+      
+      #MCRRCAuthTable(MCRCustPaymTable)
+      PROPERTIES
+        Table               #MCRRCAuthTable
+        DeleteAction        #Cascade
+        Relation            #MCRCustPaymTable
+      ENDPROPERTIES
+      
+      #MCRRCSettlementTable(MCRCustPaymTable)
+      PROPERTIES
+        Table               #MCRRCSettlementTable
+        DeleteAction        #Cascade
+        Relation            #MCRCustPaymTable
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #adjustExistingRefundCheck
+        #/// <summary>
+        #///     Supports consolidating refund check payments
+        #///         for a specific sales order that has
+        #///         not yet been printed/posted.
+        #/// </summary>
+        #/// <param name="_adjustedAmount">
+        #///     The adjusted amount that is summed with this.Amount.
+        #/// </param>
+        #/// <remarks>
+        #///     Pre Condition:  Caller has already determined this is
+        #///         an open refund check (use MCRCustPaymTable::findOpenRefChk()).
+        #///
+        #///     This logic is based off the RC settlement table.
+        #///         Multiple settlement records get created for a single
+        #///         SO refund check (RC) payment.  The first record
+        #///         gets created when the payment is submitted for auth.
+        #///         This record acts as kind of header record for the
+        #///         RC settlement records that are created later in the
+        #///         process.  It points to the auth table so you can see
+        #///         who authorized it and also tracks the amount for which
+        #///         a refund check transaction has not yet been created.
+        #///         The subsequent settlement records created are for the
+        #///         payments generated for the refund check transactions
+        #///         that get generated as you invoice product (if its not
+        #///         a pre-pay).  In other words, when the system posts
+        #///         againts the RC customer payment the new settlement
+        #///         records are created (for prepay this happens when
+        #///         the payment is submitted for auth).
+        #/// </remarks>
+        #private void adjustExistingRefundCheck(AmountCur    _adjustedAmount)
+        #{
+        #    MCRRCSettlementTable            mcrSettlementTable;
+        #    LedgerJournalTrans              ledgerJournalTrans;
+        #
+        #    AssetDepBookTableDerivedJour    assetDepBookTableDerivedJour;
+        #    LedgerJournalTransAccrual       ledgerJournalTransAccrual;
+        #    CustVendPaymJournalFee          custVendPaymJournalFee;
+        #    TaxWorkRegulation               taxWorkRegulation;
+        #    CustVendCreditInvoicingTable    custVendCreditInvoicingTable;
+        #
+        #    ttsbegin;
+        #
+        #    // get settlement record that corresponds to the approved posted amount of the RC
+        #    select firstonly RecId, LedgerJournalTransRecId from mcrSettlementTable
+        #        where mcrSettlementTable.mcrCustPaymTableRecID  == this.RecId
+        #            && mcrSettlementTable.mcrrcSettlementStatus == MCRRCSettlementStatus::InProcess;
+        #
+        #    select forupdate ledgerJournalTrans
+        #        where ledgerJournalTrans.RecId == mcrSettlementTable.LedgerJournalTransRecId;
+        #
+        #    // Delete child record of the ledgerJournalTrans record before deleting parent.
+        #    // *note: Be sure to do a 'doDelete' for the ledger trans cause one of the delete actions
+        #    // on the ledger trans deletes the customer payment record and it needs to stay.
+        #    if(ledgerJournalTrans)
+        #    {
+        #        delete_from assetDepBookTableDerivedJour
+        #            where assetDepBookTableDerivedJour.RefRecId == ledgerJournalTrans.RecId;
+        #
+        #        delete_from ledgerJournalTransAccrual
+        #            where ledgerJournalTransAccrual.RefRecid == ledgerJournalTrans.RecId
+        #                && ledgerJournalTransAccrual.RefTableid == ledgerJournalTrans.TableId;
+        #
+        #        delete_from custVendPaymJournalFee
+        #            where custVendPaymJournalFee.RefRecId == ledgerJournalTrans.RecId;
+        #
+        #        delete_from taxWorkRegulation
+        #            where taxWorkRegulation.HeadingRecId == ledgerJournalTrans.RecId
+        #                && taxWorkRegulation.HeadingTableId == ledgerJournalTrans.TableId;
+        #
+        #        delete_from custVendCreditInvoicingTable
+        #            where custVendCreditInvoicingTable.RefRecId == ledgerJournalTrans.RecId
+        #                && custVendCreditInvoicingTable.RefTableId == ledgerJournalTrans.TableId;
+        #
+        #        ledgerJournalTrans.doDelete();
+        #    }
+        #
+        #    delete_from mcrSettlementTable where mcrSettlementTable.mcrCustPaymTableRecID == this.RecId;
+        #
+        #    this.selectForUpdate(true);
+        #    this.reread();
+        #
+        #    if (_adjustedAmount)
+        #        this.Amount += _adjustedAmount;
+        #
+        #    this.PostedAmount = 0;
+        #    this.Status = MCRCustPaymStatus::NotSubmitted;
+        #
+        #    if (this.validateWrite())
+        #    {
+        #        this.doUpdate();
+        #    }
+        #    else
+        #    {
+        #        throw error("@SYS21628");
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #allowSpecialDelete
+        #/// <summary>
+        #///     Allows deletion for special cases.
+        #/// </summary>
+        #/// <returns>
+        #///     true if refund check and a return order allow cancelling; otherwise false.
+        #/// </returns>
+        #public boolean allowSpecialDelete()
+        #{
+        #    SalesTable  salesTable;
+        #    boolean     ret = false;
+        #
+        #    // Do not select subset of fields, returnItem()
+        #    //  constructs a SalesType class object which needs the buffer
+        #    select firstonly salesTable
+        #        where salesTable.TableId == this.RefTableId
+        #        && salesTable.RecId == this.RefRecId;
+        #
+        #    // If refund check and a return order allow cancelling.
+        #    if(this.CustPaymType == MCRCustPaymType::RefundCheck
+        #        && salesTable.returnItem()
+        #        && salesTable.ReturnStatus != ReturnStatusHeader::Canceled
+        #        && salesTable.ReturnStatus != ReturnStatusHeader::Closed)
+        #    {
+        #        if(this.Status == MCRCustPaymStatus::Declined
+        #            || this.Status == MCRCustPaymStatus::Authorized)
+        #        {
+        #            ret = true;
+        #        }
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #checkAllowPaymentByPolicies
+        #/// <summary>
+        #/// Checks whether the payment records meets Gift card policy.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #/// Boolean flag used to determine whether to show error messages; optional.
+        #/// </param>
+        #/// <returns>
+        #/// True if the payment meets Gift card policy for used Gift card; otherwise false.
+        #/// </returns>
+        #public boolean checkAllowPaymentByPolicies(boolean _showErrors = true)
+        #{
+        #    boolean enabled = true;
+        #
+        #    RetailGiftCardTable retailGiftCardTable;
+        #
+        #    if (!RetailParameters::find().UseGiftCardPolicies)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    if (this.PaymInfoTableId == tableNum(RetailGiftCardTable)
+        #        && this.PaymInfoRecId)
+        #    {
+        #        retailGiftCardTable = RetailGiftCardTable::mcrFindRecId(this.PaymInfoRecId);
+        #
+        #        if (retailGiftCardTable)
+        #        {
+        #            enabled = retailGiftCardTable.checkPolicy(this.Amount < 0 ?
+        #                                                        RetailGiftCardOperation::Refund :
+        #                                                        RetailGiftCardOperation::Redeem,
+        #                                                      this.Amount,
+        #                                                      _showErrors);
+        #        }
+        #    }
+        #    return enabled;
+        #}
+      ENDSOURCE
+      SOURCE #clearPaymTypeFields
+        #/// <summary>
+        #///     Clears the values of all fields that are used only for specific payment
+        #///     types.
+        #/// </summary>
+        #/// <remarks>
+        #///     This method is intended to be invoked whenever the payment type changes,
+        #///     so that unused fields are cleared.  This is particularly important for
+        #///     fields such as the credit card security code, which should not be stored
+        #///     permanently in the database.
+        #/// </remarks>
+        #private void clearPaymTypeFields()
+        #{
+        #    // credit card fields
+        #    this.PaymInfoRecId = 0;
+        #    this.PaymInfoTableId = 0;
+        #
+        #    // check fields
+        #    this.CheckNumber = "";
+        #}
+      ENDSOURCE
+      SOURCE #custInvoiceTable
+        #/// <summary>
+        #/// Finds the free text invoice by using the specified refRecId field.
+        #/// </summary>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that specifies whether to modify the record.
+        #/// </param>
+        #/// <returns>
+        #/// The related <c>CustInvoiceTable</c> record.
+        #/// </returns>
+        #public CustInvoiceTable custInvoiceTable(boolean _forUpdate = false)
+        #{
+        #    CustInvoiceTable custInvoiceTable;
+        #
+        #    if (this.RefTableId == tableNum(CustInvoiceTable)
+        #        && this.RefRecId)
+        #    {
+        #        custInvoiceTable = CustInvoiceTable::findRecId(this.RefRecId, _forUpdate);
+        #    }
+        #
+        #    return custInvoiceTable;
+        #}
+      ENDSOURCE
+      SOURCE #custTable
+        #/// <summary>
+        #/// Finds the customer by using the records customer field.
+        #/// </summary>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that specifies whether to modify the record.
+        #/// </param>
+        #/// <returns>
+        #/// The customer.
+        #/// </returns>
+        #public CustTable custTable(boolean _forUpdate = false)
+        #{
+        #    CustTable custTable;
+        #
+        #    if (this.CustAccount)
+        #    {
+        #        custTable = CustTable::find(this.CustAccount, _forUpdate);
+        #    }
+        #
+        #    return custTable;
+        #}
+      ENDSOURCE
+      SOURCE #delete
+        #/// <summary>
+        #///     Deletes the current record from the database.
+        #/// </summary>
+        #public void delete()
+        #{
+        #    //Write an event to track the delete of the payment.
+        #    MCRCustPaymEvent::insertPaymEventDelete(this);
+        #
+        #    super();
+        #
+        #}
+      ENDSOURCE
+      SOURCE #displayCCNumMasked
+        #/// <summary>
+        #/// Displays related credit card number in masked format.
+        #/// </summary>
+        #/// <returns>
+        #/// Credit card number in masked format.
+        #/// </returns>
+        #display public CreditCardNumber displayCCNumMasked()
+        #{
+        #    CreditCardNumber creditCardNumber;
+        #
+        #    if (this.PaymInfoRecId)
+        #    {
+        #        creditCardNumber = CreditCard::creditCardNumber(this.PaymInfoRecId);
+        #
+        #        return (strRep('*', 12) + creditCardNumber);
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #displayDetailedStatus
+        #/// <summary>
+        #///     Describes the status of an individual payment.
+        #/// </summary>
+        #/// <returns>
+        #///     The <c>MCRCustPaymDetailedStatus</c> retrieved by the static method getDetialedStatus.
+        #/// </returns>
+        #public display MCRCustPaymDetailedStatus displayDetailedStatus()
+        #{
+        #    return MCRPaymDetailedStatus::getDetailedStatus(this);
+        #}
+      ENDSOURCE
+      SOURCE #displayExpiryDate
+        #/// <summary>
+        #/// Displays related credit card expiry date.
+        #/// </summary>
+        #/// <returns>
+        #/// Credit card expiry date.
+        #/// </returns>
+        #display public CreditCardExpiryDate displayExpiryDate()
+        #{
+        #    if (this.PaymInfoRecId)
+        #    {
+        #        return CreditCard::expiryDate(this.PaymInfoRecId);
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #displayGiftCardAvailableBalance
+        #/// <summary>
+        #/// Displays the gift card available balance.
+        #/// </summary>
+        #/// <returns>
+        #/// The gift card available balance.
+        #/// </returns>
+        #public display RetailBalance displayGiftCardAvailableBalance()
+        #{
+        #    return this.getGiftCardAvailableBalance();
+        #}
+      ENDSOURCE
+      SOURCE #displayGiftCardPolicyDescription
+        #/// <summary>
+        #/// Shows policy for a gift card.
+        #/// </summary>
+        #/// <returns>
+        #/// Multiline string that descibes policy of gift card if this payment uses Gift card payment method.
+        #/// </returns>
+        #public display RetailGiftCardPolicies displayGiftCardPolicyDescription()
+        #{
+        #    RetailGiftCardTable retailGiftCardTable;
+        #
+        #    if (this.PaymInfoTableId == tableNum(RetailGiftCardTable)
+        #        && this.PaymInfoRecId)
+        #    {
+        #        retailGiftCardTable = RetailGiftCardTable::mcrFindRecId(this.PaymInfoRecId);
+        #        if (retailGiftCardTable)
+        #        {
+        #            return retailGiftCardTable.policyDescription();
+        #        }
+        #    }
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #displayName
+        #/// <summary>
+        #/// Displays the name of the payment.
+        #/// </summary>
+        #/// <returns>
+        #/// Name of the payment.
+        #/// </returns>
+        #display public RetailTenderTypeName displayName()
+        #{
+        #    if (this.Channel
+        #        && this.TenderTypeId)
+        #    {
+        #        return RetailStoreTenderTypeTable::find(this.Channel, this.TenderTypeId).Name;
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #displayOrderID
+        #/// <summary>
+        #///     Retrieves the order ID for this payment.
+        #/// </summary>
+        #/// <returns>
+        #///     The order ID for this payment.
+        #/// </returns>
+        #/// <remarks>
+        #///     The "order ID" is the unique ID
+        #///     for the entity with which this payment is associated (for example, the
+        #///     "sales ID" for a sales order/payment schedule/continuity order or the
+        #///     "invoice ID" for a free-text invoice).
+        #/// </remarks>
+        #public display Num displayOrderID()
+        #{
+        #    MCRCustPaymTotals mcrCustPaymTotals =
+        #        MCRCustPaymTotals::construct(this.RefTableId, this.RefRecId);
+        #
+        #    Num result = "";
+        #
+        #    if (mcrCustPaymTotals)
+        #    {
+        #        result = mcrCustPaymTotals.getOrderID();
+        #    }
+        #
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #displaySalesId
+        #/// <summary>
+        #///     Retrieves the sales ID for this payment.
+        #/// </summary>
+        #/// <returns>
+        #///     The sales ID for this payment.
+        #/// </returns>
+        #public display SalesId displaySalesId()
+        #{
+        #    SalesTable              salesTable;
+        #    CustPaymSchedLine       custPaymSchedLine;
+        #    CustPaymSched           custPaymSched;
+        #
+        #    if (this.RefTableId == tableNum(SalesTable))
+        #    {
+        #        salesTable = SalesTable::findRecId(this.RefRecId);
+        #
+        #        return salesTable.SalesId;
+        #    }
+        #    else if (this.RefTableId == tableNum(CustPaymSchedLine))
+        #    {
+        #        select firstonly SalesId from salesTable
+        #            exists join custPaymSched
+        #            where custPaymSched.ExtRecId == salesTable.RecId
+        #            exists join custPaymSchedLine
+        #            where custPaymSchedLine.TableId         == this.RefTableId
+        #                && custPaymSchedLine.RecId          == this.RefRecId
+        #                && custPaymSchedLine.ParentRecID    == custPaymSched.RecId;
+        #        if (salesTable.SalesId)
+        #        {
+        #            return salesTable.SalesId;
+        #        }
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #editCreditCard
+        #/// <summary>
+        #/// Sets or returns the credit card number associated to the
+        #///     current payment.
+        #/// </summary>
+        #/// <param name="_set">
+        #/// A <c>Boolean</c> used to determine if this method is
+        #///     displaying or modifying the credit card number.
+        #/// </param>
+        #/// <param name="_creditCardNumber">
+        #/// RecId of the selected or displayed <c>CreditCardCust</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// The last four digits of the related credit card.
+        #/// </returns>
+        #[SysClientCacheDataMethodAttribute(true)]
+        #client server edit CreditCardNumber editCreditCard(boolean _set, CreditCardNumber _creditCardNumber)
+        #{
+        #    RecId recId = str2int64(strRTrim(strLTrim(_creditCardNumber)));
+        #    CreditCardNumber creditCardNumber;
+        #    CreditCardCust creditCardCust;
+        #
+        #    if (_set)
+        #    {
+        #        if (recId)
+        #        {
+        #            creditCardCust = CreditCardCust::find(recId);
+        #            if (creditCardCust.RecId && this.CustAccount == creditCardCust.CustAccount)
+        #            {
+        #                this.PaymInfoRecId = creditCardCust.RecId;
+        #                this.PaymInfoTableId = creditCardCust.TableId;
+        #                creditCardNumber = CreditCard::creditCardNumber(creditCardCust.RecId);
+        #            }
+        #            else
+        #            {
+        #                this.PaymInfoRecId = 0;
+        #                this.PaymInfoTableId = 0;
+        #            }
+        #        }
+        #        else
+        #        {
+        #            this.PaymInfoRecId = 0;
+        #            this.PaymInfoTableId = 0;
+        #        }
+        #
+        #        return (strRep('*', 12) + creditCardNumber);
+        #    }
+        #
+        #
+        #    // Double check to make sure the record hasn't been deleted
+        #    if (this.PaymInfoRecId
+        #        && CreditCardCust::exist(this.PaymInfoRecId))
+        #    {
+        #        creditCardNumber = CreditCard::creditCardNumber(this.PaymInfoRecId);
+        #    }
+        #    else
+        #    {
+        #        creditCardNumber = '';
+        #        this.PaymInfoRecId = 0;
+        #        this.PaymInfoTableId = 0;
+        #    }
+        #
+        #    if (creditCardNumber)
+        #    {
+        #        return (strRep('*', 12) + creditCardNumber);
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #editRetailGiftCardId
+        #/// <summary>
+        #/// Sets or returns the gift card Id associated to the
+        #///     current payment.
+        #/// </summary>
+        #/// <param name="_set">
+        #/// A <c>Boolean</c> used to determine if this method is
+        #///     displaying or modifying the gift card Id.
+        #/// </param>
+        #/// <param name="_retailGiftCardId">
+        #/// RetailGiftCardId of the selected or displayed <c>RetailGiftCardTable</c> record.
+        #/// </param>
+        #/// <returns>
+        #/// The last four digits of the related gift card Id.
+        #/// </returns>
+        #public edit RetailGiftCardId editRetailGiftCardId(boolean _set, RetailGiftCardId _retailGiftCardId)
+        #{
+        #    RetailGiftCardTable retailGiftCardTable;
+        #
+        #    if (_set)
+        #    {
+        #        retailGiftCardTable = RetailGiftCardTable::findCrossCompany(_retailGiftCardId, conNull());
+        #        //Gift card must exist.
+        #        if (!retailGiftCardTable)
+        #        {
+        #            error(strFmt("@MCR11010", _retailGiftCardId));
+        #            this.PaymInfoRecId = 0;
+        #            this.PaymInfoTableId = 0;
+        #        }
+        #        else
+        #        {
+        #            this.PaymInfoRecId = retailGiftCardTable.RecId;
+        #            this.PaymInfoTableId = retailGiftCardTable.TableId;
+        #        }
+        #    }
+        #    if (this.PaymInfoRecId
+        #        && this.PaymInfoTableId == tableNum(RetailGiftCardTable))
+        #    {
+        #        return this.getGiftCardNumberMasked();
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #function
+        #/// <summary>
+        #/// Returns the current records function.
+        #/// </summary>
+        #/// <returns>
+        #/// Current records function.
+        #/// </returns>
+        #/// <remarks>
+        #/// If current record does not have required information,
+        #///     the default of on account is returned.
+        #/// </remarks>
+        #public RetailTenderFunction function()
+        #{
+        #    if (this.Channel
+        #        && this.TenderTypeId)
+        #    {
+        #        return RetailStoreTenderTypeTable::find(this.Channel, this.TenderTypeId).Function;
+        #    }
+        #    // If no values are set return default of on account
+        #    return RetailTenderFunction::Customer;
+        #}
+      ENDSOURCE
+      SOURCE #getCCNumMasked
+        #/// <summary>
+        #///     Returns the CCNum with all but the last 4
+        #///     digits masked (replaced with asterisks).
+        #/// </summary>
+        #/// <returns>
+        #///     The masked credit card number, only displaying the last four digits.
+        #/// </returns>
+        #public display CreditCardNumber getCCNumMasked()
+        #{
+        #    CreditCardCust creditCardCust;
+        #
+        #    if (this.PaymInfoTableId == tableNum(CreditCardCust)
+        #        && this.PaymInfoRecId)
+        #    {
+        #        creditCardCust = CreditCardCust::find(this.PaymInfoRecId);
+        #        if (creditCardCust)
+        #        {
+        #            return creditCardCust.CardNumber;
+        #        }
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #getCurrency
+        #/// <summary>
+        #///     Retrieves the currency from the record with which this payment is
+        #///     associated (such as a sales order or free-text invoice).
+        #/// </summary>
+        #/// <returns>
+        #///     The currency for this payment.
+        #/// </returns>
+        #public display CurrencyCode getCurrency()
+        #{
+        #    MCRCustPaymTotals mcrCustPaymTotals =
+        #        MCRCustPaymTotals::construct(this.RefTableId, this.RefRecId);
+        #
+        #    CurrencyCode result = "";
+        #
+        #    if (mcrCustPaymTotals)
+        #    {
+        #        result = mcrCustPaymTotals.getCurrency();
+        #    }
+        #
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #getDimension
+        #/// <summary>
+        #///     Retrieves the dimensionfield from the record with which this payment
+        #///     is associated (such as a sales order or free-text invoice).
+        #/// </summary>
+        #/// <returns>
+        #///     The dimensions for this payment.
+        #/// </returns>
+        #public DimensionDefault getDimension()
+        #{
+        #    MCRCustPaymTotals custPaymTotals =
+        #        MCRCustPaymTotals::construct(this.RefTableId, this.RefRecId);
+        #
+        #    DimensionDefault result;
+        #
+        #    if (custPaymTotals)
+        #    {
+        #        result = custPaymTotals.getDimension();
+        #    }
+        #
+        #    return result;
+        #}
+      ENDSOURCE
+      SOURCE #getDueDate
+        #/// <summary>
+        #///     Retrieves the due date of the current records scheduled payment plan.
+        #/// </summary>
+        #/// <returns>
+        #///     The due date of the scheduled payment plan.
+        #/// </returns>
+        #public display DueDate getDueDate()
+        #{
+        #    DueDate            dueDate;
+        #    CustPaymSchedLine  custPaymSchedLine;
+        #    if (this.RefTableId == tableNum(CustPaymSchedLine))
+        #    {
+        #        select firstonly RecId from custPaymSchedLine
+        #            where custPaymSchedLine.RecId  ==  this.RefRecId;
+        #        if (custPaymSchedLine.RecId)
+        #        {
+        #            dueDate = custPaymSchedLine.DueDate;
+        #        }
+        #    }
+        #
+        #    return dueDate;
+        #}
+      ENDSOURCE
+      SOURCE #getGiftCardAvailableBalance
+        #/// <summary>
+        #/// Finds the available gift card balance.
+        #/// </summary>
+        #/// <returns>
+        #/// The available gift card balance.
+        #/// </returns>
+        #public RetailBalance getGiftCardAvailableBalance()
+        #{
+        #    RetailGiftCardTable retailGiftCardTable;
+        #    container giftCardStatus;
+        #
+        #    if (this.PaymInfoTableId == tableNum(RetailGiftCardTable)
+        #        && this.PaymInfoRecId)
+        #    {
+        #        retailGiftCardTable = RetailGiftCardTable::mcrFindRecId(this.PaymInfoRecId);
+        #        giftCardStatus = RetailTransactionService::getGiftCardBalance(retailGiftCardTable.EntryId);
+        #
+        #        if (conPeek(giftCardStatus, 1))
+        #        {
+        #            return conPeek(giftCardStatus, 4);
+        #        }
+        #    }
+        #    return 0;
+        #}
+      ENDSOURCE
+      SOURCE #getGiftCardNumber
+        #/// <summary>
+        #///     Finds and returns the gift card number related to this payment.
+        #/// </summary>
+        #/// <returns>
+        #///     The gift card number.
+        #/// </returns>
+        #public display RetailGiftCardId getGiftCardNumber()
+        #{
+        #    RetailGiftCardTable retailGiftCardTable;
+        #
+        #    if (this.PaymInfoTableId == tableNum(RetailGiftCardTable)
+        #        && this.PaymInfoRecId)
+        #    {
+        #        retailGiftCardTable = RetailGiftCardTable::mcrFindRecId(this.PaymInfoRecId);
+        #        if (retailGiftCardTable)
+        #        {
+        #            return retailGiftCardTable.EntryId;
+        #        }
+        #    }
+        #
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #getGiftCardNumberMasked
+        #/// <summary>
+        #///     Returns the Gift card number with all but the last 4
+        #///     digits masked (replaced with asterisks).
+        #/// </summary>
+        #/// <returns>
+        #///     The masked Gift card number, only displaying the last four digits.
+        #/// </returns>
+        #public display RetailGiftCardId getGiftCardNumberMasked()
+        #{
+        #    RetailGiftCardId retailGiftCardId = this.getGiftCardNumber();
+        #
+        #    if (retailGiftCardId)
+        #    {
+        #        retailGiftCardId = MCRGiftCard::maskCardNum(retailGiftCardId);
+        #    }
+        #
+        #    return retailGiftCardId;
+        #}
+      ENDSOURCE
+      SOURCE #getOrderStatus
+        #/// <summary>
+        #///     Retrieves the order status for the order associated with the payment.
+        #/// </summary>
+        #/// <returns>
+        #///     The order status for the order associated with the payment.
+        #/// </returns>
+        #public display SalesStatus getOrderStatus()
+        #{
+        #    SalesStatus salesStatus;
+        #    SalesTable  salesTable;
+        #
+        #    salesTable = this.salesTable();
+        #    if (salesTable)
+        #    {
+        #        salesStatus = salesTable.SalesStatus;
+        #    }
+        #
+        #    return salesStatus;
+        #}
+      ENDSOURCE
+      SOURCE #getPostedAmount
+        #/// <summary>
+        #///     Displays the payment's posted amount.
+        #/// </summary>
+        #/// <returns>
+        #///     The net payment amount that has been posted.
+        #/// </returns>
+        #/// <remarks>
+        #///     The posted amount is calculated as the sum of posted debits (positive
+        #///     payment amounts) and posted credits (negative payment amounts).
+        #/// </remarks>
+        #display AmountCur getPostedAmount()
+        #{
+        #    return this.PostedAmount;
+        #}
+      ENDSOURCE
+      SOURCE #getUnpostedAmount
+        #/// <summary>
+        #///     Calculates the difference between the total amount and
+        #///     the posted amount.  Due to changes in the total amount after
+        #///     posting, the unposted amount can be larger than the total amount.
+        #/// </summary>
+        #/// <returns>
+        #///     The payment amount that has not been posted, in the payment
+        #///     currency.
+        #/// </returns>
+        #public display AmountCur getUnpostedAmount()
+        #{
+        #    return this.Amount - this.PostedAmount;
+        #}
+      ENDSOURCE
+      SOURCE #initFromRefTrans
+        #/// <summary>
+        #/// Initializes record based on the related transaction.
+        #/// </summary>
+        #public void initFromRefTrans()
+        #{
+        #    LedgerJournalTrans ledgerJournalTrans;
+        #
+        #    if (this.RefRecId
+        #        && this.RefTableId)
+        #    {
+        #        if (this.RefTableId == tableNum(SalesTable))
+        #        {
+        #            this.Channel = SalesTable::findRecId(this.RefRecId).retailSalesTable().RetailChannel;
+        #        }
+        #
+        #        if (!this.Channel)
+        #        {
+        #            this.Channel = MCRChannelUser::find().Channel;
+        #        }
+        #
+        #        // If this is related to a journal line it is being created through
+        #        //      the journal form, force amount to the journal line.
+        #        if (this.RefTableId == tableNum(LedgerJournalTrans))
+        #        {
+        #            ledgerJournalTrans = LedgerJournalTrans::findRecId(this.RefRecId, false);
+        #            this.Amount = ledgerJournalTrans.AmountCurCredit ? ledgerJournalTrans.AmountCurCredit : -ledgerJournalTrans.AmountCurDebit;
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #initValue
+        #public void initValue()
+        #{
+        #    super();
+        #
+        #    // Initialize fields based on related record
+        #    this.initFromRefTrans();
+        #}
+      ENDSOURCE
+      SOURCE #insert
+        #/// <summary>
+        #///     Formats the <c>SalesID</c>, <c>InvoiceID</c>, or Payment Schedule ID on the record.
+        #///     Allows for references to be made between the data without using record ID.
+        #///     Set the currency code on the <c>MCRCustpaymTable</c> during insert.
+        #/// </summary>
+        #public void insert()
+        #{
+        #    CustPaymSchedLine               custPaymSchedLine;
+        #    CustPaymSched                   custPaymSched;
+        #    CustInvoiceTable                custInvoiceTable;
+        #    MCRContinuityCustHeader         mcrContinuityCustHeader;
+        #    LedgerJournalTrans              ledgerJournalTrans;
+        #    MCRInstallmentPlanSalesTable    mcrInstallmentPlanSalesTable;
+        #
+        #    //Format the reference fields with the data if it has not already been passed.
+        #    switch (this.RefTableId)
+        #    {
+        #        case tableNum(SalesTable):
+        #            if( !this.CurrencyCode)
+        #            {
+        #                this.CurrencyCode = this.salesTable().CurrencyCode;
+        #            }
+        #        break;
+        #        case tableNum(CustInvoiceTable):
+        #            custInvoiceTable = CustInvoiceTable::findRecId(this.RefRecId);
+        #            if(!this.CurrencyCode)
+        #            {
+        #                this.CurrencyCode = custInvoiceTable.CurrencyCode;
+        #            }
+        #        break;
+        #        case tableNum(CustPaymSchedLine):
+        #            if (!this.CurrencyCode)
+        #            {
+        #                select RecId from custPaymSchedLine
+        #                    where custPaymSchedLine.TableId == this.RefTableId
+        #                        && custPaymSchedLine.RecId == this.RefRecId
+        #                join Name, RecId, ExtTableId, ExtRecId from custPaymSched
+        #                    where custPaymSchedLine.ParentRecID == custPaymSched.RecId;
+        #                if (custPaymSched.RecId)
+        #                {
+        #                    if (custPaymSched.ExtTableId == tableNum(SalesTable))
+        #                    {
+        #                        this.CurrencyCode   = this.salesTable().CurrencyCode;
+        #                    }
+        #                    else if (custPaymSched.ExtTableId == tableNum(MCRContinuityCustHeader))
+        #                    {
+        #                        mcrContinuityCustHeader    = MCRContinuityCustHeader::findRecId(custPaymSched.ExtRecId);
+        #                        this.CurrencyCode       = SalesTable::find(mcrContinuityCustHeader.SalesId).CurrencyCode;
+        #                    }
+        #                }
+        #            }
+        #            break;
+        #        case tableNum(MCRContinuityCustHeader):
+        #
+        #            if(!this.CurrencyCode)
+        #            {
+        #                this.CurrencyCode=SalesTable::find(mcrContinuityCustHeader.SalesId).CurrencyCode;
+        #            }
+        #        break;
+        #        case tableNum(LedgerJournalTrans):
+        #            ledgerJournalTrans = LedgerJournalTrans::findRecId(this.RefRecId,false);
+        #
+        #            if(!this.CurrencyCode)
+        #            {
+        #                this.CurrencyCode = ledgerJournalTrans.CurrencyCode;
+        #            }
+        #        break;
+        #        case tableNum(LedgerJournalTrans):
+        #            ledgerJournalTrans = LedgerJournalTrans::findRecId(this.RefRecId,false);
+        #
+        #            if(!this.CurrencyCode)
+        #            {
+        #                this.CurrencyCode = ledgerJournalTrans.CurrencyCode;
+        #            }
+        #        break;
+        #        case tableNum(MCRInstallmentPlanSalesTable):
+        #            mcrInstallmentPlanSalesTable = MCRInstallmentPlanSalesTable::findRecId(this.RefRecId);
+        #            if (!this.CurrencyCode
+        #                && mcrInstallmentPlanSalesTable)
+        #            {
+        #                this.CurrencyCode = SalesTable::find(mcrInstallmentPlanSalesTable.SalesId).CurrencyCode;
+        #            }
+        #        break;
+        #    }
+        #
+        #    this.LineNum = MCRCustPaymTable::getNextLineNum(this.RefRecId, this.RefTableId);
+        #
+        #    super();
+        #
+        #    //Write an event to track the add of the payment.
+        #    MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::Created, this);
+        #
+        #    this.recalculateAmounts();
+        #}
+      ENDSOURCE
+      SOURCE #isCancelPaymAllowed
+        #/// <summary>
+        #///     Determines if it is allowable to cancel this payment.
+        #///     No messages are written to the infolog.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     Boolean used to determine whether to show error messages; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if cancelation of payment is allowed; otherwise, false.
+        #/// </returns>
+        #public boolean isCancelPaymAllowed(boolean _showErrors = false)
+        #{
+        #    MCRCustPaym mcrCustPaym;
+        #
+        #    // okay to cancel if this record has not been inserted
+        #    if (!this.CustPaymType)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    mcrCustPaym = MCRCustPaym::construct(this);
+        #    return mcrCustPaym.validateDelete(_showErrors);
+        #}
+      ENDSOURCE
+      SOURCE #isContinuityOrder
+        #/// <summary>
+        #///     Determines if the current record is a continuity order.
+        #/// </summary>
+        #/// <returns>
+        #///     true if the current record is for a continuity order; otherwise, false.
+        #/// </returns>
+        #public boolean isContinuityOrder()
+        #{
+        #    SalesTable      salesTable;
+        #    MCRSalesTable   mcrSalesTable;
+        #
+        #    if (this.RefTableId == tableNum(CustPaymSchedLine)
+        #        || this.RefTableId == tableNum(MCRContinuityCustHeader))
+        #    {
+        #        return true;
+        #    }
+        #    else if (this.RefTableId == tableNum(SalesTable))
+        #    {
+        #        salesTable =  this.salesTable();
+        #        mcrSalesTable = salesTable.mcrSalesTable();
+        #
+        #        if (mcrSalesTable.ContinuityOrder
+        #            && mcrSalesTable.ContinuityLineEval == MCRContinuityLineEval::PayAllNow)
+        #        {
+        #            return true;
+        #        }
+        #        else
+        #        {
+        #            return false;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        return false;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #modifiedField
+        #/// <summary>
+        #///     Updetes the status of the current record based on the passed field.
+        #/// </summary>
+        #/// <param name="_fieldId">
+        #///     The ID of the field that determins what the status should be.
+        #/// </param>
+        #public void modifiedField(FieldId _fieldId)
+        #{
+        #    super(_fieldId);
+        #
+        #    switch (_fieldId)
+        #    {
+        #        case fieldNum(MCRCustPaymTable, TenderTypeId):
+        #        case fieldNum(MCRCustPaymTable, CardTypeId):
+        #            this.CustPaymType = MCRCustPaymTable::getMCRTypeFromTender(this.TenderTypeId,
+        #                                                                       this.Channel,
+        #                                                                       this.CardTypeId);
+        #            this.tenderTypeModified();
+        #        break;
+        #        case fieldNum(MCRCustPaymTable, Amount):
+        #            this.Status = MCRCustPaymStatus::NotSubmitted;
+        #            // If the amount is modified need to recheck if the payment
+        #            // puts the customer over their credit limit.
+        #            this.OnAccountAuthorized = NoYes::No;
+        #        break;
+        #        default:
+        #            break;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #recalculateAmounts
+        #/// <summary>
+        #///     Recalculates and updates payment amounts for those payments that are defined
+        #///     with percentage amounts.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     A boolean to determine whether to show errors such as check number not being
+        #///     present.
+        #/// </param>
+        #/// <param name="_processPaydowns">
+        #///     A boolean to determine whether to process the pay down method of payment; optional.
+        #/// </param>
+        #/// <param name="_cancelPayDown">
+        #///     A boolean to determine whether this method cancels pay down method of paymen.
+        #/// </param>
+        #/// <remarks>
+        #///     If the active record is new or has been modified, it is saved.  If it cannot
+        #///     be saved because it fails validation, then no payment amounts are updated.
+        #/// </remarks>
+        #public void recalculateAmounts(boolean _showErrors = true,
+        #                               boolean _processPaydowns = true,
+        #                               boolean _cancelPayDown = false)
+        #{
+        #    MCRCustPaymTotals mcrCustPaymTotals;
+        #    boolean recalculateAmounts = true;
+        #
+        #    // If this is an installment payment, do not calculate amounts
+        #    if (this.RefTableId != tableNum(SalesTable)
+        #        && this.RefTableId != tableNum(CustInvoiceTable))
+        #    {
+        #        return;
+        #    }
+        #
+        #    // Dont process paydowns when recalc is called
+        #    // when a paydown doesn't exist.
+        #    if (_processPaydowns)
+        #    {
+        #        // save the active record
+        #        //  (recalculating payments occurs by accessing the records directly
+        #        //  from the database -- the database must be up-to-date)
+        #        if (!this.RecId)
+        #        {
+        #            if(this.validateWrite(true))
+        #            {
+        #                this.write();
+        #            }
+        #            else
+        #            {
+        #                recalculateAmounts = false;
+        #            }
+        #        }
+        #        if(recalculateAmounts)
+        #        {
+        #            mcrCustPaymTotals = MCRCustPaymTotals::construct(this.RefTableId, this.RefRecId);
+        #            // recalculate amounts as percentages of sales total
+        #            mcrCustPaymTotals.recalculatePaymAmounts();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #salesTable
+        #/// <summary>
+        #/// Finds the sales order by using the specified refRecId field.
+        #/// </summary>
+        #/// <param name="_forUpdate">
+        #/// A Boolean value that specifies whether to modify the record.
+        #/// </param>
+        #/// <returns>
+        #/// The sales order.
+        #/// </returns>
+        #public SalesTable salesTable(boolean _forUpdate = false)
+        #{
+        #    SalesTable salesTable;
+        #
+        #    if (this.RefTableId == tableNum(SalesTable)
+        #        && this.RefRecId)
+        #    {
+        #        salesTable = SalesTable::findRecId(this.RefRecId, _forUpdate);
+        #    }
+        #
+        #    return salesTable;
+        #}
+      ENDSOURCE
+      SOURCE #setAllowEditInDataSource
+        #/// <summary>
+        #///     Allows/disallows editing for each field in this record's datasource, based
+        #///     upon the current state of this payment record.
+        #///     Does nothing if this record does not have a datasource.
+        #/// </summary>
+        #/// <param name="_formDataSource">
+        #///     The datasource of the form for wich allow/disallow editing properties are set; optional.
+        #/// </param>
+        #public void setAllowEditInDataSource(FormDataSource _formDataSource = this.dataSource())
+        #{
+        #    FormDataSource  dataSource = _formDataSource;
+        #    MCRCustPaym     mcrCustPaym;
+        #    DictTable       dictTable;
+        #    FormDataObject  dataSourceField;
+        #    int             fieldIndex;
+        #    boolean         allowEdit;
+        #
+        #    if (this.CustPaymType && dataSource)
+        #    {
+        #        // Construct a wrapper object for this payment record.
+        #        mcrCustPaym = MCRCustPaym::construct(this);
+        #
+        #        // Iterate over the fields in this table.
+        #        dictTable = new DictTable(tableNum(MCRCustPaymTable));
+        #
+        #        for (fieldIndex = 1; fieldIndex <= dictTable.fieldCnt(); fieldIndex++)
+        #        {
+        #            dataSourceField = dataSource.object(dictTable.fieldCnt2Id(fieldIndex));
+        #
+        #            if (dataSourceField != null)    // The field is not used in the datasource.
+        #            {
+        #                if (mcrCustPaym != null)
+        #                {
+        #                    // Ask the wrapper object if editing is allowed for the field.
+        #                    allowEdit = mcrCustPaym.allowEdit(dictTable.fieldCnt2Id(fieldIndex));
+        #                }
+        #                else    // Unable to construct a wrapper object (no payment type?).
+        #                {
+        #                    allowEdit = true;   // Allow editing by default.
+        #                }
+        #                if(dataSourceField.allowEdit()!= allowEdit)
+        #                {
+        #                    dataSourceField.allowEdit(allowEdit);
+        #                }
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #setCustAccount
+        #/// <summary>
+        #/// Sets the customer account field based on the related record.
+        #/// </summary>
+        #public void setCustAccount()
+        #{
+        #    LedgerJournalTrans              ledgerJournalTrans;
+        #    MCRInstallmentPlanSalesTable    mcrInstallmentPlanSalesTable;
+        #    SalesTable                      salesTable;
+        #
+        #    switch (this.RefTableId)
+        #    {
+        #        case tableNum(SalesTable):
+        #            this.CustAccount = SalesTable::findRecId(this.RefRecId).InvoiceAccount;
+        #        break;
+        #        case tableNum(CustInvoiceTable):
+        #            this.CustAccount = CustInvoiceTable::findRecId(this.RefRecId).InvoiceAccount;
+        #        break;
+        #        case tableNum(LedgerJournalTrans):
+        #            ledgerJournalTrans = LedgerJournalTrans::findRecId(this.RefRecId, false);
+        #            if (ledgerJournalTrans.AccountType == LedgerJournalACType::Cust)
+        #            {
+        #                this.CustAccount = CustTable::find(
+        #                                        DimensionStorage::ledgerDimension2AccountNum(
+        #                                            ledgerJournalTrans.LedgerDimension)).AccountNum;
+        #            }
+        #        break;
+        #        case tableNum(MCRInstallmentPlanSalesTable):
+        #            select InvoiceAccount from salesTable
+        #                exists join mcrInstallmentPlanSalesTable
+        #                where mcrInstallmentPlanSalesTable.RecId == this.RefRecId
+        #                   && mcrInstallmentPlanSalesTable.SalesId == salesTable.SalesId;
+        #            this.CustAccount = salesTable.InvoiceAccount;
+        #        break;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #setDefaultValues
+        #/// <summary>
+        #///     Sets fields to their default values, based upon the current state of this
+        #///     payment record.
+        #///     Typically, default values will be determined by the payment type.  To change
+        #///     the default value for a field, modify or override the "getDefaultValue"
+        #///     method of the "MCRCustPaym" class.
+        #/// </summary>
+        #private void setDefaultValues()
+        #{
+        #    MCRCustPaym mcrCustPaym;
+        #
+        #    DictTable dictTable;
+        #    int fieldIndex;
+        #
+        #    // Do not set any values if unable to construct a wrapper object.
+        #    if(!this.CustPaymType)
+        #    {
+        #        return;
+        #    }
+        #
+        #    // Construct a wrapper object for this payment record.
+        #    mcrCustPaym = MCRCustPaym::construct(this);
+        #
+        #    // Iterate over the fields in this table.
+        #    dictTable = new DictTable(tableNum(MCRCustPaymTable));
+        #
+        #    for (fieldIndex = 1; fieldIndex <= dictTable.fieldCnt(); fieldIndex++)
+        #    {
+        #        //  If the default value is of the same type as the field, then update
+        #        //  the field.  (This conditional will always fail if the default value
+        #        //  that is returned is null.)
+        #        if (typeOf(this.(dictTable.fieldCnt2Id(fieldIndex)))
+        #            == typeOf(mcrCustPaym.getDefaultValue(dictTable.fieldCnt2Id(fieldIndex))))
+        #        {
+        #            this.(dictTable.fieldCnt2Id(fieldIndex)) =
+        #                mcrCustPaym.getDefaultValue(dictTable.fieldCnt2Id(fieldIndex));
+        #        }
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #tenderTypeModified
+        #/// <summary>
+        #///     Processes defaults when tender type ID is changed.
+        #/// </summary>
+        #public void tenderTypeModified()
+        #{
+        #    RetailStoreTenderTypeTable retailStoreTenderTypeTable;
+        #
+        #    if (this.CustPaymType)
+        #    {
+        #        retailStoreTenderTypeTable = RetailStoreTenderTypeTable::find(this.Channel, this.TenderTypeId);
+        #        // If payment doesn't have a
+        #        if (retailStoreTenderTypeTable.Function == RetailTenderFunction::Card
+        #            && this.CardTypeId == '')
+        #        {
+        #            return;
+        #        }
+        #        this.clearPaymTypeFields();
+        #        this.setDefaultValues();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #update
+        #/// <summary>
+        #///     Detects when the status of this payment is being changed,
+        #///     and to send a notification to the <c>MCRCustPaym</c> class.
+        #/// </summary>
+        #public void update()
+        #{
+        #    MCRCustPaym         mcrCustPaym;
+        #    MCRCustPaymTable    mcrCustPaymTable_Old = this.orig();
+        #
+        #    // If the status is Paid, clear the percentage to avoid recaculating the amount of this payment
+        #    if (this.Status == MCRCustPaymStatus::Paid && this.PercentAmount != 0)
+        #    {
+        #        this.PercentAmount = 0;
+        #    }
+        #
+        #    // write the new data to the database
+        #    super();
+        #
+        #    //Process a payment change
+        #    if(this.CustPaymType)
+        #    {
+        #        mcrCustPaym = MCRCustPaym::construct(this);
+        #        mcrCustPaym.paymentChanged(mcrCustPaymTable_Old);
+        #    }
+        #
+        #    this.recalculateAmounts();
+        #}
+      ENDSOURCE
+      SOURCE #updatePostedAmount
+        #/// <summary>
+        #///     Adds the passed amount to the current amount.
+        #/// </summary>
+        #/// <param name="_postedAmount">
+        #///     The passed amount that gets added to the current amount.
+        #/// </param>
+        #/// <returns>
+        #///     true if the posted amount was update; otherwise, false.
+        #/// </returns>
+        #public boolean updatePostedAmount(AmountCur _postedAmount)
+        #{
+        #    this.selectForUpdate(true);
+        #    this.reread();
+        #    // Do the absolute value to accomadate returns otherwise
+        #    // will not post the payment on a partially received return.
+        #    if (abs(this.Amount) >= abs(this.PostedAmount + _postedAmount))
+        #    {
+        #        ttsbegin;
+        #        this.PostedAmount += _postedAmount;
+        #
+        #        if (this.validateWrite())
+        #        {
+        #            this.update();
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS21628");
+        #        }
+        #
+        #        ttscommit;
+        #
+        #        return true;
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #validateDelete
+        #/// <summary>
+        #///     Validates this payment for deletion from the database.
+        #/// </summary>
+        #/// <returns>
+        #///     true if this payment is allowed to be deleted; otherwise false.
+        #/// </returns>
+        #public boolean validateDelete()
+        #{
+        #    boolean ret;
+        #
+        #    MCRCustPaym custPaym;
+        #
+        #    ret = super();
+        #
+        #    if(this.CustPaymType)
+        #    {
+        #        // Use the wrapper class to perform validation.
+        #        custPaym = MCRCustPaym::construct(this);
+        #        if(!custPaym.validateDelete())
+        #        {
+        #            ret = false;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateField
+        #public boolean validateField(FieldId _fieldIdToCheck)
+        #{
+        #    boolean ret;
+        #
+        #    ret = super(_fieldIdToCheck);
+        #
+        #    switch (_fieldIdToCheck)
+        #    {
+        #        case fieldNum(MCRCustPaymTable, TenderTypeId):
+        #            if (this.CustAccount)
+        #            {
+        #                if (!MCRCustTable::findByCustAccount(this.CustAccount).AllowOnAccount
+        #                    && RetailTenderTypeTable::find(this.TenderTypeId).DefaultFunction == RetailTenderFunction::Customer)
+        #                {
+        #                    ret = checkFailed("@MCR28099");
+        #                }
+        #            }
+        #
+        #        break;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #/// <summary>
+        #///     Validates this payment record prior to writing to the database.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     Boolean to determine whether to show the errors found.
+        #/// </param>
+        #/// <returns>
+        #///     true if the record has been cleard to be written the database; otherwise, false.
+        #/// </returns>
+        #public boolean validateWrite(boolean _showErrors = true)
+        #{
+        #    boolean ret;
+        #
+        #    MCRCustPaym mcrCustPaym;
+        #
+        #    ret = super();
+        #
+        #    // Use the wrapper class to perform validation.
+        #    if(this.CustPaymType)
+        #    {
+        #        mcrCustPaym = MCRCustPaym::construct(this);
+        #        if (!mcrCustPaym.validateWrite(_showErrors))
+        #        {
+        #            ret = false;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #cancelPaym
+        #/// <summary>
+        #///     Cancels the specified payment.
+        #///     If cancellation is not allowed for the payment, nothing is done.
+        #///     (see "MCRCustPaymTable.isCancelPaymAllowed()")
+        #///     If the payment is allowed to be deleted, then it is deleted.  If not,
+        #///     then the percent amount and amount are set to 0.0, and the status is
+        #///     set to MCRCustPaymStatus::NotSubmitted.
+        #///     If the cancel is an NSF cancel then the payment records need to be backed
+        #///     out of the <c>LedgerJournalTrans</c>, <c>LedgerJournalTable</c>, <c>CustTrans</c>, and
+        #///     <c>CustTransOpen</c> tables.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymTableRecID">
+        #///     The <c>MCRCustPaymTable</c> record to be deleted if able.
+        #/// </param>
+        #/// <param name="_reasonCode">
+        #///     The reason code used to justify cancelation; optional.
+        #/// </param>
+        #public static void cancelPaym(RecId _mcrCustPaymTableRecID, ReasonCode _reasonCode = "")
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTable;
+        #    MCRCustPaym         mcrCustPaym;
+        #
+        #    if (_mcrCustPaymTableRecID)
+        #        mcrCustPaymTable = MCRCustPaymTable::findByRecID(_mcrCustPaymTableRecID, true);
+        #
+        #    //If no payment to cancel, or it cannot be cancelled, return.
+        #    if (!mcrCustPaymTable)
+        #    {
+        #        return;
+        #    }
+        #
+        #
+        #     // delete this payment, if allowed
+        #    mcrCustPaym = MCRCustPaym::construct(mcrCustPaymTable);
+        #
+        #    if (mcrCustPaym != null
+        #        && mcrCustPaymTable.validateDelete())
+        #    {
+        #        ttsbegin;
+        #        mcrCustPaymTable.delete();
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        ttsbegin;
+        #        // If payment is posted, need to run some payment type specific logic
+        #        if (mcrCustPaymTable.PostedAmount)
+        #        {
+        #            //  If NSF cancel, use BankPaymCancel class to
+        #            //      back out payment.
+        #            if (mcrCustPaymTable.CustPaymType == MCRCustPaymType::Check)
+        #            {
+        #                //  Moved to a different method, had to handle
+        #                //      multiple custTrans records associated w/ this
+        #                //      payment.
+        #                MCRPaymentReview::nsfCancel(mcrCustPaymTable, _reasonCode);
+        #                mcrCustPaymTable.reread();
+        #                mcrCustPaymTable.PostedAmount = 0.0;
+        #            }
+        #            //  If it's a credit card then the status needs to be recalculated.
+        #            //  The resutling status will either be posted or paid, depending on settlement
+        #            //  record status.
+        #            else if (mcrCustPaymTable.CustPaymType == MCRCustPaymType::CreditCard)
+        #            {
+        #                mcrCustPaymTable.Amount = mcrCustPaymTable.PostedAmount;
+        #                mcrCustPaymTable.Status = mcrCustPaym.determineStatus();
+        #            }
+        #        }
+        #        // Set the amount to the posted amount; thus allowing cancelaltion of posted
+        #        //  (but not full) payments, which will set the payment amount to the posted amount.
+        #        mcrCustPaymTable.Amount = mcrCustPaymTable.PostedAmount;
+        #
+        #        mcrCustPaymTable.PercentAmount = 0.0;
+        #        //Blank our currency code if one exists
+        #        mcrCustPaymTable.CurrencyCode="";
+        #        // clear security code, per regulations
+        #        if (mcrCustPaymTable.validateWrite())
+        #        {
+        #            mcrCustPaymTable.update();
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS21628");
+        #        }
+        #        ttscommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #continuityPaymProcessing
+        #/// <summary>
+        #///     Handles continuity order payments.
+        #///     For Continuity orders that are in a bill up front situation, the conitnuity cust header records
+        #///     that tie to this payment need to be created since the coninutiy cust header form does not.
+        #///     If the payment is a bill up front with no schedule it will fall in the pay all at sales order
+        #///     category and needs to be paid right away, for this create a continuity cust header payment record
+        #///     that equal the payment amount + the taxes.
+        #///     If the bill up front has a payment schedule then create the payment record tied to the continuity cust
+        #///     header at the end order.
+        #/// </summary>
+        #/// <param name="_isPaymSuccessful">
+        #///     A boolean determining if the payment was successful.
+        #/// </param>
+        #/// <param name="_salesTable">
+        #///     The <c>SalesTable</c> record used in connection with the continuity order and this payment.
+        #/// </param>
+        #/// <param name="_continuityCustHeader">
+        #///     The continuity order tied to the <c>SalesTable</c> record and this payment.
+        #/// </param>
+        #public static void continuityPaymProcessing(boolean _isPaymSuccessful,
+        #                                        SalesTable _salesTable,
+        #                                        MCRContinuityCustHeader _continuityCustHeader)
+        #{
+        #    MCRSalesOrderTotals     mcrCalesOrderTotals;
+        #    AmountCur               amtContinuity;
+        #    MCRSalesTable           mcrSalesTable;
+        #
+        #    if (!MCRCustPaymTable::findByRefRecIDRefTableID(_continuityCustHeader.RecId,_continuityCustHeader.TableId,false))
+        #    {
+        #        // Even if the authorization/payment is not successful copy the record if one
+        #        // is entered on the continuity parent to the children as the children will be authorized
+        #        // separately.
+        #        mcrSalesTable = _salesTable.mcrSalesTable();
+        #        if (mcrSalesTable.ContinuityOrder)
+        #        {
+        #            //  If it is a pay all now then there is no need to copy the payment
+        #            //  record. Logic that checked for pay all now has been removed.
+        #            if (mcrSalesTable.ContinuityLineEval == MCRContinuityLineEval::PayPartNowPartSched)
+        #            {
+        #                mcrCalesOrderTotals = new MCRSalesOrderTotals(_salesTable);
+        #
+        #                amtContinuity = mcrCalesOrderTotals.getContinuityPayNow()
+        #                                + mcrCalesOrderTotals.getContinuityPayNowTax();
+        #                MCRCustPaymTable::copyCustPayment(_salesTable.TableId,
+        #                                                 _salesTable.RecId,
+        #                                                 _continuityCustHeader.TableId,
+        #                                                 _continuityCustHeader.RecId,
+        #                                                 _salesTable.SalesId,
+        #                                                 amtContinuity);
+        #            }
+        #            if (mcrSalesTable.ContinuityLineEval == MCRContinuityLineEval::PayAllLater)
+        #            {
+        #                amtContinuity = 0;
+        #                MCRCustPaymTable::copyCustPayment(_salesTable.TableId,
+        #                                                 _salesTable.RecId,
+        #                                                 _continuityCustHeader.TableId,
+        #                                                 _continuityCustHeader.RecId,
+        #                                                 _salesTable.SalesId,
+        #                                                 amtContinuity);
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #copyCustPayment
+        #/// <summary>
+        #///     Copies the payments from one table to another.
+        #///     Used by continuity to copy the payment to the generated invoices.
+        #/// </summary>
+        #/// <param name="_fromTableID">
+        #///     The ID of the table being coppied from.
+        #/// </param>
+        #/// <param name="_fromRecID">
+        #///     The ID of the record being coppied from.
+        #/// </param>
+        #/// <param name="_toTableID">
+        #///     The ID of the table being coppied to.
+        #/// </param>
+        #/// <param name="_toRecID">
+        #///     The ID of the record being coppied to.
+        #/// </param>
+        #/// <param name="_salesId">
+        #///     The sales order ID for which the continuity order was created; optional.
+        #/// </param>
+        #/// <param name="_amountCur">
+        #///     The amount to be paid from the sales / continuity order; optional.
+        #/// </param>
+        #/// <param name="firstInstallmentAuth">
+        #///     Boolean that determines if the payment is the first payment; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The newly created <c>MCRCustPaymTable</c> record.
+        #/// </returns>
+        #public static MCRCustPaymTable copyCustPayment(
+        #                TableId     _fromTableID,
+        #                RecId       _fromRecID,
+        #                TableId     _toTableID,
+        #                RecId       _toRecID,
+        #                SalesId     _salesId = "",
+        #                AmountCur   _amountCur = 0,
+        #                boolean     firstInstallmentAuth = false)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable_from;
+        #    MCRCustPaymTable mcrCustPaymTable_to;
+        #
+        #    if (_fromRecID && _fromTableID)
+        #    {
+        #        select firstonly mcrCustPaymTable_from
+        #        where mcrCustPaymTable_from.RefTableId  == _fromTableID
+        #            && mcrCustPaymTable_from.RefRecId   == _fromRecID;
+        #
+        #        ttsbegin;
+        #        if (mcrCustPaymTable_from)
+        #        {
+        #            // Copy the from record to the to record
+        #            // before making changes to the record that is going to
+        #            // be inserted.
+        #            mcrCustPaymTable_to             = mcrCustPaymTable_from.data();
+        #            mcrCustPaymTable_to.RefRecId    = _toRecID;
+        #            mcrCustPaymTable_to.RefTableId  = _toTableID;
+        #
+        #            if(_amountCur != 0)
+        #            {
+        #                mcrCustPaymTable_to.Amount = _amountCur;
+        #                //Copy currency code.
+        #                if(mcrCustPaymTable_from.CurrencyCode)
+        #                {
+        #                    mcrCustPaymTable_to.CurrencyCode = mcrCustPaymTable_from.CurrencyCode;
+        #                }
+        #                else
+        #                {
+        #                    mcrCustPaymTable_to.CurrencyCode = CompanyInfo::standardCurrency();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                mcrCustPaymTable_to.Amount = 0.0;
+        #            }
+        #
+        #            // Always blank out the security code on copy of a cust paym record
+        #            // As per law a merchant should not retain security codes in the database.
+        #            mcrCustPaymTable_to.PostedAmount = 0.0;
+        #            mcrCustPaymTable_to.Status = MCRCustPaymStatus::NotSubmitted;
+        #            if (mcrCustPaymTable_to.validateWrite())
+        #            {
+        #                mcrCustPaymTable_to.insert();
+        #            }
+        #            else
+        #            {
+        #                throw error("@SYS21628");
+        #            }
+        #
+        #        }
+        #
+        #        ttscommit;
+        #        mcrCustPaymTable_to.reread();
+        #    }
+        #    return   mcrCustPaymTable_to;
+        #}
+      ENDSOURCE
+      SOURCE #count
+        #/// <summary>
+        #///     Counts the number of payments assocaited with the specified record.
+        #/// </summary>
+        #/// <param name="_refTableId">
+        #///     The ID of the table for which records are counted.
+        #/// </param>
+        #/// <param name="_refRecId">
+        #///     The ID of the table for which records are counted.
+        #/// </param>
+        #/// <returns>
+        #///     The number of payments associated with the specified record.
+        #/// </returns>
+        #public static int count(RefTableId _refTableId, RefRecId _refRecId)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #
+        #    if (_refRecId && _refTableId)
+        #    {
+        #        select count(RecId) from mcrCustPaymTable
+        #            where mcrCustPaymTable.RefTableId == _refTableId
+        #                  && mcrCustPaymTable.RefRecId == _refRecId;
+        #    }
+        #    return any2int(mcrCustPaymTable.RecId);
+        #}
+      ENDSOURCE
+      SOURCE #countNonZeroAmount
+        #/// <summary>
+        #///     Counts the number of payments associated
+        #///     with the specified record with amounts
+        #///     not equal to 0.
+        #/// </summary>
+        #/// <param name="_refTableId">
+        #///     The ID of the table for which records are counted.
+        #/// </param>
+        #/// <param name="_refRecId">
+        #///     The ID of the record for which records are counted.
+        #/// </param>
+        #/// <returns>
+        #///     The number of payments associated
+        #///     with the specified record with amounts
+        #///     not equal to 0.
+        #/// </returns>
+        #public static int countNonZeroAmount(RefTableId _refTableId, RefRecId _refRecId)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #
+        #    if (_refRecId && _refTableId)
+        #    {
+        #        select count(RecId) from mcrCustPaymTable
+        #            where mcrCustPaymTable.RefTableId == _refTableId
+        #                  && mcrCustPaymTable.RefRecId == _refRecId
+        #                  && mcrCustPaymTable.Amount != 0;
+        #    }
+        #    return any2int(mcrCustPaymTable.RecId);
+        #}
+      ENDSOURCE
+      SOURCE #countSalesPayments
+        #/// <summary>
+        #///     Counts the number of payments associated with a sales order.
+        #/// </summary>
+        #/// <param name="_salesId">
+        #///     The sales order ID for which payments are counted.
+        #/// </param>
+        #/// <returns>
+        #///     The number of payments associated with a sales order.
+        #/// </returns>
+        #public static int countSalesPayments(SalesId _salesId)
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTable;
+        #    SalesTable          salesTable;
+        #
+        #    if (_salesId)
+        #    {
+        #        select count(RecId) from mcrCustPaymTable
+        #            where (mcrCustPaymTable.RefTableId == tableNum(SalesTable))
+        #            join RecId from salesTable
+        #                where salesTable.RecId == mcrCustPaymTable.RefRecId
+        #                   && salesTable.SalesId == _salesId;
+        #    }
+        #    return int642int(mcrCustPaymTable.RecId);
+        #}
+      ENDSOURCE
+      SOURCE #createPrepayAdjustments
+        #/// <summary>
+        #///     Create a new <c>MCRCustPaymTable</c> for paymmode On_Acct.
+        #///     This method is called when creating an adjustment in case
+        #///     of substitutions. If there is an increase in order amount and the
+        #///     customer originally paid by either cash,check create a new
+        #///     on_Acct record for the difference.Note, since the adjustment is being
+        #///     made to an "On_Acct" the percentage will be 100%.
+        #/// </summary>
+        #/// <param name="_salesTable">
+        #///     The <c>SalesTable</c> record for which a prepay, On_Acct payment is created.
+        #/// </param>
+        #/// <param name="_changedAmt">
+        #///     The amount to be assigned to the <c>MCRCustPaymTable</c> record's amount field.
+        #/// </param>
+        #/// <param name="_paymAdjType">
+        #///     The method of payment to be adjusted on the <c>MCRCustPaymTable</c> record; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The newly created <c>MCRCustPaymTable</c> record.
+        #/// </returns>
+        #public static MCRCustPaymTable createPrepayAdjustments(
+        #                SalesTable _salesTable,
+        #                AmountCur  _changedAmt,
+        #                MCRPaymAdjustmentType _paymAdjType = MCRPaymAdjustmentType::Charge)
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTable_MaxLineNum;
+        #    MCRCustPaymTable    mcrCustPaymTable_OnAccount;
+        #    MCRCustPaymTable    mcrCustPaymTable_New;
+        #    MCRCustPaymTable    mcrCustPaymTable = MCRCustPaymTable::findByRefRecIDRefTableID(_salesTable.RecId,_salesTable.TableId);
+        #
+        #    if (_changedAmt
+        #        && _salesTable
+        #        && RetailMCRChannelTable::mcrEnableOrderCompletion(_salesTable))
+        #    {
+        #        if(mcrCustPaymTable
+        #            && mcrCustPaymTable.CustPaymType == MCRCustPaymType::RefundCheck
+        #            && _paymAdjType == MCRPaymAdjustmentType::Refund)
+        #        {
+        #            mcrCustPaymTable.adjustExistingRefundCheck(_changedAmt);
+        #            return mcrCustPaymTable;
+        #        }
+        #
+        #
+        #        if (mcrCustPaymTable.CustPaymType == MCRCustPaymType::OnAccount)
+        #        {
+        #            // If an on account payment already exists, just modify it and return
+        #            //  Cannot have more than 1 on account payment.
+        #            select forupdate mcrCustPaymTable_OnAccount
+        #                        where mcrCustPaymTable_OnAccount.RefRecId       == _salesTable.RecId &&
+        #                              mcrCustPaymTable_OnAccount.RefTableId     == _salesTable.TableId &&
+        #                              mcrCustPaymTable_OnAccount.CustPaymType   == MCRCustPaymType::OnAccount;
+        #
+        #            if (mcrCustPaymTable_OnAccount)
+        #            {
+        #                mcrCustPaymTable_OnAccount.Amount += _changedAmt;
+        #                if (mcrCustPaymTable_OnAccount.validateWrite())
+        #                {
+        #                    ttsbegin;
+        #                    mcrCustPaymTable_OnAccount.update();
+        #                    ttscommit;
+        #                }
+        #                else
+        #                {
+        #                    throw error("@SYS21628");
+        #                }
+        #
+        #                return mcrCustPaymTable_OnAccount;
+        #            }
+        #        }
+        #
+        #        select maxof(LineNum) from mcrCustPaymTable_MaxLineNum
+        #                where mcrCustPaymTable_MaxLineNum.RefRecId == _salesTable.RecId &&
+        #                        mcrCustPaymTable_MaxLineNum.RefTableId == _salesTable.TableId;
+        #        ttsbegin;
+        #
+        #        if(mcrCustPaymTable
+        #            && (mcrCustPaymTable.CustPaymType == MCRCustPaymType::Cash
+        #            || mcrCustPaymTable.CustPaymType == MCRCustPaymType::Check))
+        #        {
+        #            mcrCustPaymTable_New.TenderTypeId  = MCRRefundMethodsTable::findCheckRefund(_salesTable.CurrencyCode).TenderTypeId;
+        #            mcrCustPaymTable_New.CustPaymType  = MCRCustPaymType::RefundCheck;
+        #            mcrCustPaymTable_New.IsPrepay      = NoYes::Yes;
+        #        }
+        #        // If no payment exists on the order, default to use on account
+        #        // This happens in the case of a return cancellation
+        #        else
+        #        {
+        #            mcrCustPaymTable_New.TenderTypeId  = MCRRefundMethodsTable::findCustRefund(_salesTable.CurrencyCode).TenderTypeId;
+        #            mcrCustPaymTable_New.CustPaymType  = MCRCustPaymType::OnAccount;
+        #            mcrCustPaymTable_New.IsPrepay      = NoYes::No;
+        #        }
+        #
+        #        mcrCustPaymTable_New.Status        = MCRCustPaymStatus::NotSubmitted;
+        #        mcrCustPaymTable_New.PercentAmount = 0.0;
+        #        mcrCustPaymTable_New.CustAccount   = _salesTable.InvoiceAccount;
+        #        mcrCustPaymTable_New.LineNum       = mcrCustPaymTable_MaxLineNum.LineNum + 1;
+        #        mcrCustPaymTable_New.Amount        = _changedAmt;
+        #
+        #        // Assign the currency code.
+        #        mcrCustPaymTable_New.CurrencyCode  = _salesTable.CurrencyCode;
+        #        mcrCustPaymTable_New.RefRecId      = _salesTable.RecId;
+        #        mcrCustPaymTable_New.RefTableId    = _salesTable.TableId;
+        #
+        #        mcrCustPaymTable_New.initFromRefTrans();
+        #
+        #        if (mcrCustPaymTable_New.validateWrite())
+        #        {
+        #            mcrCustPaymTable_New.insert();
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS21628");
+        #        }
+        #
+        #        ttscommit;
+        #    }
+        #
+        #    return mcrCustPaymTable_New;
+        #}
+      ENDSOURCE
+      SOURCE #exists
+        #/// <summary>
+        #///     Determines if one or more payments exist associated with the specified
+        #///     record that are not 0.
+        #/// </summary>
+        #/// <param name="_refTableId">
+        #///     The reference table ID used to find the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <param name="_refRecId">
+        #///     The reference record ID used to find the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <returns>
+        #///     true if an <c>MCRCustPaymTable</c> record exists; otherwise, false.
+        #/// </returns>
+        #public static boolean exists(RefTableId _refTableId, RefRecId _refRecId)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #
+        #    if (_refRecId && _refTableId)
+        #    {
+        #        select firstonly RecId from mcrCustPaymTable
+        #            where mcrCustPaymTable.RefTableId   == _refTableId
+        #                  && mcrCustPaymTable.RefRecId  == _refRecId
+        #                  && mcrCustPaymTable.Amount    != 0;
+        #    }
+        #    return mcrCustPaymTable.RecId != 0;
+        #}
+      ENDSOURCE
+      SOURCE #findByRecID
+        #/// <summary>
+        #///     Finds a record by RecID.
+        #/// </summary>
+        #/// <param name="_recId">
+        #///     The record ID used to search for a <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #///     A <c>boolean</c> used to determine whether or not a record should be selected for update; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The <c>MCRCustPaymTable</c> record found.
+        #/// </returns>
+        #public static MCRCustPaymTable findByRecID(RecId _recId, boolean _forUpdate = false)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #
+        #    if (_recId)
+        #    {
+        #        mcrCustPaymTable.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly mcrCustPaymTable
+        #            where mcrCustPaymTable.RecId == _recId;
+        #    }
+        #    return mcrCustPaymTable;
+        #}
+      ENDSOURCE
+      SOURCE #findByRefRecIDRefTableID
+        #/// <summary>
+        #///     Finds a record by RefRecId and RefTableId.
+        #/// </summary>
+        #/// <param name="_refRecId">
+        #///     The reference record ID used to search for the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <param name="_refTableId">
+        #///     The reference table ID used to search for the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #///     <c>Boolean</c> used to determine whether or not the applicable <c>MCRCustPaymTable</c> record
+        #///         should be selected for update; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The <c>MCRCustPaymTable</c> record found.
+        #/// </returns>
+        #public static MCRCustPaymTable findByRefRecIDRefTableID(RecId _refRecId, TableId _refTableId, boolean _forUpdate = false)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #
+        #    if (_refRecId && _refTableId)
+        #    {
+        #        mcrCustPaymTable.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly mcrCustPaymTable
+        #            where mcrCustPaymTable.RefRecId == _refRecId &&
+        #            mcrCustPaymTable.RefTableId == _refTableId;
+        #    }
+        #    return mcrCustPaymTable;
+        #}
+      ENDSOURCE
+      SOURCE #findOnAcct
+        #/// <summary>
+        #///     Retrieves the customer payment record.
+        #/// </summary>
+        #/// <param name="_recId">
+        #///     The record ID used to find the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <param name="_tableId">
+        #///     The table ID used to find the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <param name="_forUpdate">
+        #///     Boolean used to determine whether the <c>MCRCustPaymTable</c> should be selected for update; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The <c>MCRCustPaymTable</c> record found.
+        #/// </returns>
+        #public static MCRCustPaymTable findOnAcct(RecId _recId, TableId _tableId, boolean _forUpdate = false)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #
+        #    if (_recId && _tableId)
+        #    {
+        #        mcrCustPaymTable.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly  mcrCustPaymTable
+        #                where mcrCustPaymTable.RefRecId   == _recId
+        #                && mcrCustPaymTable.RefTableId    == _tableId
+        #                && mcrCustPaymTable.CustPaymType  == MCRCustPaymType::OnAccount;
+        #
+        #        return mcrCustPaymTable;
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getCardTypeFromTender
+        #private static RetailCardTypesBase getCardTypeFromTender(RetailTenderTypeId _tenderTypeId,
+        #                                                            RetailCardTypeId _cardType,
+        #                                                            RetailChannelRecId _channel)
+        #{
+        #    RetailStoreTenderTypeTable      retailStoreTenderTypeTable;
+        #    RetailStoreTenderTypeCardTable  retailStoreTenderTypeCardTable;
+        #    RetailTenderTypeCardTable       retailTenderTypeCardTable;
+        #
+        #    if (_tenderTypeId && _channel)
+        #    {
+        #        select firstonly RecId from retailStoreTenderTypeTable
+        #            where retailStoreTenderTypeTable.Function == RetailTenderFunction::Card
+        #               && retailStoreTenderTypeTable.Channel == _channel
+        #               && retailStoreTenderTypeTable.TenderTypeId == _tenderTypeId
+        #            join RecId from retailStoreTenderTypeCardTable
+        #                where retailStoreTenderTypeCardTable.TenderTypeId == retailStoreTenderTypeTable.TenderTypeId
+        #                   && retailStoreTenderTypeCardTable.Channel == retailStoreTenderTypeTable.Channel
+        #                   && retailStoreTenderTypeCardTable.CardTypeId == _cardType
+        #            join CardTypes from retailTenderTypeCardTable
+        #                where retailTenderTypeCardTable.CardTypeId == retailStoreTenderTypeCardTable.CardTypeId;
+        #
+        #        return retailTenderTypeCardTable.CardTypes;
+        #    }
+        #
+        #    throw error(Error::wrongUseOfFunction(funcName()));
+        #}
+      ENDSOURCE
+      SOURCE #getCustMaxCheckAmt
+        #/// <summary>
+        #///     Retrieves the largest check amount for the passed customer.
+        #/// </summary>
+        #/// <param name="_customer">
+        #///     The customer for which this method finds the largest check.
+        #/// </param>
+        #/// <returns>
+        #///     The amount of the largest check for the passed customer.
+        #/// </returns>
+        #public static real getCustMaxCheckAmt(CustAccount _customer)
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTable;
+        #    SalesTable          salesTable;
+        #    CustInvoiceTable    custInvoiceTable;
+        #    AmountCur           retAmount = 0;
+        #
+        #    if (_customer)
+        #    {
+        #        select maxof(Amount) from mcrCustPaymTable
+        #            where   (mcrCustPaymTable.Status       == MCRCustPaymStatus::Posted)
+        #                &&  (mcrCustPaymTable.CustAccount  == _customer)
+        #            exists join salesTable
+        #            where mcrCustPaymTable.RefTableId   == salesTable.TableId
+        #            &&    mcrCustPaymTable.RefRecId     == salesTable.RecId
+        #            &&    salesTable.SalesStatus        == SalesStatus::Backorder;
+        #
+        #        retAmount = mcrCustPaymTable.Amount;
+        #
+        #        select maxof(Amount) from mcrCustPaymTable
+        #            where   mcrCustPaymTable.Status      == MCRCustPaymStatus::Posted
+        #                &&  mcrCustPaymTable.CustAccount == _customer
+        #            exists join custInvoiceTable
+        #            where mcrCustPaymTable.RefTableId  == custInvoiceTable.TableId
+        #            &&    mcrCustPaymTable.RefRecId    == custInvoiceTable.RecId;
+        #
+        #        if (retAmount > mcrCustPaymTable.Amount)
+        #        {
+        #            return retAmount;
+        #        }
+        #        else
+        #        {
+        #            return (mcrCustPaymTable.Amount);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getCustOldestCheckHoldDate
+        #/// <summary>
+        #///     Retrieves the oldest payment order for a customer that has a
+        #///     payment status of Pending, OnHold, or Backorder.
+        #/// </summary>
+        #/// <param name="_customer">
+        #///     The customer account nuumber used to find the oldes payment order.
+        #/// </param>
+        #/// <returns>
+        #///     The date the oldest payment order occured.
+        #/// </returns>
+        #/// <remarks>
+        #///     Used by the <c>MCRCheckHoldWB</c> forms.
+        #/// </remarks>
+        #public static TransDate getCustOldestCheckHoldDate(CustAccount _customer)
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTable_ST;
+        #    MCRCustPaymTable    mcrCustPaymTable_IT;
+        #    SalesTable          salesTable;
+        #    CustInvoiceTable    custInvoiceTable;
+        #
+        #    if (_customer)
+        #    {
+        #        //CreatedDate, createdTime -> createdDateTime
+        #        select firstonly mcrCustPaymTable_ST
+        #            where  (mcrCustPaymTable_ST.Status      == MCRCustPaymStatus::Posted)
+        #                && (mcrCustPaymTable_ST.CustAccount == _customer)
+        #            join RecId from salesTable
+        #            order by CreatedDateTime
+        #                where mcrCustPaymTable_ST.RefTableId    == salesTable.TableId
+        #                    && mcrCustPaymTable_ST.RefRecId     == salesTable.RecId
+        #                    && salesTable.SalesStatus           == SalesStatus::Backorder;
+        #
+        #        //CreatedDate, createdTime -> createdDateTime
+        #        select firstonly mcrCustPaymTable_IT
+        #            where   mcrCustPaymTable_IT.Status       == MCRCustPaymStatus::Posted
+        #                &&  mcrCustPaymTable_IT.CustAccount  == _customer
+        #            join RecId from custInvoiceTable
+        #            order by CreatedDateTime
+        #                where   mcrCustPaymTable_IT.RefTableId   == custInvoiceTable.TableId
+        #                    &&  mcrCustPaymTable_IT.RefRecId     == custInvoiceTable.RecId;
+        #
+        #        //Add DateTimeUtil::date to calculation to extract date from dateTime.
+        #        if (!mcrCustPaymTable_IT)
+        #        {
+        #            return (DateTimeUtil::date(mcrCustPaymTable_ST.CreatedDateTime));
+        #        }
+        #        else if (!mcrCustPaymTable_ST)
+        #        {
+        #            return (DateTimeUtil::date(mcrCustPaymTable_IT.CreatedDateTime));
+        #        }
+        #        else if (DateTimeUtil::date(mcrCustPaymTable_IT.CreatedDateTime) >
+        #                 DateTimeUtil::date(mcrCustPaymTable_ST.CreatedDateTime))
+        #        {
+        #            return (DateTimeUtil::date(mcrCustPaymTable_ST.CreatedDateTime));
+        #        }
+        #        else
+        #        {
+        #            return DateTimeUtil::date(mcrCustPaymTable_IT.CreatedDateTime);
+        #        }
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getDaysSinceCreation
+        #/// <summary>
+        #///     Calculates the number of days since the
+        #///     payment record was created.
+        #/// </summary>
+        #/// <param name="_recId">
+        #///     The ID of the record for which this method calculates the number of days since it was created.
+        #/// </param>
+        #/// <returns>
+        #///     The number of days since the <c>MCRCustPaymTable</c> record was created.
+        #/// </returns>
+        #public static Integer getDaysSinceCreation(RecId _recId)
+        #{
+        #    Integer daysSince = 0;
+        #    // Add DateTimeUtil::date to calculation to extract date from dateTime
+        #    if (_recId)
+        #    {
+        #        daysSince = systemDateGet() - DateTimeUtil::date(MCRCustPaymTable::findByRecID(_recId).CreatedDateTime);
+        #    }
+        #    return daysSince;
+        #}
+      ENDSOURCE
+      SOURCE #getMCRCardTypeFromCardTypeId
+        #/// <summary>
+        #/// Retrieves the card type for a given card type Id.
+        #/// </summary>
+        #/// <param name="_cardTypeId">
+        #/// The card type id to find a <c>RetailCardTypesBase</c> record for.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>RetailCardTypesBase</c> record for the given card type Id.
+        #/// </returns>
+        #public static MCRCustPaymType getMCRCardTypeFromCardTypeId(RetailCardTypeId _cardTypeId)
+        #{
+        #    RetailCardTypesBase cardTypes;
+        #
+        #    cardTypes = RetailTenderTypeCardTable::find(_cardTypeId).CardTypes;
+        #
+        #    switch (cardTypes)
+        #    {
+        #        case RetailCardTypesBase::CorporateCard:
+        #        case RetailCardTypesBase::InternationalKreditcard:
+        #            return MCRCustPaymType::CreditCard;
+        #        case RetailCardTypesBase::GiftCard:
+        #            return MCRCustPaymType::GiftCard;
+        #        default :
+        #            throw error(Error::wrongUseOfFunction(funcName()));
+        #    }
+        #
+        #    return MCRCustPaymType::None;
+        #}
+      ENDSOURCE
+      SOURCE #getMCRTypeFromTender
+        #/// <summary>
+        #/// Finds the <c>MCRCustPaymType</c> type based on a given <c>RetailTenderTypeId</c>, <c>RetailChannelRecId</c> and <c>RetailCardTypeId</c>.
+        #/// </summary>
+        #/// <param name="_tenderTypeId">
+        #/// RetailTenderTypeId to find the <c>MCRCustPaymType</c> type for.
+        #/// </param>
+        #/// <param name="_channel">
+        #/// RetailChannelRecId to find the <c>MCRCustPaymType</c> type for.
+        #/// </param>
+        #/// <param name="_cardType">
+        #/// RetailCardTypeId to find the <c>MCRCustPaymType</c> type for.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>MCRCustPaymType</c> type based on a given <c>RetailTenderTypeId</c>, <c>RetailChannelRecId</c> and <c>RetailCardTypeId</c>
+        #/// </returns>
+        #public static MCRCustPaymType getMCRTypeFromTender(RetailTenderTypeId _tenderTypeId,
+        #                                                   RetailChannelRecId _channel,
+        #                                                   RetailCardTypeId _cardType = '')
+        #{
+        #    RetailStoreTenderTypeTable  retailStoreTenderTypeTable;
+        #    RetailCardTypesBase         retailCardTypesBase;
+        #    MCRCustPaymType             returnType;
+        #
+        #    if (_tenderTypeId && _channel)
+        #    {
+        #        retailStoreTenderTypeTable = RetailStoreTenderTypeTable::find(_channel, _tenderTypeId);
+        #        switch (retailStoreTenderTypeTable.Function)
+        #        {
+        #            case RetailTenderFunction::Card:
+        #                retailCardTypesBase = MCRCustPaymTable::getCardTypeFromTender(_tenderTypeId, _cardType, _channel);
+        #                if (retailCardTypesBase == RetailCardTypesBase::GiftCard
+        #                    || retailCardTypesBase == RetailCardTypesBase::LoyaltyCard)
+        #                {
+        #                    returnType = MCRCustPaymType::GiftCard;
+        #                }
+        #                else
+        #                {
+        #                    returnType = MCRCustPaymType::CreditCard;
+        #                }
+        #            break;
+        #            case RetailTenderFunction::Check:
+        #                returnType = MCRCustPaymType::Check;
+        #            break;
+        #            case RetailTenderFunction::Normal:
+        #                returnType = MCRCustPaymType::Cash;
+        #            break;
+        #            // Treat everything else as on account
+        #            default :
+        #                returnType = MCRCustPaymType::OnAccount;
+        #            break;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        throw error(Error::wrongUseOfFunction(funcName()));
+        #    }
+        #
+        #    return returnType;
+        #}
+      ENDSOURCE
+      SOURCE #getNextLineNum
+        #/// <summary>
+        #///     Retrieves the line number of the related payments and increases it by one.
+        #/// </summary>
+        #/// <param name="_parentRecId">
+        #///     The RecID of the record for which this method finds the next line number.
+        #/// </param>
+        #/// <param name="_parentTableId">
+        #///     The TableID of the record for which this method finds the next line number.
+        #/// </param>
+        #/// <returns>
+        #///     The next line number of the related payments.
+        #/// </returns>
+        #public static real getNextLineNum(RefRecId _parentRecId, RefTableId _parentTableId)
+        #{
+        #    MCRCustPaymTable     mcrCustPaymTable_MaxLineNum;
+        #
+        #    if (_parentRecId
+        #        && _parentTableId)
+        #    {
+        #        select maxof(LineNum) from mcrCustPaymTable_MaxLineNum
+        #            where mcrCustPaymTable_MaxLineNum.RefRecId == _parentRecId
+        #               && mcrCustPaymTable_MaxLineNum.RefTableId == _parentTableId;
+        #
+        #        return mcrCustPaymTable_MaxLineNum.LineNum + 1;
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getNumCustCheckHolds
+        #/// <summary>
+        #/// Finds the number of check holds for a given customer.
+        #/// </summary>
+        #/// <param name="_customer">
+        #/// The customer to find check holds for.
+        #/// </param>
+        #/// <returns>
+        #/// The number of check holds for a given customer.
+        #/// </returns>
+        #public static Integer getNumCustCheckHolds(CustAccount _customer)
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTable;
+        #    SalesTable          salesTable;
+        #    CustInvoiceTable    custInvoiceTable;
+        #    Integer             retAmount = 0;
+        #    if (_customer)
+        #    {
+        #
+        #        select count(RefTableId) from mcrCustPaymTable
+        #            where  (mcrCustPaymTable.Status         == MCRCustPaymStatus::Posted)
+        #                && (mcrCustPaymTable.CustAccount    == _customer)
+        #            exists join salesTable
+        #                where mcrCustPaymTable.RefTableId       == salesTable.TableId
+        #                    &&    mcrCustPaymTable.RefRecId     == salesTable.RecId
+        #                    &&    salesTable.SalesStatus        == SalesStatus::Backorder;
+        #
+        #        retAmount = mcrCustPaymTable.RefTableId;
+        #
+        #        select count(RefTableId) from mcrCustPaymTable
+        #            where mcrCustPaymTable.Status       == MCRCustPaymStatus::Posted
+        #                && mcrCustPaymTable.CustAccount == _customer
+        #            exists join custInvoiceTable
+        #                where mcrCustPaymTable.RefTableId  == custInvoiceTable.TableId
+        #                && mcrCustPaymTable.RefRecId       == custInvoiceTable.RecId;
+        #
+        #        retAmount += mcrCustPaymTable.RefTableId;
+        #
+        #        return (retAmount);
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getOverallOldestDate
+        #/// <summary>
+        #///     Retrieves the oldest payment order that
+        #///     has a payment status of the passed variable.
+        #/// </summary>
+        #/// <param name="_status">
+        #///     The status for which this method finds the oldest payment order.
+        #/// </param>
+        #/// <param name="_type">
+        #///     The customer payment type used to find the oldest payment order.
+        #/// </param>
+        #/// <returns>
+        #///     The date of the oldest payment givent the passed status.
+        #/// </returns>
+        #/// <remarks>
+        #///     Used by the <c>MCROverCreditLimitWB</c> and the MCRCheckHoldWB forms.
+        #/// </remarks>
+        #public static TransDate getOverallOldestDate(MCRCustPaymStatus _status, MCRCustPaymType _type)
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTable_ST;
+        #    MCRCustPaymTable    mcrCustPaymTable_IT;
+        #    SalesTable          salesTable;
+        #    CustInvoiceTable    custInvoiceTable;
+        #
+        #    if (_status && _type)
+        #    {
+        #        //CreatedDate, createdTime -> createdDateTime.
+        #        select firstonly CreatedDateTime from mcrCustPaymTable_ST
+        #            where mcrCustPaymTable_ST.Status            == _status
+        #                &&    mcrCustPaymTable_ST.CustPaymType  == _type
+        #            join RecId from salesTable
+        #            order by CreatedDateTime
+        #                where mcrCustPaymTable_ST.RefTableId    == salesTable.TableId
+        #                    && mcrCustPaymTable_ST.RefRecId     == salesTable.RecId
+        #                    && salesTable.SalesStatus          == SalesStatus::Backorder;
+        #
+        #        //CreatedDate, createdTime -> createdDateTime.
+        #        select firstonly CreatedDateTime from mcrCustPaymTable_IT
+        #            where mcrCustPaymTable_IT.Status            == _status
+        #                &&    mcrCustPaymTable_IT.CustPaymType  == _type
+        #            join RecId from custInvoiceTable
+        #            order by CreatedDateTime
+        #                where  mcrCustPaymTable_IT.RefTableId    == custInvoiceTable.TableId
+        #                    && mcrCustPaymTable_IT.RefRecId      == custInvoiceTable.RecId;
+        #
+        #        //Add DateTimeUtil::date to calculation to extract date from dateTime.
+        #        if (!mcrCustPaymTable_IT)
+        #        {
+        #            return (DateTimeUtil::date(mcrCustPaymTable_ST.CreatedDateTime));
+        #        }
+        #        else if (!mcrCustPaymTable_ST)
+        #        {
+        #            return (DateTimeUtil::date(mcrCustPaymTable_IT.CreatedDateTime));
+        #        }
+        #        else if (DateTimeUtil::date(mcrCustPaymTable_IT.CreatedDateTime) >
+        #                 DateTimeUtil::date(mcrCustPaymTable_ST.CreatedDateTime))
+        #        {
+        #            return (DateTimeUtil::date(mcrCustPaymTable_ST.CreatedDateTime));
+        #        }
+        #        else
+        #        {
+        #            return (DateTimeUtil::date(mcrCustPaymTable_IT.CreatedDateTime));
+        #        }
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getOverallTotalOrders
+        #/// <summary>
+        #///     Retrieves the number of orders with a payment status
+        #///     matching that of the passed status.
+        #/// </summary>
+        #/// <param name="_status">
+        #///     The <c>MCRCustPaymStatus</c> that is used to count the number of payments matching this status.
+        #/// </param>
+        #/// <param name="_type">
+        #///     The <c>MCRCustPaymType</c> used to search for the applicable payments.
+        #/// </param>
+        #/// <returns>
+        #///     The number of orders with a payment status matching that of the passed status.
+        #/// </returns>
+        #public static Integer getOverallTotalOrders(MCRCustPaymStatus _status, MCRCustPaymType _type)
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTable;
+        #    SalesTable          salesTable;
+        #    CustInvoiceTable    custInvoiceTable;
+        #    Integer             retAmount = 0;
+        #
+        #    if (_status && _type)
+        #    {
+        #        select count(RefTableId) from mcrCustPaymTable
+        #            where mcrCustPaymTable.Status           == _status
+        #                && mcrCustPaymTable.CustPaymType    == _type
+        #            exists join salesTable
+        #                where mcrCustPaymTable.RefTableId   == salesTable.TableId
+        #                    && mcrCustPaymTable.RefRecId    == salesTable.RecId
+        #                    && salesTable.SalesStatus       == SalesStatus::Backorder;
+        #
+        #        retAmount = mcrCustPaymTable.RefTableId;
+        #
+        #        select count(RefTableId) from mcrCustPaymTable
+        #            where mcrCustPaymTable.Status           == _status
+        #                && mcrCustPaymTable.CustPaymType    == _type
+        #            exists join custInvoiceTable
+        #            where mcrCustPaymTable.RefTableId   == custInvoiceTable.TableId
+        #                && mcrCustPaymTable.RefRecId    == custInvoiceTable.RecId;
+        #
+        #        retAmount += mcrCustPaymTable.RefTableId;
+        #
+        #        return retAmount;
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #isFullyAuthed
+        #/// <summary>
+        #/// Checks if any authorization is stale before doing any processing that is
+        #/// based on the fact that an authorization might be stale.
+        #/// </summary>
+        #/// <param name="_refRecID">
+        #///     The record ID used to find the appropriate credit card payment(s).
+        #/// </param>
+        #/// <param name="_refTableID">
+        #///     The Table ID used to find the appropriate credit card payment(s).
+        #/// </param>
+        #/// <returns>
+        #/// true if there are any payment authorizations related to this order that are not authorized;
+        #/// otherwise, false.
+        #/// </returns>
+        #public static boolean isFullyAuthed(RecId _refRecID,
+        #                                       TableId _refTableID)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #
+        #    select firstonly RecId from mcrCustPaymTable
+        #        where mcrCustPaymTable.CustPaymType == MCRCustPaymType::CreditCard
+        #            && mcrCustPaymTable.RefRecId == _refRecID
+        #            && mcrCustPaymTable.RefTableId == _refTableID
+        #            && mcrCustPaymTable.Amount > 0
+        #        exists join creditCardAuthTrans
+        #            where creditCardAuthTrans.ApprovalAmountCur == mcrCustPaymTable.Amount
+        #            && creditCardAuthTrans.mcrPaymRecId == mcrCustPaymTable.RecId
+        #            && creditCardAuthTrans.ProcessorStatus != CreditCardProcessorStatus::Approved;
+        #
+        #    if (mcrCustPaymTable)
+        #    {
+        #        return false;
+        #    }
+        #
+        #    return true;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #lookupCardType
+        #/// <summary>
+        #///     Performs a lookup for call center card payments
+        #/// </summary>
+        #/// <param name="_control">
+        #///     The form control used to search for the applicable <c>RetailStoreTenderTypeCardTable</c> record.
+        #/// </param>
+        #/// <param name="_tenderType">
+        #///     Tender type used to filter out card types for other types.
+        #/// </param>
+        #/// <param name="_channel">
+        #///     Channel used to filter out card types for other channels.
+        #/// </param>
+        #public static void lookupCardType(FormControl _control,
+        #                                    RetailStoreTenderTypeId _tenderType,
+        #                                    RetailChannelRecId _channel)
+        #{
+        #    SysTableLookup sysTableLookup =
+        #        SysTableLookup::newParameters(tableNum(RetailStoreTenderTypeCardTable), _control);
+        #
+        #    Query                   query = new Query();
+        #    QueryBuildDataSource    queryBuildDataSource_StoreCardTable;
+        #    QueryBuildDataSource    queryBuildDataSource_CardTable;
+        #
+        #    queryBuildDataSource_StoreCardTable = query.addDataSource(tableNum(RetailStoreTenderTypeCardTable));
+        #    if (_channel)
+        #    {
+        #        queryBuildDataSource_StoreCardTable.addRange
+        #                            (fieldNum(RetailStoreTenderTypeCardTable, Channel))
+        #                            .value(SysQuery::value(_channel));
+        #    }
+        #    if (_tenderType)
+        #    {
+        #        queryBuildDataSource_StoreCardTable.addRange
+        #                            (fieldNum(RetailStoreTenderTypeCardTable, TenderTypeId))
+        #                            .value(SysQuery::value(_tenderType));
+        #    }
+        #
+        #    queryBuildDataSource_CardTable = queryBuildDataSource_StoreCardTable.addDataSource(tableNum(RetailTenderTypeCardTable));
+        #    queryBuildDataSource_CardTable.relations(true);
+        #    queryBuildDataSource_CardTable.joinMode(JoinMode::InnerJoin);
+        #    queryBuildDataSource_CardTable.addRange(fieldNum(RetailTenderTypeCardTable, CardTypes)).value(SysQuery::value(RetailCardTypesBase::CorporateCard));
+        #    queryBuildDataSource_CardTable.addRange(fieldNum(RetailTenderTypeCardTable, CardTypes)).value(SysQuery::value(RetailCardTypesBase::GiftCard));
+        #    queryBuildDataSource_CardTable.addRange(fieldNum(RetailTenderTypeCardTable, CardTypes)).value(SysQuery::value(RetailCardTypesBase::InternationalKreditcard));
+        #
+        #    sysTableLookup.addLookupfield(fieldNum(RetailStoreTenderTypeCardTable, CardTypeId));
+        #    sysTableLookup.parmQuery(query);
+        #
+        #    sysTableLookup.performFormLookup();
+        #}
+      ENDSOURCE
+      SOURCE #lookupDfltReturnPaymMode
+        #/// <summary>
+        #///     Retrieves the default return payment mode.
+        #///     Only paymenmt modes of on account and refund check should be allowed.
+        #/// </summary>
+        #/// <param name="_control">
+        #///     The form control used to search for the applicable <c>RetailTenderTypeTable</c> record.
+        #/// </param>
+        #public static void lookupDfltReturnPaymMode(FormControl _control)
+        #{
+        #    SysTableLookup sysTableLookup =
+        #        SysTableLookup::newParameters(tableNum(RetailTenderTypeTable), _control);
+        #
+        #    Query query = new Query();
+        #    QueryBuildDataSource queryBuildDataSource_TenderType;
+        #
+        #    queryBuildDataSource_TenderType = query.addDataSource(tableNum(RetailTenderTypeTable));
+        #    queryBuildDataSource_TenderType
+        #        .addRange(fieldNum(RetailTenderTypeTable, DefaultFunction))
+        #        .value(SysQuery::value(RetailTenderFunction::Check));
+        #    queryBuildDataSource_TenderType
+        #        .addRange(fieldNum(RetailTenderTypeTable, DefaultFunction))
+        #        .value(SysQuery::value(RetailTenderFunction::Customer));
+        #
+        #    sysTableLookup.addLookupfield(fieldNum(RetailTenderTypeTable, TenderTypeId));
+        #    sysTableLookup.addLookupfield(fieldNum(RetailTenderTypeTable, Name));
+        #    sysTableLookup.parmQuery(query);
+        #
+        #    sysTableLookup.performFormLookup();
+        #}
+      ENDSOURCE
+      SOURCE #processIfAuthStale
+        #/// <summary>
+        #/// Submits authorizations for all credit card payments
+        #///     on the order if they are no longer valid.
+        #/// </summary>
+        #/// <param name="_salesTableRecId">
+        #/// RecID of related sales order.
+        #/// </param>
+        #/// <returns>
+        #/// true if order is fully authed; otherwise, false.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #/// Parameter value must be included, error is throw if the RecID
+        #/// of the related sales order is not provided.
+        #/// </exception>
+        #public static boolean processIfAuthStale(RefRecId _salesTableRecId)
+        #{
+        #    boolean             ret = true;
+        #    CreditCardAuthTrans creditCardAuthTrans;
+        #    MCRCustPaymTable    mcrCustPaymTable;
+        #
+        #    if (_salesTableRecId)
+        #    {
+        #        while select mcrCustPaymTable
+        #            where mcrCustPaymTable.RefRecId == _salesTableRecId
+        #                && mcrCustPaymTable.RefTableId == tableNum(SalesTable)
+        #                && mcrCustPaymTable.CustPaymType == MCRCustPaymType::CreditCard
+        #                //--> Added by Red Maple to avoid trying to process transactions that are not
+        #                //--> Standard AX Credit Cards
+        #                && mcrCustPaymTable.PaymInfoTableId != tableNum(SalesTableCC)
+        #        {
+        #            creditCardAuthTrans = CreditCardAuthTrans::mcrFindValidPreApproval(mcrCustPaymTable.RecId);
+        #
+        #            if (!creditCardAuthTrans)
+        #            {
+        #                ret = CreditCardProcess::mcrDoPreAuth(mcrCustPaymTable) && ret;
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        throw error(Error::wrongUseOfFunction(funcName()));
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #selectFirstByIDAndType
+        #/// <summary>
+        #///     Returns the first record in the payment table
+        #///     that has the passed sales ID and payment
+        #///     type.
+        #/// </summary>
+        #/// <param name="_recId">
+        #///     The record ID used to find the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <param name="_tableId">
+        #///     The table ID used to find the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <param name="_paymType">
+        #///     The type of payment used to find the applicable <c>MCRCustPaymTable</c> record.
+        #/// </param>
+        #/// <returns>
+        #///     The first record in the payment table that
+        #///     has the passed sales ID and payment type.
+        #/// </returns>
+        #/// <exception cref="Exception::Error">
+        #///     _recId, _tableId, and _paymType are required, throw error if not provided.
+        #/// </exception>
+        #public static MCRCustPaymTable selectFirstByIDAndType(RecId _recId, TableId _tableId, MCRCustPaymType _paymType)
+        #{
+        #    MCRCustPaymTable mcrCustPaymTable;
+        #
+        #    if (_recId && _tableId && _paymType)
+        #    {
+        #        select firstonly mcrCustPaymTable
+        #            where (mcrCustPaymTable.RefRecId == _recId)
+        #                && (mcrCustPaymTable.RefTableId == _tableId)
+        #                && (mcrCustPaymTable.CustPaymType == _paymType);
+        #
+        #        return mcrCustPaymTable;
+        #    }
+        #    else
+        #    {
+        #        throw error("@MCR27548");
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validatePaymMode
+        #/// <summary>
+        #///     Validates the specified method of payment for use on a customer payment.
+        #///     The method of payment must:
+        #///     * exist
+        #///     * be configured as 'active' for use for customer payments
+        #///     * have an associated payment type
+        #/// </summary>
+        #/// <param name="_retailTenderTypeId">
+        #///     The payment mode to be validated.
+        #/// </param>
+        #/// <param name="_allowBlank">
+        #///     Boolean that determines whether or not to allow blanks; optional.
+        #/// </param>
+        #/// <param name="_showErrors">
+        #///     Boolean that determines whether or not to show errors; optional.
+        #/// </param>
+        #/// <param name="_custAccount">
+        #///     The customer account number used in validation; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if the record is valid and ready to be written to the database; otherwise false.
+        #/// </returns>
+        #public static boolean validatePaymMode(
+        #                    RetailTenderTypeId _retailTenderTypeId,
+        #                    boolean _allowBlank = false,
+        #                    boolean _showErrors = true,
+        #                    AccountNum  _custAccount = '')
+        #{
+        #    boolean isValid = true;
+        #
+        #    RetailTenderTypeTable retailTenderTypeTable;
+        #
+        #    if (_retailTenderTypeId == "")
+        #    {
+        #        if (!_allowBlank)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error("@MCR11425");
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        retailTenderTypeTable = RetailTenderTypeTable::find(_retailTenderTypeId);
+        #        if (!retailTenderTypeTable)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR10968", _retailTenderTypeId));
+        #            }
+        #        }
+        #        else
+        #        {
+        #            // Check to see if customer allows on-account payments.
+        #            if (_custAccount)
+        #            {
+        #                if (!MCRCustTable::findByCustAccount(_custAccount).AllowOnAccount
+        #                    && retailTenderTypeTable.DefaultFunction == RetailTenderFunction::Customer)
+        #                {
+        #                    isValid = false;
+        #                    if (_showErrors)
+        #                    {
+        #                        error("@MCR28099");
+        #                    }
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #writePaymentAdjustmentSales
+        #/// <summary>
+        #///     Creates a new cust paym record for either a charge or a refund.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymTable_Orig">
+        #///     The <c>MCRCustPaymTable</c> record used for returns.
+        #/// </param>
+        #/// <param name="_amountChanged">
+        #///     The new amount to be written to the new <c>MCRCustPaymTable</c> recrod.
+        #/// </param>
+        #/// <param name="_paymAdjustType">
+        #///     The <c>MCRPaymAdjustmentType</c> enum used to determine the adjusted <c>MCRCustPaymTable</c>
+        #///     record's PercentAmount field; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The <c>MCRCustPaymTable</c> record found.
+        #/// </returns>
+        #public static MCRCustPaymTable writePaymentAdjustmentSales(
+        #                MCRCustPaymTable        _mcrCustPaymTable_Orig,
+        #                AmountCur               _amountChanged,
+        #                MCRPaymAdjustmentType   _paymAdjustType = MCRPaymAdjustmentType::Charge)
+        #{
+        #    MCRCustPaymTable    mcrCustPaymTableAdjs;
+        #    AmountCur           refundableAmt = 0;
+        #
+        #    ttsbegin;
+        #
+        #    if (_mcrCustPaymTable_Orig)
+        #    {
+        #        mcrCustPaymTableAdjs.Amount             = _amountChanged;
+        #
+        #        // Broke up the credit card and e-check values
+        #        //    also, only set percent amount for charges
+        #        // Credit cards (blank for EChecks)
+        #        if (_mcrCustPaymTable_Orig.CustPaymType == MCRCustPaymType::CreditCard)
+        #        {
+        #            if (_paymAdjustType == MCRPaymAdjustmentType::Charge)
+        #            {
+        #                // Set the percent amount on the adjustment record to
+        #                // zero - if this is set to 100 % and the original also was
+        #                // set to a 100% then we will have an issue with validation as
+        #                // the percent is now greater than a 100%.
+        #                mcrCustPaymTableAdjs.PercentAmount = 0.0;
+        #            }
+        #            else
+        #            {
+        #                mcrCustPaymTableAdjs.OrigRefundRecID = _mcrCustPaymTable_Orig.RecId;
+        #            }
+        #        }
+        #
+        #        mcrCustPaymTableAdjs.CustAccount    = _mcrCustPaymTable_Orig.CustAccount;
+        #        mcrCustPaymTableAdjs.CustPaymType   = _mcrCustPaymTable_Orig.CustPaymType;
+        #        mcrCustPaymTableAdjs.IsPrepay       = _mcrCustPaymTable_Orig.IsPrepay;
+        #        mcrCustPaymTableAdjs.TenderTypeId   = _mcrCustPaymTable_Orig.TenderTypeId;
+        #        mcrCustPaymTableAdjs.CardTypeId     = _mcrCustPaymTable_Orig.CardTypeId;
+        #
+        #        //Removed posted credit assignment
+        #
+        #        mcrCustPaymTableAdjs.RefRecId           = _mcrCustPaymTable_Orig.RefRecId;
+        #        mcrCustPaymTableAdjs.RefTableId         = _mcrCustPaymTable_Orig.RefTableId;
+        #        mcrCustPaymTableAdjs.PaymInfoRecId      = _mcrCustPaymTable_Orig.PaymInfoRecId;
+        #        mcrCustPaymTableAdjs.PaymInfoTableId    = _mcrCustPaymTable_Orig.PaymInfoTableId;
+        #        mcrCustPaymTableAdjs.Status             = MCRCustPaymStatus::NotSubmitted;
+        #
+        #        mcrCustPaymTableAdjs.initFromRefTrans();
+        #
+        #        if (mcrCustPaymTableAdjs.validateWrite())
+        #        {
+        #            mcrCustPaymTableAdjs.insert();
+        #        }
+        #        else
+        #        {
+        #            throw error("@SYS21628");
+        #        }
+        #
+        #    }
+        #    ttscommit;
+        #
+        #    return mcrCustPaymTableAdjs;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

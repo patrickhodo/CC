@@ -1,0 +1,211 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardStoreBatch
+    PROPERTIES
+      Name                #CreditCardStoreBatch
+      Origin              #{DC05A069-98E4-465D-8865-16366670B539}
+      LegacyId            #20020
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardStoreBatch
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #creditTrans
+        #boolean creditTrans(CreditCardTrans       ccTrans)
+        #{
+        #    CreditCardBatchLines        ccBatchLines;
+        #    CreditCardTrans             delccTrans;
+        #    ;
+        #    //--> If this a credit of another transaction, then we need to remove that transaction
+        #    if (ccTrans.OrigID)
+        #    {
+        #        select ccBatchLines where ccBatchLines.CreditCardTransID == ccTrans.OrigID;
+        #
+        #        if (ccBatchLines)
+        #        {
+        #            ttsbegin;
+        #
+        #            select delccTrans where delccTrans.TransID == ccTrans.TransID;
+        #
+        #            if (delccTrans.RemovedFromBatch == NoYes::No)
+        #            {
+        #                delccTrans.RemovedFromBatch = NoYes::Yes;
+        #                delccTrans.update();
+        #            }
+        #            else
+        #            {
+        #                throw error("@ACC1064");
+        #            }
+        #
+        #            ccBatchLines.delete();
+        #
+        #            ttscommit;
+        #            return true;
+        #        }
+        #        else
+        #        {
+        #            throw error("@ACC1065");
+        #        }
+        #    }
+        #
+        #    return false;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #container run(CreditCardTrans   ccTrans)
+        #{
+        #    CreditCardBatchTable        ccBatchTable;
+        #    CreditCardBatchLines        ccBatchLines;
+        #    container                   msg;
+        #    ;
+        #    //--> Does a batch already exist?
+        #    select firstonly ccBatchTable where
+        #        ccBatchTable.BatchStatus == CreditCardBatchStatus::Open;
+        #
+        #    if (!ccBatchTable)
+        #    {
+        #        ccBatchTable.clear();
+        #        ccBatchTable.BatchNumber = NumberSeq::newGetNum(CreditCardParameters::numRefBatchNum()).num();
+        #        ccBatchTable.BatchStatus = CreditCardBatchStatus::Open;
+        #        ccBatchTable.TerminalId  = CreditCardTerminalTable::find().TerminalId;
+        #        ccBatchTable.TransDate = today();
+        #        ccBatchTable.insert();
+        #    }
+        #
+        #    if (ccTrans.TransType == CreditCardTrxType::V)
+        #    {
+        #        this.voidTrans(ccTrans);
+        #        this.updateForBatch(ccTrans,ccBatchTable);
+        #    }
+        #    else if (ccTrans.TransType== CreditCardTrxType::C)
+        #    {
+        #        if (this.creditTrans(ccTrans) == NoYes::Yes )
+        #        {
+        #            this.updateForBatch(ccTrans,ccBatchTable);
+        #            return msg;
+        #        }
+        #
+        #
+        #    }
+        #
+        #        //--> Insert record into batch lines
+        #        select ccBatchLines
+        #            where ccBatchLines.CreditCardTransID == ccTrans.TransID;
+        #
+        #        if (ccBatchLines)
+        #            throw error("@ACC719");
+        #
+        #        ccBatchLines.clear();
+        #        ccBatchLines.BatchNumber = ccBatchTable.BatchNumber;
+        #        ccBatchLines.CreditCardTransID = ccTrans.TransID;
+        #        ccBatchLines.LineNum = CreditCardBatchLines::lastLineNum(ccBatchTable.BatchNumber) + 1;
+        #        ccBatchLines.TrxType = ccTrans.TransType;
+        #        ccBatchLines.insert();
+        #
+        #        this.updateForBatch(ccTrans,ccBatchTable);
+        #
+        #    return msg;
+        #}
+      ENDSOURCE
+      SOURCE #updateForBatch
+        #void updateForBatch(CreditCardTrans    _ccTrans,
+        #                    CreditCardBatchTable    ccBatchTable)
+        #{
+        #    CreditCardTrans         newccTrans;
+        #    ;
+        #    ttsbegin;
+        #
+        #    select forupdate newccTrans where newccTrans.RecId == _ccTrans.RecId;
+        #
+        #    if (!newccTrans)
+        #        throw error(strFmt("@ACC142"));
+        #
+        #    newccTrans.Result               =   "-999";
+        #    newccTrans.AuthCode             =   strFmt("@ACC913",_ccTrans.TransID,ccBatchTable.BatchNumber);
+        #    newccTrans.Comment1             =   "@ACC720";
+        #
+        #
+        #    newccTrans.update();
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #voidTrans
+        #boolean voidTrans(CreditCardTrans       ccTrans)
+        #{
+        #    CreditCardBatchLines        ccBatchLines;
+        #    CreditCardTrans             delccTrans;
+        #    ;
+        #    select delccTrans where delccTrans.AuthCode == ccTrans.OrigID;
+        #
+        #    select ccBatchLines where ccBatchLines.CreditCardTransID == delccTrans.TransID;
+        #
+        #    if (ccBatchLines)
+        #    {
+        #        ttsbegin;
+        #
+        #        select forupdate delccTrans where delccTrans.TransID == ccTrans.TransID;
+        #
+        #        if (delccTrans.RemovedFromBatch == NoYes::No)
+        #        {
+        #            delccTrans.RemovedFromBatch = NoYes::Yes;
+        #            delccTrans.update();
+        #        }
+        #        else
+        #        {
+        #            throw error("@ACC1064");
+        #        }
+        #
+        #        ccBatchLines.delete();
+        #
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        throw error("@ACC1065");
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #static container construct(CreditCardTrans   ccTrans)
+        #{
+        #    CreditCardStoreBatch        ccStoreBatch;
+        #    ;
+        #    ccStoreBatch = new CreditCardStoreBatch();
+        #
+        #    return ccStoreBatch.run(ccTrans);
+        #}
+      ENDSOURCE
+      SOURCE #isCurrentCredit
+        #static boolean isCurrentCredit(CreditCardTrans       ccTrans)
+        #{
+        #    CreditCardBatchLines        ccBatchLines;
+        #    ;
+        #    select ccBatchLines where ccBatchLines.CreditCardTransID == ccTrans.OrigID;
+        #
+        #    if (!ccBatchLines)
+        #    {
+        #        return false;
+        #    }
+        #    else
+        #    {
+        #        return true;
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

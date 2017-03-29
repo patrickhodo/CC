@@ -1,0 +1,260 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantTSYS
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantTSYS
+      Label               #@ACC1723
+      FormRef             #creditCardterminalTable
+      TitleField1         #TerminalId
+      TitleField2         #URL
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdIdx
+      ClusterIndex        #TerminalIdIdx
+      DeveloperDocumentation  #@ACC1724
+      Origin              #{5D869087-3FEF-4D7E-A032-6B6655137D00}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Cardholder
+        ENUM
+        PROPERTIES
+          Name                #Cardholder
+          Table               #CreditCardMerchantTSYS
+          Origin              #{03A2FED7-4B37-4D20-9D8D-20CDCBCFBA3D}
+          EnumType            #CreditCardCardholder
+        ENDPROPERTIES
+        
+      FIELD #DeviceId
+        STRING
+        PROPERTIES
+          Name                #DeviceId
+          Label               #@SYS90307
+          Table               #CreditCardMerchantTSYS
+          Origin              #{C8D3AB80-7C98-4AD9-BACC-A389F538496C}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #Industry
+        ENUM
+        PROPERTIES
+          Name                #Industry
+          Table               #CreditCardMerchantTSYS
+          Origin              #{7F0E4407-ACF5-456B-8D76-46840CEDA3BC}
+          EnumType            #CreditCardIndustryCybersource
+        ENDPROPERTIES
+        
+      FIELD #Key
+        STRING
+        PROPERTIES
+          Name                #Key
+          Table               #CreditCardMerchantTSYS
+          Origin              #{B2B80CEF-B161-4AD4-84E3-A5968E3B0CAB}
+          ExtendedDataType    #CreditCardCybersourceKey
+          StringSize          #(Memo)
+        ENDPROPERTIES
+        
+      FIELD #MerchantId
+        STRING
+        PROPERTIES
+          Name                #MerchantId
+          Label               #@ACC603
+          Table               #CreditCardMerchantTSYS
+          Origin              #{0FA3B377-E838-4EA6-83C6-AA8A18060F2F}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #Pwd
+        STRING
+        PROPERTIES
+          Name                #Pwd
+          Label               #@SYS30019
+          Table               #CreditCardMerchantTSYS
+          Origin              #{823112E1-FAA9-4E1A-B10A-8D17CD223F78}
+          ExtendedDataType    #CreditCardPartnerPwd
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantTSYS
+          Origin              #{0076F39A-EC22-42E7-9725-3E07DE883033}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #UniqueId
+        STRING
+        PROPERTIES
+          Name                #UniqueId
+          Visible             #No
+          Table               #CreditCardMerchantTSYS
+          Origin              #{6DF1006B-7DA3-4E49-B3DF-CE4D1938323D}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #URL
+        STRING
+        PROPERTIES
+          Name                #URL
+          Table               #CreditCardMerchantTSYS
+          Origin              #{D097E814-A0F1-4E5B-9A56-72C63AD1BCCF}
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #UserId
+        STRING
+        PROPERTIES
+          Name                #UserId
+          Table               #CreditCardMerchantTSYS
+          Origin              #{2011470A-39B7-44F0-BF5E-8E6365B4A630}
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Industry
+        PROPERTIES
+          Name                #Industry
+          Label               #@ACC634
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Industry
+          #Cardholder
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Interface
+        PROPERTIES
+          Name                #Interface
+          Label               #@SYS69603
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Merchant
+        PROPERTIES
+          Name                #Merchant
+          Label               #@ACC1012
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UserId
+          #Pwd
+          #MerchantId
+          #DeviceId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #Key
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdIdx
+      PROPERTIES
+        Name                #TerminalIdIdx
+        AllowDuplicates     #No
+        Origin              #{915A7FE7-8B65-46FB-BE01-A084EA4380FF}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ExactlyOne
+          RelationshipType    #Composition
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #findTerminalWithId
+        #static CreditCardMerchantAdflex findTerminalWithId(CreditCardTerminalId ccTerminalId)
+        #{
+        #    CreditCardMerchantAdflex     ccADN;
+        #    ;
+        #
+        #    select ccADN where ccADN.TerminalId == ccTerminalId;
+        #
+        #    if (!ccADN)
+        #        throw error("@ACC924");
+        #
+        #    return ccADN;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

@@ -1,0 +1,526 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #RetailGiftCardTerminalTransactions
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #RetailGiftCardTerminalTransactions
+      Label               #@RET5047
+      TitleField1         #cardNumber
+      TitleField2         #operation
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #RetailTablesEx3
+      CacheLookup         #NotInTTS
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #RecId
+      ClusterIndex        #cardNumberIdx
+      DeveloperDocumentation  #@RET4040258
+      Origin              #{27503D98-9F0E-4AF8-917A-E5148F14B274}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #amount
+        REAL
+        PROPERTIES
+          Name                #amount
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{220CDAEA-A2F7-4FAA-BD9E-F7054845B79A}
+          ExtendedDataType    #AmountMST
+        ENDPROPERTIES
+        
+      FIELD #cardNumber
+        STRING
+        PROPERTIES
+          Name                #cardNumber
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{22297380-86F7-4839-9414-6140F0989380}
+          ExtendedDataType    #RetailGiftCardId
+          StringSize          #30
+        ENDPROPERTIES
+        
+      FIELD #Channel
+        INT64
+        PROPERTIES
+          Name                #Channel
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{CDB68648-687A-4CBA-AC2F-995EA1A8F2E1}
+          ExtendedDataType    #RetailChannelRecId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardTerminalId
+        STRING
+        PROPERTIES
+          Name                #CreditCardTerminalId
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{B6BA49AC-68D8-412A-A7DA-A3C6F9B2E9DC}
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #MCRInventTransId
+        STRING
+        PROPERTIES
+          Name                #MCRInventTransId
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{04D9D4F8-DFFB-42D2-A793-155964C49401}
+          ExtendedDataType    #TradeInventTransId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #MCRInvoiceAccount
+        STRING
+        PROPERTIES
+          Name                #MCRInvoiceAccount
+          HelpText            #@MCR40286
+          Mandatory           #Yes
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{E572C914-3662-493E-98B7-92CA93C8A86B}
+          ExtendedDataType    #CustInvoiceAccount
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #MCRSalesId
+        STRING
+        PROPERTIES
+          Name                #MCRSalesId
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          IgnoreEDTRelation   #Yes
+          Origin              #{8CDED8AF-1DAB-4491-8120-5CB651513E34}
+          ExtendedDataType    #SalesIdBase
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #operation
+        ENUM
+        PROPERTIES
+          Name                #operation
+          Mandatory           #Yes
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{6CD0B2E5-D4CD-430D-B4CD-4AA3FED049B4}
+          EnumType            #RetailGiftCardOperation
+        ENDPROPERTIES
+        
+      FIELD #PNRef
+        STRING
+        PROPERTIES
+          Name                #PNRef
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{43B5699E-2BF0-4C60-B44F-222E77A479C5}
+          ExtendedDataType    #CreditCardPNRef
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #receiptId
+        STRING
+        PROPERTIES
+          Name                #receiptId
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{830BA89A-40D3-4E8A-A407-2CE6EDCAA33B}
+          ExtendedDataType    #RetailReceiptId
+          StringSize          #18
+        ENDPROPERTIES
+        
+      FIELD #RepMsg
+        STRING
+        PROPERTIES
+          Name                #RepMsg
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{DD9993DF-74D9-483C-93C6-AA7EFA4EF0FC}
+          ExtendedDataType    #CreditCardRepMsg
+          StringSize          #50
+        ENDPROPERTIES
+        
+      FIELD #Result
+        STRING
+        PROPERTIES
+          Name                #Result
+          Label               #@SYS6769
+          HelpText            #@ACC1049
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{6C100455-1408-43B6-BD4D-1DC55AB32AF2}
+          ExtendedDataType    #TransTxt
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #staffId
+        STRING
+        PROPERTIES
+          Name                #staffId
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{07790E6A-DBA5-4FFF-B997-1950CCECA4C7}
+          ExtendedDataType    #RetailStaffId
+          StringSize          #25
+        ENDPROPERTIES
+        
+      FIELD #terminalId
+        STRING
+        PROPERTIES
+          Name                #terminalId
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{2C54B31B-346F-4A77-8061-4D588E1368D0}
+          ExtendedDataType    #RetailTerminalId
+        ENDPROPERTIES
+        
+      FIELD #transactionId
+        STRING
+        PROPERTIES
+          Name                #transactionId
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{0F39F929-B111-47CB-8F4A-149972AE0A84}
+          ExtendedDataType    #RetailTransactionId
+          StringSize          #44
+        ENDPROPERTIES
+        
+      FIELD #transDate
+        DATE
+        PROPERTIES
+          Name                #transDate
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{2AB626D4-32DC-4791-9C96-BBEF3DD4426D}
+          ExtendedDataType    #RetailtransDate
+        ENDPROPERTIES
+        
+      FIELD #TransID
+        STRING
+        PROPERTIES
+          Name                #TransID
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{1C11B164-BA6C-4AE7-9CC3-E33F2A419A12}
+          ExtendedDataType    #CreditCardTransID
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #transTime
+        TIME
+        PROPERTIES
+          Name                #transTime
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RetailGiftCardTerminalTransactions
+          Origin              #{F42692EA-0F08-49D0-A932-F58E55028546}
+          ExtendedDataType    #RetailTransTime
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #cardNumber
+          #transactionId
+          #transDate
+          #transTime
+          #Channel
+          #terminalId
+          #operation
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #All
+        PROPERTIES
+          Name                #All
+          Label               #@SYS80094
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #cardNumber
+          #receiptId
+          #MCRInventTransId
+          #MCRInvoiceAccount
+          #MCRSalesId
+          #amount
+          #Channel
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Details
+        PROPERTIES
+          Name                #Details
+          Label               #@RET3813
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #transDate
+          #transTime
+          #operation
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Grid
+        PROPERTIES
+          Name                #Grid
+          Label               #@RET4772
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Channel
+          #terminalId
+          #transactionId
+          #staffId
+          #transDate
+          #transTime
+          #operation
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@RET3040
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Channel
+          #terminalId
+          #transactionId
+          #staffId
+          #receiptId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #cardNumberIdx
+      PROPERTIES
+        Name                #cardNumberIdx
+        Origin              #{B53EC7B6-880D-444F-9185-B588203AFA27}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #cardNumber
+      ENDINDEXFIELDS
+      
+      #mcrInventTransIdx
+      PROPERTIES
+        Name                #mcrInventTransIdx
+        Origin              #{395EEC55-CC56-4B9F-80AF-398F8AD57162}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #MCRInventTransId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #cardNumber
+        PROPERTIES
+          Name                #cardNumber
+          Table               #RetailGiftCardTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #cardNumber
+            RelatedField        #entryId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRCustTable
+        PROPERTIES
+          Name                #MCRCustTable
+          Table               #CustTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #MCRInvoiceAccount
+            RelatedField        #AccountNum
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRSalesLine
+        PROPERTIES
+          Name                #MCRSalesLine
+          Table               #SalesLine
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #IssuedSalesLine
+          Role                #GiftCard
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #MCRInventTransId
+            RelatedField        #InventTransId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #MCRSalesTable
+        PROPERTIES
+          Name                #MCRSalesTable
+          Table               #SalesTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          RelatedTableRole    #PaymentForSalesOrder
+          Role                #PaymentGiftCardTransaction
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #MCRSalesId
+            RelatedField        #SalesId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailChannelTable
+        PROPERTIES
+          Name                #RetailChannelTable
+          Table               #RetailChannelTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #Channel
+            RelatedField        #RecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailTerminalTable
+        PROPERTIES
+          Name                #RetailTerminalTable
+          Table               #RetailTerminalTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #terminalId
+            RelatedField        #terminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailTransactionTable
+        PROPERTIES
+          Name                #RetailTransactionTable
+          Table               #RetailTransactionTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #transactionId
+            RelatedField        #transactionId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #find
+        #static RetailGiftCardTerminalTransactions find(CreditCardTransId       ccTransId)
+        #{
+        #    RetailGiftCardTerminalTransactions         ccTrans;
+        #    ;
+        #    select ccTrans where
+        #        ccTrans.TransID == ccTransId;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #initFromRetailTable
+        #public static RetailGiftCardTerminalTransactions initFromRetailTable(RetailGiftCardTable   retailTable,
+        #                                       CreditCardTerminalId         terminalId)
+        #{
+        #    RetailGiftCardTerminalTransactions      giftCardTransactions;
+        #    ;
+        #    giftCardTransactions.TransID                =   NumberSeq::newGetNum(CreditCardParameters::numRefCCTransId()).num();
+        #    giftCardTransactions.cardNumber             =   retailTable.entryId   ;
+        #    giftCardTransactions.CreditCardTerminalId   =   terminalId;
+        #    giftCardTransactions.operation              =   RetailGiftCardOperation::Balance;
+        #    giftCardTransactions.transDate              =   today();
+        #    return giftCardTransactions;
+        #}
+      ENDSOURCE
+      SOURCE #initFromRetailTrans
+        #public static RetailGiftCardTerminalTransactions initFromRetailTrans(RetailGiftCardTransactions   retailTransactions,
+        #                                       CreditCardTerminalId         terminalId)
+        #{
+        #    RetailGiftCardTerminalTransactions      giftCardTransactions;
+        #    ;
+        #    giftCardTransactions.TransID                =   NumberSeq::newGetNum(CreditCardParameters::numRefCCTransId()).num();
+        #    giftCardTransactions.amount                 =   retailTransactions.amount;
+        #    giftCardTransactions.cardNumber             =   retailTransactions.cardNumber;
+        #    giftCardTransactions.Channel                =   retailTransactions.Channel;
+        #    giftCardTransactions.CreditCardTerminalId   =   terminalId;
+        #    giftCardTransactions.MCRInventTransId       =   retailTransactions.MCRInventTransId;
+        #    giftCardTransactions.MCRInvoiceAccount      =   retailTransactions.MCRInvoiceAccount;
+        #    giftCardTransactions.MCRSalesId             =   retailTransactions.MCRSalesId;
+        #    giftCardTransactions.operation              =   retailTransactions.operation;
+        #    giftCardTransactions.PNRef                  =   retailTransactions.transactionId;
+        #    giftCardTransactions.receiptId              =   retailTransactions.receiptId;
+        #    giftCardTransactions.staffId                =   retailTransactions.staffId;
+        #    giftCardTransactions.transDate              =   today();
+        #    giftCardTransactions.transactionId          =   retailTransactions.transactionId;
+        #    return giftCardTransactions;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

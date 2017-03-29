@@ -1,0 +1,641 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #tmpSalesTableCC
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #tmpSalesTableCC
+      Label               #@ACC127
+      FormRef             #SalesTableCC
+      TitleField1         #SalesId
+      TitleField2         #CreditCardId
+      TableType           #InMemory
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CreateRecIdIndex    #Yes
+      TableGroup          #Transaction
+      PrimaryIndex        #RecId
+      ClusterIndex        #SalesIdIdx
+      DeveloperDocumentation  #@ACC1447
+      Origin              #{DFEAAD37-B033-4031-A145-738E64CC389F}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AmountCur
+        REAL
+        PROPERTIES
+          Name                #AmountCur
+          Table               #tmpSalesTableCC
+          Origin              #{3055D10A-7BEB-41BE-8717-DC6BE367E073}
+          ExtendedDataType    #AmountMST
+        ENDPROPERTIES
+        
+      FIELD #AmountMST
+        REAL
+        PROPERTIES
+          Name                #AmountMST
+          Label               #@ACC1010
+          Table               #tmpSalesTableCC
+          Origin              #{69612A9D-829A-4180-A1A8-8FA5C988CB03}
+          ExtendedDataType    #AmountMST
+        ENDPROPERTIES
+        
+      FIELD #AuthCode
+        STRING
+        PROPERTIES
+          Name                #AuthCode
+          Table               #tmpSalesTableCC
+          Origin              #{9825E32B-2C32-4E61-AB34-E57FC9A9E78F}
+          ExtendedDataType    #CreditCardAuthCode
+          StringSize          #6
+        ENDPROPERTIES
+        
+      FIELD #Cancelled
+        ENUM
+        PROPERTIES
+          Name                #Cancelled
+          Label               #@SYS1068
+          HelpText            #@ACC158
+          Table               #tmpSalesTableCC
+          Origin              #{270740DD-7EAF-4B80-9BBD-926F177A5468}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #Captured
+        ENUM
+        PROPERTIES
+          Name                #Captured
+          Label               #@ACC1018
+          HelpText            #@ACC1020
+          Table               #tmpSalesTableCC
+          Origin              #{AD72BE88-9008-4C06-8118-67DC67D0B424}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #CaptureRestricted
+        ENUM
+        PROPERTIES
+          Name                #CaptureRestricted
+          Label               #@ACC1013
+          HelpText            #@ACC1019
+          Table               #tmpSalesTableCC
+          Origin              #{4DF53D09-9D24-48A6-B2DF-63AC3ABC8AA5}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #CitiPlan
+        STRING
+        PROPERTIES
+          Name                #CitiPlan
+          Table               #tmpSalesTableCC
+          Origin              #{501613E3-1F4D-4D4C-B198-0D6234B045C7}
+          ExtendedDataType    #CreditCardCitiPlan
+          StringSize          #5
+        ENDPROPERTIES
+        
+      FIELD #CreditCardId
+        STRING
+        PROPERTIES
+          Name                #CreditCardId
+          Table               #tmpSalesTableCC
+          Origin              #{27E27541-7B30-4F36-867B-30B04E817E5E}
+          ExtendedDataType    #CreditCardId
+        ENDPROPERTIES
+        
+      FIELD #CreditCardTrxType
+        ENUM
+        PROPERTIES
+          Name                #CreditCardTrxType
+          Table               #tmpSalesTableCC
+          Origin              #{E30E2A28-F4EA-4F0F-8DDB-0CDCBADB023A}
+          EnumType            #CreditCardTrxType
+        ENDPROPERTIES
+        
+      FIELD #CurrencyCode
+        STRING
+        PROPERTIES
+          Name                #CurrencyCode
+          Table               #tmpSalesTableCC
+          Origin              #{F464349D-52E4-451F-A7CB-B45792737127}
+          ExtendedDataType    #CurrencyCode
+          StringSize          #3
+        ENDPROPERTIES
+        
+      FIELD #CustInvoiceRefRecId
+        INT64
+        PROPERTIES
+          Name                #CustInvoiceRefRecId
+          Table               #tmpSalesTableCC
+          Origin              #{250208C8-6920-4FE7-A40C-123ADA7AD4CD}
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #Debit
+        ENUM
+        PROPERTIES
+          Name                #Debit
+          Label               #@ACC1001
+          HelpText            #@ACC1002
+          Visible             #No
+          ConfigurationKey    #Debit
+          Table               #tmpSalesTableCC
+          Origin              #{2305B659-D909-4FBA-A761-45055EFF2B6A}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #EnforceAVS
+        ENUM
+        PROPERTIES
+          Name                #EnforceAVS
+          Label               #@ACC1303
+          HelpText            #@ACC1304
+          Table               #tmpSalesTableCC
+          Origin              #{C9A68DA8-8D3B-4ABB-9EFD-E653D8FE11DB}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #NameOnCard
+        STRING
+        PROPERTIES
+          Name                #NameOnCard
+          Label               #@ACC14
+          HelpText            #@ACC15
+          Table               #tmpSalesTableCC
+          Origin              #{D1A60FB4-6D37-4E9A-A45F-88A6D4E656D5}
+          ExtendedDataType    #Name
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #PNRef
+        STRING
+        PROPERTIES
+          Name                #PNRef
+          Table               #tmpSalesTableCC
+          Origin              #{115DE2F3-1DC6-4B23-9A40-A1D501766D1B}
+          ExtendedDataType    #CreditCardPNRef
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #Processed
+        ENUM
+        PROPERTIES
+          Name                #Processed
+          HelpText            #@ACC1475
+          Table               #tmpSalesTableCC
+          Origin              #{923B2813-564C-4C13-8604-FBEB73828CCF}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #ProjProposalId
+        STRING
+        PROPERTIES
+          Name                #ProjProposalId
+          Table               #tmpSalesTableCC
+          Origin              #{74002768-5966-4FD8-8055-C0C10A93F596}
+          ExtendedDataType    #ProjProposalId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #RecurringToken
+        ENUM
+        PROPERTIES
+          Name                #RecurringToken
+          Table               #tmpSalesTableCC
+          Origin              #{4127ABB8-9C25-408B-8361-8E0774AFBEC1}
+          EnumType            #CreditCardRecurringToken
+        ENDPROPERTIES
+        
+      FIELD #Registered
+        ENUM
+        PROPERTIES
+          Name                #Registered
+          Label               #@SYS50316
+          HelpText            #@ACC661
+          Table               #tmpSalesTableCC
+          Origin              #{00C4077F-92E6-4F5B-836B-0981F5E560D0}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #SalesId
+        STRING
+        PROPERTIES
+          Name                #SalesId
+          Table               #tmpSalesTableCC
+          Origin              #{C28D1B7C-D939-468B-B70A-AB96C5AE8E3E}
+          ExtendedDataType    #SalesId
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #TransID
+        STRING
+        PROPERTIES
+          Name                #TransID
+          Table               #tmpSalesTableCC
+          Origin              #{29CD60ED-B8C9-46F9-A481-4AE0FA1C1C7D}
+          ExtendedDataType    #CreditCardTransID
+          StringSize          #20
+        ENDPROPERTIES
+        
+      FIELD #UseProfile
+        ENUM
+        PROPERTIES
+          Name                #UseProfile
+          Label               #@ACC1444
+          HelpText            #@ACC1445
+          Table               #tmpSalesTableCC
+          Origin              #{E9AC2EAF-37D1-4220-9339-62F5FC31B96D}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #VoiceAuth
+        ENUM
+        PROPERTIES
+          Name                #VoiceAuth
+          Label               #@ACC621
+          HelpText            #@ACC622
+          Table               #tmpSalesTableCC
+          Origin              #{96128288-B48E-4C85-8D75-EA389EB8DAE3}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+          #CreditCardId
+          #AmountCur
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+          #CreditCardId
+          #AmountCur
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Amount
+        PROPERTIES
+          Name                #Amount
+          Label               #@SYS53072
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #AmountMST
+          #AmountCur
+          #CurrencyCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #CaptureRestricted
+        PROPERTIES
+          Name                #CaptureRestricted
+          Label               #@ACC1013
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CaptureRestricted
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Cardholder
+        PROPERTIES
+          Name                #Cardholder
+          Label               #@ACC1277
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #NameOnCard
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Citibank
+        PROPERTIES
+          Name                #Citibank
+          Label               #@ACC869
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CitiPlan
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Debit
+        PROPERTIES
+          Name                #Debit
+          Label               #@SYS9512
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #Debit
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Hidden
+        PROPERTIES
+          Name                #Hidden
+          Label               #@SYS54478
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CustInvoiceRefRecId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Information
+        PROPERTIES
+          Name                #Information
+          Label               #@SYS53922
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #SalesId
+          #ProjProposalId
+          #CreditCardId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Profile
+        PROPERTIES
+          Name                #Profile
+          Label               #@SYS40276
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #UseProfile
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Transaction
+        PROPERTIES
+          Name                #Transaction
+          Label               #@SYS15191
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardTrxType
+          #Processed
+          #PNRef
+          #Cancelled
+          #Registered
+          #Captured
+          #EnforceAVS
+          #RecurringToken
+          #TransID
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Verbal
+        PROPERTIES
+          Name                #Verbal
+          Label               #@ACC621
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #VoiceAuth
+          #AuthCode
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #WebSale
+        PROPERTIES
+          Name                #WebSale
+          Label               #@ACC30
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #SalesIdIdx
+      PROPERTIES
+        Name                #SalesIdIdx
+        Origin              #{1EB2441D-02AA-45CF-B3C7-492C2718EAE2}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #SalesId
+      ENDINDEXFIELDS
+      
+      #PNRefIdx
+      PROPERTIES
+        Name                #PNRefIdx
+        Origin              #{079125B5-177E-4DF5-B338-4D40C1CF9943}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #PNRef
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTable
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CreditCardId
+            RelatedField        #CreditCardId
+            SourceEDT           #CreditCardId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #Currency
+        PROPERTIES
+          Name                #Currency
+          Table               #Currency
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #CurrencyCode
+            RelatedField        #CurrencyCode
+            SourceEDT           #CurrencyCode
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #CustInvoiceTable
+        PROPERTIES
+          Name                #CustInvoiceTable
+          Table               #CustInvoiceTable
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #CustInvoiceRefRecId
+            RelatedField        #RecId
+            SourceEDT           #RefRecId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #PNRefId
+        PROPERTIES
+          Name                #PNRefId
+          Table               #CreditCardTrans
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #PNRef
+            RelatedField        #PNRef
+            SourceEDT           #CreditCardPNRef
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #ProjProposalJour
+        PROPERTIES
+          Name                #ProjProposalJour
+          Table               #ProjProposalJour
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #ProjProposalId
+            RelatedField        #ProposalId
+            SourceEDT           #ProjProposalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #SalesTable
+        PROPERTIES
+          Name                #SalesTable
+          Table               #SalesTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+          EDTRelation         #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #SalesId
+            RelatedField        #SalesId
+            SourceEDT           #SalesId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #createRecord
+        #static TmpSalesTableCC createRecord(SalesTableCC    ccTrans)
+        #{
+        #    TmpSalesTableCC  tmpCCTrans;
+        #    int i, n, k, p;
+        #    DictTable dt,dtmp;
+        #    str                 fieldName;
+        #
+        #    dt=new DictTable(ccTrans.TableId);
+        #    n=dt.fieldCnt();
+        #
+        #    dtmp=new DictTable(tableNum(tmpSalesTableCC));
+        #
+        #
+        #    for(i=1; i<=dtmp.fieldCnt()-5; i++)
+        #    {
+        #
+        #        k=dt.fieldCnt2Id(i);
+        #        fieldname = dt.fieldName(k);
+        #        p=dtmp.fieldName2Id(dt.fieldName(k));
+        #
+        #        tmpCCTrans.(p) = ccTrans.(k);
+        #    }
+        #
+        #    tmpCCTRans.insert();
+        #
+        #    return tmpCCTrans;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #transferRecord
+        #static SalesTableCC transferRecord(TmpSalesTableCC    tmpCCTrans)
+        #{
+        #    SalesTableCC     ccTrans;
+        #    int         i, n, k;
+        #    DictTable   dt;
+        #    DictField   df;
+        #    FieldName   fieldName;
+        #
+        #    dt=new DictTable(tmpCCTrans.TableId);
+        #    n=dt.fieldCnt();
+        #
+        #    for(i=1; i<=16; i++)
+        #    {
+        #
+        #        k=dt.fieldCnt2Id(i);
+        #        df = new DictField(tmpCCTrans.TableId,k);
+        #        fieldName = fieldId2Name(tmpCCTRans.TableId,k);
+        #
+        #        CCTrans.(fieldname2id(ccTrans.TableId,fieldName)) = tmpCCTrans.(k);
+        #    }
+        #
+        #    CCTRans.insert();
+        #
+        #    return CCTrans;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

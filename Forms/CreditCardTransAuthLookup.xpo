@@ -1,0 +1,345 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardTransAuthLookup
+  PROPERTIES
+    Name                #CreditCardTransAuthLookup
+    Origin              #{3D2506F9-9607-44E1-9235-EE19DF501BBF}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    FormStringControl       callingNameControl;
+      #    SalesParmUpdateCC       salesParmUpdateCC;
+      #    SalesTableCC            locSalesTableCC;
+      #    SalesId                 salesId;
+      #}
+    ENDSOURCE
+    SOURCE #callingNameControl
+      #void callingNameControl(FormStringControl _callingNameControl)
+      #{
+      #    ;
+      #    callingNameControl = _callingNameControl;
+      #}
+    ENDSOURCE
+    SOURCE #closeSelect
+      #void closeSelect(str p1)
+      #{
+      #    ;
+      #    salesTableCC_ds.leaveRecord();
+      #
+      #    super(salesTableCC.TransID);
+      #
+      #}
+      #
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    if (element.args().record())
+      #    {
+      #        switch (element.args().record().TableId)
+      #        {
+      #            case tablenum(SalesParmUpdate)  :
+      #                salesParmUpdateCC = element.args().record();
+      #                salesId = salesParmUpdateCC.salesId;
+      #                break;
+      #            case tableNum(SalesTableCC)     :
+      #                locSalesTableCC = element.args().record();
+      #                salesId = locSalesTableCC.SalesId;
+      #                break;
+      #        }
+      #    }
+      #
+      #    super();
+      #
+      #    element.selectMode();
+      #}
+    ENDSOURCE
+    SOURCE #parmSalesId
+      #void parmSalesId(SalesId    _salesId)
+      #{
+      #    ;
+      #    salesId = _salesId;
+      #}
+    ENDSOURCE
+    SOURCE #parmSalesParm
+      #void parmSalesParm(salesParmUpdateCC    _salesParmUpdateCC)
+      #{
+      #    ;
+      #    salesParmUpdateCC = _salesParmUpdateCC;
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #salesTableCC
+          Table               #SalesTableCC
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #init
+          #public void init()
+          #{
+          #    ;
+          #    super();
+          #
+          #    if (salesParmUpdateCC)
+          #    {
+          #        this.query().dataSourceNo(1).clearDynalinks();
+          #        this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,CreditCardTrxType)).value('3');
+          #        this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,Processed)).value('1');
+          #        this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,Cancelled)).value('0');
+          #        this.query().dataSourceNo(1).addRange(fieldNum(salesTableCC,Captured)).value('0');
+          #        this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,SalesId)).value(salesParmUpdateCC.SalesId);
+          #    }
+          #    else
+          #    {
+          #        this.query().dataSourceNo(1).clearDynalinks();
+          #        this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,CreditCardTrxType)).value('3');
+          #        this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,Processed)).value('1');
+          #        this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,Cancelled)).value('0');
+          #        this.query().dataSourceNo(1).addRange(fieldNum(salesTableCC,Captured)).value('0');
+          #        this.query().dataSourceNo(1).addRange(fieldNum(SalesTableCC,SalesId)).value(SalesId);
+          #    }
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@SYS27400
+      TitleDatasource     #salesTableCC
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1073741823
+          DataSource          #salesTableCC
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #salesTableCC_Cancelled
+          ElementPosition     #1908874352
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          DataSource          #salesTableCC
+          DataField           #Cancelled
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #salesTableCC_Processed
+          ElementPosition     #1670265058
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          DataSource          #salesTableCC
+          DataField           #Processed
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #salesTableCC_CreditCardTrxType
+          ElementPosition     #1431655764
+          HierarchyParent     #Grid
+          DataSource          #salesTableCC
+          DataField           #CreditCardTrxType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #salesTableCC_AmountCur
+          ElementPosition     #1193046470
+          HierarchyParent     #Grid
+          DataSource          #salesTableCC
+          DataField           #AmountCur
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #salesTableCC_CreditCardId
+          ElementPosition     #954437176
+          HierarchyParent     #Grid
+          DataSource          #salesTableCC
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #salesTableCC_PNRef
+          ElementPosition     #477218588
+          HierarchyParent     #Grid
+          DataSource          #salesTableCC
+          DataField           #PNRef
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #salesTableCC_TransID
+          AutoDeclaration     #Yes
+          ElementPosition     #715827882
+          HierarchyParent     #Grid
+          DataSource          #salesTableCC
+          DataField           #TransID
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

@@ -1,0 +1,74 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardCaptureSettlement
+    PROPERTIES
+      Name                #CreditCardCaptureSettlement
+      Origin              #{3FF4980E-B697-4713-9FAC-7E1699B0AF31}
+      LegacyId            #20006
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardCaptureSettlement
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #captureRestricted
+        #static NoYes captureRestricted(salesTableCC     salesTableCC,
+        #                          SalesTotals      _salesTotals)
+        #{
+        #    NoYes           ret = false;
+        #    CreditCardTrans ccTrans;
+        #    ;
+        #    select sum(amountMST),count(recId) from ccTrans
+        #        where ccTrans.SalesId == salesTableCC.SalesId
+        #        && ccTrans.TransType == CreditCardTrxType::D;
+        #
+        #    if (ccTrans.RecId > 0)
+        #    {
+        #        if (ccTrans.AmountMST >= salesTableCC.AmountMST)
+        #        {
+        #            //--> Captured in full
+        #            ret = true;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #fullCaptured
+        #static NoYes fullCaptured(salesTableCC     salesTableCC,
+        #                            SalesTotals      salesTotals,
+        #                            AmountMST        amountRemain)
+        #{
+        #    NoYes           ret = false;
+        #    CreditCardTrans ccTrans;
+        #    ;
+        #    select sum(amountMST),count(recId) from ccTrans
+        #        where ccTrans.SalesId == salesTableCC.SalesId
+        #        && ccTrans.TransType == CreditCardTrxType::D
+        #        && ccTrans.TransID == salesTableCC.TransID;
+        #
+        #    if (ccTrans.RecId > 0)
+        #    {
+        #        if (amountRemain > salesTableCC.AmountMST)
+        #        {
+        #            //--> Too much to capture and already been captured once.  Move on.
+        #            ret = true;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

@@ -1,0 +1,184 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardTenderType
+    EnforceFKRelation 1
+    PROPERTIES
+      Name                #CreditCardTenderType
+      Label               #@ACC1848
+      FormRef             #CreditCardTenderType
+      TitleField1         #RetailCardTypeId
+      TitleField2         #CreditCardType
+      ConfigurationKey    #CreditCardAdv
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #SurrogateKey
+      ClusterIndex        #CardTypeIdx
+      DeveloperDocumentation  #@ACC1849
+      Origin              #{9F65C6AC-6D78-4E32-BF5F-53825854EA11}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #CreditCardType
+        ENUM
+        PROPERTIES
+          Name                #CreditCardType
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardTenderType
+          Origin              #{6448C8E1-B35A-4A47-96DE-020D385A91E8}
+          EnumType            #CreditCardType
+        ENDPROPERTIES
+        
+      FIELD #RetailCardTypeId
+        STRING
+        PROPERTIES
+          Name                #RetailCardTypeId
+          HelpText            #@SYS116721
+          Mandatory           #Yes
+          Table               #CreditCardTenderType
+          Origin              #{2B382F19-757C-443E-A43A-BA0B90F169EA}
+          ExtendedDataType    #RetailCardTypeId
+        ENDPROPERTIES
+        
+      FIELD #TenderTypeId
+        STRING
+        PROPERTIES
+          Name                #TenderTypeId
+          Table               #CreditCardTenderType
+          Origin              #{8A06C750-29BE-487B-A125-029ED522B77B}
+          ExtendedDataType    #RetailTenderTypeId
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardType
+          #RetailCardTypeId
+          #TenderTypeId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardType
+          #RetailCardTypeId
+          #TenderTypeId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoIdentification
+        PROPERTIES
+          Name                #AutoIdentification
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TenderTypeId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Identification
+        PROPERTIES
+          Name                #Identification
+          Label               #@SYS53631
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #CreditCardType
+          #RetailCardTypeId
+          #TenderTypeId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #CardTypeIdx
+      PROPERTIES
+        Name                #CardTypeIdx
+        AllowDuplicates     #No
+        Origin              #{AF044799-71F2-49AE-BF87-0C83ADEAF2A1}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #CreditCardType
+        #RetailCardTypeId
+        #TenderTypeId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #RetailTenderTypeCardTable
+        PROPERTIES
+          Name                #RetailTenderTypeCardTable
+          Table               #RetailTenderTypeCardTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #RetailCardTypeId
+            RelatedField        #cardTypeId
+            SourceEDT           #RetailCardTypeId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+      REFERENCE #RetailTenderTypeTable
+        PROPERTIES
+          Name                #RetailTenderTypeTable
+          Table               #RetailTenderTypeTable
+          RelatedTableCardinality   #ExactlyOne
+          Cardinality         #ZeroOne
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #TenderTypeId
+            RelatedField        #tenderTypeId
+            SourceEDT           #RetailTenderTypeId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #findbyCreditCardType
+        #static RetailCardTypeId findbyCreditCardType(CreditCardType ccType)
+        #{
+        #    CreditCardTenderType            ccTendertype;
+        #    ;
+        #    select CreditCardType,RetailCardTypeId from ccTendertype
+        #        where ccTendertype.CreditCardType == ccType;
+        #
+        #    return ccTendertype.RetailCardTypeId;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

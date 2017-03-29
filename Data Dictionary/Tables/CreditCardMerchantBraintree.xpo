@@ -1,0 +1,226 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: DBT
+
+; 
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #CreditCardMerchantBraintree
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #CreditCardMerchantBraintree
+      Label               #@ACC1269
+      FormRef             #CreditCardTerminalTable
+      TitleField1         #TerminalId
+      TitleField2         #URL
+      ConfigurationKey    #CreditCardAdv
+      SecurityKey         #CreditCardTables
+      CacheLookup         #Found
+      TableGroup          #Parameter
+      PrimaryIndex        #TerminalIdIdx
+      ClusterIndex        #TerminalIdIdx
+      Origin              #{AED7E4FC-E75A-4F80-A7E0-7CBC8BAA6A50}
+      LegacyId            #20045
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Key
+        STRING
+        PROPERTIES
+          Name                #Key
+          Label               #@MCR24647
+          Table               #CreditCardMerchantBraintree
+          Origin              #{CAB3C0E0-3520-4A1A-928E-FE8192E5F2A0}
+          LegacyId            #20005
+          ExtendedDataType    #CreditCardCybersourceKey
+          StringSize          #(Memo)
+        ENDPROPERTIES
+        
+      FIELD #MerchantId
+        STRING
+        PROPERTIES
+          Name                #MerchantId
+          Label               #@ACC603
+          Table               #CreditCardMerchantBraintree
+          Origin              #{37641B0F-031D-40DE-AA61-7AAC74CF8F1C}
+          LegacyId            #20004
+          ExtendedDataType    #CreditCardUser
+          StringSize          #64
+        ENDPROPERTIES
+        
+      FIELD #PrivateKey
+        STRING
+        PROPERTIES
+          Name                #PrivateKey
+          Label               #@ACC1903
+          Table               #CreditCardMerchantBraintree
+          Origin              #{816A3BD8-F999-49C0-AA46-54758FF66192}
+          LegacyId            #20010
+          ExtendedDataType    #CreditCardCybersourceKey
+          StringSize          #(Memo)
+        ENDPROPERTIES
+        
+      FIELD #RetailProcessor
+        ENUM
+        PROPERTIES
+          Name                #RetailProcessor
+          Table               #CreditCardMerchantBraintree
+          Origin              #{2B4ABB56-AF10-4196-9C94-07E5A451668F}
+          LegacyId            #20009
+        ENDPROPERTIES
+        
+      FIELD #TerminalId
+        STRING
+        PROPERTIES
+          Name                #TerminalId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #CreditCardMerchantBraintree
+          Origin              #{0C45CBF3-005E-4EE0-AFCA-4FE2FDE3DC41}
+          LegacyId            #20001
+          ExtendedDataType    #CreditCardTerminalId
+        ENDPROPERTIES
+        
+      FIELD #URL
+        STRING
+        PROPERTIES
+          Name                #URL
+          Table               #CreditCardMerchantBraintree
+          Origin              #{87E9A2CD-73DF-480F-9AAF-F1B325CA83BE}
+          LegacyId            #20002
+          ExtendedDataType    #URL
+          StringSize          #255
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoLookup
+        PROPERTIES
+          Name                #AutoLookup
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+          #URL
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Industry
+        PROPERTIES
+          Name                #Industry
+          Label               #@ACC1319
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Interface
+        PROPERTIES
+          Name                #Interface
+          Label               #@SYS69603
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #URL
+          #Key
+          #PrivateKey
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Merchant
+        PROPERTIES
+          Name                #Merchant
+          Label               #@ACC1012
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #MerchantId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Retail
+        PROPERTIES
+          Name                #Retail
+          Label               #@ACC639
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #RetailProcessor
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Terminal
+        PROPERTIES
+          Name                #Terminal
+          Label               #@SYS39201
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #TerminalId
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #TerminalIdIdx
+      PROPERTIES
+        Name                #TerminalIdIdx
+        AllowDuplicates     #No
+        Enabled             #No
+        Origin              #{A057A1F5-54AE-4C98-9904-1B4B495B43A0}
+        LegacyId            #20001
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TerminalId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #CreditCardTerminalTable
+        PROPERTIES
+          Name                #CreditCardTerminalTable
+          Table               #CreditCardTerminalTable
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE NORMAL
+          PROPERTIES
+            Field               #TerminalId
+            RelatedField        #TerminalId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #find
+        #static CreditCardMerchantBraintree find(CreditCardTerminalId    terminalId)
+        #{
+        #    CreditCardMerchantBraintree         ccBraintree;
+        #    ;
+        #    select ccBraintree
+        #        where ccBraintree.TerminalId == terminalId;
+        #
+        #    return ccBraintree;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: END

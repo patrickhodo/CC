@@ -1,0 +1,1158 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardElavonBuilder
+    PROPERTIES
+      Name                #CreditCardElavonBuilder
+      Extends             #CreditCardAdv
+      RunOn               #Server
+      Origin              #{7F7B39F1-CD93-4C09-B2B3-2F52F17E2F02}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #build
+        #str build(CreditCardTrans       _ccTrans)
+        #{
+        #    //--> COM Deviation Statement
+        #    //--> Microsoft requires calls to COM or ActiveX controls that do not meet
+        #    //--> security standards be delared in the X++ code
+        #    //--> The COM/.NET objects used in this method do NOT violate the security standards
+        #    CreditCardStr                         parmList;
+        #    System.Net.WebRequest           webRequest;
+        #    System.Net.HttpWebResponse      webResponse;
+        #    System.IO.Stream                stream;
+        #    System.IO.StreamWriter          streamWriter = null;
+        #    System.IO.StreamReader          streamReader = null;
+        #    InteropPermission               clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    ;
+        #    clrPermission.assert();
+        #    select ccElavon
+        #        where ccElavon.TerminalId == _ccTrans.TerminalId;
+        #
+        #    if (!ccElavon)
+        #    {
+        #        throw error("@ACC1209");
+        #    }
+        #
+        #    this.parmCreditCardMerchantElavon(ccElavon);
+        #    this.parmParameters(CreditCardParameters::findParameterWithTerminal(ccElavon.TerminalId));
+        #    this.parmccTrans(_ccTrans);
+        #    this.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTrans.Location));
+        #
+        #
+        #    if (this.parmccTrans().CreditCardType != CreditCardType::Stored)
+        #    {
+        #        switch (this.parmccTrans().TransType)
+        #        {
+        #            case    CreditCardTrxType::A        :
+        #                parmList += this.buildAuth();
+        #                break;
+        #            case    CreditCardTrxType::C        :
+        #                if (_ccTrans.TxRefGuid == str2guid(''))
+        #                {
+        #                    parmList += this.buildCredit();
+        #                }
+        #                else
+        #                {
+        #                    parmList += this.buildEnhancedCredit();
+        #                }
+        #                break;
+        #            case    CreditCardTrxType::D        :
+        #                parmList += this.buildCapture();
+        #                break;
+        #            case    CreditCardTrxType::S        :
+        #                parmList += this.buildSale();
+        #                break;
+        #            case    CreditCardTrxType::V        :
+        #                parmList += this.buildVoid();
+        #                break;
+        #        }
+        #    }
+        #    else
+        #    {
+        #        switch (this.parmccTrans().TransType)
+        #        {
+        #
+        #            case    CreditCardTrxType::S        :
+        #                parmList += this.buildSaleStored();
+        #                break;
+        #            case    CreditCardTrxType::C        :
+        #                parmList += this.buildCreditStored();
+        #                break;
+        #            default :
+        #                throw error(strFmt("@ACC1753"));
+        #        }
+        #    }
+        #
+        #    parmList = 'xmldata='+parmList;
+        #
+        #    try
+        #    {
+        #        WebRequest = System.Net.WebRequest::Create(ccElavon.HostAddress);
+        #        WebRequest.set_Method('POST');
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        WebRequest.set_ContentType('application/x-www-form-urlencoded');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    CodeAccessPermission::revertAssert();
+        #
+        #
+        #    return response;
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildAuth
+        #str buildAuth()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('ccauthonly');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Merchant Id
+        #    xmlTextWriter.writeStartElement('ssl_test_mode');
+        #    xmlTextWriter.writeString('false');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('ssl_amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_cvv2cvc2_indicator');
+        #        xmlTextWriter.writeString('1');
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('ssl_cvv2cvc2');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.NameOnCard || ccTable.NameOnCard)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_first_name');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard ? this.parmFirstName(ccTrans.NameOnCard) : this.parmFirstName(ccTable.NameOnCard));
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('ssl_last_name');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard ? this.parmLastName(ccTrans.NameOnCard) : this.parmLastName(ccTable.NameOnCard));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::Yes)
+        #    {
+        #        if (this.parmParameters().AVSZipOnly)
+        #        {
+        #            xmlTextWriter.writeStartElement('ssl_avs_zip');
+        #            xmlTextWriter.writeString(subStr(this.parmPostalAddress().ZipCode,1,5));
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        if (this.parmParameters().AVS)
+        #        {
+        #            xmlTextWriter.writeStartElement('ssl_avs_address');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            xmlTextWriter.writeStartElement('ssl_city');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            xmlTextWriter.writeStartElement('ssl_state');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #        }
+        #
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_email');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_email');
+        #        xmlTextWriter.writeString('null@null.com');
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #
+        #
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildCapture
+        #str buildCapture()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('ccforce');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Merchant Id
+        #    xmlTextWriter.writeStartElement('ssl_test_mode');
+        #    xmlTextWriter.writeString('false');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> approval code
+        #    xmlTextWriter.writeStartElement('ssl_approval_code');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('ssl_amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildCredit
+        #str buildCredit()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('cccredit');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Merchant Id
+        #    xmlTextWriter.writeStartElement('ssl_test_mode');
+        #    xmlTextWriter.writeString('false');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('ssl_amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_cvv2cvc2_indicator');
+        #        xmlTextWriter.writeString('1');
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('ssl_cvv2cvc2');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.NameOnCard || ccTable.NameOnCard)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_first_name');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard ? this.parmFirstName(ccTrans.NameOnCard) : this.parmFirstName(ccTable.NameOnCard));
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('ssl_last_name');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard ? this.parmLastName(ccTrans.NameOnCard) : this.parmLastName(ccTable.NameOnCard));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::Yes)
+        #    {
+        #        if (this.parmParameters().AVSZipOnly)
+        #        {
+        #            xmlTextWriter.writeStartElement('ssl_avs_zip');
+        #            xmlTextWriter.writeString(subStr(this.parmPostalAddress().ZipCode,1,5));
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        if (this.parmParameters().AVS)
+        #        {
+        #            xmlTextWriter.writeStartElement('ssl_avs_address');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            xmlTextWriter.writeStartElement('ssl_city');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            xmlTextWriter.writeStartElement('ssl_state');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #        }
+        #
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_email');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_email');
+        #        xmlTextWriter.writeString('null@null.com');
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildCreditStored
+        #str buildCreditStored()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('egcredit');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('ssl_amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildElavonLogin
+        #xmlTextWriter buildElavonLogin()
+        #{
+        #    CreditCardStr                         parmList;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    ;
+        #
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Merchant Id
+        #    xmlTextWriter.writeStartElement('txn');
+        #
+        #
+        #
+        #    //--> Merchant Id
+        #    xmlTextWriter.writeStartElement('ssl_merchant_id');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantElavon().AccounttId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> User Id
+        #    xmlTextWriter.writeStartElement('ssl_user_id');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantElavon().UserId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> PIN
+        #    xmlTextWriter.writeStartElement('ssl_pin');
+        #    xmlTextWriter.writeString(this.parmCreditCardMerchantElavon().PIN);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    parmList = xmlTextWriter.toString();
+        #
+        #    return xmlTextWriter;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnhancedCredit
+        #str buildEnhancedCredit()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('ccreturn');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Merchant Id
+        #    xmlTextWriter.writeStartElement('ssl_test_mode');
+        #    xmlTextWriter.writeString('false');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    /*if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }*/
+        #
+        #    //--> transaction
+        #    xmlTextWriter.writeStartElement('ssl_txn_id');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('ssl_amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_cvv2cvc2_indicator');
+        #        xmlTextWriter.writeString('1');
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('ssl_cvv2cvc2');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.NameOnCard || ccTable.NameOnCard)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_first_name');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard ? this.parmFirstName(ccTrans.NameOnCard) : this.parmFirstName(ccTable.NameOnCard));
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('ssl_last_name');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard ? this.parmLastName(ccTrans.NameOnCard) : this.parmLastName(ccTable.NameOnCard));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::Yes)
+        #    {
+        #        if (this.parmParameters().AVSZipOnly)
+        #        {
+        #            xmlTextWriter.writeStartElement('ssl_avs_zip');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        if (this.parmParameters().AVS)
+        #        {
+        #            xmlTextWriter.writeStartElement('ssl_avs_address');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            xmlTextWriter.writeStartElement('ssl_city');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            xmlTextWriter.writeStartElement('ssl_state');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #        }
+        #
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_email');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_email');
+        #        xmlTextWriter.writeString('null@null.com');
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildSale
+        #str buildSale()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('ccsale');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Merchant Id
+        #    xmlTextWriter.writeStartElement('ssl_test_mode');
+        #    xmlTextWriter.writeString('false');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('ssl_amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> CVV
+        #    if (ccTrans.CID)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_cvv2cvc2_indicator');
+        #        xmlTextWriter.writeString('1');
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('ssl_cvv2cvc2');
+        #        xmlTextWriter.writeString(ccTrans.CID);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.NameOnCard || ccTable.NameOnCard)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_first_name');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard ? this.parmFirstName(ccTrans.NameOnCard) : this.parmFirstName(ccTable.NameOnCard));
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        xmlTextWriter.writeStartElement('ssl_last_name');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard ? this.parmLastName(ccTrans.NameOnCard) : this.parmLastName(ccTable.NameOnCard));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::Yes)
+        #    {
+        #        if (this.parmParameters().AVSZipOnly)
+        #        {
+        #            xmlTextWriter.writeStartElement('ssl_avs_zip');
+        #            xmlTextWriter.writeString(subStr(this.parmPostalAddress().ZipCode,1,5));
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        if (this.parmParameters().AVS)
+        #        {
+        #            xmlTextWriter.writeStartElement('ssl_avs_address');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            xmlTextWriter.writeStartElement('ssl_city');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            xmlTextWriter.writeStartElement('ssl_state');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #        }
+        #
+        #    }
+        #
+        #    if (ccTrans.AVSEmail)
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_email');
+        #        xmlTextWriter.writeString(ccTrans.AVSEmail);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        xmlTextWriter.writeStartElement('ssl_email');
+        #        xmlTextWriter.writeString('null@null.com');
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildSaleStored
+        #str buildSaleStored()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('egcsale');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    ccTable = CreditCardTable::find(this.parmccTrans().CreditCardId);
+        #
+        #    if (ccTable)
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> PAN
+        #        xmlTextWriter.writeStartElement('ssl_card_number');
+        #        xmlTextWriter.writeString(this.retrieveValue(this.parmccTrans().CreditCardNumEncrypt));
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Expiration date
+        #    if (ccTable)
+        #    {
+        #        ccTrans.OneTimeDateExp = ccTable.ExpirationDate;
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #    else
+        #    {
+        #        //--> expiration date
+        #        xmlTextWriter.writeStartElement('ssl_exp_date');
+        #        xmlTextWriter.writeString(this.getExpDate());
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('ssl_amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #str buildVoid()
+        #{
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('ccvoid');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> transaction
+        #    xmlTextWriter.writeStartElement('ssl_txn_id');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardElavonBuilder extends CreditCardAdv
+        #{
+        #    CreditCardMerchantElavon            ccElavon;
+        #    CreditCardParameters                ccParams;
+        #}
+      ENDSOURCE
+      SOURCE #getCustomerInfo
+        #str getCustomerInfo()
+        #{
+        #    #define.amp('&')
+        #    TempStr                 parmList;
+        #    TempStr                 temp;
+        #    ContactPerson           contactPerson;
+        #    LogisticsPostalAddress  logistics = LogisticsPostalAddress::findRecId(this.parmccTrans().Location);
+        #    LogisticsPostalAddress  delivery;
+        #    DirPersonName           personName;
+        #    ;
+        #    //--> Customer information
+        #    parmList = 'x_cust_id=' + this.parmccTrans().CustAccount;
+        #    parmList += #amp;
+        #
+        #    //--> AVS Information
+        #    temp = System.Web.HttpUtility::UrlEncode(logistics.Street);
+        #    parmList += 'x_address=' + temp;
+        #    parmList += #amp;
+        #
+        #    parmList += 'x_zip=' + logistics.ZipCode;
+        #    parmList += #amp;
+        #
+        #    salesTable = SalesTable::find(this.parmccTrans().SalesId);
+        #    delivery = LogisticsPostalAddress::findRecId(SalesTable.deliveryLocation());
+        #
+        #    if (salesTable && SalesTableCC::findRecId(ccTrans.RefRecId).EnforceAVS == NoYes::Yes)
+        #    {
+        #        temp = System.Web.HttpUtility::UrlEncode(CustTable::find(salesTable.CustAccount).name());
+        #        parmList += 'x_ship_to_company=' + temp;
+        #
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.Street);
+        #        parmList += 'x_ship_to_address=' + temp;
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.City);
+        #        parmList += 'x_ship_to_city=' + temp;
+        #        parmList += #amp;
+        #
+        #        parmList += 'x_ship_to_state=' + delivery.State;
+        #        parmList += #amp;
+        #
+        #        temp = System.Web.HttpUtility::UrlEncode(delivery.ZipCode);
+        #        parmList += 'x_ship_to_zip=' + temp;
+        #        parmList += #amp;
+        #
+        #        parmList += 'x_ship_to_country=' + delivery.CountryRegionId;
+        #        parmList += #amp;
+        #
+        #        contactPerson = ContactPerson::find(salesTable.ContactPersonId);
+        #
+        #        if (contactPerson)
+        #        {
+        #            personName = DirPersonName::find(contactPerson.Party);
+        #            if (personName.FirstName)
+        #            {
+        #                temp = System.Web.HttpUtility::UrlEncode(personName.FirstName);
+        #                parmList += 'x_ship_to_first_name=' + temp;
+        #                parmList += #amp;
+        #            }
+        #            if (personName.LastName)
+        #            {
+        #                temp = System.Web.HttpUtility::UrlEncode(personName.LastName);
+        #                parmList += 'x_ship_to_last_name=' + temp;
+        #                parmList += #amp;
+        #            }
+        #        }
+        #    }
+        #
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #getExpDate
+        #str getExpDate()
+        #{
+        #    TempStr                 ExpDate;
+        #    TempStr                 month;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(this.parmccTrans().OneTimeDateExp));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ccYear = int2str(Year(this.parmccTrans().OneTimeDateExp));
+        #    if (this.parmYearType() == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,2);
+        #    }
+        #
+        #    ExpDate =  month + ccYear;
+        #
+        #    return ExpDate;
+        #}
+      ENDSOURCE
+      SOURCE #parmCreditCardMerchantElavon
+        #CreditCardMerchantElavon parmCreditCardMerchantElavon(CreditCardMerchantElavon _ccElavon = ccElavon)
+        #{
+        #    ;
+        #    ccElavon = _ccElavon;
+        #    return ccElavon;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #firstName parmFirstName(Name     _name)
+        #{
+        #    TempStr     tmpStr;
+        #    Counter     marker;
+        #    Counter     len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmLastName
+        #firstName parmLastName(Name     _name)
+        #{
+        #    TempStr     tmpStr;
+        #    TempStr     reduction;
+        #    Counter     marker;
+        #    Counter     len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker+1);
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmParameters
+        #CreditCardParameters parmParameters(CreditCardParameters _ccParams = ccParams)
+        #{
+        #    ;
+        #    ccParams = _ccParams;
+        #    return ccParams;
+        #}
+      ENDSOURCE
+      SOURCE #getElavonResponse
+        #static CreditCardTrans getElavonResponse(CreditCardStr                msg,
+        #                                CreditCardTrans                     ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList;
+        #    XmlNode                         elementParent;
+        #    Counter                         cnt;
+        #    CreditCardStr                         tmpStr;
+        #    CreditCardStr                         node;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #
+        #    ;
+        #    ttsbegin;
+        #    ccTRans.selectForUpdate(true);
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be one node <TXN>
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        response.insert(node,elementParent.innerText());
+        #
+        #    }
+        #
+        #    //--> Map Lookups
+        #    if (response.exists('ssl_result'))
+        #    {
+        #        ccTrans.Result = response.lookup('ssl_result');
+        #        ccTrans.RepMsg = response.lookup('ssl_result_message');
+        #    }
+        #
+        #    if (response.exists('ssl_approval_code'))
+        #    {
+        #        ccTrans.PNRef = response.lookup('ssl_approval_code');
+        #    }
+        #
+        #    if (response.exists('ssl_avs_response'))
+        #    {
+        #        ccTrans.AvsAddr = response.lookup('ssl_avs_response');
+        #    }
+        #
+        #    if (response.exists('ssl_cvv2_response'))
+        #    {
+        #        ccTrans.CVDResponseStr = response.lookup('ssl_cvv2_response');
+        #    }
+        #
+        #    if (response.exists('ssl_txn_id'))
+        #    {
+        #        ccTrans.RetrevalRefNum = response.lookup('ssl_txn_id');
+        #    }
+        #
+        #    if (response.exists('errorCode'))
+        #    {
+        #        ccTrans.Result = response.lookup('errorCode');
+        #    }
+        #
+        #    if (response.exists('errorMessage'))
+        #    {
+        #        ccTrans.RepMsg = response.lookup('errorMessage');
+        #    }
+        #
+        #    if (response.exists('errorName'))
+        #    {
+        #        ccTrans.Comment1 = response.lookup('errorName');
+        #    }
+        #
+        #    ccTrans.update();
+        #    ttscommit;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #getResponse
+        #static str getResponse(str 1 response)
+        #{
+        #    CreditCardStr     r;
+        #    ;
+        #    switch (response)
+        #    {
+        #        case '1'    :
+        #            r = '0';  //<-- Approved in our jargon
+        #            break;
+        #        default     :
+        #            r = response;
+        #            break;
+        #    }
+        #
+        #    return r;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

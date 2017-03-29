@@ -1,0 +1,3063 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #SysCheckList
+    PROPERTIES
+      Name                #SysCheckList
+      RunOn               #Client
+      Origin              #{2D0C129F-0000-1000-5728-AA203277636B}
+      LegacyId            #4767
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #applyStylesheet
+        #protected boolean applyStylesheet()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #canBePreventedAtStartup
+        #protected boolean canBePreventedAtStartup()
+        #{
+        #    //Should be overridden
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #canRunSilent
+        #protected boolean canRunSilent()
+        #{
+        #    //Should be overridden
+        #    return false;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #// This is a framework class. Customizing this class may cause problems with future upgrades to the software.
+        #abstract class SysCheckList
+        #{
+        #    #SysCheckList
+        #
+        #    List                checkList;
+        #    Map                 checkMap;
+        #    FormActiveXControl  html;
+        #    FormCheckBoxControl checkBoxPreventAtStartup;
+        #    boolean             sortWithStatusPreference;
+        #    boolean             onlyPrimarilySortOrder;
+        #    boolean             isSetupMode;
+        #    boolean             htmlInitialized;
+        #}
+      ENDSOURCE
+      SOURCE #doInit
+        #protected void doInit(boolean _silent = false, boolean _ignoreEmpty = false)
+        #{
+        #    Args         args;
+        #    Object       formRun;
+        #    FormDesign   formDesign;
+        #    str          id; //used in both form and class to identify the activeX html cacheobject
+        #    str          infoText;
+        #
+        #    ;
+        #    //Create list
+        #    this.init();
+        #
+        #
+        #    if (_ignoreEmpty || !this.isEmpty())
+        #    {
+        #        //Show list
+        #        if (_silent && this.canRunSilent())
+        #        {
+        #            this.runSilent();
+        #        }
+        #        else
+        #        {
+        #            // <GCN>
+        #            if (this.preRunFormInInitialization())
+        #            {
+        #            // </GCN>
+        #            //Save checklist in cache - we do not allow more than one instance of each list
+        #            infolog.globalCache().set(this.getName(),
+        #                                        this.getName(),
+        #                                        this);
+        #
+        #            // <GCN>
+        #            }
+        #            // </GCN>
+        #            //init form
+        #            id = this.getName() + '|' + int2str(WinAPI::getTickCount());
+        #            args = new Args(formStr(SysCheckList));
+        #            args.parm(id);
+        #            args.caller(this);
+        #
+        #            formRun = classfactory.formRunClass(args);
+        #
+        #            infoText = this.infoText();
+        #            if (infoText)
+        #            {
+        #                formRun.parmInfoText(infoText);
+        #            }
+        #
+        #            formRun.init(); //Save control in cache
+        #            formDesign = formRun.design();
+        #            formDesign.caption(this.getCheckListCaption());
+        #
+        #            this.initHtmlControl(id);
+        #            this.initCheckBoxControl(id);
+        #            // display the checkbox only if the checklist requires it
+        #            if (this.canBePreventedAtStartup() && checkBoxPreventAtStartup.visible())
+        #            {
+        #                checkBoxPreventAtStartup.visible(true);
+        #            }
+        #            else
+        #            {
+        #                checkBoxPreventAtStartup.visible(false);
+        #            }
+        #
+        #            this.updateHtml(false);
+        #
+        #            formRun.run();
+        #            formRun.detach();
+        #        }
+        #    }
+        #    else
+        #    {
+        #        //Finalize list - eg. make list not runnable
+        #        this.finalizeChecklist();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #doUpdateHtml
+        #/// <summary>
+        #/// Updates the HTML content of a checklist.
+        #/// </summary>
+        #/// <param name="_refresh">
+        #/// A Boolean value that indicates whether to update the checklist.
+        #/// </param>
+        #/// <remarks>
+        #/// Once a checklist item has been added or removed from the checklist or a checklist item state has
+        #/// otherwise been changed, this method should be called to update the checklist.
+        #/// </remarks>
+        #public void doUpdateHtml(boolean _refresh)
+        #{
+        #    // New public method to prevent breaking existing API
+        #    this.updateHtml(_refresh);
+        #}
+      ENDSOURCE
+      SOURCE #finalize
+        #void finalize()
+        #{
+        #    //Called from form on close
+        #
+        #    ListIterator checkListIterator = new ListIterator(checkList);
+        #    SysCheckListItem sysCheckListItem;
+        #
+        #    // Clear the install mode in the model store to prevent modified modelstore dialog.
+        #    SysModelStore::clearInstallMode();
+        #
+        #    if (this.isEmpty())
+        #    {
+        #        this.finalizeChecklist();
+        #    }
+        #
+        #    checkListIterator.begin();
+        #    while (checkListIterator.more()) //Loop through all list items
+        #    {
+        #        if (checkMap.exists(checkListIterator.value()))
+        #        {
+        #            sysCheckListItem = checkMap.lookup(checkListIterator.value());
+        #            sysCheckListItem.finalize();
+        #        }
+        #        checkListIterator.next();
+        #    }
+        #
+        #    checkMap = null;
+        #}
+      ENDSOURCE
+      SOURCE #finalizeChecklist
+        #protected void finalizeChecklist()
+        #{
+        #    //Override this method if you need to run anything after all items in checklist has been finished
+        #
+        #    return;
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #/*
+        #    Use: return SysSetupLog::findEx(_name, _description).RecId != 0;
+        #    for global checklists.
+        #
+        #    Use: return SysSetupCompanyLog::findEx(_name, _description).RecId != 0;
+        #    for company specific checklists.
+        #
+        #    Use the find instead of findEx if application and kernel build no. not is necessery
+        #*/
+        #abstract public boolean find(IdentifierName   _name,
+        #                             ClassDescription _description = '')
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #getAdditionalCss
+        #/// <summary>
+        #/// Gets additional CSS information for the checklist.
+        #/// </summary>
+        #/// <returns>
+        #/// A string that contains CSS information.
+        #/// </returns>
+        #/// <remarks>
+        #/// CSS is used to format and group all controls in the checklist.
+        #/// </remarks>
+        #protected str getAdditionalCss()
+        #{
+        #    return  '\n' +
+        #            '<STYLE>\n' +
+        #            '.checklistImage {\n' +
+        #            '    float: left;\n' +
+        #            '    display: inline-block;\n' +
+        #            '    margin-right: 5px;\n' +
+        #            '}\n' +
+        #            '.checkboxInput\n' +
+        #            '{\n' +
+        #            '    float: left;\n' +
+        #            '    display: inline-block;\n' +
+        #            '    margin-right: 5px;\n' +
+        #            '    margin-left: 1px;\n' +
+        #            '    margin-top: 2px;\n' +
+        #            '}\n' +
+        #            '.checklistItemContent {\n' +
+        #            '    overflow: hidden;\n' +
+        #            '    margin-right: 5px;\n' +
+        #            '    float: left;\n' +
+        #            '}\n' +
+        #            '.checklistItemText {\n' +
+        #            '    font-weight: bold;\n' +
+        #            '    overflow: visible;\n' +
+        #            '    height: 16px;\n' +
+        #            '    margin-top: 5px;\n' +
+        #            '}\n' +
+        #            '.checklistItem {\n' +
+        #            '    overflow: hidden;\n' +
+        #            '    margin-left: 1px;\n' +
+        #            '}\n' +
+        #            '.checkboxItem\n' +
+        #            '{\n' +
+        #            '    overflow: hidden;\n' +
+        #            '}\n' +
+        #            '.group {\n' +
+        #            '    margin-left: 6px;\n' +
+        #            '    margin-bottom: 5px;\n' +
+        #            '    margin-top: 5px;\n' +
+        #            '}\n' +
+        #            '.groupHeader {\n' +
+        #            '    height: 25px;\n' +
+        #            '    overflow: visible;\n' +
+        #            '    margin-bottom: 7px;\n' +
+        #            '    position: relative;\n' +
+        #            '}\n' +
+        #            '.groupContent {\n' +
+        #            '    margin-left: 43px;\n' +
+        #            '    position: relative;\n' +
+        #            '}\n' +
+        #            '.groupSlide {\n' +
+        #            '    position: relative;\n' +
+        #            '    overflow: hidden;\n' +
+        #            '}\n' +
+        #            '.groupIcons {\n' +
+        #            '    float: left;\n' +
+        #            '    margin-right: 5px;\n' +
+        #            '}\n' +
+        #            '.groupText {\n' +
+        #            '    margin-top: 4px;\n' +
+        #            '    font-weight: bold;\n' +
+        #            '    font-size: x-small;\n' +
+        #            '}\n' +
+        #            '.groupExpandCollapse {\n' +
+        #            '    position: relative;\n' +
+        #            '    top: -7px;\n' +
+        #            '    margin-right: 5px;\n' +
+        #            '    margin-top: 14px;\n' +
+        #            '    float: left;\n' +
+        #            '}\n' +
+        #            '.checklistItemHelp {\n' +
+        #            '    float: left;\n' +
+        #            '    display: inline-block;\n' +
+        #            '    margin-right: 5px;\n' +
+        #            '}\n' +
+        #            '.checklistItemMarkAsComplete {\n' +
+        #            '    float: right;\n' +
+        #            '    display: inline-block;\n' +
+        #            '    margin-right: 5px;\n' +
+        #            '}\n' +
+        #            '</STYLE>\n';
+        #}
+      ENDSOURCE
+      SOURCE #getCheckListCaption
+        #protected str getCheckListCaption()
+        #{
+        #    return "@SYS69985";
+        #}
+      ENDSOURCE
+      SOURCE #getChecklistXml
+        #/// <summary>
+        #/// Gets the checklist XML document.
+        #/// </summary>
+        #/// <returns>
+        #/// A string that contains the XML content of the checklist.
+        #/// </returns>
+        #/// <remarks>
+        #/// The checklist XML is used to build up the HTML content of the checklist which is then rendered by
+        #/// the ActiveX control.
+        #/// </remarks>
+        #protected XmlDocument getChecklistXml()
+        #{
+        #    XmlDocument         xmlDoc = new XmlDocument();
+        #    ListEnumerator      enumerator = checkList.getEnumerator();
+        #    SysCheckListItem    checkListItem;
+        #    XmlNode             rootNode;
+        #    DictEnum            statusEnum = new DictEnum(enumNum(SysCheckListStatus));
+        #    str                 label;
+        #
+        #    XmlNode getExistingGroup(str _groupName, XmlNode _parentNode = xmlDoc.root())
+        #    {
+        #        XmlNode groupNode = _parentNode.selectSingleNode(strFmt('//ChecklistGroup[@title="%1"]', _groupName));
+        #
+        #        return groupNode;
+        #    }
+        #
+        #    XmlNode addChecklistGroup(str _groupName, XmlNode _parentNode = xmlDoc.root())
+        #    {
+        #        List            groups;
+        #        ListEnumerator  groupsEnumerator;
+        #        XmlElement      groupNode;
+        #
+        #        groups = strSplit(_groupName, '\\');
+        #        groupsEnumerator = groups.getEnumerator();
+        #
+        #        while (groupsEnumerator.moveNext())
+        #        {
+        #            groupNode = getExistingGroup(groupsEnumerator.current(), _parentNode.parentNode());
+        #
+        #            if (!groupNode)
+        #            {
+        #                groupNode = xmlDoc.createElement('ChecklistGroup');
+        #                groupNode.setAttribute('title', groupsEnumerator.current());
+        #                groupNode.setAttribute('expanded', (this.groupIsExpanded(groupsEnumerator.current()) ? 'true' : 'false'));
+        #                groupNode.setAttribute('imageExpand', SysCheckList::imageURL('hlpexpnd.gif'));
+        #                groupNode.setAttribute('imageCollapse', SysCheckList::imageURL('hlpcolla.gif'));
+        #                _parentNode.appendChild(groupNode);
+        #                _parentNode = groupNode;
+        #            }
+        #        }
+        #
+        #        return groupNode ? groupNode : _parentNode;
+        #    }
+        #
+        #    XmlNode addChecklistItem(SysCheckListItem _checkListItem)
+        #    {
+        #        XmlElement          itemNode;
+        #        XmlElement          groupNode;
+        #        SysCheckListStatus  groupStatus;
+        #        str                 itemHelpLink;
+        #
+        #        groupNode = addChecklistGroup(_checkListItem.getCheckListGroup());
+        #
+        #        if (_checkListItem.isCheckbox())
+        #        {
+        #            itemNode = xmlDoc.createElement('CheckboxItem');
+        #        }
+        #        else
+        #        {
+        #            itemNode = xmlDoc.createElement('ChecklistItem');
+        #        }
+        #
+        #        label = _checkListItem.label();
+        #        itemHelpLink = _checkListItem.getHelpLink();
+        #        itemNode.setAttribute('title', _checkListItem.label() + (_checkListItem.indeterminate() || _checkListItem.isCheckbox() ? '' : " (" + "@SYS340867" + ")"));
+        #        itemNode.setAttribute('itemLink', this.makeLink(_checkListItem.getMenuItemName(),
+        #                                                        _checkListItem.getMenuItemType(),
+        #                                                        _checkListItem.getState()));
+        #        itemNode.setAttribute('helpLink', itemHelpLink);
+        #        itemNode.setAttribute('description', _checkListItem.helpText());
+        #        itemNode.setAttribute('image', this.getStatusImage(_checkListItem.getState()));
+        #        itemNode.setAttribute('imageTooltipText', this.getStatusToolTip(_checkListItem.getState()));
+        #        itemNode.setAttribute('linkTooltipText', _checkListItem.label());//"@SYS73865" (Bug 109058)
+        #        itemNode.setAttribute('status', Global::enum2Symbol(enumNum(SysCheckListStatus), _checkListItem.getState()));
+        #        itemNode.setAttribute('isCheckbox', _checkListItem.isCheckbox() ? 'true' : 'false');
+        #        itemNode.setAttribute('checkboxState', _checkListItem.checkboxState() ? 'true' : 'false');
+        #        if (strLen(itemHelpLink)>0)
+        #        {
+        #            // Only show link if a link is available
+        #            itemNode.setAttribute('helpText', "@SYS14501"); // Help
+        #        }
+        #
+        #        itemNode.setAttribute('itemName', 'markascomplete://' + classId2Name(classIdGet(_checkListItem)));
+        #        itemNode.setAttribute('markAsComplete', (_checkListItem.indeterminate() &&
+        #            _checkListItem.getState() != SysCheckListStatus::Finished && _checkListItem.getState() != SysCheckListStatus::Deferred) ? "@SYS340868" : ' ');
+        #
+        #        groupNode.appendChild(itemNode);
+        #
+        #        // Determine the overall status of the group
+        #        groupStatus = groupNode.hasAttribute('status') ?  statusEnum.name2Value(groupNode.getAttribute('status')) : SysCheckListStatus::Indeterminate;
+        #        if (!_checkListItem.isCheckbox())
+        #        {
+        #            groupStatus = this.getGroupState(_checkListItem.getState(), groupStatus);
+        #            groupNode.setAttribute('image', this.getStatusImage(groupStatus));
+        #        }
+        #        groupNode.setAttribute('status', Global::enum2Symbol(enumNum(SysCheckListStatus), groupStatus));
+        #
+        #        return itemNode;
+        #    }
+        #
+        #    xmlDoc = new XmlDocument();
+        #    rootNode = xmlDoc.createElement('Checklist');
+        #    xmlDoc.appendChild(rootNode);
+        #
+        #    while (enumerator.moveNext())
+        #    {
+        #        if (checkMap.exists(enumerator.current()))
+        #        {
+        #            checkListItem = checkMap.lookup(enumerator.current());
+        #
+        #            if (checkListItem && checkListItem.visible() && checkListItem.isRunnable())
+        #            {
+        #                addChecklistItem(checkListItem);
+        #            }
+        #        }
+        #    }
+        #
+        #    return xmlDoc;
+        #}
+      ENDSOURCE
+      SOURCE #getGroupState
+        #/// <summary>
+        #/// Gets the state of a group of checklist items in the checklist.
+        #/// </summary>
+        #/// <param name="_itemState">
+        #/// The item state that is used to compare to checklist state.
+        #/// </param>
+        #/// <param name="_groupState">
+        #/// The current group state.
+        #/// </param>
+        #/// <returns>
+        #/// The state of the group of checklist items.
+        #/// </returns>
+        #/// <remarks>
+        #/// The group state is finished when all mandatory items in the group are finished.
+        #/// </remarks>
+        #protected SysCheckListStatus getGroupState(SysCheckListStatus _itemState, SysCheckListStatus _groupState)
+        #{
+        #    if (_itemState < _groupState)
+        #    {
+        #        return _itemState;
+        #    }
+        #    else
+        #    {
+        #        return _groupState;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getHelpImage
+        #protected Filename getHelpImage()
+        #{
+        #    return SysCheckList::imageURL(#ImageHelp);
+        #}
+      ENDSOURCE
+      SOURCE #getHtml
+        #protected str getHtml()
+        #{
+        #    str                 htmlText;
+        #    str                 css;
+        #    XmlDocument         checklistXml;
+        #    XmlReader           xslChecklist;
+        #    XmlReader           xmlChecklist;
+        #    resourceNode        xslt = SysResource::getResourceNode('ReleaseUpdateChecklistXSLT_xml');
+        #    str                 xslText;
+        #
+        #    [xslText] = SysResource::getResourceNodeData(xslt);
+        #    checklistXml = this.getChecklistXml();
+        #
+        #    xslChecklist = XmlReader::newXml(xslText);
+        #    xmlChecklist = XmlReader::newXml(checklistXml.xml());
+        #    htmlText = XmlTransform::execute(xslChecklist, xmlChecklist, true);
+        #
+        #    if (this.applyStylesheet())
+        #    {
+        #        css = SysCheckList::getDefaultStylesheet();
+        #        css += this.getAdditionalCss();
+        #        css += this.getHtmlScript();
+        #    }
+        #
+        #    return strFmt(this.getHtmlDocumentTemplate(),
+        #                this.getHtmlHeader() ? strFmt(this.getHtmlHeaderTemplate(),this.getHtmlHeader()): '',
+        #                this.getHtmlHeaderHelp(),
+        #                htmlText,
+        #                css
+        #                );
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlDocumentTemplate
+        #protected str getHtmlDocumentTemplate()
+        #{
+        #    //%1=Header
+        #    //%2=Header text
+        #    //%3=Rows in table
+        #    //%4=StyleSheet
+        #    return '<html'
+        #        +  this.maybeDirRTL() // BASIS bidi
+        #        +  '>%4<BODY SCROLL="AUTO">\n'
+        #        +  '<TABLE border=0 cellPadding=0 cellSpacing=0 width="100%" height="100%" '
+        #        +  'style="margin-top: 0; margin-left: 0; margin-right: 0; margin-bottom: -12">'
+        #        +  '<TBODY>\n<TR>\n<TD>'
+        #        +  '%1%2<p><DIV align=left>\n'
+        #        +  '<TABLE class="TableBackground" border=0 cellPadding=0 cellSpacing=0 width="100%" height="100%">'
+        #        +  '<TBODY valign="top">\n<TR>\n<TD>\n'
+        #        + '%3'
+        #        +  '</TD>\n</TR></TBODY></TABLE>\n'
+        #        +  '</TD>\n</TR></TBODY></TABLE>'
+        #        +  '</DIV></p></BODY></html>';
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlGroupTemplate
+        #protected str getHtmlGroupTemplate()
+        #{
+        #    //%1=Link for menuitem when clicking icon - use makeLink(..)
+        #    //%2=Text for link
+        #    //%3=Additional helptext
+        #    //%4=Path for status image
+        #    //%5=Tooltip for status image
+        #    //%6=Link etc. for additional help
+        #    //%7=Link for menuitem when clicking text - use makeLink(..)
+        #
+        #
+        #    return '<TABLE class="TableBackground" border=0 cellPadding=8 cellSpacing=0 width="100%"><TBODY>'
+        #        + '\n<TR>'
+        #        +  '\n<TD width="100%" style="BORDER-TOP: #cab99f 1px solid"><B>%1</B></TD>'                //colum with link and helptext
+        #        +  '</TR>'
+        #        +   '</TBODY>\n</TABLE>\n';
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlGroupText
+        #protected str getHtmlGroupText(str _checkListGroup)
+        #{
+        #    str htmlText = '';
+        #    ;
+        #
+        #    if (_checkListGroup)
+        #    {
+        #        htmlText = strFmt(this.getHtmlGroupTemplate(), _checkListGroup);
+        #    }
+        #    return htmlText;
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlHeader
+        #protected str getHtmlHeader()
+        #{
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlHeaderHelp
+        #protected str getHtmlHeaderHelp()
+        #{
+        #    return strFmt('<A href="Dynamics://DynamicsHelp/Topic?Id=forms.SysChecklist">%1</A>', "@SYS60385");
+        #}
+        #
+      ENDSOURCE
+      SOURCE #getHtmlHeaderTemplate
+        #protected str getHtmlHeaderTemplate()
+        #{
+        #    //%1=Header
+        #    return '<H1 class=naviheader>%1</H1>';
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlHelpTemplate
+        #protected str getHtmlHelpTemplate()
+        #{
+        #    //%1=Link for anything
+        #    //%2=Path for image
+        #    //%3=Tooltip
+        #    return ' <A href="%1"><IMG BORDER="0" SRC="%2" ALT="%3"></A>';
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlInfoTemplate
+        #protected str getHtmlInfoTemplate()
+        #{
+        #    //%1=Text
+        #    //%2=StyleSheet
+        #    return '<html'
+        #        +  this.maybeDirRTL() // BASIS bidi
+        #        +  '>%2<BODY bgcolor="#CAB99F" SCROLL="NO" Style="margin-top: 0.00em; margin-bottom: 0.00em;">\n'
+        #        +  '%1</BODY></html>';
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlItemTemplate
+        #protected str getHtmlItemTemplate(boolean _showLink = true, boolean _showImageLink = false)
+        #{
+        #    //%1=Link for menuitem when clicking icon - use makeLink(..)
+        #    //%2=Text for link
+        #    //%3=Additional helptext
+        #    //%4=Path for status image
+        #    //%5=Tooltip for status image
+        #    //%6=Link etc. for additional help
+        #    //%7=Link for menuitem when clicking text - use makeLink(..)
+        #
+        #    str title = _showLink ? 'TITLE="%8"' : '';
+        #    ;
+        #
+        #    return '<TABLE class="TableBackground" border=0 cellPadding=8 cellSpacing=0 width="100%"><TBODY>'
+        #        +  '\n<TR>\n<TD>'
+        #        +  '<A ' + (_showImageLink ? 'href' : 'ref') + '="%1"><IMG BORDER="0" SRC="%4" ALT="%5"></A>\n</TD>'   //colum with status image
+        #        +  '\n<TD width="100%">'
+        #        +  '<A ' + (_showLink ? 'href' : 'ref') + '="%7"' +title+ '><B>%2</B></A><br>%3\n</TD>'                //colum with link and helptext
+        #        +  '\n<TD>&nbsp;%6\n</TD>\n</TR>' //colum with help text, icon or whatever
+        #        +   '</TBODY>\n</TABLE>\n';
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlItemText
+        #protected str getHtmlItemText(SysCheckListItem _item, str _parameters)
+        #{
+        #    str htmlText = '';
+        #    str htmlHelpText, htmlImageLink, htmlTextLink;
+        #    ;
+        #
+        #    if (_item && _item.visible())
+        #    {
+        #        //link to additional help if any
+        #        htmlHelpText = _item.getHelpLink() ?
+        #                       strFmt(this.getHtmlHelpTemplate(),
+        #                              _item.getHelpLink(),
+        #                              this.getHelpImage(),
+        #                              "@SYS73864")
+        #                       : '';
+        #
+        #        //link for running task - used when clicking text
+        #        htmlTextLink = this.makeLink(_item.getMenuItemName(),
+        #                                     _item.getMenuItemType(),
+        #                                     _item.getState());
+        #
+        #        //link to be used when clicking icon - only use link when status is indeterminate
+        #        htmlImageLink = _item.indeterminate() && _item.getState() == SysCheckListStatus::Indeterminate ?
+        #                        this.makeLink(menuitemActionStr(SysCheckList_System) + '+' + _parameters, MenuItemType::Action)
+        #                        : '';
+        #
+        #        //format all parts
+        #        htmlText = strFmt(this.getHtmlItemTemplate(_item.getState() != SysCheckListStatus::Deferred, htmlImageLink != ''),
+        #                          htmlImageLink,
+        #                          _item.label(),
+        #                          _item.helpText(),
+        #                          this.getStatusImage(_item.getState()),
+        #                          this.getStatusToolTip(_item.getState()),
+        #                          htmlHelpText,
+        #                          htmlTextLink,
+        #                          "@SYS73865"
+        #                          );
+        #    }
+        #
+        #    return htmlText;
+        #}
+      ENDSOURCE
+      SOURCE #getHtmlScript
+        #/// <summary>
+        #/// Gets the HTML code of a checklist.
+        #/// </summary>
+        #/// <returns>
+        #/// A string that contains the HTML code of the checklist.
+        #/// </returns>
+        #protected str getHtmlScript()
+        #{
+        #    return  '<script language="javascript">\n' +
+        #            '    function toggleGroup(link)\n' +
+        #            '    {\n' +
+        #            '        var group = link.parentElement.parentElement.parentElement;\n' +
+        #            '        var content = getElementByClass(group, "groupContent");\n' +
+        #            '        var expand = getElementByClass(link, "groupExpand");\n' +
+        #            '        var collapse = getElementByClass(link, "groupCollapse");\n' +
+        #            '\n' +
+        #            '        if (content.style.display == "")\n' +
+        #            '        {\n' +
+        #            '            content.style.display = "none";\n' +
+        #            '            expand.style.display = "";\n' +
+        #            '            collapse.style.display = "none";\n' +
+        #            '        }\n' +
+        #            '        else\n' +
+        #            '        {\n' +
+        #            '            content.style.display = "";\n' +
+        #            '            expand.style.display = "none";\n' +
+        #            '            collapse.style.display = "";\n' +
+        #            '        }\n' +
+        #            '\n' +
+        #            '        return false;\n' +
+        #            '    }\n' +
+        #            '    function getElementByClass(element, className)\n' +
+        #            '    {\n' +
+        #            '        var children = element.children;\n' +
+        #            '        var child;\n' +
+        #            '        var i;\n' +
+        #            '\n' +
+        #            '        for (i = 0; i < children.length; i++)\n' +
+        #            '        {\n' +
+        #            '            if (children.item(i).className == className)\n' +
+        #            '            {\n' +
+        #            '                return children(i);\n' +
+        #            '            }\n' +
+        #            '            if (children.item(i).children.length > 0)\n' +
+        #            '            {\n' +
+        #            '                child = getElementByClass(children.item(i), className);\n' +
+        #            '                if (child)\n' +
+        #            '                {\n' +
+        #            '                    return child;\n' +
+        #            '                }\n' +
+        #            '            }\n' +
+        #            '        }\n' +
+        #            '\n' +
+        #            '        return null;\n' +
+        #            '    }\n' +
+        #            '    function toggleCheckbox(sender, url)\n' +
+        #            '    {\n' +
+        #            '        document.location = url + "+" + sender.checked;\n' +
+        #            '    }\n' +
+        #            '</script>\n';
+        #}
+      ENDSOURCE
+      SOURCE #getInterfaceId
+        #abstract protected ClassId getInterfaceId()
+        #{
+        #    //Should be overridden to return interface that identifies checklist
+        #}
+      ENDSOURCE
+      SOURCE #getItem
+        #public SysCheckListItem getItem(ClassId _id)
+        #{
+        #    if (checkMap.exists(_id))
+        #    {
+        #        return checkMap.lookup(_id);
+        #    }
+        #    return null;
+        #}
+      ENDSOURCE
+      SOURCE #getName
+        #protected str getName()
+        #{
+        #    return classId2Name(classIdGet(this));
+        #}
+      ENDSOURCE
+      SOURCE #getScroll
+        #protected int getScroll()
+        #{
+        #    //Get scroll
+        #    COM com = html.document();
+        #
+        #    if (com)
+        #    {
+        #        com = com.body();
+        #
+        #        if (com)
+        #            return com.scrollTop();
+        #    }
+        #    return 0;
+        #}
+      ENDSOURCE
+      SOURCE #getStatusImage
+        #protected Filename getStatusImage(SysCheckListStatus _status)
+        #{
+        #    Filename ret = '';
+        #    switch (_status)
+        #    {
+        #        case SysCheckListStatus::Finished :
+        #            ret += #ImageFinished;
+        #            break;
+        #        case SysCheckListStatus::InProcess :
+        #            ret += #ImageInProcess;
+        #            break;
+        #        case SysCheckListStatus::Ready :
+        #            ret += #ImageReady;
+        #            break;
+        #        case SysCheckListStatus::Deferred :
+        #            ret += #ImageDeferred;
+        #            break;
+        #        case SysCheckListStatus::Indeterminate :
+        #            ret += #ImageIndeterminate;
+        #            break;
+        #        default :
+        #    }
+        #
+        #    return SysCheckList::imageURL(ret);
+        #}
+      ENDSOURCE
+      SOURCE #getStatusToolTip
+        #protected str getStatusToolTip(SysCheckListStatus _status)
+        #{
+        #    str ret;
+        #    ;
+        #    switch (_status)
+        #    {
+        #        case SysCheckListStatus::Finished :
+        #            ret = "@SYS56424";
+        #            break;
+        #        case SysCheckListStatus::InProcess :
+        #            ret = "@SYS70572";
+        #            break;
+        #        case SysCheckListStatus::Ready :
+        #            ret = "@SYS14432";
+        #            break;
+        #        case SysCheckListStatus::Deferred :
+        #            ret = "@SYS26350";
+        #            break;
+        #        case SysCheckListStatus::Indeterminate :
+        #            ret = "@SYS72546";
+        #            break;
+        #        default :
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #gotoScroll
+        #protected void gotoScroll(int _scroll)
+        #{
+        #    //Set scroll
+        #    COM com = html.document();
+        #;
+        #    if (com && _scroll)
+        #    {
+        #        com = com.body();
+        #
+        #        if (com)
+        #            com.scrollTop(_scroll);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #groupIsExpanded
+        #/// <summary>
+        #/// Checks whether a checklist group is in an expanded state.
+        #/// </summary>
+        #/// <param name="_groupName">
+        #/// The group name of the checklist.
+        #/// </param>
+        #/// <returns>
+        #/// true if the group is in an expanded state; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// A group is in an expanded state whenever a user clicks on the plus icon next to the group text.
+        #/// </remarks>
+        #protected boolean groupIsExpanded(str _groupName)
+        #{
+        #    COM com = html.document();
+        #    COM d;
+        #    COM s;
+        #    str groupClass;
+        #    int i;
+        #
+        #    if (com)
+        #    {
+        #        com = com.body();
+        #        com = com.getElementsByTagName('div');
+        #
+        #        for (i = 1; i < com.length(); i++)
+        #        {
+        #            d = com.item(i);
+        #            groupClass = d.className();
+        #
+        #            if (groupClass == 'groupText')
+        #            {
+        #                if (d.innerText() == _groupName)
+        #                {
+        #                    d = d.parentElement();  // groupHeader
+        #                    d = d.nextSibling();    // groupSlide
+        #                    d = d.firstChild();     // groupContent
+        #                    s = d.style();
+        #
+        #                    return s.display() != 'none';
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #infoText
+        #protected str infoText()
+        #{
+        #    return '';
+        #}
+      ENDSOURCE
+      SOURCE #init
+        #protected void init()
+        #{
+        #    SysCheckListItem sysCheckListItem;
+        #    SetIterator setIterator;
+        #    MapEnumerator mapEnumerator;
+        #    ;
+        #
+        #    //Init of class variables
+        #    checkMap       = new Map(Types::Integer,Types::Class);
+        #    checkList      = new List(Types::Integer);
+        #
+        #    //init of method variables
+        #    mapEnumerator = checkMap.getEnumerator();
+        #
+        #    //Create setIterator to all items
+        #    setIterator = new SetIterator(SysCheckList::getAllCheckListItems(this.getInterfaceId()));
+        #    setIterator.begin();
+        #    while (setIterator.more())
+        #    {
+        #        //We've got an item attached to this list - is it runnable?
+        #        sysCheckListItem = new DictClass(setIterator.value()).makeObject();
+        #        sysCheckListItem.parmSysCheckList(this);
+        #        sysCheckListItem.init();
+        #
+        #        //Then insert runnable item in map
+        #        if(sysCheckListItem.isRunnable())
+        #        {
+        #            checkMap.insert(sysCheckListItem.getItemId(), sysCheckListItem);
+        #        }
+        #
+        #        setIterator.next();
+        #    }
+        #
+        #    //Then check and insert in the checkList
+        #    while (mapEnumerator.moveNext())
+        #    {
+        #        this.insertItem(mapEnumerator.currentValue());
+        #    }
+        #    //Refresh status of listitems - set status depended on status of dependencies
+        #    this.refresh();
+        #
+        #    //Resort
+        #
+        #    if (this.sortWithStatusPreference())
+        #    {
+        #        //Sort list so items with same status are displayed in groups
+        #        if (! this.onlyPrimarilySortOrder())
+        #            this.sequenceSort();
+        #
+        #        this.statusSort();
+        #    }
+        #    else
+        #    {
+        #        if (! this.onlyPrimarilySortOrder())
+        #            this.statusSort();
+        #
+        #        this.sequenceSort();
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #initCheckBoxControl
+        #protected void initCheckBoxControl(str _id)
+        #{
+        #    ;
+        #    checkBoxPreventAtStartup = infolog.globalCache().get(classStr(FormCheckBoxControl), _id, checkBoxPreventAtStartup);
+        #}
+      ENDSOURCE
+      SOURCE #initHtmlControl
+        #protected void initHtmlControl(str _id)
+        #{
+        #    ObjectIdent objectIdent = infolog.globalCache().get(classStr(FormActiveXControl), _id, null);
+        #    ;
+        #
+        #    if (objectIdent)
+        #    {
+        #        html = objectIdent.object();
+        #        htmlInitialized = true;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #insertItem
+        #protected boolean insertItem(SysCheckListItem _sysCheckListItem)
+        #{
+        #    boolean found = true;
+        #;
+        #
+        #    checkList.addStart(_sysCheckListItem.getItemId());
+        #    return found;
+        #}
+      ENDSOURCE
+      SOURCE #isEmpty
+        #protected boolean isEmpty()
+        #{
+        #    boolean ret = ! this.needReStart();
+        #    ListIterator checkListIterator = new ListIterator(checkList);
+        #    SysCheckListItem sysCheckListItem;
+        #    ;
+        #
+        #    if (!checkList.empty())
+        #    {
+        #        checkListIterator.begin();
+        #        while (checkListIterator.more() && ret)
+        #        {
+        #            if (checkMap.exists(checkListIterator.value()))
+        #            {
+        #                sysCheckListItem = checkMap.lookup(checkListIterator.value());
+        #                if (sysCheckListItem.getState() != SysCheckListStatus::Finished &&
+        #                    sysCheckListItem.visible() && sysCheckListItem.isRunnable())
+        #                    ret = false; //Something has not been finished...
+        #            }
+        #            checkListIterator.next();
+        #        }
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #isRunnable
+        #abstract protected boolean isRunnable()
+        #{
+        #    //Should be overridden to return condition for checklist
+        #}
+      ENDSOURCE
+      SOURCE #makeLink
+        #protected str makeLink(MenuItemName _name, MenuItemType _type, SysCheckListStatus _status = SysCheckListStatus::Ready)
+        #{
+        #    str ret;
+        #
+        #    if (_status != SysCheckListStatus::Deferred)
+        #    {
+        #        switch (_type)
+        #        {
+        #            case MenuItemType::Action :
+        #                ret = 'MenuItemAction://';
+        #                break;
+        #            case MenuItemType::Display :
+        #                ret = 'MenuItemDisplay://';
+        #                break;
+        #            case MenuItemType::Output :
+        #                ret = 'MenuItemOutput://';
+        #                break;
+        #            default :
+        #        }
+        #        ret += _name;
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #mandatoryFinished
+        #/// <summary>
+        #/// Verifies whether all of the mandatory items of a checklist have finished.
+        #/// </summary>
+        #/// <returns>
+        #/// true if all of the mandatory items have finished; otherwise, false.
+        #/// </returns>
+        #public boolean mandatoryFinished()
+        #{
+        #    // New public method to prevent breaking existing API
+        #    return this.mandatoryItemsFinished();
+        #}
+      ENDSOURCE
+      SOURCE #mandatoryItems
+        #protected container mandatoryItems()
+        #{
+        #    ListIterator        checkListIterator = new ListIterator(checkList);
+        #    SysCheckListItem    sysCheckListItem;
+        #    container           mandatoryCon = conNull();
+        #
+        #    if (!checkList.empty())
+        #    {
+        #        checkListIterator.begin();
+        #
+        #        while (checkListIterator.more())
+        #        {
+        #            if (checkMap.exists(checkListIterator.value()))
+        #            {
+        #                sysCheckListItem = checkMap.lookup(checkListIterator.value());
+        #
+        #                if (sysCheckListItem.visible() && sysCheckListItem.isRunnable() && !sysCheckListItem.indeterminate())
+        #                {
+        #                    mandatoryCon += [checkListIterator.value()];
+        #                }
+        #            }
+        #
+        #            checkListIterator.next();
+        #        }
+        #    }
+        #
+        #    return mandatoryCon;
+        #}
+      ENDSOURCE
+      SOURCE #mandatoryItemsFinished
+        #protected boolean mandatoryItemsFinished()
+        #{
+        #    ListEnumerator   listEnumerator    = checkList.getEnumerator();
+        #    SysCheckListItem sysCheckListItem;
+        #    container        c                 = this.mandatoryItems();
+        #    ;
+        #
+        #    while (listEnumerator.moveNext()) //Loop through all list items
+        #    {
+        #        // Look up the actual item instance for status
+        #        if (checkMap.exists(listEnumerator.current()))
+        #        {
+        #            sysCheckListItem = checkMap.lookup(listEnumerator.current());
+        #
+        #            // if it is a mandatory item
+        #            if (conFind(c, classIdGet(sysCheckListItem)))
+        #            {
+        #                // check for current status in memory
+        #                if (sysCheckListItem.getState()  != SysCheckListStatus::Finished)
+        #                {
+        #                    return false;
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #maybeDirRTL
+        #// BASIS bidi
+        #public str maybeDirRTL()
+        #{
+        #    str sDir;
+        #
+        #    if (currentSessionLanguageRTL())
+        #        sDir = ' dir="rtl"';
+        #    else
+        #        sDir = '';
+        #
+        #    return sDir;
+        #}
+      ENDSOURCE
+      SOURCE #needReStart
+        #public boolean needReStart(boolean _restart = false)
+        #{
+        #    if (prmisDefault(_restart)) //no parm - just get global
+        #        return infolog.globalCache().get(this.getName(), #Restart, false);
+        #
+        #    infolog.globalCache().set(this.getName(), #Restart, _restart);
+        #    return _restart;
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #protected void new()
+        #{
+        #    ;
+        #    sortWithStatusPreference = false;
+        #    onlyPrimarilySortOrder   = true;
+        #}
+      ENDSOURCE
+      SOURCE #onlyPrimarilySortOrder
+        #protected boolean onlyPrimarilySortOrder(boolean _onlyPrimarilySortOrder = onlyPrimarilySortOrder)
+        #{
+        #;
+        #    onlyPrimarilySortOrder = _onlyPrimarilySortOrder;
+        #    return onlyPrimarilySortOrder;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #parmIsSetupMode
+        #public boolean parmIsSetupMode(boolean _isSetupMode = isSetupMode)
+        #{
+        #    isSetupMode = _isSetupMode;
+        #
+        #    return isSetupMode;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #preRunFormInInitialization
+        #/// <summary>
+        #/// Peforms operation before running the form in the initialization.
+        #/// </summary>
+        #/// <returns>
+        #/// True if setting the cache is needed; otherwise, false.
+        #/// </returns>
+        #// <GCN>
+        #protected boolean preRunFormInInitialization()
+        #{
+        #    return true;
+        #}
+        #// </GCN>
+      ENDSOURCE
+      SOURCE #preventAtStartup
+        #/// <summary>
+        #/// Checks to see whether a checklist has been prevented at startup.
+        #/// </summary>
+        #/// <returns>
+        #/// true if the checklist has been prevented at startup; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// Normally, there is a check box on every checklist UI to enable user to disable the checklist at
+        #/// startup. X++ code can also be used to disable a checklist.
+        #/// </remarks>
+        #public boolean preventAtStartup()
+        #{
+        #    // New public method to prevent breaking existing API
+        #    return this.canBePreventedAtStartup();
+        #}
+      ENDSOURCE
+      SOURCE #refresh
+        #protected void refresh()
+        #{
+        #    ListEnumerator listEnumerator = checkList.getEnumerator();
+        #    SysCheckListItem sysCheckListItem;
+        #;
+        #
+        #    while (listEnumerator.moveNext()) //Loop through all list items
+        #    {
+        #        if (checkMap.exists(listEnumerator.current()))
+        #        {
+        #            sysCheckListItem = checkMap.lookup(listEnumerator.current());
+        #            sysCheckListItem.flushState();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #runSilent
+        #protected void runSilent()
+        #{
+        #    //Should be overridden to include items that can run in silent mode
+        #}
+      ENDSOURCE
+      SOURCE #save
+        #/*
+        #    Use: SysSetupLog::saveEx(_name, _description);
+        #    for global checklists.
+        #
+        #    Use: SysSetupCompanyLog::saveEx(_name, _description);
+        #    for company specific checklists.
+        #
+        #    Use the save instead of saveEx if application and kernel build no. not is necessery
+        #*/
+        #abstract public void save(IdentifierName   _name,
+        #                          ClassDescription _description = '')
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #sequenceSort
+        #protected void sequenceSort()
+        #{
+        #    SysCheckListItem sysCheckListItem;
+        #    ListIterator listIterator = new ListIterator(checkList);
+        #    Map map = new Map(Types::Integer, Types::Class);
+        #    SetIterator setIterator;
+        #    container newList = conNull(), seq = conNull(), temp;
+        #    int i;
+        #    boolean foundInSeq;
+        #    ;
+        #
+        #    //Insert all item without seq in newlist - store others in seq
+        #    listIterator.begin();
+        #    while (listIterator.more())
+        #    {
+        #        if (checkMap.exists(listIterator.value()))
+        #        {
+        #            sysCheckListItem = checkMap.lookup(listIterator.value());
+        #            if (sysCheckListItem.getSequence())
+        #            {
+        #                seq += listIterator.value();
+        #                map.insert(listIterator.value(),sysCheckListItem.getSequence());
+        #            }
+        #            else
+        #            {
+        #                newList += listIterator.value();
+        #            }
+        #        }
+        #        listIterator.next();
+        #    }
+        #
+        #    while (conLen(seq))
+        #    {
+        #        temp = conNull();
+        #
+        #        for (i=1;i<=conLen(seq);i++)
+        #        {
+        #            foundInSeq  = false;
+        #            setIterator = new SetIterator(map.lookup(conPeek(seq,i)));
+        #            setIterator.begin();
+        #            while (setIterator.more())
+        #            {
+        #                if (conFind(seq, setIterator.value()))
+        #                    foundInSeq = true;
+        #
+        #                setIterator.next();
+        #            }
+        #            if (!foundInSeq)
+        #            {
+        #                //None of the items in the sequence for the current item was
+        #                //found in the container where the other items with sequence are stored
+        #                // - so the item can be added to newList
+        #                newList += conPeek(seq,i);
+        #            }
+        #            else
+        #            {
+        #                //There are still items in seq that should be added to newList before
+        #                //this one...
+        #                temp += conPeek(seq,i);
+        #            }
+        #        }
+        #
+        #        if (conLen(seq) == conLen(temp))
+        #        {
+        #            //All items in seq are related in some errorously way
+        #            //We know seq contains items - so add first element to list
+        #            newList += conPeek(temp,1);
+        #            temp = conDel(temp,1,1);
+        #        }
+        #
+        #        seq = temp;
+        #    }
+        #
+        #    //and create the new sorted list
+        #    checkList = con2List(newList);
+        #}
+      ENDSOURCE
+      SOURCE #sortWithStatusPreference
+        #protected boolean sortWithStatusPreference(boolean _value = sortWithStatusPreference)
+        #{
+        #;
+        #    sortWithStatusPreference = _value;
+        #    return sortWithStatusPreference;
+        #}
+      ENDSOURCE
+      SOURCE #statusSort
+        #protected void statusSort()
+        #{
+        #    SysCheckListItem sysCheckListItem;
+        #    ListIterator listIterator = new ListIterator(checkList);
+        #    Map map = new Map(Types::Integer, Types::Container);
+        #    container con = conNull();
+        #    ;
+        #
+        #    map.insert(#defaultMap,conNull());
+        #    map.insert(SysCheckListStatus::Ready,conNull());
+        #    map.insert(SysCheckListStatus::Finished,conNull());
+        #    map.insert(SysCheckListStatus::Deferred,conNull());
+        #    map.insert(SysCheckListStatus::Indeterminate,conNull());
+        #
+        #    //Insert all item in checklist in map
+        #    listIterator.begin();
+        #    while (listIterator.more())
+        #    {
+        #        if (checkMap.exists(listIterator.value()))
+        #        {
+        #            sysCheckListItem = checkMap.lookup(listIterator.value());
+        #            if (map.exists(sysCheckListItem.getState()))
+        #            {
+        #                map.insert(sysCheckListItem.getState(), map.lookup(sysCheckListItem.getState()) + listIterator.value());
+        #            }
+        #            else
+        #            {
+        #                map.insert(#defaultMap, map.lookup(#defaultMap) + listIterator.value());
+        #            }
+        #        }
+        #        listIterator.next();
+        #    }
+        #
+        #    //Merge containers from map
+        #    con =  map.lookup(SysCheckListStatus::Finished);
+        #    con += map.lookup(SysCheckListStatus::Ready);
+        #    con += map.lookup(SysCheckListStatus::Indeterminate);
+        #    con += map.lookup(#defaultMap);
+        #    con += map.lookup(SysCheckListStatus::Deferred);
+        #
+        #    //and create the new sorted list
+        #    checkList = con2List(con);
+        #}
+      ENDSOURCE
+      SOURCE #updateHtml
+        #protected void updateHtml(boolean _refresh = true)
+        #{
+        #    int i;
+        #    boolean madatoryItemsFinished;
+        #
+        #    if (htmlInitialized)
+        #    {
+        #        if (_refresh)
+        #        {
+        #            this.refresh();
+        #        }
+        #
+        #        //Get scroll
+        #        i = this.getScroll();
+        #
+        #        madatoryItemsFinished = this.mandatoryItemsFinished();
+        #        checkBoxPreventAtStartup.enabled(madatoryItemsFinished);
+        #        // if mandatory items are reset to unfinished after a re-execute
+        #        // clear the checkbox
+        #        if (!madatoryItemsFinished)
+        #        {
+        #            checkBoxPreventAtStartup.checked(false);
+        #        }
+        #        SysHelp::showHTML(html, this.getHtml());
+        #        html.update();
+        #
+        #        this.gotoScroll(i);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #checkListItems
+        #//This method should never be overlayered
+        #protected static container checkListItems()
+        #{
+        #    return SysCheckList::checkListItemsHook() +
+        #           [
+        #            // <GTH>
+        #            className2Id(classStr(SysCheckListItem_TaxWithholdRevenueType)),
+        #            // </GTH>
+        #            classNum(SysCheckListItem_PreventAtStartupUpgrade),
+        #            classNum(SysCheckListItem_ApplicationUpgrade),
+        #            classNum(SysCheckListItem_Company),
+        #            classNum(SysCheckListItem_SystemParameters),
+        #            classNum(SysCheckListItem_Compile),
+        #            className2Id(classStr(SysCheckListItem_CompileServ)),
+        #            classNum(SysCheckListItem_CompileUpgrade),
+        #            classNum(SysCheckListItem_CILGeneration),
+        #            className2Id(classStr(SysCheckListItem_CILGenerationServ)),
+        #            classNum(SysCheckListItem_CILGenerationInit),
+        #            classNum(SysCheckListItem_EDT),
+        #            classNum(SysCheckListItem_LifecycleServices),
+        #            classNum(SysCheckListItem_ConfigurationKey),
+        #            classNum(SysCheckListItem_LicenseCode),
+        #            classNum(SysCheckListItem_LicenseCodeUpgrade),
+        #            //classnum(SysCheckListItem_OracleStatistics),
+        #            classNum(SysCheckListItem_RestartSetup),
+        #            classNum(SysCheckListItem_RestartUpgrade),
+        #            classNum(SysCheckListItem_Synchronize),
+        #            classNum(SysCheckListItem_SynchronizeUpgrade),
+        #            classNum(SysCheckListItem_CreateTablesUpgrade),
+        #            classNum(SysCheckListItem_BulkCopyParameters),
+        #            classNum(SysCheckListItem_BulkCopyMap),
+        #            classNum(SysCheckListItem_BaseTimezoneUpgrade),
+        #            classNum(SysCheckListItem_SysUpgradeImportAODAlt),
+        #            classNum(SysCheckListItem_SysUpgradeImportAOD),
+        #            classNum(SysCheckListItem_SysUpgradeImportALD),
+        #            classNum(SysCheckListItem_SysUpgradeDetectCon/*flicts*/),
+        #            classNum(SysCheckListItem_SysUpgradeCodeUpgrade),
+        #            className2Id(classStr(SysCheckListItem_SysUpgradeDctCnServ)),
+        #            classNum(SysCheckListItem_User),
+        #            classNum(SysCheckListItem_ApplicationPreUpgrade),
+        #            classNum(SysCheckListItem_ApplicationAddUpg/*rade*/),
+        #            classNum(SysCheckListItem_DataImport),
+        #            classNum(SysCheckListItem_ProfileImport),
+        #            classNum(SysCheckListItem_SetupAIF),
+        #            classNum(SysCheckListItem_BCProxy),
+        #            classNum(SysCheckListItem_Validation),
+        #            classNum(SysCheckListItem_BCProxyUpgrade),
+        #            classNum(SysCheckListItem_SQM),
+        #            classNum(SysCheckListItem_SQMUpgrade),
+        #            classNum(SysCheckListItem_SysUpgradeEP),
+        #            classNum(SysCheckListItem_SelectEPHomePage),
+        #            classNum(SysCheckListItem_UpgradeAifCode),
+        #            classNum(SysCheckListItem_CreateAddressBook),
+        #            classNum(SysCheckListItem_PreventUpdate),
+        #            classNum(SysCheckListItem_LicenseCodeUpdate),
+        #            className2Id(classStr(SysCheckListItem_ApplicationPUServ)),
+        #            className2Id(classStr(SysCheckListItem_SynchronizeUpdServ)),
+        #            className2Id(classStr(SysCheckListItem_ApplicationUpdtServ)),
+        #            className2Id(classStr(SysCheckListItem_AdditionalUpdatServ)),
+        #            classNum(SysCheckListItem_InventPurchRelief),
+        #            classNum(SysCheckListItem_SitesSvcSetAcct),
+        #            classNum(SysCheckListItem_SitesSvcConfUrl),
+        #            classNum(SysCheckListItem_SitesSvcAvailSols),
+        #            classNum(SysCheckListItem_SitesSvcAddUsers),
+        #            classNum(SysCheckListItem_SitesSvcCreateSol),
+        #            classNum(SysCheckListItem_SitesSvcOperationLog),
+        #            classNum(SysCheckListItem_SysUpgradeImportMSAOD),
+        #            classNum(SysCheckListItem_SysUpgradeImportMSModel),
+        #            classNum(SysCheckListItem_SysUpgradeImportBase),
+        #            classNum(SysCheckListItem_SysUpgradeImportModel),
+        #            classNum(SysCheckListItem_SysUpgradeRestartAos),
+        #            classNum(SysCheckListItem_DataUpgrade),
+        #            classNum(SysCheckListItem_DataUpdate),
+        #            classNum(SysCheckListItem_SetupPartitionAccount),
+        #            classNum(SysCheckListItem_SetupPartitionData),
+        #            classNum(SysCheckListItem_SetupPartition),
+        #            classNum(SysCheckListItem_BuildSSRSReports),
+        #            classNum(SysCheckListItem_SysUpgradeInfo),
+        #            classNum(SysCheckListItem_SysUpgradeRuleConfig),
+        #            classNum(SysCheckListItem_SetFlag4199),
+        #            classNum(SysCheckListItem_SetAOSBufferSize),
+        #            classNum(SysCheckListItem_SetSQLParallelism),
+        #            classNum(SysCheckListItem_SetAOSStartupCmd),
+        #            classNum(SysCheckListItem_Compile),
+        #            classNum(SysCheckListItem_RevertSettings),
+        #            classNum(SysCheckListItem_SysUpgradeFlattenDB),
+        #            classNum(SysCheckListItem_SysUpdateFlattenDB),
+        #            className2Id(classStr(SysCheckListItem_RestartAosServ)),
+        #            className2Id(classStr(SysCheckListItem_LoadUpdateScripts)),
+        #            classNum(SysCheckListItem_SysUpgradeMetadataMerge),
+        #            classNum(SysCheckListItem_SysUpgradeImportISVAOD),
+        #            classNum(SysCheckListItem_SysUpgradeExportIds),
+        #            classNum(SysCheckListItem_SysUpgradePreserveID),
+        #            classNum(SysCheckListItem_SysUpgradeRestartAOSPre),
+        #            classNum(SysCheckListItem_SynchronizeUpgradeCode),
+        #            classNum(SysCheckListItem_SysUpgradeDataRestarAOS),
+        #            classNum(SysCheckListItem_SysUpdateDataRestartAOS),
+        #            classNum(SysCheckListItem_SynchronizeUpgradeData),
+        #            classNum(SysCheckListItem_SynchronizeUpdateData),
+        #            classNum(SysCheckListItem_SysUpdateReportBusiness)
+        #            ] +
+        #            [
+        #            classNum(SysCheckListItem_UpgradeAIF),
+        #            classNum(SysCheckListItem_DisableChangeTracking),
+        #            classNum(SysCheckListItem_TableCollections),
+        #            classNum(SysCheckListItem_SysUpdateReportProject),
+        #            //--> Credit Card
+        #            classNum(SysCheckListItem_CreditCardAdv)
+        #            //<-- Credit card
+        #            ];
+        #}
+      ENDSOURCE
+      SOURCE #checkListItemsHook
+        #// This method should never contain any sys classes
+        #protected static container checkListItemsHook()
+        #{
+        #    return [
+        #            classNum(RetailStoreSetup_CreateStoreDatabase),
+        #            classNum(RetailStoreSetup_CreateRealTimeSvc),
+        #            classNum(RetailStoreSetup_CreateSynSvcForStore),
+        #            classNum(RetailStoreSetup_CreateRetailStore),
+        #            classNum(RetailStoreSetup_CreateSynSvcForAXSide),
+        #            classNum(RetailStoreSetup_SetRealTimeSvcProfile),
+        #            classNum(RetailStoreSetup_SetChannelDataGroup),
+        #            classNum(RetailStoreSetup_SetCDXWorkingFolder),
+        #            classNum(RetailStoreSetup_SetStoreDatabaseProfile),
+        #            classNum(RetailStoreSetup_CreateStoresRegister),
+        #            classNum(RetailStoreSetup_SetSchJobConfigration),
+        #            classNum(RetailStoreSetup_ResetStatus),
+        #            classNum(RetailStoreSetup_CreateHardwareProfile),
+        #            classNum(RetailStoreSetup_CreateFunctionalityProf),
+        #            classNum(RetailStoreSetup_CreateVisualProfile),
+        #            classNum(RetailCheckListItem_InstallOnlineStore),
+        #            classNum(RetailCheckListItem_SetupDataGroup),
+        #            classNum(RetailCheckListItem_SetupDBProfile),
+        #            classNum(RetailCheckListItem_SetupTSProfile),
+        #            classNum(RetailCheckListItem_SetupPaymConnector),
+        #            classNum(RetailCheckListItem_CreateAttributes),
+        #            classNum(RetailCheckListItem_CreateAttributeGroup),
+        #            classNum(RetailCheckListItem_CreateNavHierarchy),
+        #            classNum(RetailCheckListItem_CreateOnlineStore),
+        #            classNum(RetailCheckListItem_AddStoreToOrgHierarc),
+        #            classNum(RetailCheckListItem_AddDlvModeToStore),
+        #            classNum(RetailCheckListItem_MapAttributes),
+        #            classNum(RetailCheckListItem_PublishOnlineStore),
+        #            classNum(RetailCheckListItem_DeployInitialDataset),
+        #            classNum(RetailCheckListItem_SetupDistSchedule),
+        #            classNum(RetailCheckListItem_AddAssortmentToStore),
+        #            classNum(RetailCheckListItem_ManageCatalogs),
+        #            classNum(RetailCheckListItem_ManageSPExperience),
+        #            classNum(SysCheckListItem_ConfigurationKeyUpg),
+        #            className2Id(classStr(SysCheckListItem_LoadUpdateExScripts)),
+        #            className2Id(classStr(SysCheckListItem_RestartAllAosServ)),
+        #            classNum(SysCheckListItem_SysUpdateCodeInfo),
+        #            classNum(SysCheckListItem_SysUpdateCodeDetectCon),
+        #            classNum(SysCheckListItem_SysUpdateCodeMetaMerge),
+        #            classNum(SysCheckListItem_SysUpdateCodeRemoveMode),
+        #            classNum(SysCheckListItem_SysUpdateCodeExpModel),
+        #            classNum(SysCheckListItem_SysUpdateCodeExpStore),
+        #            classNum(SysCheckListItem_SysUpdateCodeUpgrade),
+        #            classNum(SysCheckListItem_SysUpdateCodeLicense),
+        #            classNum(SysCheckListItem_SysUpdateCodeCILInit),
+        #            classNum(SysCheckListItem_SysUpdateCodeCILFinal),
+        #            classNum(SysCheckListItem_SysUpdateCodeCompilInit),
+        #            classNum(SysCheckListItem_SysUpdateCodeCompile),
+        #            classNum(SysCheckListItem_SysUpdateCodeRestartAos),
+        #            classNum(SysCheckListItem_SysUpdateCodeResAosCIL),
+        #            classNum(SysCheckListItem_SysUpdateCodeSyncDB),
+        #            classNum(SysCheckListItem_SysUpdateImportStore),
+        #            classNum(SysCheckListItem_SysUpdateRestartAos),
+        #            classNum(SysCheckListItem_SysUpdateCIL),
+        #            classNum(SysCheckListItem_AdditionalUpdate),
+        #            classNum(SysCheckListItem_ApplicationPreUpdate),
+        #            classNum(SysCheckListItem_ApplicationUpdate),
+        #            classNum(SysCheckListItem_SynchronizeUpdate)
+        #            // <GEERU>
+        #            , classNum(SysCheckListItem_SysUpgradeAlignStrEdtSz)
+        #            // </GEERU>
+        #            , className2Id(classStr(SysCheckListItem_CodeMerge))
+        #            , classNum(SysCheckListItem_SysUpdateCodeLcs)
+        #            ];
+        #}
+      ENDSOURCE
+      SOURCE #checkLists
+        #protected static List checkLists()
+        #{
+        #    return con2List(
+        #        SysCheckList::checkListsHook() +
+        #        [classNum(SysCheckList_Setup),
+        #         classNum(SysCheckList_SetupPartition),
+        #         classNum(SysCheckList_UpgradeCode),
+        #         classNum(SysCheckList_Upgrade),
+        #         className2Id(classStr(SysCheckList_Update)),
+        #         className2Id(classStr(SysCheckList_SysUpdateCode)),
+        #         classNum(SysCheckList_SitesSvcConfiguration),
+        #         className2Id(classStr(SysChecklist_Servicing)),
+        #         classNum(SysCheckList_SitesSvcConfiguration),
+        #         classNum(RetailCheckList_OnlineStoreSetup),
+        #         classNum(RetailCheckList_RetailStoreSetup)
+        #        ]
+        #        );
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #checkListsHook
+        #protected static container checkListsHook()
+        #{
+        #    return conNull();
+        #}
+      ENDSOURCE
+      SOURCE #compileChecklists
+        #private static void compileChecklists()
+        #{
+        #    SysModelElement modelElement;
+        #    TreeNodePath path;
+        #    TreeNode checkListItemNode;
+        #
+        #    while select RecId, RootModelElement, Name, ParentId, ElementType
+        #        from modelElement
+        #        where modelElement.Name like 'SysCheckList*' && modelElement.ElementType == UtilElementType::Class
+        #    {
+        #        path = SysTreeNode::modelElement2RootElementPath(modelElement);
+        #        checkListItemNode = TreeNode::findNode(path);
+        #        if(checkListItemNode)
+        #        {
+        #            checkListItemNode.AOTcompile(0, true);
+        #            checkListItemNode.treeNodeRelease();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createDATDataarea
+        ##Admin
+        #static server void createDATDataarea()
+        #{
+        #    DataArea    dataArea;
+        #    ;
+        #    ttsbegin;
+        #
+        #    new SkipAOSValidationPermission().assert();
+        #
+        #    select forupdate dataArea
+        #        where dataArea.Id == #DatCompany &&
+        #              dataArea.IsVirtual == false;
+        #
+        #    if(!dataArea)
+        #    {
+        #        dataArea.clear();
+        #        dataArea.skipAosValidation(true);
+        #        dataArea.Id         = #DatCompany;
+        #        dataArea.Name       = "@SYS15585";
+        #        dataArea.IsVirtual  = false;
+        #        dataArea.TimeZone = DateTimeUtil::getUserPreferredTimeZone();
+        #        dataArea.insert();
+        #        CodeAccessPermission::revertAssert();
+        #        ReleaseUpdateDB::runWithoutUpdate(#DatCompany);
+        #    }
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #findDependentItems
+        #protected static void findDependentItems(ClassId _searchForId, Set _searchSet, SysCheckList _sysCheckList, Set _setDependents)
+        #{
+        #    List listDependencies;
+        #    ListIterator listIterator;
+        #    SetIterator setIterator = new SetIterator(_searchSet);
+        #    SysCheckListItem searchInItem;
+        #    ;
+        #
+        #    setIterator.begin();
+        #    while (setIterator.more())
+        #    {
+        #        searchInItem = _sysCheckList.getItem(setIterator.value());
+        #        if (searchInItem)
+        #        {
+        #            listDependencies = searchInItem.getDependency();
+        #            if (listDependencies)
+        #            {
+        #                listIterator = new ListIterator(listDependencies);
+        #                listIterator.begin();
+        #                while (listIterator.more())
+        #                {
+        #                    if (listIterator.value() == _searchForId)
+        #                    {
+        #                        if (!_setDependents.in(setIterator.value()))
+        #                        {
+        #                            _setDependents.add(setIterator.value());
+        #                            SysCheckList::findDependentItems(setIterator.value(), _searchSet, _sysCheckList, _setDependents);
+        #                        }
+        #                        break;
+        #                    }
+        #                    listIterator.next();
+        #                }
+        #            }
+        #        }
+        #        setIterator.next();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #finished
+        #static public void finished(ClassId _id)
+        #{
+        #    SysDictClass dictClass;
+        #    SysCheckList::updateItem(_id, SysCheckListStatus::Finished);
+        #
+        #    dictClass = new SysDictClass(_id);
+        #
+        #    if (dictClass && dictClass.isImplementing(classNum(SysCheckListInterfaceUpgrade)))
+        #    {
+        #        //Log, so we have an idea on how long a checklist item takes from the time user clicks on the checklist
+        #        ReleaseUpdateDB::log(strFmt('Checklist finished: %1', classId2Name(_id)), ReleaseUpdateLogType::CheckList);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #getAllCheckListItems
+        #static protected Set getAllCheckListItems(ClassId _interfaceId = 0)
+        #{
+        #    //Create list of all items - then check each if it is empty
+        #    Set itemSet = new Set(Types::Integer);
+        #    SysDictClass sysDictClass;
+        #    int i;
+        #    ;
+        #
+        #    //extendedBy takes 20 sec on startup...
+        #    //This is a bit faster...
+        #    for (i=conLen(SysCheckList::checkListItems()); i>0 ;i--)
+        #    {
+        #        sysDictClass = new SysDictClass(conPeek(SysCheckList::checkListItems(),i));
+        #
+        #        if ((!_interfaceId || sysDictClass.isImplementing(_interfaceId)) //correct interface or all
+        #         && !sysDictClass.isAbstract())
+        #        {
+        #            itemSet.add(conPeek(SysCheckList::checkListItems(),i));
+        #        }
+        #    }
+        #    return itemSet;
+        #}
+      ENDSOURCE
+      SOURCE #getCheckList
+        #/// <summary>
+        #/// Gets an instance of a checklist class from its class ID.
+        #/// </summary>
+        #/// <param name="_classId">
+        #/// The class ID of the checklist.
+        #/// </param>
+        #/// <returns>
+        #/// The checklist object that has been created.
+        #/// </returns>
+        #/// <remarks>
+        #/// Once a checklist object is created, its reference is also stored in the global cache.
+        #/// </remarks>
+        #public static SysCheckList getCheckList(ClassId _classId)
+        #{
+        #    SysCheckList sysCheckList;
+        #    SysCheckListItem sysCheckListItem;
+        #    ListIterator listIterator;
+        #    ;
+        #
+        #    //Create list of all checklists - then check each if it is empty
+        #    listIterator = new ListIterator(SysCheckList::checkLists());
+        #    listIterator.begin();
+        #    while (listIterator.more())
+        #    {
+        #        if (! (new DictClass(listIterator.value()).isAbstract()))
+        #        {
+        #            //Try to get list
+        #            sysCheckList = infolog.globalCache().get(classId2Name(listIterator.value()),
+        #                                                     classId2Name(listIterator.value()), null);
+        #            if (sysCheckList)
+        #            {
+        #                sysCheckListItem = sysCheckList.getItem(_classId);
+        #                if (_classId && sysCheckListItem)
+        #                {
+        #                    break;
+        #                }
+        #            }
+        #        }
+        #        listIterator.next();
+        #    }
+        #
+        #    return sysCheckList;
+        #}
+      ENDSOURCE
+      SOURCE #getDefaultStylesheet
+        #protected static str getDefaultStylesheet()
+        #{
+        #    str themeName = SysCheckList::themeName();
+        #    ;
+        #
+        #    switch (themeName)
+        #    {
+        #        case #Theme_Classic:
+        #            return SysCheckList::getStylesheetAllClassicTheme();
+        #
+        #        case #Theme_XPBlue:
+        #            return SysCheckList::getStyleXPBlue();
+        #
+        #        case #Theme_XPOlive:
+        #            return SysCheckList::getStyleXPOlive();
+        #
+        #        case #Theme_XPSilver:
+        #            return SysCheckList::getStyleXPSilver();
+        #
+        #        default:
+        #            return SysCheckList::getStylesheetAllClassicTheme();
+        #    }
+        #
+        #    return SysCheckList::getStylesheetAllClassicTheme();
+        #
+        #}
+      ENDSOURCE
+      SOURCE #getStylesheetAllClassicTheme
+        #protected static str getStylesheetAllClassicTheme()
+        #{
+        #;
+        #return @"
+        #<STYLE>
+        #
+        #body
+        #{
+        #/* CHS: Changed fontsequence to match rest of app. Changed font size from 70% to 80%;*/
+        #
+        #font-size: 8pt;
+        #font-family: 'tahoma','arial', 'verdana';
+        #color:WindowText;
+        #background-color:ThreeDFace;
+        #/* CHS: removed: background:#CAB99F;*/
+        #}
+        #/* CHS: NEW CLASS */
+        #.TableBackground
+        #{
+        #    background-color:Window;
+        #}
+        #h1
+        #{
+        #color:WindowText; /* Theme compliance*/
+        #/* CHS: removed color: Black ; */
+        #font-size: 125%;
+        #margin-bottom: 0.50em;
+        #}
+        #h2
+        #{
+        #color:WindowText; /* Theme compliance*/
+        #/* CHS: removed color: Black ; */
+        #font-size: 110%;
+        #margin-top: 2.00em;
+        #margin-bottom: 0.50em;
+        #}
+        #h3
+        #{
+        #font-weight: bold;
+        #font-size: 100%;
+        #margin-top: 1.20em;
+        #margin-bottom: 0.50em;
+        #}
+        #h4
+        #{
+        #font-weight: bold;
+        #font-size: 100%;
+        #margin-top: 1.20em;
+        #margin-bottom: 0.50em;
+        #}
+        #table
+        #{
+        #font-size: 100%
+        #}
+        #th
+        #{
+        #background-color: ThreeDLighShadow; /* CHS: I am uncertain of this color. Need to see it in effect */
+        #text-align: left;
+        #}
+        #tr
+        #{
+        #vertical-align: top;
+        #}
+        #td
+        #{
+        #vertical-align: top;
+        #}
+        #p
+        #{
+        #margin-top: 0.60em;
+        #margin-bottom: 0.60em;
+        #}
+        #
+        #hr
+        #{
+        #    color: WindowText;
+        #    background-color: WindowText;
+        #height: 1px;
+        #/* CHS:  removed:
+        #color: black;
+        #background-color: black;*/
+        #
+        #}
+        #/* CHS: Very good. Do not change link colors. */
+        #a
+        #{
+        #text-decoration: none
+        #}
+        #a:hover
+        #{
+        #text-decoration: underline
+        #}
+        #ol
+        #{
+        #font-size: 100%;
+        #margin-top: 0.50em;
+        #margin-bottom: 0.00em;
+        #margin-left: 4.00em;
+        #}
+        #ol ul
+        #{
+        #margin-top: 0.50em;
+        #list-style: disc;
+        #}
+        #ul
+        #{
+        #font-size:100%;
+        #margin-top: 0.50em;
+        #margin-bottom: 0.00em;
+        #}
+        #ul ul
+        #{
+        #margin-top: 0.50em;
+        #list-style: disc;
+        #}
+        #li
+        #{
+        #margin-bottom: 0.70em;
+        #margin-left: -2.00em;
+        #}
+        #td.indextable
+        #{
+        #background-color: transparent;
+        #}
+        #.indent
+        #{
+        #margin-left: 2.00em;
+        #}
+        #.highlight
+        #{
+        #    background-color: Highlight;
+        #/* CHS: Removed this: background-color: #add8e6;*/
+        #}
+        #p.tips
+        #{
+        #margin-top: 0.60em;
+        #}
+        #p.notes
+        #{
+        #margin-top: 0.60em;
+        #}
+        #p.code
+        #{
+        #font-size: 125%;
+        #font-family: 'courier new', courier;
+        #}
+        #span.userinterface
+        #{
+        #}
+        #span.userinterface span.label
+        #{
+        #font-weight: bold;
+        #}
+        #div.configurationkey
+        #{
+        #color: navy;
+        #font-weight: bold;
+        #}
+        #div.feature
+        #{
+        #color: navy;
+        #}
+        #div.security
+        #{
+        #color: navy;
+        #}
+        #
+        #
+        #/* CHS: changed completely*/
+        #h1.naviheader
+        #{
+        #    font-family: 'arial';
+        #    color:ButtonText;
+        #    font-size:large;
+        #    letter-spacing:1px;
+        #}
+        #.label
+        #{
+        #font-weight: bold;
+        #}
+        #
+        #</STYLE>";
+        #}
+      ENDSOURCE
+      SOURCE #getStyleXPBlue
+        #protected static str getStyleXPBlue()
+        #{
+        #;
+        #return @"
+        #<STYLE>
+        #body
+        #{
+        #/* CHS: Changed fontsequence to match rest of app. Changed font size from 70% to 80%;*/
+        #
+        #font-size: 8pt;
+        #font-family: 'tahoma','arial', 'verdana';
+        #color:WindowText;
+        #background-color:#ddecfe;
+        #/* CHS: Added filter;*/
+        #filter:progid:DXImageTransform.Microsoft.Gradient( startColorstr='#ddecfe', endColorstr='#4a7ac9', gradientType='0');
+        #
+        #/* CHS: removed: background:#CAB99F;*/
+        #}
+        #/* CHS: NEW CLASS */
+        #.TableBackground
+        #{
+        #    background-color:Window;
+        #}
+        #h1
+        #{
+        #color:background; /* Theme compliance*/
+        #/* CHS: removed color: Black ; */
+        #font-size: 125%;
+        #margin-bottom: 0.50em;
+        #}
+        #h2
+        #{
+        #color:background; /* Theme compliance*/
+        #/* CHS: removed color: Black ; */
+        #font-size: 110%;
+        #margin-top: 2.00em;
+        #margin-bottom: 0.50em;
+        #}
+        #h3
+        #{
+        #font-weight: bold;
+        #font-size: 100%;
+        #margin-top: 1.20em;
+        #margin-bottom: 0.50em;
+        #}
+        #h4
+        #{
+        #font-weight: bold;
+        #font-size: 100%;
+        #margin-top: 1.20em;
+        #margin-bottom: 0.50em;
+        #}
+        #table
+        #{
+        #font-size: 100%
+        #}
+        #th
+        #{
+        #background-color: ThreeDLighShadow; /* CHS: I am uncertain of this color. Need to see it in effect */
+        #text-align: left;
+        #}
+        #
+        #tr
+        #{
+        #vertical-align: top;
+        #}
+        #td
+        #{
+        #vertical-align: top;
+        #}
+        #p
+        #{
+        #margin-top: 0.60em;
+        #margin-bottom: 0.60em;
+        #}
+        #
+        #hr
+        #{
+        #    color: WindowText;
+        #    background-color: WindowText;
+        #height: 1px;
+        #/* CHS:  removed:
+        #color: black;
+        #background-color: black;*/
+        #
+        #}
+        #/* CHS: Very good. Do not change link colors. */
+        #a
+        #{
+        #text-decoration: none
+        #}
+        #a:hover
+        #{
+        #text-decoration: underline
+        #}
+        #ol
+        #{
+        #font-size: 100%;
+        #margin-top: 0.50em;
+        #margin-bottom: 0.00em;
+        #margin-left: 4.00em;
+        #}
+        #ol ul
+        #{
+        #margin-top: 0.50em;
+        #list-style: disc;
+        #}
+        #ul
+        #{
+        #font-size:100%;
+        #margin-top: 0.50em;
+        #margin-bottom: 0.00em;
+        #}
+        #ul ul
+        #{
+        #margin-top: 0.50em;
+        #list-style: disc;
+        #}
+        #li
+        #{
+        #margin-bottom: 0.70em;
+        #margin-left: -2.00em;
+        #}
+        #td.indextable
+        #{
+        #background-color: transparent;
+        #}
+        #.indent
+        #{
+        #margin-left: 2.00em;
+        #}
+        #.highlight
+        #{
+        #    background-color: Highlight;
+        #/* CHS: Removed this: background-color: #add8e6;*/
+        #}
+        #p.tips
+        #{
+        #margin-top: 0.60em;
+        #}
+        #p.notes
+        #{
+        #margin-top: 0.60em;
+        #}
+        #p.code
+        #{
+        #font-size: 125%;
+        #font-family: 'courier new', courier;
+        #}
+        #span.userinterface
+        #{
+        #}
+        #span.userinterface span.label
+        #{
+        #font-weight: bold;
+        #}
+        #div.configurationkey
+        #{
+        #color: navy;
+        #font-weight: bold;
+        #}
+        #div.feature
+        #{
+        #color: navy;
+        #}
+        #div.security
+        #{
+        #color: navy;
+        #}
+        #
+        #
+        #/* CHS: changed completely*/
+        #h1.naviheader
+        #{
+        #    font-family: 'arial';
+        #    color:ButtonText;
+        #    font-size:large;
+        #    letter-spacing:1px;
+        #}
+        #.label
+        #{
+        #    font-weight: bold;
+        #}
+        #
+        #</STYLE>";
+        #}
+      ENDSOURCE
+      SOURCE #getStyleXPOlive
+        #protected static str getStyleXPOlive()
+        #{
+        #;
+        #return @"
+        #<STYLE>
+        #
+        #body
+        #{
+        #    /* CHS: removed: background:#CAB99F;*/
+        #/* CHS: Changed fontsequence to match rest of app. Changed font size from 70% to 80%;*/
+        #
+        #font-size: 8pt;
+        #font-family: 'tahoma','arial', 'verdana';
+        #color:WindowText;
+        #background-color:#F3F2E7;
+        #filter:progid:DXImageTransform.Microsoft.Gradient( startColorstr='#f3f2e7', endColorstr='#9fab80', gradientType='0');
+        #
+        #/* CHS: removed: background:#CAB99F;*/
+        #}
+        #/* CHS: NEW CLASS */
+        #.TableBackground
+        #{
+        #    background-color:Window;
+        #}
+        #h1
+        #{
+        #color:#5A6B46; /* Theme compliance*/
+        #/* CHS: removed color: Black ; */
+        #font-size: 125%;
+        #margin-bottom: 0.50em;
+        #}
+        #h2
+        #{
+        #color:#5A6B46; /* Theme compliance*/
+        #/* CHS: removed color: Black ; */
+        #font-size: 110%;
+        #margin-top: 2.00em;
+        #margin-bottom: 0.50em;
+        #}
+        #h3
+        #{
+        #font-weight: bold;
+        #font-size: 100%;
+        #margin-top: 1.20em;
+        #margin-bottom: 0.50em;
+        #}
+        #h4
+        #{
+        #font-weight: bold;
+        #font-size: 100%;
+        #margin-top: 1.20em;
+        #margin-bottom: 0.50em;
+        #}
+        #table
+        #{
+        #font-size: 100%
+        #}
+        #th
+        #{
+        #background-color: ThreeDLighShadow; /* CHS: I am uncertain of this color. Need to see it in effect */
+        #text-align: left;
+        #}
+        #
+        #tr
+        #{
+        #vertical-align: top;
+        #}
+        #td
+        #{
+        #vertical-align: top;
+        #}
+        #p
+        #{
+        #margin-top: 0.60em;
+        #margin-bottom: 0.60em;
+        #}
+        #
+        #hr
+        #{
+        #    color: WindowText;
+        #    background-color: WindowText;
+        #height: 1px;
+        #/* CHS:  removed:
+        #color: black;
+        #background-color: black;*/
+        #
+        #}
+        #/* CHS: Very good. Do not change link colors. */
+        #a
+        #{
+        #text-decoration: none
+        #}
+        #a:hover
+        #{
+        #text-decoration: underline
+        #}
+        #ol
+        #{
+        #font-size: 100%;
+        #margin-top: 0.50em;
+        #margin-bottom: 0.00em;
+        #margin-left: 4.00em;
+        #}
+        #ol ul
+        #{
+        #margin-top: 0.50em;
+        #list-style: disc;
+        #}
+        #ul
+        #{
+        #font-size:100%;
+        #margin-top: 0.50em;
+        #margin-bottom: 0.00em;
+        #}
+        #ul ul
+        #{
+        #margin-top: 0.50em;
+        #list-style: disc;
+        #}
+        #li
+        #{
+        #margin-bottom: 0.70em;
+        #margin-left: -2.00em;
+        #}
+        #td.indextable
+        #{
+        #background-color: transparent;
+        #}
+        #.indent
+        #{
+        #margin-left: 2.00em;
+        #}
+        #.highlight
+        #{
+        #    background-color: Highlight;
+        #/* CHS: Removed this: background-color: #add8e6;*/
+        #}
+        #p.tips
+        #{
+        #margin-top: 0.60em;
+        #}
+        #p.notes
+        #{
+        #margin-top: 0.60em;
+        #}
+        #p.code
+        #{
+        #font-size: 125%;
+        #font-family: 'courier new', courier;
+        #}
+        #span.userinterface
+        #{
+        #}
+        #span.userinterface span.label
+        #{
+        #font-weight: bold;
+        #}
+        #div.configurationkey
+        #{
+        #color: navy;
+        #font-weight: bold;
+        #}
+        #div.feature
+        #{
+        #color: navy;
+        #}
+        #div.security
+        #{
+        #color: navy;
+        #}
+        #
+        #
+        #/* CHS: changed completely*/
+        #h1.naviheader
+        #{
+        #    font-family: 'arial';
+        #    color:ButtonText;
+        #    font-size:large;
+        #    letter-spacing:1px;
+        #}
+        #.label
+        #{
+        #font-weight: bold;
+        #}
+        #
+        #
+        #</STYLE>";
+        #}
+      ENDSOURCE
+      SOURCE #getStyleXPSilver
+        #protected static str getStyleXPSilver()
+        #{
+        #;
+        #return @"
+        #<STYLE>
+        #
+        #body
+        #{
+        #/* CHS: Changed fontsequence to match rest of app. Changed font size from 70% to 80%;*/
+        #
+        #font-size: 8pt;
+        #font-family: 'tahoma','arial', 'verdana';
+        #color:WindowText;
+        #background-color:#EEEEF4;
+        #filter:progid:DXImageTransform.Microsoft.Gradient( startColorstr='#eeeef4', endColorstr='#a2a2b5', gradientType='0');
+        #
+        #
+        #/* CHS: removed: background:#CAB99F;*/
+        #}
+        #/* CHS: NEW CLASS */
+        #.TableBackground
+        #{
+        #    background-color:Window;
+        #}
+        #h1
+        #{
+        #color:#5C5B79; /* Theme compliance*/
+        #/* CHS: removed color: Black ; */
+        #font-size: 125%;
+        #margin-bottom: 0.50em;
+        #}
+        #h2
+        #{
+        #color:#5C5B79; /* Theme compliance*/
+        #/* CHS: removed color: Black ; */
+        #font-size: 110%;
+        #margin-top: 2.00em;
+        #margin-bottom: 0.50em;
+        #}
+        #h3
+        #{
+        #font-weight: bold;
+        #font-size: 100%;
+        #margin-top: 1.20em;
+        #margin-bottom: 0.50em;
+        #}
+        #h4
+        #{
+        #font-weight: bold;
+        #font-size: 100%;
+        #margin-top: 1.20em;
+        #margin-bottom: 0.50em;
+        #}
+        #table
+        #{
+        #font-size: 100%
+        #}
+        #th
+        #{
+        #background-color: ThreeDLighShadow; /* CHS: I am uncertain of this color. Need to see it in effect */
+        #text-align: left;
+        #}
+        #
+        #tr
+        #{
+        #vertical-align: top;
+        #}
+        #td
+        #{
+        #vertical-align: top;
+        #}
+        #p
+        #{
+        #margin-top: 0.60em;
+        #margin-bottom: 0.60em;
+        #}
+        #
+        #hr
+        #{
+        #    color: WindowText;
+        #    background-color: WindowText;
+        #height: 1px;
+        #/* CHS:  removed:
+        #color: black;
+        #background-color: black;*/
+        #
+        #}
+        #/* CHS: Very good. Do not change link colors. */
+        #a
+        #{
+        #text-decoration: none
+        #}
+        #a:hover
+        #{
+        #text-decoration: underline
+        #}
+        #ol
+        #{
+        #font-size: 100%;
+        #margin-top: 0.50em;
+        #margin-bottom: 0.00em;
+        #margin-left: 4.00em;
+        #}
+        #ol ul
+        #{
+        #margin-top: 0.50em;
+        #list-style: disc;
+        #}
+        #ul
+        #{
+        #font-size:100%;
+        #margin-top: 0.50em;
+        #margin-bottom: 0.00em;
+        #}
+        #ul ul
+        #{
+        #margin-top: 0.50em;
+        #list-style: disc;
+        #}
+        #li
+        #{
+        #margin-bottom: 0.70em;
+        #margin-left: -2.00em;
+        #}
+        #td.indextable
+        #{
+        #background-color: transparent;
+        #}
+        #.indent
+        #{
+        #margin-left: 2.00em;
+        #}
+        #.highlight
+        #{
+        #    background-color: Highlight;
+        #/* CHS: Removed this: background-color: #add8e6;*/
+        #}
+        #p.tips
+        #{
+        #margin-top: 0.60em;
+        #}
+        #p.notes
+        #{
+        #margin-top: 0.60em;
+        #}
+        #p.code
+        #{
+        #font-size: 125%;
+        #font-family: 'courier new', courier;
+        #}
+        #span.userinterface
+        #{
+        #}
+        #span.userinterface span.label
+        #{
+        #font-weight: bold;
+        #}
+        #div.configurationkey
+        #{
+        #color: navy;
+        #font-weight: bold;
+        #}
+        #div.feature
+        #{
+        #color: navy;
+        #}
+        #div.security
+        #{
+        #color: navy;
+        #}
+        #
+        #
+        #/* CHS: changed completely*/
+        #h1.naviheader
+        #{
+        #    font-family: 'arial';
+        #    color:ButtonText;
+        #    font-size:large;
+        #    letter-spacing:1px;
+        #}
+        #.label
+        #{
+        #font-weight: bold;
+        #}
+        #
+        #</STYLE>";
+        #}
+      ENDSOURCE
+      SOURCE #imageURL
+        #static client URL imageURL(str _name)
+        #{
+        #    ;
+        #    return xInfo::directory(DirectoryType::Include) + _name;
+        #}
+      ENDSOURCE
+      SOURCE #initNoUpdate
+        #static public void initNoUpdate(boolean _prompt = false)
+        #{
+        #    if (_prompt && Box::yesNo("@SYS73858", DialogButton::No) == DialogButton::No)
+        #        return;
+        #
+        #    ttsbegin;
+        #    SysSetupLog::saveEx(classStr(SysCheckListItem_Synchronize), '');          //Do not run Synchronize
+        #    SysSetupLog::saveEx(classStr(SysCheckListItem_SynchronizeUpgrade), '');   //same
+        #    SysSetupLog::saveEx(classStr(SysCheckList_Upgrade), #CheckListFinished);  //Do not run upgrade
+        #
+        #    SysSetupPartitionLog::saveEx(classStr(SysCheckListItem_Company), #CheckListFinished);
+        #    SysSetupPartitionLog::saveEx(classStr(SysCheckListItem_DataImport), #CheckListFinished);
+        #    SysSetupPartitionLog::saveEx(classStr(SysCheckListItem_SetupPartitionAccount), #CheckListFinished);
+        #    SysSetupPartitionLog::saveEx(classStr(SysCheckListItem_SetupPartitionData), #CheckListFinished);
+        #    SysSetupPartitionLog::saveEx(classStr(SysCheckListItem_SystemParameters), #CheckListFinished);
+        #    SysSetupPartitionLog::saveEx(classStr(SysCheckList_SetupPartition), #CheckListFinished);
+        #
+        #    SysSetupLog::saveEx(classStr(SysCheckList_SetupPartition), #CheckListRunning);
+        #    SysSetupLog::saveEx(classStr(SysCheckList_SetupPartition), #CheckListFinished);
+        #
+        #    SysSetupLog::saveEx(classStr(SysCheckListItem_Compile), '');              //Do not run compile
+        #    SysSetupLog::saveEx(classStr(SysCheckList_UpgradeCode), #CheckListFinished);//Do not run code upgrade
+        #    SysSetupLog::saveEx(classStr(SysCheckList_Setup), #CheckListFinished);    //Do not run setup
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #isFinished
+        #/// <summary>
+        #/// Checks to see whether a checklist is finished.
+        #/// </summary>
+        #/// <param name="_classId">
+        #/// The class ID of the checklist.
+        #/// </param>
+        #/// <returns>
+        #/// true if the checklist is finished; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #/// A checklist is finished if all its mandatory items are finished.
+        #/// </remarks>
+        #public static boolean isFinished(ClassId _classId)
+        #{
+        #    SysCheckList sysCheckList;
+        #    SysCheckListItem sysCheckListItem;
+        #
+        #    sysCheckList = SysCheckList::getCheckList(_classId);
+        #    if (sysCheckList)
+        #    {
+        #        sysCheckListItem = sysCheckList.getItem(_classId);
+        #        if (_classId && sysCheckListItem)
+        #        {
+        #            // Check if item is already finished (but not for Company Accounts)
+        #            if (sysCheckListItem.getState() == SysCheckListStatus::Finished &&
+        #                classIdGet(sysCheckListItem) != classNum(SysCheckListItem_Company) &&
+        #                classIdGet(sysCheckListItem) != classNum(SysCheckListItem_DataImport) &&
+        #                classIdGet(sysCheckListItem) != classNum(SysCheckListItem_BCProxy) )
+        #            {
+        #                return true;
+        #            }
+        #        }
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #lookupLastExecuted
+        #public static SysSetupLog lookupLastExecuted(ClassId _class)
+        #{
+        #    SysSetupLog sysSetupLog;
+        #    SysDictClass dictClass = new SysDictClass(_class);
+        #
+        #    if(dictClass.isExtending(className2Id(classStr(SysCheckList))))
+        #    {
+        #        select firstonly * from sysSetupLog
+        #            where sysSetupLog.Name == classId2Name(_class) &&
+        #                sysSetupLog.Description == #CheckListExecuted;
+        #
+        #    }
+        #
+        #    return sysSetupLog;
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #static public void main(Args _args)
+        #{
+        #    boolean silent = _args ? (_args.parm() == #Silent) : false;
+        #    int i;
+        #
+        #    str parmName(str _parm)
+        #    {
+        #        int parmPos = strFind(_parm,'=',1,strLen(_parm));
+        #        return parmPos ? subStr(_parm,1,parmPos-1) : '';
+        #    }
+        #    str parm(str _parm)
+        #    {
+        #        return subStr(_parm,strFind(_parm,'=',1,strLen(_parm))+1,strLen(_parm));
+        #    }
+        #    ;
+        #
+        #    if (_args && !silent)
+        #    {
+        #        if (_args.parmEnumType() == enumNum(SysCheckListType))
+        #        {
+        #            switch (_args.parmEnum())
+        #            {
+        #                case SysCheckListType::User :
+        #                    i = str2int(parm(_args.parm()));
+        #                    if (i && parmName(_args.parm())=='')
+        #                    {
+        #                        //Called when a menuitem link in a userdefined list is pressed
+        #                        SysCheckList::runUserMenuItem(i);
+        #                        return; //Exit - do not run new checklist
+        #                    }
+        #                    else if (parm(_args.parm()) && parmName(_args.parm())==#ListParameter)
+        #                    {
+        #                        //Run specific checklist
+        #                        SysCheckList_User::runUserCheckList(parm(_args.parm()));
+        #                        return;
+        #                    }
+        #                    break;
+        #
+        #                case SysCheckListType::System :
+        #                    i = str2int(parm(_args.parm()));
+        #                    if (i)
+        #                    {
+        #                        SysCheckList::updateConditional(i, parmName(_args.parm())==#RecordParameter);
+        #                        return; //Exit - do not run new checklist
+        #                    }
+        #                    break;
+        #
+        #                case SysCheckListType::Custom :
+        #                case SysCheckListType::Restart :
+        #                    i = className2Id(parm(_args.parm()));
+        #                    if (i)
+        #                    {
+        #                        if (i == classNum(SysCheckList_UpgradeCode))
+        #                        {
+        #                            /* If opened by SysCheckList_UpgradeCode display menu item.
+        #                            A global flag is set to tell the checklist selection Dialog not to have the data upgrade option.
+        #                            The Dialog is shown at SysCheckList_UpgradeCode.getCheckListType
+        #                            */
+        #                            appl.globalCache().set(classStr(SysCheckList_UpgradeCode), methodStr(SysCheckList_UpgradeCode, getCheckListType), true);
+        #                        }
+        #
+        #                        SysCheckList::runCheckListSpecific(i, true);
+        #                        return; //Exit - do not run new checklist
+        #                    }
+        #                    break;
+        #
+        #                case SysCheckListType::SetDB :
+        #                    SysCheckList::initNoUpdate(true);
+        #                    return; //mark upgrade and setup as finished
+        #
+        #                default :
+        #            }
+        #        }
+        #    }
+        #
+        #    SysCheckList::runCheckList(silent);
+        #}
+      ENDSOURCE
+      SOURCE #markExecuted
+        #public static void markExecuted(ClassId _class)
+        #{
+        #    SysSetupLog sysSetupLog;
+        #    SysDictClass dictClass = new SysDictClass(_class);
+        #    if(dictClass.isExtending(className2Id(classStr(SysCheckList))))
+        #    {
+        #        ttsbegin;
+        #
+        #        delete_from sysSetupLog
+        #            where
+        #                sysSetupLog.Name == classId2Name(_class) &&
+        #                sysSetupLog.Description == #CheckListExecuted;
+        #
+        #        SysSetupLog::save(classId2Name(_class), #CheckListExecuted);
+        #
+        #        ttscommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #preventCheckListAtStartup
+        #/// <summary>
+        #/// Prevents a checklist from running at start up.
+        #/// </summary>
+        #/// <param name="_checkListClassName">
+        #/// The name of the checklist class to set not to run at start up.
+        #/// </param>
+        #/// <param name="_value">
+        #/// true is the checklist should not run at start up; otherwise, false.
+        #/// </param>
+        #static void preventCheckListAtStartup(IdentifierName _checkListClassName, boolean _value = true)
+        #{
+        #    SysSetupLog sysSetupLog;
+        #
+        #    ttsbegin;
+        #
+        #    select firstonly forupdate sysSetupLog
+        #    where sysSetupLog.Version == xInfo::releaseVersion() &&
+        #          sysSetupLog.AppBuild == ApplicationVersion::buildNo() &&
+        #          sysSetupLog.Name == _checkListClassName;
+        #
+        #    if (!sysSetupLog)
+        #    {
+        #        sysSetupLog.initValue();
+        #        sysSetupLog.Version     = xInfo::releaseVersion();
+        #        sysSetupLog.Name        = _checkListClassName;
+        #        sysSetupLog.Description = _value ? #CheckListFinished : '';
+        #        sysSetupLog.insert();
+        #    }
+        #    else
+        #    {
+        #        sysSetupLog.Description = _value ? #CheckListFinished : '';
+        #        sysSetupLog.update();
+        #    }
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #resetDependents
+        #static public void resetDependents(ClassId _completedItemId, SysCheckList _sysCheckList)
+        #{
+        #    Set setDependencies = new Set(Types::Integer);
+        #    Set setCheckListItems;
+        #    SetIterator setIterator = new SetIterator(setDependencies);
+        #    SysSetupLog sysSetupLog;
+        #    ;
+        #
+        #    // Get all the checklist items for this interface
+        #    setCheckListItems = SysCheckList::getAllCheckListItems(_sysCheckList.getInterfaceId());
+        #
+        #    // find all checklist items dependent on _completedItemId
+        #    SysCheckList::findDependentItems(_completedItemId, setCheckListItems, _sysCheckList, setDependencies);
+        #
+        #    // delete items to be re-executed from SysSetupLog
+        #    //      setDependencies contains the list of dependent items
+        #    setIterator.begin();
+        #    while (setIterator.more())
+        #    {
+        #        if (_sysCheckList.find(classId2Name(setIterator.value()), ''))
+        #        {
+        #            delete_from sysSetupLog
+        #                where sysSetupLog.Name==classId2Name(setIterator.value()) &&
+        #                sysSetupLog.Description=='';
+        #        }
+        #        setIterator.next();
+        #    }
+        #
+        #}
+      ENDSOURCE
+      SOURCE #runCheckList
+        #static public void runCheckList(boolean _silent = false)
+        #{
+        #    SysCheckList sysCheckList;
+        #    ListIterator listIterator;
+        #    DictClass    dictClass;
+        #    boolean      isSetupMode;
+        #    ;
+        #
+        #    if (Session::isServer() || (xGlobal::clientKind() == ClientType::COMObject))
+        #    {
+        #        //Do not run on server or comObjects...
+        #        return;
+        #    }
+        #
+        #    isSetupMode = SysCheckList_Setup::isSetupMode();
+        #
+        #    //Create list of all checklists - then check each if it is empty
+        #    listIterator = new ListIterator(SysCheckList::checkLists());
+        #    listIterator.begin();
+        #    while (listIterator.more())
+        #    {
+        #        //create specific checklist
+        #        dictClass = new DictClass(listIterator.value());
+        #        if (dictClass && !dictClass.isAbstract())
+        #        {
+        #            sysCheckList = dictClass.makeObject();
+        #            sysCheckList.parmIsSetupMode(isSetupMode);
+        #
+        #            if (sysCheckList.isRunnable()) //is condition for list ok
+        #            {
+        #                sysCheckList.doInit(_silent, true);
+        #            }
+        #        }
+        #
+        #        listIterator.next();
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #runCheckListSpecific
+        #static public void runCheckListSpecific(ClassId _id, boolean _ignoreisRunnable = false, boolean _silent = false, boolean _compile = false)
+        #{
+        #    SysCheckList sysCheckList;
+        #    DictClass    dictClass;
+        #    ;
+        #
+        #    if (Session::isServer() || (xGlobal::clientKind() == ClientType::COMObject))
+        #    {
+        #        //Do not run on server or comObjects...
+        #        return;
+        #    }
+        #
+        #    if (_compile)
+        #    {
+        #        SysCheckList::compileChecklists();
+        #    }
+        #
+        #    //create specific checklist
+        #    dictClass = new DictClass(_id);
+        #    if (dictClass && !dictClass.isAbstract())
+        #    {
+        #        sysCheckList = dictClass.makeObject();
+        #        if (_ignoreisRunnable || sysCheckList.isRunnable()) //is condition for list ok
+        #        {
+        #            sysCheckList.doInit(_silent, true);
+        #
+        #            if (_id == classNum(SysCheckList_Upgrade) && !SysCheckList_Upgrade::isUpgrade())
+        #            {
+        #                ReleaseUpdateDB::log("@SYS312446");
+        #                Box::warning("@SYS312446");// "Dynamics AX was not registered for upgrade! Upgrade steps may lead to error."
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #runUserMenuItem
+        #static private server boolean runUserMenuItem(ClassId _id)
+        #{
+        #    SysCheckListTable sysCheckListTable;
+        #    SysCheckListItemTable sysCheckListItemTable;
+        #    boolean ret = false;
+        #    str name;
+        #    SysCheckList sysCheckList;
+        #    SysCheckListItem sysCheckListItem;
+        #    ;
+        #
+        #    sysCheckListItemTable = SysCheckListItemTable::find(_id);
+        #    if (sysCheckListItemTable)
+        #    {
+        #        select firstonly sysCheckListTable where sysCheckListTable.SysCheckListId == sysCheckListItemTable.SysCheckListId;
+        #        if (sysCheckListTable && sysCheckListTable.IsRunning)
+        #        {
+        #            ret = SysHelp::processMenuFunction(sysCheckListItemTable.MenuItemName, sysCheckListItemTable.MenuItemType);
+        #
+        #            if (ret)
+        #            {
+        #                name = classId2Name(classNum(SysCheckList_User)) + sysCheckListTable.SysCheckListId;
+        #                sysCheckList = infolog.globalCache().get(name, name, null);
+        #                if (sysCheckList)
+        #                {
+        #                    sysCheckListItem = sysCheckList.getItem(_id);
+        #                    if (sysCheckListItem)
+        #                    {
+        #                        sysCheckListItem.setStatus(SysCheckListStatus::Finished);
+        #                    }
+        #
+        #                    sysCheckList.updateHtml();
+        #                }
+        #            }
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #themeName
+        #static WebThemeName themeName()
+        #{
+        #    container theme;
+        #    ;
+        #
+        #    theme = WinAPI::getCurrentThemeName();
+        #
+        #    if(conLen(theme) > 1)
+        #    {
+        #        //Base theme name on current Windows theme/color scheme
+        #        return conPeek(theme, 2);
+        #    }
+        #
+        #    return '';
+        #}
+        #
+      ENDSOURCE
+      SOURCE #update
+        #static public void update()
+        #{
+        #    SysCheckList sysCheckList;
+        #    ListEnumerator listEnumerator;
+        #    ;
+        #
+        #    //Create list of all checklists - then check each if it is empty
+        #    listEnumerator = SysCheckList::checkLists().getEnumerator();
+        #    while (listEnumerator.moveNext())
+        #    {
+        #        if (! (new DictClass(listEnumerator.current()).isAbstract()))
+        #        {
+        #            //Try to get list
+        #            sysCheckList = infolog.globalCache().get(classId2Name(listEnumerator.current()),
+        #                                                     classId2Name(listEnumerator.current()), null);
+        #            if (sysCheckList)
+        #            {
+        #                sysCheckList.updateHtml();
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateConditional
+        #static private void updateConditional(ClassId _id, boolean _userDefinedRecord = false)
+        #{
+        #    SysCheckListTable   sysCheckListTable;
+        #    SysCheckList        sysCheckList;
+        #    SysCheckListItem    sysCheckListItem;
+        #    ListIterator        listIterator;
+        #    str                 name;
+        #    SysCheckListStatus  status;
+        #
+        #    void doUpdate()
+        #    {
+        #        if (sysCheckList)
+        #        {
+        #            sysCheckListItem = sysCheckList.getItem(_id);
+        #            if (_id && sysCheckListItem)
+        #            {
+        #                status = sysCheckListItem.getState();
+        #                if (status == SysCheckListStatus::Indeterminate)
+        #                {
+        #                    sysCheckListItem.setStatus(SysCheckListStatus::Finished);
+        #                }
+        #                else if (status == SysCheckListStatus::Finished)
+        #                {
+        #                    sysCheckListItem.indeterminate(true);
+        #                    sysCheckListItem.setStatus(SysCheckListStatus::Indeterminate);
+        #                }
+        #            }
+        #
+        #            sysCheckList.updateHtml();
+        #        }
+        #    }
+        #    ;
+        #
+        #    if (_userDefinedRecord)
+        #    {
+        #        //Run all (runnable) lists i table
+        #        while select IsRunning, SysCheckListId
+        #            from    sysCheckListTable
+        #        {
+        #            if (sysCheckListTable.IsRunning)
+        #            {
+        #                name = classId2Name(classNum(SysCheckList_User)) + sysCheckListTable.SysCheckListId;
+        #                sysCheckList = infolog.globalCache().get(name, name, null);
+        #                doUpdate();
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        //Create list of all checklists - then check each if it is empty
+        #        listIterator = new ListIterator(SysCheckList::checkLists());
+        #        listIterator.begin();
+        #        while (listIterator.more())
+        #        {
+        #            if (! (new DictClass(listIterator.value()).isAbstract()))
+        #            {
+        #                //Try to get list
+        #                sysCheckList = infolog.globalCache().get(classId2Name(listIterator.value()),
+        #                                                         classId2Name(listIterator.value()), null);
+        #                doUpdate();
+        #            }
+        #            listIterator.next();
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #updateItem
+        #static public void updateItem(ClassId _classId = 0, SysCheckListStatus _status = SysCheckListStatus::Ready)
+        #{
+        #    SysCheckList sysCheckList;
+        #    SysCheckListItem sysCheckListItem;
+        #
+        #    sysCheckList = SysCheckList::getCheckList(_classId);
+        #
+        #    if (sysCheckList)
+        #    {
+        #        sysCheckListItem = sysCheckList.getItem(_classId);
+        #        if (_classId && sysCheckListItem)
+        #        {
+        #            //Set status
+        #            sysCheckListItem.setStatus(_status);
+        #        }
+        #
+        #        sysCheckList.updateHtml(true);
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

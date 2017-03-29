@@ -1,0 +1,768 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardTrans
+  PROPERTIES
+    Name                #CreditCardTrans
+    Origin              #{25B7222C-EE86-4DB5-A7CC-4F72CE270538}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    LogisticsPostalAddressFormHandler addressController;
+      #}
+    ENDSOURCE
+    SOURCE #getAddressController
+      #public LogisticsPostalAddressFormHandler getAddressController()
+      #{
+      #    return addressController;
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    ;
+      #
+      #    super();
+      #
+      #    addressController = LogisticsPostalAddressFormHandler::newParameters(creditCardTrans_DS,
+      #        logisticsPostalAddress_ds);
+      #    addressController.callerUpdateQuery(fieldNum(CreditCardTrans,Location));
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTrans
+          Table               #CreditCardTrans
+          Index               #PNRef
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          InsertAtEnd         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+      ENDMETHODS
+    ENDDATASOURCE
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #LogisticsPostalAddress
+          Table               #LogisticsPostalAddress
+          AllowCheck          #No
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          JoinSource          #CreditCardTrans
+          LinkType            #OuterJoin
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #write
+          #public void write()
+          #{
+          #    //super();
+          #}
+        ENDSOURCE
+        SOURCE #validateWrite
+          #public boolean validateWrite()
+          #{
+          #    return true;
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+    LogisticsPostalAddress CreditCardTrans
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@ACC99
+      TitleDatasource     #CreditCardTrans
+      WindowResize        #Dynamic
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL ACTIONPANE
+        PROPERTIES
+          Name                #ActionPane1
+          ElementPosition     #715827882
+          Style               #Strip
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL ACTIONPANETAB
+        PROPERTIES
+          Name                #ActionPaneTab1
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPane1
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL BUTTONGROUP
+        PROPERTIES
+          Name                #ButtonGroup
+          ElementPosition     #1431655764
+          HierarchyParent     #ActionPaneTab1
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+          HierarchyParent     #Overview
+          DataSource          #CreditCardTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Address
+          ElementPosition     #858993458
+          HierarchyParent     #Other
+          DataSource          #CreditCardTrans
+          DataGroup           #Address
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #AddressDisplay
+          ElementPosition     #1610612734
+          HierarchyParent     #AddressTab
+          FrameType           #None
+          DataSource          #CreditCardTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Amount
+          ElementPosition     #805306365
+          HierarchyParent     #General
+          DataSource          #CreditCardTrans
+          DataGroup           #Amount
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #AuthSource
+          ElementPosition     #1717986916
+          HierarchyParent     #Other
+          DataSource          #CreditCardTrans
+          DataGroup           #AuthSource
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #AVS
+          ElementPosition     #1073741822
+          HierarchyParent     #AddressTab
+          DataSource          #CreditCardTrans
+          DataGroup           #AVS
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Batch
+          ElementPosition     #1171354716
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #Batch
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Commercial
+          ElementPosition     #976128930
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #Commercial
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #CVD
+          ElementPosition     #1366580502
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #CVD
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Cybersource
+          ElementPosition     #1757032074
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #Cybersource
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Identification
+          ElementPosition     #1342177275
+          HierarchyParent     #General
+          DataSource          #CreditCardTrans
+          DataGroup           #Identification
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Messages
+          ElementPosition     #1288490187
+          HierarchyParent     #Other
+          Caption             #@SYS74342
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #OneTime
+          ElementPosition     #390451572
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #OneTime
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Orbital
+          ElementPosition     #1561806288
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #Orbital
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Origin1
+          ElementPosition     #585677358
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #Origin
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Party
+          ElementPosition     #536870910
+          HierarchyParent     #General
+          DataSource          #CreditCardTrans
+          DataGroup           #Party
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Registration
+          ElementPosition     #780903144
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #Registration
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Solo
+          ElementPosition     #1879048185
+          HierarchyParent     #General
+          DataSource          #CreditCardTrans
+          DataGroup           #Solo
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Transaction
+          ElementPosition     #1073741820
+          HierarchyParent     #General
+          DataSource          #CreditCardTrans
+          DataGroup           #Transaction
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #TransDate
+          ElementPosition     #1610612730
+          HierarchyParent     #General
+          DataSource          #CreditCardTrans
+          DataGroup           #TransDate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #Verbal
+          ElementPosition     #1952257860
+          HierarchyParent     #Origin
+          DataSource          #CreditCardTrans
+          DataGroup           #Verbal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REFERENCEGROUP
+        PROPERTIES
+          Name                #CreditCardTrans_Location
+          ElementPosition     #1431655764
+          HierarchyParent     #AddressDisplay
+          DataSource          #CreditCardTrans
+          ReferenceField      #Location
+          ReplacementFieldGroup #AddressDisplay
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TAB
+        PROPERTIES
+          Name                #Tab
+          Width               #Column width
+          Height              #Column height
+          ElementPosition     #1431655764
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #AddressTab
+          ElementPosition     #1533916890
+          HierarchyParent     #Tab
+          Caption             #@SYS9362
+          DataSource          #CreditCardTrans
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #General
+          ElementPosition     #920350134
+          HierarchyParent     #Tab
+          Caption             #@SYS2952
+          Columns             #Auto
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Origin
+          ElementPosition     #1227133512
+          HierarchyParent     #Tab
+          Caption             #@SYS26398
+          Columns             #Auto
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Other
+          ElementPosition     #1840700268
+          HierarchyParent     #Tab
+          Caption             #@SYS21694
+          Columns             #Auto
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL TABPAGE
+        PROPERTIES
+          Name                #Overview
+          ElementPosition     #613566756
+          HierarchyParent     #Tab
+          Caption             #@SYS9039
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTrans_TransType
+          ElementPosition     #954437176
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTrans
+          DataField           #TransType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_TransDate
+          ElementPosition     #715827882
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTrans
+          DataField           #TransDate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #CustInvoiceJournal
+          ElementPosition     #1610612733
+          HierarchyParent     #ButtonGroup
+          MenuItemName        #CustInvoiceJournal
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL MENUITEMBUTTON
+        PROPERTIES
+          Name                #LedgerTransVoucher1
+          ElementPosition     #1073741822
+          HierarchyParent     #ButtonGroup
+          MenuItemName        #LedgerTransVoucher1
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL REALEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_AmountMST
+          ElementPosition     #1908874352
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #AmountMST
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_Comment1
+          Width               #Column width
+          ElementPosition     #1288490187
+          HierarchyParent     #Messages
+          MultiLine           #Yes
+          LabelAlignment      #Right
+          DataSource          #CreditCardTrans
+          DataField           #Comment1
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_Comment2
+          ElementPosition     #1717986916
+          HierarchyParent     #Messages
+          MultiLine           #Yes
+          LabelAlignment      #Right
+          DataSource          #CreditCardTrans
+          DataField           #Comment2
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_CreditCardId
+          ElementPosition     #477218588
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTrans
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_PNRef
+          ElementPosition     #1431655764
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTrans
+          DataField           #PNRef
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_RepMsg
+          ElementPosition     #1670265058
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTrans
+          DataField           #RepMsg
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_RepMsg1
+          ElementPosition     #858993458
+          HierarchyParent     #Messages
+          LabelAlignment      #Right
+          DataSource          #CreditCardTrans
+          DataField           #RepMsg
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTrans_Result
+          ElementPosition     #1193046470
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTrans
+          DataField           #Result
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

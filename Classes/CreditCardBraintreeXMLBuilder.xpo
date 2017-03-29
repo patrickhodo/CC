@@ -1,0 +1,1874 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardBraintreeXMLBuilder
+    PROPERTIES
+      Name                #CreditCardBraintreeXMLBuilder
+      Origin              #{7BA518E3-9319-47E4-AE09-2FC79B225D56}
+      LegacyId            #20082
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeClientResponse
+        #str analyzeClientResponse(str                     msg)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i;
+        #    str                             tmpStr,node;
+        #    str                             value;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #
+        #    ;
+        #    ccTRans.selectForUpdate(true);
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be one node <TXN>
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        response.insert(node,elementParent.innerText());
+        #
+        #    }
+        #
+        #    //--> Map Lookups
+        #    if (response.exists('value'))
+        #    {
+        #        value = response.lookup('value');
+        #    }
+        #
+        #
+        #
+        #
+        #
+        #    return value;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeClientResponseVault
+        #str analyzeClientResponseVault(str                      msg,
+        #                               CreditCardTable          ccTable)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent,elementChild;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i;
+        #    str                             tmpStr,node;
+        #    str                             value;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #    CreditCardStr                   month,day,yr;
+        #    CreditCardExpirationDate        expDate;
+        #    ;
+        #    if (strScan(msg,'xml',1,strLen(msg)) == 0)
+        #    {
+        #        throw error(msg);
+        #    }
+        #    ttsbegin;
+        #    ccTable.selectForUpdate(true);
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be one node <TXN>
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        response.insert(node,elementParent.innerText());
+        #
+        #        if (node == 'credit-cards' || node == 'subscriptions')
+        #        {
+        #            childNodeList = elementParent.childNodes().item(0).childNodes();
+        #            if (childNodeList.length() > 1)
+        #            {
+        #                for (childCnt = 0 ; childCnt < childNodeList.length() ; childCnt += 1)
+        #                {
+        #                    elementChild = childNodeList.item(childCnt);
+        #                    node = elementChild.nodeName();
+        #                    response.insert(node,elementChild.innerText());
+        #                }
+        #            }
+        #        }
+        #
+        #    }
+        #
+        #    //--> Map Lookups
+        #    if (response.exists('value'))
+        #    {
+        #        value = response.lookup('value');
+        #    }
+        #
+        #    if (response.exists('customer-id'))
+        #    {
+        #        ccTable.PaymentProfileId = response.lookup('customer-id');
+        #    }
+        #    if (response.exists('token'))
+        #    {
+        #        ccTable.ProfileId = response.lookup('token');
+        #    }
+        #
+        #    if (response.exists('token'))
+        #    {
+        #        ccTable.ProfileId = response.lookup('token');
+        #    }
+        #
+        #    if (response.exists('expiration-month'))
+        #    {
+        #        month = response.lookup('expiration-month');
+        #        yr = response.lookup('expiration-year');
+        #
+        #        expDate = dateEndMth( str2Date(month+"/1/"+yr,213));
+        #        ccTable.ExpirationDate = expDate;
+        #    }
+        #
+        #    if (response.exists('last-4'))
+        #    {
+        #        ccTable.CreditCardNumSecure = '************' + response.lookup('last-4');
+        #    }
+        #
+        #
+        #    ttscommit;
+        #
+        #
+        #
+        #    return value;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #xml build()
+        #{
+        #    xml                     xml;
+        #    CreditCardTrans         origCCTrans;
+        #    ;
+        #    switch (this.parmccTrans().TransType)
+        #    {
+        #        case (CreditCardTrxType::A)     :
+        #        {
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                xml = this.buildNewAuthToken();
+        #            }
+        #            else
+        #            {
+        #                throw error("Braintree requires a stored value in order to process");
+        #            }
+        #
+        #
+        #            break;
+        #        }
+        #        case (CreditCardTrxType::C)     :
+        #        {
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                 xml = this.buildReturnToken();
+        #            }
+        #            else
+        #            {
+        #                throw error("Braintree requires a stored value in order to process");
+        #            }
+        #            break;
+        #        }
+        #        case (CreditCardTrxType::D)     :
+        #        {
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                    xml = this.buildPostAuthToken();
+        #            }
+        #            else
+        #            {
+        #                    throw error("Braintree requires a stored value in order to process");
+        #            }
+        #
+        #            break;
+        #        }
+        #        case (CreditCardTrxType::S)     :
+        #        {
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                 xml = this.buildNewSaleToken();
+        #            }
+        #            else
+        #            {
+        #                 throw error("Braintree requires a stored value in order to process");
+        #            }
+        #            break;
+        #        }
+        #        case (CreditCardTrxType::V)     :
+        #        {
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                 xml = this.buildVoidToken();
+        #            }
+        #            else
+        #            {
+        #                 throw error("Braintree requires a stored value in order to process");
+        #            }
+        #            break;
+        #        }
+        #
+        #    }
+        #
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #buildDocument
+        #void buildDocument()
+        #{
+        #    ;
+        #    xmlDocument = XMLDocument::newBlank('iso-8859-1');
+        #    //instruction = xmlDocument.createProcessingInstruction('xml-stylesheet',
+        #        //'type="text/xsl" href="www.redmaple.com"');
+        #
+        #    //xmlDocument.appendChild(instruction);
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuthToken
+        #xml buildNewAuthToken()
+        #{
+        #    str                             parmHeader,parmRequest,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantBraintree     ccBrainTree;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    str                             verificationStr,verificationStr2;
+        #    SalesTable                      salesTable = SalesTable::find(ccTrans.SalesId);
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccBrainTree = this.parmMerchantBraintree();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('transaction');
+        #
+        #    //--> Type
+        #    xmlTextWriter.writeStartElement('type');
+        #    xmlTextWriter.writeString('sale');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> order-id
+        #    xmlTextWriter.writeStartElement('order-id');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('amount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(ccTrans.AmountMST,9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Channel
+        #    xmlTextWriter.writeStartElement('channel');
+        #    xmlTextWriter.writeString('REDMAPLE_SP');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('payment-method-token');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Shipping
+        #    if (this.parmPostalAddress())
+        #    {
+        #        xmlTextWriter.writeStartElement('shipping');
+        #
+        #        //-->First name
+        #        xmlTextWriter.writeStartElement('first-name');
+        #        xmlTextWriter.writeString(this.parmFirstName(salesTable.DeliveryName));
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->First name
+        #        xmlTextWriter.writeStartElement('last-name');
+        #        xmlTextWriter.writeString(this.parmLastName(salesTable.DeliveryName));
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->Street address
+        #        xmlTextWriter.writeStartElement('street-address');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->locality
+        #        xmlTextWriter.writeStartElement('locality');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->State/Region
+        #        xmlTextWriter.writeStartElement('region');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->postal code
+        #        xmlTextWriter.writeStartElement('postal-code');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->Country
+        #        xmlTextWriter.writeStartElement('country-name');
+        #        xmlTextWriter.writeString(LogisticsAddressCountryRegionTranslation::find(this.parmPostalAddress().CountryRegionId).ShortName);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->Country
+        #        xmlTextWriter.writeStartElement('country-code-alpha2');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().CountryRegionId);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->Country
+        #        xmlTextWriter.writeStartElement('country-code-alpha3');
+        #        xmlTextWriter.writeString(this.resolveCountry());
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //--> End shipping node
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Billing
+        #    xmlTextWriter.writeStartElement('billing');
+        #
+        #    //-->First name
+        #    xmlTextWriter.writeStartElement('first-name');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->First name
+        #    xmlTextWriter.writeStartElement('last-name');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->Street address
+        #    xmlTextWriter.writeStartElement('street-address');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().street);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->locality
+        #    xmlTextWriter.writeStartElement('locality');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->State/Region
+        #    xmlTextWriter.writeStartElement('region');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->postal code
+        #    xmlTextWriter.writeStartElement('postal-code');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->Country
+        #    xmlTextWriter.writeStartElement('country-name');
+        #    xmlTextWriter.writeString(LogisticsAddressCountryRegionTranslation::find(this.parmPostalAddress().CountryRegionId).ShortName);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->Country
+        #    xmlTextWriter.writeStartElement('country-code-alpha2');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().CountryRegionId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->Country
+        #    xmlTextWriter.writeStartElement('country-code-alpha3');
+        #    xmlTextWriter.writeString(this.resolveCountry());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End billing node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewCustomerVault
+        #xml buildNewCustomerVault(CreditCardTable   ccTable)
+        #{
+        #    str                             parmHeader,parmRequest,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantBraintree     ccBrainTree;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    str                             verificationStr,verificationStr2;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTable.ProfileTerminalId  );
+        #    ccBrainTree = this.parmMerchantBraintree();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTable.ProfileTerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('customer');
+        #
+        #     //-->First name
+        #    xmlTextWriter.writeStartElement('first-name');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTable.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->First name
+        #    xmlTextWriter.writeStartElement('last-name');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTable.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card
+        #    xmlTextWriter.writeStartElement('credit-card');
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('payment-method-nonce');
+        #    xmlTextWriter.writeString(ccTable.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('options');
+        #    xmlTextWriter.writeStartElement('verify-card');
+        #    xmlTextWriter.writeAttributeString('type','Boolean');
+        #    xmlTextWriter.writeString('false');
+        #    xmlTextWriter.writeEndElement();
+        #    //--> End Options Node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress())
+        #    {
+        #        xmlTextWriter.writeStartElement('billing-address');
+        #        //-->Street address
+        #        if (this.parmPostalAddress().Street)
+        #        {
+        #            xmlTextWriter.writeStartElement('street-address');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        //-->locality
+        #        //-->Street address
+        #        if (this.parmPostalAddress().City)
+        #        {
+        #            xmlTextWriter.writeStartElement('locality');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        //-->State/Region
+        #        if (this.parmPostalAddress().State)
+        #        {
+        #            xmlTextWriter.writeStartElement('region');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        //-->postal code
+        #        if (this.parmPostalAddress().ZipCode)
+        #        {
+        #            xmlTextWriter.writeStartElement('postal-code');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        //-->Country
+        #        if (this.parmPostalAddress().CountryRegionId)
+        #        {
+        #            xmlTextWriter.writeStartElement('country-name');
+        #            xmlTextWriter.writeString(LogisticsAddressCountryRegionTranslation::find(this.parmPostalAddress().CountryRegionId).ShortName);
+        #            xmlTextWriter.writeEndElement();
+        #
+        #
+        #            //-->Country
+        #            xmlTextWriter.writeStartElement('country-code-alpha2');
+        #            xmlTextWriter.writeString(this.resolveCountry());
+        #            xmlTextWriter.writeEndElement();
+        #
+        #            //-->Country
+        #            xmlTextWriter.writeStartElement('country-code-alpha3');
+        #            xmlTextWriter.writeString(this.parmPostalAddress().CountryRegionId);
+        #            xmlTextWriter.writeEndElement();
+        #        }
+        #
+        #        //--> End billing address node
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> End Credit Card node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End customer node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewSaleToken
+        #xml buildNewSaleToken()
+        #{
+        #    str                             parmHeader,parmRequest,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantBraintree     ccBrainTree;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    str                             verificationStr,verificationStr2;
+        #    SalesTable                      salesTable = SalesTable::find(ccTrans.SalesId);
+        #    CreditCardTable                 ccTable = CreditCardTable::find(ccTrans.CreditCardId);
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccBrainTree = this.parmMerchantBraintree();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('transaction');
+        #
+        #    //--> Type
+        #    xmlTextWriter.writeStartElement('type');
+        #    xmlTextWriter.writeString('sale');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> order-id
+        #    xmlTextWriter.writeStartElement('order-id');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('amount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(ccTrans.AmountMST,9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Channel
+        #    xmlTextWriter.writeStartElement('channel');
+        #    xmlTextWriter.writeString('REDMAPLE_SP');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('payment-method-token');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Shipping
+        #    if (this.parmPostalAddress())
+        #    {
+        #        xmlTextWriter.writeStartElement('shipping');
+        #
+        #        //-->First name
+        #        xmlTextWriter.writeStartElement('first-name');
+        #        xmlTextWriter.writeString(this.parmFirstName(salesTable.DeliveryName));
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->First name
+        #        xmlTextWriter.writeStartElement('last-name');
+        #        xmlTextWriter.writeString(this.parmLastName(salesTable.DeliveryName));
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->Street address
+        #        xmlTextWriter.writeStartElement('street-address');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().Street);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->locality
+        #        xmlTextWriter.writeStartElement('locality');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->State/Region
+        #        xmlTextWriter.writeStartElement('region');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->postal code
+        #        xmlTextWriter.writeStartElement('postal-code');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->Country
+        #        xmlTextWriter.writeStartElement('country-name');
+        #        xmlTextWriter.writeString(LogisticsAddressCountryRegionTranslation::find(this.parmPostalAddress().CountryRegionId).ShortName);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->Country
+        #        xmlTextWriter.writeStartElement('country-code-alpha2');
+        #        xmlTextWriter.writeString(this.parmPostalAddress().CountryRegionId);
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //-->Country
+        #        xmlTextWriter.writeStartElement('country-code-alpha3');
+        #        xmlTextWriter.writeString(this.resolveCountry());
+        #        xmlTextWriter.writeEndElement();
+        #
+        #        //--> End shipping node
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Billing
+        #    xmlTextWriter.writeStartElement('billing');
+        #
+        #    //-->First name
+        #    xmlTextWriter.writeStartElement('first-name');
+        #    xmlTextWriter.writeString(this.parmFirstName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->First name
+        #    xmlTextWriter.writeStartElement('last-name');
+        #    xmlTextWriter.writeString(this.parmLastName(ccTrans.NameOnCard));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->Street address
+        #    xmlTextWriter.writeStartElement('street-address');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().street);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->locality
+        #    xmlTextWriter.writeStartElement('locality');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().City);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->State/Region
+        #    xmlTextWriter.writeStartElement('region');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().State);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->postal code
+        #    xmlTextWriter.writeStartElement('postal-code');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().ZipCode);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->Country
+        #    xmlTextWriter.writeStartElement('country-name');
+        #    xmlTextWriter.writeString(LogisticsAddressCountryRegionTranslation::find(this.parmPostalAddress().CountryRegionId).ShortName);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->Country
+        #    xmlTextWriter.writeStartElement('country-code-alpha2');
+        #    xmlTextWriter.writeString(this.parmPostalAddress().CountryRegionId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //-->Country
+        #    xmlTextWriter.writeStartElement('country-code-alpha3');
+        #    xmlTextWriter.writeString(this.resolveCountry());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End billing node
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeStartElement('options');
+        #    xmlTextWriter.writeStartElement('submit-for-settlement');
+        #    xmlTextWriter.writeString('true');
+        #    xmlTextWriter.writeEndElement();
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildPostAuthToken
+        #xml buildPostAuthToken()
+        #{
+        #    str                             parmHeader,parmRequest,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantBraintree     ccBrainTree;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    str                             verificationStr,verificationStr2;
+        #    SalesTable                      salesTable = SalesTable::find(ccTrans.SalesId);
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccBrainTree = this.parmMerchantBraintree();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    parmAll = '<?xml version="1.0" encoding="UTF-8"?>';
+        #
+        #    xmlTextWriter.writeStartElement('transaction');
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('amount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(ccTrans.AmountMST,9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildReturnToken
+        #xml buildReturnToken()
+        #{
+        #    str                             parmHeader,parmRequest,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantBraintree     ccBrainTree;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    str                             verificationStr,verificationStr2;
+        #    SalesTable                      salesTable = SalesTable::find(ccTrans.SalesId);
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccBrainTree = this.parmMerchantBraintree();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('transaction');
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('amount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildTestAuth
+        #private xml buildTestAuth()
+        #{
+        #    xmlTextWriter                   xml_Writer;
+        #    CreditCardMerchantBraintree     ccBrainTree;
+        #    ;
+        #
+        #    ccBrainTree = this.parmMerchantBraintree();
+        #    xml_Writer = XMLTextWriter::newXml();
+        #    xml_Writer.formatting(XMLFormatting::None);
+        #
+        #    xml_writer.WriteStartElement("Transaction");
+        #    xml_writer.WriteElementString("ExactID", 'AD5269-03');//Gateway ID
+        #    xml_writer.WriteElementString("Password", "welcome1");//Password
+        #    xml_writer.WriteElementString("Transaction_Type", "00");
+        #    xml_writer.WriteElementString("DollarAmount", "1.66");
+        #    xml_writer.WriteElementString("Expiry_Date", "1214");
+        #    xml_writer.WriteElementString("CardHoldersName", "C# REST Client");
+        #    xml_writer.WriteElementString("Card_Number", "4111111111111111");
+        #    xml_writer.WriteElementString("VerificationStr2", "123");
+        #    xml_writer.WriteEndElement();
+        #
+        #    return xml_Writer.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildVoidToken
+        #xml buildVoidToken()
+        #{
+        #    str                             parmHeader,parmRequest,parmAll,parmTest;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantBraintree     ccBrainTree;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    CreditCardParameters            ccParameters;
+        #    str                             verificationStr,verificationStr2;
+        #    SalesTable                      salesTable = SalesTable::find(ccTrans.SalesId);
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccBrainTree = this.parmMerchantBraintree();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('transaction');
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('amount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(abs(ccTrans.AmountMST),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #checkMerchantBraintree
+        #boolean checkMerchantBraintree(CreditCardMerchantBraintree  ccMerchantBraintree)
+        #{
+        #    ;
+        #
+        #    if (!ccMerchantBraintree.MerchantId)
+        #       throw error("@ACC617");
+        #    else if (!ccMerchantBraintree.URL)
+        #        throw error("@ACC56");
+        #    else if (!ccMerchantBraintree.Key)
+        #        throw error("No public key in merchant table");
+        #    else if (!ccMerchantBraintree.PrivateKey)
+        #        throw error("No private key in merchant table");
+        #
+        #    return true;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardBraintreeXMLBuilder
+        #{
+        #    str                             transactionText;
+        #    XMLDocument                     xmlDocument;
+        #    CreditCardTrans                 ccTrans;
+        #    CreditCardMerchantBraintree     merchantBraintree;
+        #    str                             clientToken;
+        #    LogisticsPostalAddress          postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #createClientToken
+        #str  createClientToken()
+        #{
+        #    xmlTextWriter                   xmlTextWriter;
+        #    AifDocumentXmlNamespace         documentNamespace;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    xmlTextWriter.writeStartElement("client_token");
+        #
+        #    xmlTextWriter.writeStartElement("version");
+        #    xmlTextWriter.writeAttributeString("type","integer");
+        #    xmlTextWriter.writeString("2");
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    return xmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #parmCCTrans
+        #CreditCardTrans parmCCTrans(CreditCardTrans _ccTrans = ccTrans)
+        #{
+        #    ;
+        #    ccTrans = _ccTrans;
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmFirstName
+        #firstName parmFirstName(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    tmpStr = subStr(_name,1,marker-1);
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmLastName
+        #firstName parmLastName(Name     _name)
+        #{
+        #    str         tmpStr;
+        #    str         reduction;
+        #    int         marker;
+        #    int         len;
+        #    ;
+        #    len = strLen(_name);
+        #    marker = strFind(_name,' ',1,len);
+        #
+        #    reduction = subStr(_name,marker,len-marker+1);
+        #
+        #    while (strLen(reduction)>0)
+        #    {
+        #        marker = strFind(reduction,' ',1,30);
+        #
+        #        if (marker == 0)
+        #        {
+        #            tmpStr = subStr(reduction,1,30);
+        #            reduction ='';
+        #        }
+        #        else
+        #        {
+        #            reduction = subStr(reduction,marker+1,30);
+        #        }
+        #    }
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantBraintree
+        #CreditCardMerchantBraintree parmMerchantBraintree(CreditCardMerchantBraintree _merchantBraintree = merchantBraintree)
+        #{
+        #    ;
+        #    merchantBraintree = _merchantBraintree;
+        #    return merchantBraintree;
+        #}
+      ENDSOURCE
+      SOURCE #parmPostalAddress
+        #public LogisticsPostalAddress parmPostalAddress(LogisticsPostalAddress _postalAddress = postalAddress)
+        #{
+        #    ;
+        #    postalAddress = _postalAddress;
+        #    return postalAddress;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransactionText
+        #str parmTransactionText(str _transactionText = transactionText)
+        #{
+        #    ;
+        #    transactionText = _transactionText;
+        #    return transactionText;
+        #}
+      ENDSOURCE
+      SOURCE #resolveCountry
+        #str resolveCountry()
+        #{
+        #    LogisticsAddressCountryRegionId countryId;
+        #    ;
+        #    countryId = LogisticsAddressZipCode::find(this.parmPostalAddress().ZipCode).CountryRegionId;
+        #
+        #    if (countryId == 'USA')
+        #    {
+        #        countryId = 'US';
+        #    }
+        #
+        #    return countryId;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue()
+        #{
+        #    str         returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(this.parmCCTrans().CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount()
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue();
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue();
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumSecure)
+        #                throw error('@ACC707');
+        #
+        #            ParmList += this.retrieveValue();
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt('@ACC141',ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnCardType
+        #str returnCardType()
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    CreditCardType          ccType;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        ccType =  this.parmCCTrans().CreditCardType;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        ccType =  ccTable.CreditCardType;
+        #    }
+        #
+        #    switch (ccType)
+        #    {
+        #        case CreditCardType::AmericanExpress    :
+        #            ParmList = 'American Express';
+        #            break;
+        #        case CreditCardType::Visa    :
+        #            ParmList = 'Visa';
+        #            break;
+        #        case CreditCardType::MasterCard    :
+        #            ParmList = 'Mastercard';
+        #            break;
+        #        case CreditCardType::Discover    :
+        #            ParmList = 'Discover';
+        #            break;
+        #        case CreditCardType::Diners    :
+        #            ParmList = 'Diners Club';
+        #            break;
+        #        case CreditCardType::JCB    :
+        #            ParmList = 'JCB';
+        #            break;
+        #
+        #        case CreditCardType::PayPal    :
+        #            ParmList = 'PayPal';
+        #            break;
+        #
+        #
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnDayFromDate
+        #str returnDayFromDate(date        dateTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     day;
+        #    ;
+        #    day =  int2str(DayofMth(dateTrans));
+        #    if (strlen(day)==1)
+        #    {
+        #        day = '0' + day;
+        #    }
+        #
+        #    ParmList =  day;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonth
+        #str returnMonth()
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(this.parmCCTrans().OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthCC
+        #str returnMonthCC(CreditCardTable         ccTable)
+        #{
+        #    str                     ParmList;
+        #    str                     month;
+        #    ;
+        #
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthFromDate
+        #str returnMonthFromDate(date        dateTrans)
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     month;
+        #    ;
+        #    month =  int2str(Mthofyr(dateTrans));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear
+        #str returnYear()
+        #{
+        #    CreditCardTable         ccTable;
+        #    str                     ParmList;
+        #    str                     ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(this.parmCCTrans().OneTimeDateExp));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYearCC
+        #str returnYearCC(CreditCardTable         ccTable)
+        #{
+        #    str                     ParmList;
+        #    str                     ccYear;
+        #    ;
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #
+        #    ParmList =  ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeResponse
+        #static CreditCardTrans analyzeResponse(str                     msg,
+        #                                CreditCardTrans                ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList,childNodeList,childNodeLst2;
+        #    XmlNode                         elementParent;
+        #    XmlNode                         elementChild2,elementChild3;
+        #    XMLNamespaceManager             xmlNSManager;
+        #    int                             cnt,childCnt,childCnt2;
+        #    int                             i;
+        #    str                             tmpStr;
+        #    str                             node;
+        #    str                             errMsg;
+        #    boolean                         accepted;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #
+        #    ;
+        #
+        #
+        #    ttsbegin;
+        #    ccTRans.selectForUpdate(true);
+        #
+        #    i = strFind(msg,"xml",1,strLen(msg));
+        #
+        #    if (strScan(msg,'xml',1,strLen(msg)) == 0)
+        #    {
+        #        ccTrans.RepMsg = msg;
+        #        i = strFind(msg,"(",1,strLen(msg));
+        #        cnt = strFind(msg,")",i+1,4);
+        #        ccTrans.PNRef = substr(msg,i+1,cnt-i-1);
+        #        ccTrans.Result = ccTrans.PNRef;
+        #    }
+        #    else
+        #    {
+        #
+        #        xmlResult = new XMLDocument();
+        #        xmlResult.loadXml(msg);
+        #        tmpStr = xmlResult.xml();
+        #        nodeList = xmlResult.documentElement().childNodes();
+        #        cnt = nodeList.length();
+        #
+        #        //--> This should be one node <transaction>
+        #        for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #        {
+        #            elementParent = nodeList.item(cnt);
+        #            node = elementParent.nodeName();
+        #            response.insert(node,elementParent.innerText());
+        #
+        #        }
+        #
+        #        //--> Map Lookups
+        #        if (response.exists('status'))
+        #        {
+        #            switch (ccTrans.TransType)
+        #            {
+        #                case    CreditCardTrxType::A:
+        #                    if (response.lookup('status') == 'authorized')
+        #                    {
+        #                        ccTrans.Result = '0';
+        #                    }
+        #                    break;
+        #                case    CreditCardTrxType::S,CreditCardTrxType::D,CreditCardTrxType::C   :
+        #                    if (response.lookup('status') == 'submitted_for_settlement')
+        #                    {
+        #                        ccTrans.Result = '0';
+        #                    }
+        #                    break;
+        #                case    CreditCardTrxType::V   :
+        #                    if (response.lookup('status') == 'voided')
+        #                    {
+        #                        ccTrans.Result = '0';
+        #                    }
+        #                    break;
+        #            }
+        #        }
+        #
+        #        if (response.exists('id'))
+        #        {
+        #            ccTrans.PNRef = response.lookup('id');
+        #        }
+        #
+        #        if (response.exists('avs-postal-code-response-code'))
+        #        {
+        #            ccTrans.AvsAddr = response.lookup('avs-postal-code-response-code');
+        #        }
+        #
+        #        if (response.exists('avs-street-address-response-code'))
+        #        {
+        #            ccTrans.AvsAddr = response.lookup('avs-street-address-response-code');
+        #        }
+        #
+        #        if (response.exists('cvv-response-code'))
+        #        {
+        #            ccTrans.CVDResponseStr = response.lookup('cvv-response-code');
+        #        }
+        #
+        #        if (response.exists('processor-authorization-code'))
+        #        {
+        #            ccTrans.AuthCode = response.lookup('processor-authorization-code');
+        #        }
+        #    }
+        #
+        #    ccTrans.update();
+        #    ttscommit;
+        #
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #processBraintree
+        #server static str processBraintree(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardMerchantBraintree                 ccBrainTree = CreditCardMerchantBraintree::find(ccTrans.TerminalId);
+        #
+        #    //--> Braintree Specific variables
+        #    HttpRequest                                 request;
+        #    CreditCardBraintreeXMLBuilder               xmlBuilder = new CreditCardBraintreeXMLBuilder();
+        #    //-->
+        #    str                                         response;
+        #    str                                         parmList;
+        #
+        #    URL                                         url;
+        #
+        #    System.Net.WebRequest                       webRequest;
+        #    System.Net.HttpWebResponse                  webResponse;
+        #    System.IO.Stream                            stream;
+        #
+        #    System.Byte[]                               keyBytes;
+        #    System.Byte[]                               responseBytes;
+        #    CLRObject                                   authBytes;
+        #    System.Byte[]                               digestBytes;
+        #    System.IO.MemoryStream                      hashStream;
+        #    str                                         digestStr,digestText,base64Text;
+        #    System.String                               tempStr;
+        #    System.String                               result;
+        #    CreditCardTable                             ccTable = CreditCardTable::find(ccTrans.CreditCardId);
+        #    str                                         dateTime = DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime()) + 'Z' ;
+        #
+        #
+        #    System.IO.StreamWriter                      streamWriter = null;
+        #    System.IO.StreamReader                      streamReader = null;
+        #    System.Net.WebHeaderCollection              headerCollection;
+        #    System.Net.NetworkCredential                iCredentials;
+        #    System.Security.Cryptography.HMACSHA1       hmacSha1;
+        #    System.Security.Cryptography.SHA1           sha1;
+        #    InteropPermission                           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Text.Encoding                        stencoding;
+        #    System.String                               sysString;
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccBrainTree
+        #        where ccBrainTree.TerminalId == ccTrans.TerminalId;
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantBraintree(ccBrainTree);
+        #    xmlBuilder.parmMerchantBraintree(ccBrainTree);
+        #    xmlBuilder.parmCCTrans(ccTrans);
+        #
+        #    //--> Check to make sure profile is created properly
+        #    if (!ccTable.PaymentProfileId)
+        #    {
+        #        throw error("BrainTree profile must be updated with an address prior to processing");
+        #    }
+        #
+        #    try
+        #    {
+        #        //--> This builds the XML
+        #        ParmList += xmlBuilder.build();
+        #
+        #        //--> This instantiates the SHA-1 encryption for the digest.
+        #        sha1 = System.Security.Cryptography.SHA1::Create();
+        #
+        #        //--> Create plain text
+        #        sysString = System.Convert::ToString(ccBraintree.Key + ":" + ccBraintree.PrivateKey);
+        #        stEncoding = System.Text.Encoding::get_ASCII();
+        #        keyBytes = stencoding.GetBytes(sysString);
+        #
+        #
+        #        base64Text = System.Convert::ToBase64String( keyBytes);
+        #        base64Text = "Basic " + base64Text;
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add("Authorization", base64Text);
+        #        headerCollection.Add("X-ApiVersion","4");
+        #
+        #        if (strFind(ccBrainTree.URL,"/",strLen(ccBrainTree.URL),1))
+        #        {
+        #            ccBrainTree.URL = subStr(ccBraintree.URL,1,strLen(ccBraintree.URL)-1);
+        #        }
+        #
+        #        switch (ccTrans.TransType)
+        #        {
+        #            case CreditCardTrxType::A,CreditCardTrxType::S  :
+        #
+        #                url = ccBrainTree.URL + "/merchants/" + ccBrainTree.MerchantId +
+        #                    "/transactions";
+        #                break;
+        #            case CreditCardTrxType::D   :
+        #                url = ccBrainTree.URL + "/merchants/" + ccBrainTree.MerchantId +
+        #                    "/transactions/" + ccTrans.OrigID + "/submit_for_settlement";
+        #                break;
+        #            case CreditCardTrxType::C   :
+        #                url = ccBrainTree.URL + "/merchants/" + ccBrainTree.MerchantId +
+        #                    "/transactions/" + ccTrans.OrigID + "/refund";
+        #                break;
+        #            case CreditCardTrxType::V   :
+        #                url = ccBrainTree.URL + "/merchants/" + ccBrainTree.MerchantId +
+        #                    "/transactions/" + ccTrans.OrigID + "/void";
+        #                break;
+        #
+        #        }
+        #        WebRequest = System.Net.WebRequest::Create(url);
+        #
+        #        switch (ccTrans.TransType)
+        #        {
+        #            case CreditCardTrxType::A,CreditCardTrxType::S  :
+        #                WebRequest.set_Method('POST');
+        #                break;
+        #            default :
+        #                WebRequest.set_Method('PUT');
+        #
+        #        }
+        #
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('application/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processBraintreeClientToken
+        #server static str processBraintreeClientToken()
+        #{
+        #    CreditCardMerchantBraintree                 ccBrainTree = CreditCardMerchantBraintree::find(CreditCardTerminalTable::find().TerminalId);
+        #
+        #    //--> Braintree Specific variables
+        #    HttpRequest                                 request;
+        #    CreditCardBraintreeXMLBuilder               xmlBuilder = new CreditCardBraintreeXMLBuilder();
+        #    //-->
+        #    str                                         response;
+        #    str                                         parmList;
+        #    URL                                         url;
+        #
+        #    System.Net.WebRequest                       webRequest;
+        #    System.Net.HttpWebResponse                  webResponse;
+        #    System.IO.Stream                            stream;
+        #
+        #    System.Byte[]                               keyBytes;
+        #    System.Byte[]                               responseBytes;
+        #    CLRObject                                   authBytes;
+        #    System.Byte[]                               digestBytes;
+        #    System.IO.MemoryStream                      hashStream;
+        #    str                                         digestStr,digestText,base64Text;
+        #    System.String                               tempStr;
+        #    System.String                               result;
+        #    str                                         dateTime = DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime()) + 'Z' ;
+        #
+        #
+        #    System.IO.StreamWriter                      streamWriter = null;
+        #    System.IO.StreamReader                      streamReader = null;
+        #    System.Net.WebHeaderCollection              headerCollection;
+        #    System.Net.NetworkCredential                iCredentials;
+        #    System.Security.Cryptography.HMACSHA1       hmacSha1;
+        #    System.Security.Cryptography.SHA1           sha1;
+        #    InteropPermission                           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Text.Encoding                        stencoding;
+        #    System.String                               sysString;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantBraintree(ccBrainTree);
+        #    xmlBuilder.parmMerchantBraintree(ccBrainTree);
+        #
+        #
+        #    try
+        #    {
+        #        //--> This builds the XML
+        #        ParmList += xmlBuilder.createClientToken();
+        #
+        #        //--> This instantiates the SHA-1 encryption for the digest.
+        #        sha1 = System.Security.Cryptography.SHA1::Create();
+        #
+        #        //--> Create plain text
+        #        sysString = System.Convert::ToString(ccBraintree.Key + ":" + ccBraintree.PrivateKey);
+        #        stEncoding = System.Text.Encoding::get_ASCII();
+        #        keyBytes = stencoding.GetBytes(sysString);
+        #
+        #
+        #        base64Text = System.Convert::ToBase64String( keyBytes);
+        #        base64Text = "Basic " + base64Text;
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        //headerCollection.Add("Content-Type","application/xml");
+        #        //headerCollection.Add("Accept", "application/xml");
+        #        headerCollection.Add("Authorization", base64Text);
+        #        headerCollection.Add("X-ApiVersion","4");
+        #
+        #        if (strFind(ccBrainTree.URL,"/",strLen(ccBrainTree.URL),1))
+        #        {
+        #            ccBrainTree.URL = subStr(ccBraintree.URL,1,strLen(ccBraintree.URL)-1);
+        #        }
+        #
+        #        url =ccBrainTree.URL + "/merchants/" + ccBrainTree.MerchantId +
+        #            "/client_token";
+        #        WebRequest = System.Net.WebRequest::Create(url);
+        #
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('application/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    response = xmlBuilder.analyzeClientResponse(response);
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processBraintreeVoid
+        #server static str processBraintreeVoid(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardMerchantBraintree                 ccBrainTree = CreditCardMerchantBraintree::find(ccTrans.TerminalId);
+        #
+        #    //--> Braintree Specific variables
+        #    HttpRequest                                 request;
+        #    CreditCardBraintreeXMLBuilder               xmlBuilder = new CreditCardBraintreeXMLBuilder();
+        #    //-->
+        #    str                                         response;
+        #    str                                         parmList;
+        #
+        #    URL                                         url;
+        #
+        #    System.Net.WebRequest                       webRequest;
+        #    System.Net.HttpWebResponse                  webResponse;
+        #    System.IO.Stream                            stream;
+        #
+        #    System.Byte[]                               keyBytes;
+        #    System.Byte[]                               responseBytes;
+        #    CLRObject                                   authBytes;
+        #    System.Byte[]                               digestBytes;
+        #    System.IO.MemoryStream                      hashStream;
+        #    str                                         digestStr,digestText,base64Text;
+        #    System.String                               tempStr;
+        #    System.String                               result;
+        #    str                                         dateTime = DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime()) + 'Z' ;
+        #
+        #
+        #    System.IO.StreamWriter                      streamWriter = null;
+        #    System.IO.StreamReader                      streamReader = null;
+        #    System.Net.WebHeaderCollection              headerCollection;
+        #    System.Net.NetworkCredential                iCredentials;
+        #    System.Security.Cryptography.HMACSHA1       hmacSha1;
+        #    System.Security.Cryptography.SHA1           sha1;
+        #    InteropPermission                           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Text.Encoding                        stencoding;
+        #    System.String                               sysString;
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccBrainTree
+        #        where ccBrainTree.TerminalId == ccTrans.TerminalId;
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantBraintree(ccBrainTree);
+        #    xmlBuilder.parmMerchantBraintree(ccBrainTree);
+        #    xmlBuilder.parmCCTrans(ccTrans);
+        #
+        #
+        #    try
+        #    {
+        #        //--> This builds the XML
+        #        ParmList += xmlBuilder.build();
+        #
+        #        //--> This instantiates the SHA-1 encryption for the digest.
+        #        sha1 = System.Security.Cryptography.SHA1::Create();
+        #
+        #        //--> Create plain text
+        #        sysString = System.Convert::ToString(ccBraintree.Key + ":" + ccBraintree.PrivateKey);
+        #        stEncoding = System.Text.Encoding::get_ASCII();
+        #        keyBytes = stencoding.GetBytes(sysString);
+        #
+        #
+        #        base64Text = System.Convert::ToBase64String( keyBytes);
+        #        base64Text = "Basic " + base64Text;
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add("Authorization", base64Text);
+        #        headerCollection.Add("X-ApiVersion","4");
+        #
+        #        if (strFind(ccBrainTree.URL,"/",strLen(ccBrainTree.URL),1))
+        #        {
+        #            ccBrainTree.URL = subStr(ccBraintree.URL,1,strLen(ccBraintree.URL)-1);
+        #        }
+        #
+        #        url =ccBrainTree.URL + "/merchants/" + ccBrainTree.MerchantId +
+        #            "/transactions/" + ccTrans.OrigID + '/void';
+        #        WebRequest = System.Net.WebRequest::Create(url);
+        #
+        #        WebRequest.set_Method('PUT');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('application/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+      SOURCE #processCustomerVault
+        #server static void processCustomerVault(CreditCardTable      ccTable)
+        #{
+        #    CreditCardMerchantBraintree                 ccBrainTree = CreditCardMerchantBraintree::find(CreditCardTerminalTable::find().TerminalId);
+        #
+        #    //--> Braintree Specific variables
+        #    HttpRequest                                 request;
+        #    CreditCardBraintreeXMLBuilder               xmlBuilder = new CreditCardBraintreeXMLBuilder();
+        #    //-->
+        #    str                                         response;
+        #    str                                         parmList;
+        #    URL                                         url;
+        #
+        #    System.Net.WebRequest                       webRequest;
+        #    System.Net.HttpWebResponse                  webResponse;
+        #    System.IO.Stream                            stream;
+        #
+        #    System.Byte[]                               keyBytes;
+        #    System.Byte[]                               responseBytes;
+        #    CLRObject                                   authBytes;
+        #    System.Byte[]                               digestBytes;
+        #    System.IO.MemoryStream                      hashStream;
+        #    str                                         digestStr,digestText,base64Text;
+        #    System.String                               tempStr;
+        #    System.String                               result;
+        #    str                                         dateTime = DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime()) + 'Z' ;
+        #
+        #
+        #    System.IO.StreamWriter                      streamWriter = null;
+        #    System.IO.StreamReader                      streamReader = null;
+        #    System.Net.WebHeaderCollection              headerCollection;
+        #    System.Net.NetworkCredential                iCredentials;
+        #    System.Security.Cryptography.HMACSHA1       hmacSha1;
+        #    System.Security.Cryptography.SHA1           sha1;
+        #    InteropPermission                           clrPermission = new InteropPermission(InteropKind::ClrInterop);
+        #    System.Text.Encoding                        stencoding;
+        #    System.String                               sysString;
+        #    ;
+        #    clrPermission.assert();
+        #
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantBraintree(ccBrainTree);
+        #    xmlBuilder.parmMerchantBraintree(ccBrainTree);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTable.Location));
+        #
+        #    if (ccTable.PaymentProfileId)
+        #    {
+        #        info("Vault already created");
+        #        return;
+        #    }
+        #
+        #
+        #    try
+        #    {
+        #        //--> This builds the XML
+        #        ParmList += xmlBuilder.buildNewCustomerVault(ccTable);
+        #
+        #        //--> This instantiates the SHA-1 encryption for the digest.
+        #        sha1 = System.Security.Cryptography.SHA1::Create();
+        #
+        #        //--> Create plain text
+        #        sysString = System.Convert::ToString(ccBraintree.Key + ":" + ccBraintree.PrivateKey);
+        #        stEncoding = System.Text.Encoding::get_ASCII();
+        #        keyBytes = stencoding.GetBytes(sysString);
+        #
+        #
+        #        base64Text = System.Convert::ToBase64String( keyBytes);
+        #        base64Text = "Basic " + base64Text;
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        //headerCollection.Add("Accept", "application/xml");
+        #        headerCollection.Add("Authorization", base64Text);
+        #        headerCollection.Add("X-ApiVersion","4");
+        #
+        #        if (strFind(ccBrainTree.URL,"/",strLen(ccBrainTree.URL),1))
+        #        {
+        #            ccBrainTree.URL = subStr(ccBraintree.URL,1,strLen(ccBraintree.URL)-1);
+        #        }
+        #
+        #        url =ccBrainTree.URL + "/merchants/" + ccBrainTree.MerchantId +
+        #            "/customers";
+        #        WebRequest = System.Net.WebRequest::Create(url);
+        #
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('application/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    response = xmlBuilder.analyzeClientResponseVault(response,ccTable);
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

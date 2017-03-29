@@ -1,0 +1,247 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardUpdateTrans
+    PROPERTIES
+      Name                #CreditCardUpdateTrans
+      Extends             #RunBaseBatch
+      Origin              #{8188B1CF-F98D-4ABB-8FB4-4A4B8E22D064}
+      LegacyId            #20042
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #checkForInvalidCharacters
+        #private boolean checkForInvalidCharacters(str ccNum)
+        #{
+        #    #define.MinValue(32)
+        #    #define.MaxValue(127)
+        #    boolean         ret;
+        #
+        #    int             i;
+        #    int             characterValue;
+        #    ;
+        #
+        #    for(i = 1; i <= strlen(ccNum); i++)
+        #    {
+        #        characterValue = char2num(ccNum, i);
+        #
+        #        if ((characterValue < #MinValue) || (characterValue > #MaxValue))
+        #        {
+        #            ret = true;
+        #        }
+        #    }
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardUpdateTrans extends RunBaseBatch
+        #{
+        #
+        #    QueryRun                    QueryRun;
+        #    NoYes                       cardInfoOnly;
+        #    NoYes                       invoiceOrder;
+        #
+        #
+        #    DialogField                 fieldCardInfo;
+        #    DialogField                 fieldInvoice;
+        #
+        #
+        #    #define.CurrentVersion(2)
+        #    #LOCALMACRO.CurrentList
+        #        cardInfoOnly
+        #    #ENDMACRO
+        #
+        #    #LOCALMACRO.CurrentList1
+        #        cardInfoOnly
+        #    #ENDMACRO
+        #
+        #}
+      ENDSOURCE
+      SOURCE #deleteCreditCardInfo
+        #void deleteCreditCardInfo(CreditCardTrans    ccTrans)
+        #{
+        #    CreditCardTrans     thisCCTrans;
+        #    ;
+        #    ttsBegin;
+        #    select forupdate thisCCTrans
+        #        where thisCCTrans.RecId == ccTRans.RecId;
+        #
+        #    if (thisCCTrans)
+        #    {
+        #        thisCCTrans.CreditCardNumEncrypt = '';
+        #        thisCCTRans.update();
+        #    }
+        #    ttsCommit;
+        #}
+      ENDSOURCE
+      SOURCE #deleteTrans
+        #void deleteTrans(CreditCardTrans    ccTrans)
+        #{
+        #    ;
+        #    delete_from ccTrans
+        #        where ccTrans.RecId == ccTRans.RecId;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #dialog
+        #// AOSRunMode::Server
+        #Object dialog()
+        #{
+        #    DialogRunbase   dialog = super();
+        #    ;
+        #    dialog.addGroup("@ACC1460");
+        #
+        #    fieldCardInfo      = dialog.addField(extendedtypeStr(NoYesId),"@ACC1461");
+        #    fieldInvoice      = dialog.addField(extendedtypeStr(NoYesId),"@ACC1462");
+        #
+        #    fieldCardInfo.value(cardInfoOnly);
+        #    fieldInvoice.value(invoiceOrder);
+        #
+        #    return dialog;
+        #}
+      ENDSOURCE
+      SOURCE #getFromDialog
+        #// AOSRunMode::Server
+        #boolean getFromDialog()
+        #{
+        #    ;
+        #    cardInfoOnly   = fieldCardInfo.value();
+        #    invoiceOrder   = fieldInvoice.value();
+        #
+        #
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #initParmDefault
+        #void initParmDefault()
+        #{
+        #    super();
+        #
+        #    QueryRun = new QueryRun(QueryStr(CreditCardTrans));
+        #
+        #}
+      ENDSOURCE
+      SOURCE #pack
+        #container pack()
+        #{
+        #    return [#CurrentVersion,#CurrentList, QueryRun.pack()];
+        #}
+      ENDSOURCE
+      SOURCE #queryRun
+        #QueryRun queryRun()
+        #{
+        #    return QueryRun;
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #void run()
+        #{
+        #    CreditCardTrans         ccTrans;
+        #    ;
+        #
+        #    setPrefix(CreditCardUpdateTrans::description());
+        #
+        #    try
+        #    {
+        #        ttsbegin;
+        #
+        #        while (QueryRun.next())
+        #        {
+        #            ccTrans = QueryRun.get(tableNum(CreditCardTrans));
+        #
+        #            if (invoiceOrder)
+        #            {
+        #                if (SalesTable::find(ccTrans.SalesId).DocumentStatus == DocumentStatus::Invoice)
+        #                {
+        #                    if (cardInfoONly)
+        #                    {
+        #                        this.deleteCreditCardInfo(ccTrans);
+        #                    }
+        #                    else
+        #                    {
+        #                        this.deleteTrans(ccTrans);
+        #                    }
+        #
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (cardInfoONly)
+        #                {
+        #                    this.deleteCreditCardInfo(ccTrans);
+        #                }
+        #                else
+        #                {
+        #                    this.deleteTrans(ccTrans);
+        #                }
+        #            }
+        #
+        #        }
+        #        ttscommit;
+        #    }
+        #    catch (Exception::Deadlock)
+        #        retry;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #showQueryValues
+        #boolean showQueryValues()
+        #{
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #unpack
+        #boolean unpack(container packedClass)
+        #{
+        #    Integer     locVersion     = conPeek(packedClass,1);
+        #    container   locPackedQuery;
+        #
+        #    switch (locVersion)
+        #    {
+        #        case #CurrentVersion:
+        #            [locVersion,#CurrentList1,locPackedQuery] = packedClass;
+        #            if (!locPackedQuery)
+        #                return false;
+        #            QueryRun = new QueryRun(locPackedQuery);
+        #            break;
+        #        case 1                  :
+        #            [locVersion,#CurrentList1] = packedClass;
+        #            QueryRun = new QueryRun(QueryStr(CreditCardTable));
+        #            break;
+        #        default :
+        #            return false;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #description
+        #client server static public ClassDescription description()
+        #{
+        #    return "@ACC1305";
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #server static void main(Args args)
+        #{
+        #    CreditCardUpdateTrans    ccUpdateTrans;
+        #    ;
+        #    ccUpdateTrans  = new CreditCardUpdateTrans();
+        #
+        #    if (ccUpdateTrans.prompt())
+        #    {
+        #        ccUpdateTrans.run();
+        #    }
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

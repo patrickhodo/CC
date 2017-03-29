@@ -1,0 +1,199 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: WCL
+
+; 
+; --------------------------------------------------------------------------------
+  VERSION 1
+  
+  WEBCONTROL #CreditCardCreateHostPay
+    PROPERTIES
+      Name                #CreditCardCreateHostPay
+      Filename            #CreditCardCreateHostPay.ascx
+      RelativePath        #ep
+      Origin              #{5F1012E2-A8B7-4D52-B731-9CEEFC6D0E37}
+    ENDPROPERTIES
+    
+    SOURCE #
+      #ï»¿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="CreditCardCreateHostPay.ascx.cs" Inherits="CreditCardCreateHostPay" %>
+      #<dynamics:AxDataSource ID="CreditCardTableDS" runat="server" DataSetName="CreditCardTableDS" ProviderView="CreditCardTable">
+      #</dynamics:AxDataSource>
+      #
+      #
+    ENDSOURCE
+    PERMISSIONS #Permissions
+      PROPERTIES
+      ENDPROPERTIES
+      
+      PERMISSIONSET #Read
+        PROPERTIES
+        ENDPROPERTIES
+        
+        TABLES #Tables
+        ENDTABLES
+        
+      SERVERMETHODS #Server Methods
+      ENDSERVERMETHODS
+      
+    ASSOCIATEDWEBCONTROLS #Associated Web Controls
+    ENDASSOCIATEDWEBCONTROLS
+    
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDWEBCONTROLS #Associated Web Controls
+ENDASSOCIATEDWEBCONTROLS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDWEBCONTROLS #Associated Web Controls
+ENDASSOCIATEDWEBCONTROLS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  TABLES #Tables
+  ENDTABLES
+  
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDWEBCONTROLS #Associated Web Controls
+ENDASSOCIATEDWEBCONTROLS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+SOURCEFILE
+PROPERTIES
+  Name                #CreditCardCreateHostPay_ascx_cs
+  Filename            #CreditCardCreateHostPay.ascx.cs
+  RelativePath        #ep
+ENDPROPERTIES
+
+SOURCE #
+  #using System;
+  #using System.Collections.Generic;
+  #using System.Linq;
+  #using System.Web;
+  #using System.Web.UI;
+  #using System.Web.UI.DataVisualization.Charting;
+  #using System.Web.UI.WebControls;
+  #using Microsoft.Dynamics.Framework.Portal.UI.WebControls;
+  #using Microsoft.Dynamics.Framework.Portal.UI.WebControls.WebParts;
+  #using Microsoft.Dynamics.Framework.BusinessConnector.Session;
+  #using Microsoft.Dynamics.Framework.BusinessConnector.Adapter;
+  #
+  #public partial class CreditCardCreateHostPay : System.Web.UI.UserControl
+  #{
+  #    IAxaptaRecordAdapter axRecord,axTerminal;
+  #    private ISession AxSession
+  #    {
+  #        get
+  #        {
+  #            AxBaseWebPart webpart = AxBaseWebPart.GetWebpart(this);
+  #            return webpart == null ? null : webpart.Session;
+  #        }
+  #    }
+  #    protected void Page_Load(object sender, EventArgs e)
+  #    {
+  #        string company = "";
+  #        string customer = "";
+  #        string terminal = "";
+  #        string url ="";
+  #        string referrer = Request.UrlReferrer.ToString();
+  #        string transactionKey = "";
+  #        string hostedPageId = "";
+  #        string axConfig = "";
+  #
+  #        using (axRecord = AxSession.AxaptaAdapter.CreateAxaptaRecord("CreditCardParameters"))
+  #        {
+  #            // Try to retrieve a list of the items.
+  #            axRecord.ExecuteStmt("select * from %1 where %1.PrimaryParam==1");
+  #
+  #            while (axRecord.Found)
+  #            {
+  #                // Add each item to the listbox.
+  #                company = axRecord.GetField("DataAreaid").ToString();
+  #                terminal = axRecord.GetField("TerminalId").ToString();
+  #                url = axRecord.GetField("HostedEPURL").ToString();
+  #                axRecord.Next();
+  #            }
+  #
+  #        }
+  #
+  #        using (axTerminal = AxSession.AxaptaAdapter.CreateAxaptaRecord("CreditCardMerchantFirstData"))
+  #        {
+  #            axTerminal.ExecuteStmt("select * from %1 where %1.TerminalId == '" + terminal + "'");
+  #
+  #            while (axTerminal.Found)
+  #            {
+  #                transactionKey = axTerminal.GetField("TransactionKey").ToString();
+  #                hostedPageId = axTerminal.GetField("HostPayPageId").ToString();
+  #                axConfig = axTerminal.GetField("HostPayConfiguration").ToString();
+  #                axTerminal.Next();
+  #            }
+  #        }
+  #
+  #        
+  #        customer = this.CreditCardTableDS.GetDataSet().DataSetRun.AxaptaObjectAdapter.Call("getCustomer").ToString();
+  #
+  #        if (url != "")
+  #        {
+  #            url += "?Accountnum=" + customer;
+  #            url += "&DATAAREAID=" + company;
+  #            url += "&TERMINALID=" + terminal;
+  #            url += "&TransactionKey=" + transactionKey;
+  #            url += "&HostedPageID=" + hostedPageId;
+  #            url += "&AXCONFIG=" + axConfig ;
+  #            //Response.Redirect(url);
+  #            Page.ClientScript.RegisterStartupScript(
+  #                this.GetType(),"OpenWindow","window.open('" + url + "','_newtab');",true);
+  #            //    this.GetType(), "OpenWindow", "window.open('" + url + "','_newtab');", true);
+  #
+  #            //AxUrlMenuItem oldUrl = new AxUrlMenuItem("CreditCardTableListPage");
+  #            //Page.ClientScript.RegisterStartupScript(
+  #            //    this.GetType(), "OpenWindow", "window.open('" + oldUrl.Url.ToString() + "','_newtab');", true);
+  #            //Response.Redirect(oldUrl.Url.ToString());
+  #        }
+  #        else
+  #        {
+  #            //throw;
+  #            url = "http://none";
+  #            Response.Redirect(url);
+  #        }
+  #        
+  #    }
+  #}
+  #
+ENDSOURCE
+ENDSOURCEFILE
+
+ENDWEBCONTROL
+
+
+***Element: END

@@ -1,0 +1,462 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; 
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #CreditCardAdvLookup
+  PROPERTIES
+    Name                #CreditCardAdvLookup
+    Origin              #{EE395189-E4EA-483B-9B27-9450E9D658B8}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    CustAccount                 custAccount;
+      #    smmBusRelAccount            busRelAccount;
+      #    FormStringControl           callingNameControl;
+      #    LogisticsLocationRecId      locationRecId;
+      #    QueryBuildRange             qbrCCID;
+      #    SalesTableCC                salesTableCC;
+      #    SalesId                     salesId;
+      #    RefRecId                    refRecId;
+      #    RefTableId                  refTableId;
+      #
+      #}
+    ENDSOURCE
+    SOURCE #busRelAccount
+      #void  busRelAccount(smmBusRelAccount  _busRelAccount)
+      #{;
+      #    busRelAccount = _busRelAccount;
+      #}
+    ENDSOURCE
+    SOURCE #callingNameControl
+      #void callingNameControl(FormStringControl _callingNameControl)
+      #{
+      #    ;
+      #    callingNameControl = _callingNameControl;
+      #}
+    ENDSOURCE
+    SOURCE #closeSelect
+      #void closeSelect(str p1)
+      #{
+      #    CreditCardTable_ds.leaveRecord();
+      #
+      #    super(creditCardTable.CreditCardId);
+      #}
+      #
+    ENDSOURCE
+    SOURCE #custAccount
+      #void  custAccount(CustAccount  _custAccount)
+      #{;
+      #    custAccount = _custAccount;
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #void init()
+      #{
+      #    ProjFundingSource   projFundingSource;
+      #    ProjProposalJour    projProposalJour;
+      #    ProjTable           projTable;
+      #    ;
+      #    if (!(custAccount || busRelAccount))
+      #        throw error("@SYS22539");
+      #
+      #    //RMCC_Bug_2_SalesOrderCCLookup, 3.29.2016, VOT >
+      #    //changed from "element.args().record()" check for the case when user performs lookup before record is saved
+      #    if (element.args().record().TableId == tableNum(SalesTableCC))
+      #    {
+      #        salesTableCC = element.args().record();
+      #        salesId = salesTableCC.salesId;
+      #        [RefTableId,refRecId] = CreditCardTable::getPrimaryRecord(salesTableCC);
+      #    }
+      #    //RMCC_Bug_2_SalesOrderCCLookup, 3.29.2016, VOT <
+      #    else if (element.args().record().TableId == tableNum(LedgerJournalTrans))
+      #    {
+      #        RefTableId = element.args().record().TableId;
+      #        refRecId = element.args().record().RecId;
+      #    }
+      #    else if (element.args().record().TableId == tableNum(ProjFundingSource))
+      #    {
+      #        RefTableId = element.args().record().TableId;
+      #        refRecId = element.args().record().RecId;
+      #    }
+      #    else if (element.args().record().TableId == tableNum(ProjTable))
+      #    {
+      #        RefTableId = element.args().record().TableId;
+      #        refRecId = element.args().record().RecId;
+      #    }
+      #
+      #    super();
+      #
+      #    if (SalesTableCC.ProjProposalId)
+      #    {
+      #        projProposalJour = ProjProposalJour::find(SalesTableCC.ProjProposalId);
+      #        projFundingSource = projFundingSource::findCustAccount(projProposalJour.ProjInvoiceProjId);
+      #
+      #        if (projFundingSource.CreditCardId)
+      #        {
+      #            RefTableId = projFundingSource.TableId;
+      #            RefRecId = projFundingSource.RecId;
+      #        }
+      #        else
+      #        {
+      #            projTable = projTable::find(projProposalJour.projId());
+      #            RefTableId = projTable.TableId;
+      #            RefRecId = projTable.RecId;
+      #        }
+      #    }
+      #
+      #    element.selectMode();
+      #}
+    ENDSOURCE
+    SOURCE #logisticsLocationRecId
+      #void  logisticsLocationRecId(LogisticsLocationRecId  _logisticsLocationRecId)
+      #{;
+      #    locationRecId = _logisticsLocationRecId;
+      #}
+    ENDSOURCE
+    SOURCE #run
+      #public void run()
+      #{
+      #    FormStringControl   callerControl   = SysTableLookup::getCallerStringControl(element.args());
+      #    Boolean             filterLookup    = false;
+      #    CreditCardId        creditCardId;
+      #    CreditCardTable     creditCardTableCurrent;
+      #    ;
+      #    if (callingNameControl && callingNameControl.text() && callingNameControl.hasChanged())
+      #    {
+      #        filterLookup = true;
+      #        CreditCardTable_ds.autoSearch(false);
+      #    }
+      #
+      #    super();
+      #
+      #    if (filterLookup)
+      #    {
+      #        CreditCardTable_ds.reSearch();
+      #        CreditCardTable_Name.filter(callingNameControl.text());
+      #    }
+      #    else
+      #    {
+      #        if (callingNameControl && !callingNameControl.hasChanged() && element.args().lookupValue())
+      #        {
+      #            creditCardId = element.args().lookupValue();
+      #            element.args().lookupField(fieldNum(CreditCardTable, creditCardId));
+      #            creditCardTableCurrent = CreditCardTable::find(creditCardId);
+      #            if (creditCardTableCurrent)
+      #                creditCardTable_ds.findRecord(creditCardTableCurrent);
+      #        }
+      #    }
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+    DATASOURCE
+      OBJECTPOOL
+        PROPERTIES
+          Name                #CreditCardTable
+          Table               #CreditCardTable
+          AllowEdit           #No
+          AllowCreate         #No
+          AllowDelete         #No
+          InsertIfEmpty       #No
+        ENDPROPERTIES
+        
+        FIELDLIST
+        ENDFIELDLIST
+      ENDOBJECTPOOL
+      METHODS
+        SOURCE #executeQuery
+          #public void executeQuery()
+          #{
+          #    CreditCardTable         ccTable;
+          #    str                     ccID;
+          #    ;
+          #    if (custAccount)
+          #    {
+          #        while select CreditCardId,CustAccount,Inactive,Location,UsePostalAddress,salesId,OneTimeRefRecId from ccTable
+          #            where ccTable.CustAccount == custAccount
+          #            && ccTable.Inactive == NoYes::No
+          #            //RMCC_Bug_4_SalesOrderCCLookup, 3.29.2016, VOT >
+          #            && !ccTable.SalesId
+          #            //RMCC_Bug_4_SalesOrderCCLookup, 3.29.2016, VOT <
+          #            && ((ccTable.Location == locationRecId
+          #            && ccTable.UsePostalAddress == NoYes::Yes)
+          #            || ccTable.UsePostalAddress == NoYes::No)
+          #        {
+          #            if (ccTable.OneTimeRefRecId == 0)
+          #            {
+          #                ccId += ccTable.CreditCardId + ',';
+          #            }
+          #        }
+          #
+          #        if (salesId != '' || refRecId != 0)
+          #        {
+          #            while select CreditCardId,CustAccount,Inactive,Location,UsePostalAddress from ccTable
+          #                where ccTable.CustAccount == custAccount
+          #                && ((ccTable.SalesId == salesId
+          #                && salesId != "")
+          #                || (ccTable.OneTimeRefRecId == refRecId
+          #                && refRecId != 0))
+          #                && ccTable.Inactive == NoYes::No
+          #                && ((ccTable.Location == locationRecId
+          #                && ccTable.UsePostalAddress == NoYes::Yes)
+          #                || ccTable.UsePostalAddress == NoYes::No)
+          #            {
+          #                ccId += ccTable.CreditCardId + ',';
+          #            }
+          #        }
+          #    }
+          #    else
+          #    {
+          #        while select CreditCardId,BusRelAccount,Inactive,Location,UsePostalAddress from ccTable
+          #            where ccTable.BusRelAccount == busRelAccount
+          #            && ccTable.Inactive == NoYes::No
+          #            && ((ccTable.Location == locationRecId
+          #            && ccTable.UsePostalAddress == NoYes::Yes)
+          #            || ccTable.UsePostalAddress == NoYes::No)
+          #        {
+          #            ccId += ccTable.CreditCardId + ',';
+          #        }
+          #    }
+          #
+          #    if (ccID)
+          #    {
+          #        qbrCCID.value(ccID);
+          #    }
+          #    else
+          #    {
+          #        qbrCCID.value(SysQuery::valueEmptyString());
+          #    }
+          #
+          #    this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTable,CreditCardId)).status(RangeStatus::Hidden);
+          #
+          #    super();
+          #}
+        ENDSOURCE
+        SOURCE #init
+          #public void init()
+          #{
+          #    super();
+          #
+          #    this.queryBuildDataSource().clearDynalinks();
+          #
+          #    qbrCCID = this.query().dataSourceNo(1).addRange(fieldNum(CreditCardTable,CreditCardId));
+          #}
+        ENDSOURCE
+      ENDMETHODS
+    ENDDATASOURCE
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+      Caption             #@ACC686
+      Columns             #2
+      ArrangeGuide        
+        ARRAY INDEX Columns 
+          #0
+          #0
+        ENDARRAY
+      Style               #Lookup
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL GRID
+        PROPERTIES
+          Name                #Grid
+          ElementPosition     #1073741823
+          DataSource          #CreditCardTable
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL CHECKBOX
+        PROPERTIES
+          Name                #CreditCardTable_Profile
+          ElementPosition     #1879048185
+          HierarchyParent     #Grid
+          BackgroundColor     #Window background
+          DataSource          #CreditCardTable
+          DataField           #Profile
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL COMBOBOX
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardType
+          ElementPosition     #1073741820
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #CreditCardType
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #CreditCardTable_ExpirationDate
+          ElementPosition     #1610612730
+          HierarchyParent     #Grid
+          DataSource          #CreditCardTable
+          DataField           #ExpirationDate
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardId
+          ElementPosition     #536870910
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #CreditCardId
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_CreditCardNumSecure
+          ElementPosition     #1342177275
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #CreditCardNumSecure
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL STRINGEDIT
+        PROPERTIES
+          Name                #CreditCardTable_Name
+          AutoDeclaration     #Yes
+          ElementPosition     #805306365
+          HierarchyParent     #Grid
+          LabelAlignment      #Right
+          DataSource          #CreditCardTable
+          DataField           #Name
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END

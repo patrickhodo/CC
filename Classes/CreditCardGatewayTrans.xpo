@@ -1,0 +1,129 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardGatewayTrans
+    PROPERTIES
+      Name                #CreditCardGatewayTrans
+      Origin              #{E0AD688F-A0A9-4E3D-8B2B-5A1E4AC911DC}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class CreditCardGatewayTrans
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #public CreditCardTable createProfile(CreditCardTransDataContract  dataContract)
+        #{
+        #    CreditCardTable         ccTable;
+        #    SalesTable              salesTable      =   SalesTable::find(dataContract.salesId());
+        #    ;
+        #    ccTable.clear();
+        #    ccTable.initValue();
+        #    ccTable.CustAccount     =       salesTable.InvoiceAccount;
+        #    ccTable.CreditCardNumSecure =   dataContract.creditCardMasked();
+        #    ccTable.CreditCardType  =       dataContract.creditCardType();
+        #    ccTable.ExpirationDate  =       dataContract.creditCardExpDate();
+        #    ccTable.NameOnCard      =       dataContract.creditCardNameOnCard();
+        #    ccTable.Profile         =       NoYes::Yes;
+        #    ccTable.ProfileId       =       dataContract.profileId();
+        #    ccTable.insert();
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #createSalesTableCCTrans
+        #public salesTableCC createSalesTableCCTrans (CreditCardTrans ccTrans)
+        #{
+        #    SalesTableCC        salesTableCC;
+        #    DictEnum            dictEnum = new DictEnum(enumnum(CreditCardTrxType));
+        #    ;
+        #    if (ccTrans)
+        #    {
+        #        salesTableCC.clear();
+        #        salesTableCC.AmountCur         =    ccTrans.AmountCur;
+        #        salesTableCC.AmountMST         =    ccTrans.AmountMST;
+        #        salesTableCC.CurrencyCode      =    ccTrans.CurrencyCode;
+        #        salesTableCC.Cancelled         =    NoYes::No;
+        #        salesTableCC.CreditCardId      =    ccTrans.CreditCardId;
+        #        salesTableCC.CreditCardTrxType =    ccTrans.TransType;
+        #        salesTableCC.Processed         =    NoYes::Yes;
+        #        salesTableCC.PNRef             =    ccTrans.PNRef;
+        #        salesTableCC.SalesId           =    ccTrans.SalesId;
+        #        salesTableCC.TransID           =    ccTrans.TransID;
+        #        salesTableCC.NameOnCard        =    ccTrans.NameOnCard;
+        #        salesTableCC.insert();
+        #
+        #    }
+        #
+        #    return salesTableCC;
+        #}
+      ENDSOURCE
+      SOURCE #createTransFromDatacontract
+        #public CreditCardTrans createTransFromDatacontract(CreditCardTransDataContract dataContract,
+        #                                                    CreditCardTable             ccTable)
+        #{
+        #    CreditCardTrans         ccTrans;
+        #    SalesTableCC            salesTableCC;
+        #    DictEnum                dictEnum = new DictEnum(enumnum(CreditCardTrxType));
+        #    ;
+        #    //--> Set values that are not attributes
+        #    ccTrans.OrigDateTime        =   DateTimeUtil::applyTimeZoneOffset(
+        #                                            DateTimeUtil::getSystemDateTime(),
+        #                                            DateTimeUtil::getCompanyTimeZone());
+        #    ccTrans.TransDate           =   systemDateGet();
+        #    ccTrans.TransID             =   NumberSeq::newGetNum(CreditCardParameters::numRefCCTransId()).num();
+        #    ccTrans.WorkerProcessor     =   currentWorker();
+        #    ccTrans.TransCurrencyCode   =   companyInfo::standardCurrency();
+        #    ccTrans.TxRefGuid           =   newGuid();
+        #    //--> Result of 0 is a good transaction
+        #    ccTrans.Result              =   '0';
+        #    ccTrans.EntrySource         =   CreditCardEntrySource::Manual;
+        #    ccTrans.JournalOrig         =   CreditCardJournalOrig::System;
+        #
+        #
+        #    //--> Set value fields
+        #    ccTrans.AmountCur           =   dataContract.amountCur();
+        #    ccTrans.CurrencyCode        =   dataContract.currencyCode();
+        #    ccTrans.CreditCardType      =   dataContract.creditCardType();
+        #    ccTrans.AmountMST           =   Currency::amountCur2MST(ccTrans.AmountCur,ccTrans.CurrencyCode);
+        #
+        #    //--> Credit Card values
+        #    ccTrans.Profile             =   ccTable.Profile;
+        #    ccTrans.ProfileId           =   ccTable.ProfileId;
+        #    ccTrans.CreditCardId        =   ccTable.CreditCardId;
+        #
+        #    //--> Transaction values
+        #    ccTrans.TransType           =   dataContract.creditCardTrxType();
+        #    ccTrans.TrxType             =   dictEnum.index2Symbol(ccTrans.TransType);
+        #    ccTrans.PNRef               =   dataContract.transReference();
+        #    ccTrans.CreditCardNumSecure =   dataContract.creditCardMasked();
+        #    ccTrans.SalesId             =   dataContract.salesId();
+        #    ccTrans.TerminalId          =   dataContract.creditCardTerminalId();
+        #
+        #    //--> Processor specific information
+        #    ccTrans.CybersourceToken    =   dataContract.cybersourceToken();
+        #
+        #    ccTrans.insert();
+        #
+        #    salesTableCC = this.createSalesTableCCTrans(ccTrans);
+        #
+        #    ccTrans.selectForUpdate(true);
+        #    ccTrans.RefRecId = salesTableCC.RecId;
+        #    ccTrans.write();
+        #
+        #    return ccTrans;
+        #
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

@@ -1,0 +1,34 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: JOB
+
+; 
+; --------------------------------------------------------------------------------
+  JOBVERSION 1
+  
+  SOURCE #CreateOffLineRecordForCreditCard
+    #static void CreateOffLineRecordForCreditCard(Args _args)
+    #{
+    #    RetailOfflineTable          offlineTable;
+    #    ;
+    #    ttsBegin;
+    #
+    #    select offlineTable where offlineTable.TableName == "CreditCardRetailTerminalTable";
+    #
+    #    if (!offlineTable)
+    #    {
+    #        offlineTable.TableName = "CreditCardRetailTerminalTable";
+    #        offlineTable.insert();
+    #    }
+    #    ttsCommit;
+    #
+    #
+    #}
+  ENDSOURCE
+  PROPERTIES
+    Origin              #{B539DA9E-19EA-42BF-A1B3-29702EFA43E1}
+  ENDPROPERTIES
+  
+
+***Element: END

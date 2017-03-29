@@ -1,0 +1,1433 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #MCRCustPaym
+    PROPERTIES
+      Name                #MCRCustPaym
+      Origin              #{2CD5E2C8-4F56-4E6D-9767-0F6E575EAA9D}
+      LegacyId            #30049
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #allowEdit
+        #/// <summary>
+        #///     Determines if a payment field should be editable by the user.
+        #/// </summary>
+        #/// <param name="_fieldId">
+        #///     The ID of a field from the <c>MCRCustPaymTable</c> table.
+        #/// </param>
+        #/// <returns>
+        #///     true if editing should be allowed; otherwise, false.
+        #/// </returns>
+        #public boolean allowEdit(FieldId _fieldId)
+        #{
+        #    switch (_fieldId)
+        #    {
+        #        // the following fields should never be allowed to be directly edited
+        #        //  by the user
+        #        case fieldNum(MCRCustPaymTable, CustAccount):
+        #        case fieldNum(MCRCustPaymTable, CustPaymType):
+        #        case fieldNum(MCRCustPaymTable, LineNum):
+        #        case fieldNum(MCRCustPaymTable, PostedAmount):
+        #        case fieldNum(MCRCustPaymTable, RefTableId):
+        #        case fieldNum(MCRCustPaymTable, RefRecId):
+        #        case fieldNum(MCRCustPaymTable, Status):
+        #        case fieldNum(MCRCustPaymTable, CurrencyCode):
+        #            return false;
+        #    }
+        #
+        #    return true;
+        #}
+      ENDSOURCE
+      SOURCE #allowEditCurrency
+        #/// <summary>
+        #///     Determines if the currency should be allowed to be modified for this
+        #///     payment.
+        #/// </summary>
+        #/// <returns>
+        #///     true if any amount has not been posted for the payment; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     The currency for all payments is always the same as the currency for
+        #///     the entity associated with the payments.  The currency must not change if,
+        #///     for example, financial transactions exist for one or more payments.
+        #/// </remarks>
+        #boolean allowEditCurrency()
+        #{
+        #    boolean allowEdit = true;
+        #
+        #    if (mcrCustPaymTable.PostedAmount != 0)
+        #    {
+        #        allowEdit = false;
+        #    }
+        #
+        #    return allowEdit;
+        #}
+      ENDSOURCE
+      SOURCE #allowEditInvoiceAccount
+        #/// <summary>
+        #///     Determines if the invoice account should be allowed to be modified for this
+        #///     payment.
+        #/// </summary>
+        #/// <returns>
+        #///     true if any amount has not been posted for the payment; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     The invoice account for all payments must always be the same as the
+        #///     invoice account for the entity associated with the payments.  The invoice
+        #///     account must not change if, for example, financial transactions exist for
+        #///     one or more payments.  The invoice account is stored in the payment table
+        #///     (for efficient table joins), but is not allowed to be directly edited by
+        #///     the user.  The invoice account must be updated on each payment if changed
+        #///     on the entity associated with the payments.
+        #/// </remarks>
+        #boolean allowEditInvoiceAccount()
+        #{
+        #    boolean allowEdit = true;
+        #
+        #    if (mcrCustPaymTable.PostedAmount != 0)
+        #    {
+        #        allowEdit = false;
+        #    }
+        #
+        #    return allowEdit;
+        #}
+      ENDSOURCE
+      SOURCE #allowUserInput
+        #/// <summary>
+        #///     Determines if this payment instance is allowed to
+        #///     prompt the user for input during payment operations.
+        #/// </summary>
+        #/// <param name="_allowUserInput">
+        #///     A boolean that determines whether or not to prompt user for input during
+        #///     operations on the payment; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if the operations are allowed to prompt user for input; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     If the _allowUserInput value is false, then user interaction is not permitted.
+        #///     Each payment operation (i.e., public method) must support
+        #///     non-interactive processing, meaning that each operation must be able
+        #///     to execute successfully without user interaction.
+        #/// </remarks>
+        #boolean allowUserInput(boolean _allowUserInput = allowUserInput)
+        #{
+        #    allowUserInput = _allowUserInput;
+        #
+        #    return allowUserInput;
+        #}
+        #
+        #
+      ENDSOURCE
+      SOURCE #authorizeChargeManually
+        #/// <summary>
+        #///     Authorizes the payment.
+        #/// </summary>
+        #/// <param name="_creditCardAuthorization">
+        #///     The reason to authorize the payment
+        #/// </param>
+        #/// <returns>
+        #///     The payment stats of 'Authorized'.
+        #/// </returns>
+        #MCRCustPaymStatus authorizeChargeManually(CreditCardAuthorization _creditCardAuthorization)
+        #{
+        #    return MCRCustPaymStatus::Authorized;
+        #}
+      ENDSOURCE
+      SOURCE #authorizeRefundManually
+        #/// <summary>
+        #///     Authorizes the refund.
+        #/// </summary>
+        #/// <param name="_code">
+        #///     The reason to authroize the refund.
+        #/// </param>
+        #/// <returns>
+        #///     The authorization stats of 'Authorized'.
+        #/// </returns>
+        #MCRCustPaymStatus authorizeRefundManually(str _code)
+        #{
+        #    return MCRCustPaymStatus::Authorized;
+        #}
+      ENDSOURCE
+      SOURCE #canAuthorize
+        #/// <summary>
+        #///     Determines if the payment can be authorized.
+        #/// </summary>
+        #/// <returns>
+        #///     true if the status is not submitted; otherwise, false.
+        #/// </returns>
+        #boolean canAuthorize()
+        #{
+        #    if (mcrCustPaymTable.Status == MCRCustPaymStatus::NotSubmitted)
+        #    {
+        #        return true;
+        #    }
+        #
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #canPost
+        #/// <summary>
+        #///     Determines if the payment can be posted.
+        #/// </summary>
+        #/// <param name="_postAmount">
+        #///     The amount that determines if the payment can be posted.
+        #/// </param>
+        #/// <returns>
+        #///     true if the status is paid or posted and the amount passed does not
+        #///     equal zero; otherwise, false.
+        #/// </returns>
+        #boolean canPost(AmountCur _postAmount)
+        #{
+        #    if (_postAmount != 0
+        #        && (mcrCustPaymTable.Status == MCRCustPaymStatus::Paid
+        #        || mcrCustPaymTable.Status == MCRCustPaymStatus::Posted))
+        #    {
+        #        return true;
+        #    }
+        #
+        #    return false;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #/// <summary>
+        #///     The <c>MCRCustPaym</c> abstract class to handle customer payments.
+        #/// </summary>
+        #/// <remarks>
+        #///     This class defines a common interface for payments of all types, and
+        #///     implements common functionality.  Extending classes provide specialized
+        #///     functionality for each payment type.
+        #///     The factory method "construct" should be used to construct an instance of
+        #///     the appropriate extending class.
+        #///     An instance of this class acts as a wrapper around a "MCRCustPaymTable" table
+        #///     buffer -- not around the table record.  This means that the data that is
+        #///     passed to the constructor is never re-loaded from the database.  Changes made
+        #///     to the record after the wrapper is constructed will not be reflected in
+        #///     subsequent calls to methods of the wrapper.  It is expected that an instance
+        #///     of this class will be constructed, used immediately, and then discarded; it
+        #///     is not recommended that an instance of this class be stored and reused.
+        #/// </remarks>
+        #abstract class mcrCustPaym
+        #{
+        #    // payment for which this instance is a wrapper
+        #    MCRCustPaymTable        mcrCustPaymTable;
+        #    // is user interaction allowed?
+        #    boolean                 allowUserInput;
+        #    CreditCardAuthTrans     creditCardAuthTrans_Reversal;
+        #    LedgerJournalTable      ledgerJournalTable;
+        #    MCRLedgerJournal        mcrLedgerJournal;
+        #    boolean                 skipJournalPost;
+        #    CustInvoiceJour         custInvoiceJour;
+        #    SalesInvoiceId          salesInvoiceId;
+        #    CustInvoiceId           custInvoiceId;
+        #    CustInvoiceTable        custInvoiceTable;
+        #    CustPaymSchedLine       custPaymSchedLine;
+        #    LedgerJournalTrans      ledgerJournalTransPaym;
+        #    DimensionDefault        defaultDimension;
+        #    str                     paymReference;
+        #
+        #    // <GEERU>
+        #    #ISOCountryRegionCodes
+        #    #EECountryRegionCodes
+        #    // </GEERU>
+        #
+        #    //--> Red Maple Credit Card Begin
+        #    boolean                 skipJournalCreate;
+        #    //<-- Red Maple Credit Card End
+        #}
+        #
+      ENDSOURCE
+      SOURCE #declineChargeManually
+        #/// <summary>
+        #///     Declines the payment manually.
+        #/// </summary>
+        #/// <param name="_code">
+        #///     The response code used to justify the manual decline.
+        #/// </param>
+        #/// <returns>
+        #///     A payment status of declined.
+        #/// </returns>
+        #MCRCustPaymStatus declineChargeManually(str _code)
+        #{
+        #    return MCRCustPaymStatus::Declined;
+        #}
+      ENDSOURCE
+      SOURCE #declineRefundManually
+        #/// <summary>
+        #///     Declines the refund manually.
+        #/// </summary>
+        #/// <param name="_authCode">
+        #///     The response code used to justify the manual decline.
+        #/// </param>
+        #/// <returns>
+        #///     A payment status of declined.
+        #/// </returns>
+        #MCRCustPaymStatus declineRefundManually(str _authCode)
+        #{
+        #    return MCRCustPaymStatus::Declined;
+        #}
+      ENDSOURCE
+      SOURCE #determineStatus
+        #/// <summary>
+        #///     Creates parent method so it can be called without
+        #///     specifically creating an <c>MCRCustPaym_CreditCard</c> object.
+        #/// </summary>
+        #/// <returns>
+        #///     The current status of the <c>MCRCustPaymTable</c> record.
+        #/// </returns>
+        #MCRCustPaymStatus determineStatus()
+        #{
+        #    return mcrCustPaymTable.Status;
+        #}
+      ENDSOURCE
+      SOURCE #getCustomerPostingProfile
+        #private CustPostingProfile getCustomerPostingProfile(boolean _isPrepay)
+        #{
+        #    //  Need to retrieve more than one piece of information from totals
+        #    //  so instantiating the object here rather than calling methods
+        #    //  on MCRCustPaymTable
+        #    CustPostingProfile  postingProfileVal;
+        #    MCRCustPaymTotals   mcrCustPaymTotals;
+        #
+        #    mcrCustPaymTotals = MCRCustPaymTotals::construct(mcrCustPaymTable.RefTableId, mcrCustPaymTable.RefRecId);
+        #
+        #    if (mcrCustPaymTotals)
+        #    {
+        #        // If posting a prepay, need to determine the profile rather than using the related
+        #        //      records profile. This only applies to sales orders.
+        #        postingProfileVal = mcrCustPaymTotals.getPostingProfile(_isPrepay);
+        #    }
+        #    else
+        #    {
+        #        postingProfileVal = CustParameters::find().PostingProfile;
+        #    }
+        #
+        #    return postingProfileVal;
+        #}
+      ENDSOURCE
+      SOURCE #getDefaultValue
+        #/// <summary>
+        #///     Retrieves the default value for the specified field.
+        #/// </summary>
+        #/// <param name="_fieldId">
+        #///     The ID of a field from the <c>MCRCustPaymTable</c> table.
+        #/// </param>
+        #/// <returns>
+        #///     null to indicate that a default is not defined for the field; meaning that the
+        #///     system default or the current value for the field is okay.
+        #/// </returns>
+        #anytype getDefaultValue(FieldId _fieldId)
+        #{
+        #    return null;
+        #}
+      ENDSOURCE
+      SOURCE #getPaymAccount
+        #/// <summary>
+        #/// Gets the payment account and account type.
+        #/// </summary>
+        #/// <returns>
+        #/// The account type <c>LedgerJournalACType</c> and the account <c>LedgerJournalAC</c>
+        #/// </returns>
+        #/// <remarks>
+        #/// By default, the account type and account are determined by the payment method.
+        #/// </remarks>
+        #public container getPaymAccount()
+        #{
+        #    RetailStoreTenderTypeTable      retailStoreTenderTypeTable;
+        #    LedgerJournalACType             offsetType;
+        #    LedgerDimensionDefaultAccount   offsetAccount;
+        #
+        #    retailStoreTenderTypeTable = RetailStoreTenderTypeTable::find(mcrCustPaymTable.Channel, mcrCustPaymTable.TenderTypeId);
+        #
+        #    if (retailStoreTenderTypeTable)
+        #    {
+        #        switch (retailStoreTenderTypeTable.AccountType)
+        #        {
+        #            case RetailLedgerBank::Bank:
+        #                offsetType = LedgerJournalACType::Bank;
+        #            break;
+        #            case RetailLedgerBank::Ledger:
+        #                offsetType = LedgerJournalACType::Ledger;
+        #            break;
+        #            // <GEERU>
+        #            case RetailLedgerBank::RCash:
+        #                offsetType = LedgerJournalACType::RCash;
+        #            break;
+        #            // </GEERU>
+        #        }
+        #        offsetAccount = retailStoreTenderTypeTable.LedgerDimension;
+        #    }
+        #    else
+        #    {
+        #        throw error(strFmt("@MCR40426",enum2str(mcrCustPaymTable.CustPaymType)));
+        #    }
+        #
+        #    return [offsetType, offsetAccount];
+        #}
+      ENDSOURCE
+      SOURCE #hasPaymTypeData
+        #/// <summary>
+        #///     Determines if all required data that is specific to the payment
+        #///     type has been provided.
+        #/// </summary>
+        #/// <returns>
+        #///     Nothing; the child method is the only one called.
+        #/// </returns>
+        #/// <remarks>
+        #///     A payment of type "check" requires a check number.
+        #///     This method should return true if a check number has been provided;
+        #///     otherwise, this method should return false.
+        #/// </remarks>
+        #abstract boolean hasPaymTypeData()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #initCommonMCRLedgerJournalData
+        #private void initCommonMCRLedgerJournalData(boolean _isPrepay, boolean _isReturn)
+        #{
+        #    ExchRate        exchRate;
+        #    Num             paymOrderId;
+        #    CurrencyCode    currency;
+        #
+        #    // <GEERU>
+        #    CustParameters  custParms;
+        #
+        #    boolean countryRegion_W  = SysCountryRegionCode::isLegalEntityInCountryRegion(#easternEuropeAllandRU);
+        #    boolean countryRegion_RU = SysCountryRegionCode::isLegalEntityInCountryRegion([#isoRU]);
+        #    // </GEERU>
+        #    boolean paymentIsPrepayment = _isPrepay;
+        #
+        #    paymOrderId = mcrCustPaymTable.displayOrderID();
+        #    // Get the current exchange rate.
+        #    currency    = mcrCustPaymTable.getCurrency();
+        #    // Retrieve the exchange rate from the exchange rates table.
+        #    exchRate    = Currency::exchRate(currency);
+        #
+        #    paymentIsPrepayment = paymentIsPrepayment && !_isReturn;
+        #
+        #    if (paymentIsPrepayment)
+        #    {
+        #        // <GEERU>
+        #        if (countryRegion_W)
+        #        {
+        #            custParms = CustParameters::find();
+        #
+        #            mcrLedgerJournal.parmTaxGroup(custParms.TaxGroup_RU);
+        #            mcrLedgerJournal.parmTaxItemGroup(custParms.TaxItemGroup_RU);
+        #
+        #            if (countryRegion_RU)
+        #            {
+        #                mcrLedgerJournal.parmCustFactureAutoCreate_RU(custParms.PrepaymentFactureAutoCreate_RU);
+        #            }
+        #        }
+        #        // </GEERU>
+        #        else
+        #        {
+        #            mcrLedgerJournal.parmTaxGroup(SalesTable::find(paymOrderId).TaxGroup);
+        #            mcrLedgerJournal.parmTaxItemGroup(TaxParameters::find().TaxItemGroup);
+        #        }
+        #    }
+        #
+        #    mcrLedgerJournal.parmExchRate(exchRate);
+        #    mcrLedgerJournal.parmCurrencyCode(currency);
+        #    mcrLedgerJournal.parmTransDate(systemDateGet());
+        #    mcrLedgerJournal.parmTransTxt(strFmt("@MCR10835",
+        #                                    paymOrderId, enum2str(mcrCustPaymTable.CustPaymType)));
+        #    mcrLedgerJournal.parmPaymReference(this.parmPaymReference());
+        #    mcrLedgerJournal.parmMCRPaymOrderID(paymOrderId);
+        #    mcrLedgerJournal.parmMCRRefPaymID(mcrCustPaymTable.RecId);
+        #    mcrLedgerJournal.parmTransactionType(LedgerTransType::Payment);
+        #}
+      ENDSOURCE
+      SOURCE #initMCRLedgerJournalDataCustPayment
+        #private void initMCRLedgerJournalDataCustPayment(boolean _isPrepay, LedgerJournalACType _offsetType, LedgerDimensionDefaultAccount _offsetAccount)
+        #{
+        #    PostingProfile                  postingProfileVal;
+        #
+        #    postingProfileVal = this.getCustomerPostingProfile(_isPrepay);
+        #
+        #    mcrLedgerJournal.parmPostingProfile(postingProfileVal);
+        #    if (_offsetType == LedgerJournalACType::Ledger)
+        #    {
+        #        mcrLedgerJournal.parmledgerOffsetAccount(
+        #            MCRAssistantLedgerDimension::mergeAccountAndDimension(
+        #                DimensionStorage::getMainAccountIdFromLedgerDimension(_offsetAccount), this.parmDefaultDimension()));
+        #    }
+        #    else
+        #    {
+        #        mcrLedgerJournal.parmledgerOffsetAccount(_offsetAccount);
+        #    }
+        #    mcrLedgerJournal.parmLedgerOffsetAccountType(_offsetType);
+        #    mcrLedgerJournal.parmDefaultDimension(ledgerJournalTable.DefaultDimension);
+        #    mcrLedgerJournal.parmOffsetDefaultDimension(this.parmDefaultDimension());
+        #    mcrLedgerJournal.parmAccountNum(mcrCustPaymTable.CustAccount);
+        #}
+      ENDSOURCE
+      SOURCE #initMCRLedgerJournalDataRCash
+        #// <GEERU>
+        #private void initMCRLedgerJournalDataRCash(boolean _isPrepay, LedgerJournalACType _accountType, LedgerDimensionDefaultAccount _account)
+        #{
+        #    PostingProfile                  postingProfileVal;
+        #    PostingProfile                  offsetPostingProfileVal;
+        #
+        #    offsetPostingProfileVal = this.getCustomerPostingProfile(_isPrepay);
+        #    postingProfileVal       = RCashParameters::find().PostingProfile;
+        #
+        #    mcrLedgerJournal.parmPostingProfile(postingProfileVal);
+        #    mcrLedgerJournal.parmOffsetPostingProfile_RU(offsetPostingProfileVal);
+        #    mcrLedgerJournal.parmLedgerAccountType(_accountType);
+        #    mcrLedgerJournal.parmLedgerAccount(_account);
+        #    mcrLedgerJournal.parmLedgerOffsetAccountType(LedgerJournalACType::Cust);
+        #    mcrLedgerJournal.parmLedgerOffsetAccount(DimensionStorage::getDynamicAccount(mcrCustPaymTable.CustAccount, LedgerJournalACType::Cust));
+        #    mcrLedgerJournal.parmDefaultDimension(this.parmDefaultDimension());
+        #    mcrLedgerJournal.parmOffsetDefaultDimension(ledgerJournalTable.DefaultDimension);
+        #}
+        #// </GEERU>
+      ENDSOURCE
+      SOURCE #new
+        #/// <summary>
+        #///     Constructs a new instance.
+        #/// </summary>
+        #/// <param name="_custPaymTable">
+        #///      Customer payment record for which this instance is a wrapper.
+        #/// </param>
+        #/// <param name="_allowUserInput">
+        #///     Specifies whether user interaction is allowed during operations on this
+        #///     payment.  If true, the user might be prompted for input.  If false, all
+        #///     operations will complete without requesting user input.
+        #/// </param>
+        #/// <param name="_creditCardAuthTrans">
+        #///     A <c>CreditCardAuthTrans</c> record applied to a class variable; optional.
+        #/// </param>
+        #void new(MCRCustPaymTable    _custPaymTable,
+        #         boolean             _allowUserInput,
+        #         CreditCardAuthTrans _creditCardAuthTrans = null)
+        #{
+        #    // Always set class variable.
+        #    mcrCustPaymTable = _custPaymTable;
+        #
+        #    allowUserInput = _allowUserInput;
+        #
+        #    creditCardAuthTrans_Reversal = _creditCardAuthTrans;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #parmCustInvoiceJour
+        #/// <summary>
+        #///     Gets or sets the <c>CustInvoiceJour</c> table buffer.
+        #/// </summary>
+        #/// <param name="_custInvoiceJour">
+        #/// The <c>CustInvoiceJour</c> table buffer to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>CustInvoiceJour</c> table buffer on the object.
+        #/// </returns>
+        #public CustInvoiceJour parmCustInvoiceJour(CustInvoiceJour _custInvoiceJour = custInvoiceJour)
+        #{
+        #    custInvoiceJour = _custInvoiceJour;
+        #    return custInvoiceJour;
+        #}
+      ENDSOURCE
+      SOURCE #parmCustInvoiceTable
+        #/// <summary>
+        #///     Gets or sets the <c>CustInvoiceId</c> to hande free text invoices.
+        #/// </summary>
+        #/// <param name="_custInvoiceTable">
+        #/// The <c>CustInvoiceTable</c> to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>CustInvoiceId</c> table buffer on the object.
+        #/// </returns>
+        #public CustInvoiceTable parmCustInvoiceTable(CustInvoiceTable _custInvoiceTable = custInvoiceTable)
+        #{
+        #    custInvoiceTable = _custInvoiceTable;
+        #    return custInvoiceTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmCustPaymSchedLine
+        #/// <summary>
+        #///     Gets or sets the <c>CustPaymSchedLine</c> table buffer.
+        #/// </summary>
+        #/// <param name="_custPaymSchedLine">
+        #/// The <c>CustPaymSchedLine</c> table buffer to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>CustPaymSchedLine</c> table buffer on the object.
+        #/// </returns>
+        #public CustPaymSchedLine parmCustPaymSchedLine(CustPaymSchedLine _custPaymSchedLine = custPaymSchedLine)
+        #{
+        #    custPaymSchedLine = _custPaymSchedLine;
+        #    return custPaymSchedLine;
+        #}
+      ENDSOURCE
+      SOURCE #parmDefaultDimension
+        #/// <summary>
+        #/// Sets the default dimension of the <c>LedgerJournalTrans</c> table record.
+        #/// </summary>
+        #/// <param name="_defaultDimension">
+        #/// The <c>DimensionDefault</c> to be set on the <c>LedgerJournalTrans</c> table record.
+        #/// </param>
+        #/// <returns>
+        #/// The default dimension set on the <c>LedgerJournalTrans</c> table record.
+        #/// </returns>
+        #public DimensionDefault parmDefaultDimension(DimensionDefault _defaultDimension = defaultDimension)
+        #{
+        #    defaultDimension = _defaultDimension;
+        #    return defaultDimension;
+        #}
+      ENDSOURCE
+      SOURCE #parmFreeTextInvoiceId
+        #/// <summary>
+        #///     Gets or sets the <c>CustInvoiceId</c> to hande free text invoices.
+        #/// </summary>
+        #/// <param name="_custInvoiceId">
+        #/// The <c>CustInvoiceId</c> to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>CustInvoiceId</c> table buffer on the object.
+        #/// </returns>
+        #public CustInvoiceId parmFreeTextInvoiceId(CustInvoiceId _custInvoiceId = custInvoiceId)
+        #{
+        #    custInvoiceId = _custInvoiceId;
+        #    return custInvoiceId;
+        #}
+      ENDSOURCE
+      SOURCE #parmLedgerJournalTable
+        #/// <summary>
+        #///     Sets and return the <c>LedgerJournalTable</c> class variable.
+        #/// </summary>
+        #/// <param name="_ledgerJournalTable">
+        #///     The class variable being set; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The newly set <c>LedgerJouranlTable</c> record.
+        #/// </returns>
+        #LedgerJournalTable parmLedgerJournalTable(LedgerJournalTable _ledgerJournalTable = ledgerJournalTable)
+        #{
+        #    ledgerJournalTable = _ledgerJournalTable;
+        #    return ledgerJournalTable;
+        #}
+      ENDSOURCE
+      SOURCE #parmLedgerJournalTrans
+        #/// <summary>
+        #///     Gets or sets the <c>LedgerJournalTrans</c> table buffer.
+        #/// </summary>
+        #/// <param name="_ledgerJournalTrans">
+        #/// The <c>LedgerJournalTable</c> table buffer to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>LedgerJournalTrans</c> table buffer on the object.
+        #/// </returns>
+        #public LedgerJournalTrans parmLedgerJournalTrans(LedgerJournalTrans _ledgerJournalTrans = ledgerJournalTransPaym)
+        #{
+        #    ledgerJournalTransPaym = _ledgerJournalTrans;
+        #    return ledgerJournalTransPaym;
+        #}
+      ENDSOURCE
+      SOURCE #parmMCRLedgerJournal
+        #/// <summary>
+        #///     Sets and return the <c>MCRLedgerJournal</c> class variable.
+        #/// </summary>
+        #/// <param name="_mcrLedgerJournal">
+        #///     The <c>MCRLedgerJournal</c> being set and returned; optional.
+        #/// </param>
+        #/// <returns>
+        #///     The <c>MCRLedgerJournal</c> record.
+        #/// </returns>
+        #MCRLedgerJournal parmMCRLedgerJournal(MCRLedgerJournal _mcrLedgerJournal = mcrLedgerJournal)
+        #{
+        #    mcrLedgerJournal = _mcrLedgerJournal;
+        #    return mcrLedgerJournal;
+        #}
+      ENDSOURCE
+      SOURCE #parmPaymReference
+        #/// <summary>
+        #///     Gets or sets an identifier for this payment.
+        #/// </summary>
+        #/// <param name="_paymReference">
+        #/// The <c>string</c> identifier for this payment.
+        #/// </param>
+        #/// <returns>
+        #///     An <c>string</c> of an identifier for this payment..
+        #/// </returns>
+        #/// <remarks>
+        #///     The payment reference iswritten to the ledger
+        #///     journal during posting, and is intended to
+        #///     identify this payment on a bank deposit slip
+        #///     or for other financial records.
+        #/// </remarks>
+        #public str parmPaymReference(str _paymReference = paymReference)
+        #{
+        #    paymReference = _paymReference;
+        #    return paymReference;
+        #}
+      ENDSOURCE
+      SOURCE #parmSalesInvoiceId
+        #/// <summary>
+        #///     Gets or sets the <c>SalesInvoiceId</c>.
+        #/// </summary>
+        #/// <param name="_salesInvoiceId">
+        #/// The <c>SalesInvoiceId</c> to set on the object.
+        #/// </param>
+        #/// <returns>
+        #/// The <c>SalesInvoiceId</c> table buffer on the object.
+        #/// </returns>
+        #public CustInvoiceId parmSalesInvoiceId(SalesInvoiceId _salesInvoiceId = salesInvoiceId)
+        #{
+        #    salesInvoiceId = _salesInvoiceId;
+        #    return salesInvoiceId;
+        #}
+      ENDSOURCE
+      SOURCE #parmSkipJournalCreate
+        #/// <summary>
+        #///     Determines whether or not the LedgerJournalCheckPost's run
+        #///     method will be run.
+        #/// </summary>
+        #/// <param name="_skipJournalCreate">
+        #///     A boolean determining whether or not to skip creating the journal; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if posting should be skipped; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     Primarily used when wanting to use used with Red Maple Credit Cards which
+        #/// creates its own journal
+        #/// </remarks>
+        #boolean parmSkipJournalCreate(boolean _skipJournalCreate = skipJournalCreate)
+        #{
+        #    skipJournalCreate = _skipJournalCreate;
+        #    return skipJournalCreate;
+        #}
+      ENDSOURCE
+      SOURCE #parmSkipJournalPost
+        #/// <summary>
+        #///     Determines whether or not the LedgerJournalCheckPost's run
+        #///     method will be run in postToLedgerJournal.
+        #/// </summary>
+        #/// <param name="_skipJournalPost">
+        #///     A boolean determining whether or not to skip posting; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if posting should be skipped; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     Primarily used when wanting to use payment processing
+        #///     to validate/create payments and journal lines but not post
+        #///     right away.  So they can be posted later in batch. Used in
+        #///     conjunction with parmLedgerJournalTable.
+        #/// </remarks>
+        #boolean parmSkipJournalPost(boolean _skipJournalPost = skipJournalPost)
+        #{
+        #    skipJournalPost = _skipJournalPost;
+        #    return skipJournalPost;
+        #}
+      ENDSOURCE
+      SOURCE #paymentChanged
+        #/// <summary>
+        #///     Alters a payment.
+        #/// </summary>
+        #/// <param name="_mcrCustPaymTable_Old">
+        #///     The <c>MCRCustPaymTable</c> record being altered.
+        #/// </param>
+        #void paymentChanged(MCRCustPaymTable _mcrCustPaymTable_Old)
+        #{
+        #    boolean loggedChange = false;
+        #    if (mcrCustPaymTable.Status != _mcrCustPaymTable_Old.Status)
+        #    {
+        #        switch (mcrCustPaymTable.Status)
+        #        {
+        #        case MCRCustPaymStatus::Declined:
+        #            // Log a status change to declined
+        #            MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::Declined, mcrCustPaymTable);
+        #            break;
+        #        case MCRCustPaymStatus::Authorized:
+        #            // Log a Authorized change
+        #            MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::Authorized, mcrCustPaymTable);
+        #            break;
+        #        case MCRCustPaymStatus::Paid:
+        #            // Log a Paid change
+        #            MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::Settled, mcrCustPaymTable);
+        #            break;
+        #        case MCRCustPaymStatus::Posted:
+        #            // Log a Posted change
+        #            MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::Posted, mcrCustPaymTable);
+        #            break;
+        #        default:
+        #            MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::StatusChange, mcrCustPaymTable);
+        #            break;
+        #        }
+        #        loggedChange = true;
+        #    }
+        #
+        #    if (mcrCustPaymTable.Amount != _mcrCustPaymTable_Old.Amount)
+        #    {
+        #        // Log the payment amount change event.
+        #        MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::AmountChange, mcrCustPaymTable);
+        #        loggedChange = true;
+        #    }
+        #
+        #    // Log other changes
+        #    if (!loggedChange)
+        #    {
+        #        // Log other change
+        #        MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::Change, mcrCustPaymTable);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #performAuth
+        #/// <summary>
+        #///     Performs authorization on this payment.
+        #/// </summary>
+        #/// <returns>
+        #///     The resulting payment status.
+        #/// </returns>
+        #/// <remarks>
+        #///     Authorization should be for the non-posted payment amount, not for the
+        #///     payment amount.
+        #///     Extending classes should implement this method to do the following:
+        #///     1) Perform any applicable authorization procedures.  These procedures
+        #///     might consist only of placing the payment into some authorization
+        #///     queue, or they might consist of completing the entire authorization
+        #///     process.
+        #///     2) Determine and return the resulting payment status.
+        #///     This method should not make updates to the payment record -- neither to
+        #///     the table buffer that is stored as a member variable, nor to the record in
+        #///     the database.
+        #///
+        #///     The status must be one of the following:
+        #///     * MCRCustPaymStatus::PendingAuth.
+        #///     * MCRCustPaymStatus::Authorized.
+        #///     * MCRCustPaymStatus::Declined.
+        #///     * MCRCustPaymStatus::OnHold.
+        #/// </remarks>
+        #abstract protected MCRCustPaymStatus performAuth()
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #performPost
+        #/// <summary>
+        #///     Performs posting operations after posting records to the
+        #///     ledger journal.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The amount to be posted.
+        #/// </param>
+        #protected abstract void performPost(Amount _amount)
+        #{
+        #}
+      ENDSOURCE
+      SOURCE #post
+        #/// <summary>
+        #///     Posts the payment for the amount passed.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The amount of the payment being postd.
+        #/// </param>
+        #/// <param name="_isPrepay">
+        #///     A boolean determining if they payment is a prepay or not.
+        #/// </param>
+        #public void post(Amount _amount, boolean _isPrepay)
+        #{
+        #    setPrefix(strFmt("@MCR10793",
+        #                     enum2str(mcrCustPaymTable.CustPaymType),
+        #                     num2str(_amount, 1, 2, 1, 2)));
+        #
+        #    if (!this.validatePost(_amount, true))
+        #    {
+        #        throw error("@MCR10794");
+        #    }
+        #
+        #    ttsbegin;
+        #
+        #    // create ledger journal records
+        #    if (this.parmSkipJournalCreate() == NoYes::No)
+        #    {
+        #        this.postToLedgerJournal(_amount, _isPrepay);
+        #    }
+        #
+        #    mcrCustPaymTable.updatePostedAmount(_amount);
+        #
+        #    mcrCustPaymTable.reread();
+        #
+        #    // perform any posting operations for specific payment types
+        #    this.performPost(_amount);
+        #
+        #    ttscommit;
+        #}
+      ENDSOURCE
+      SOURCE #postToLedgerJournal
+        #/// <summary>
+        #///     Creates a ledger journal entry to post payment for the specified amount
+        #///     and retrieves the user setup for customer payment journal name from
+        #///     cust parameters table.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The amount to be posted to the <c>LedgerJournalTable</c> record.
+        #/// </param>
+        #/// <param name="_isPrepay">
+        #///     A boolean determining if the amount paid is a prepay or not.
+        #/// </param>
+        #/// <remarks>
+        #///     If a journal name has not been set up then
+        #///     the journalname that is of type Cust_P will be pulled in.
+        #/// </remarks>
+        #void postToLedgerJournal(Amount _amount, boolean _isPrepay)
+        #{
+        #    //  Need to retrieve more than one piece of information from totals
+        #    //  so instantiating the object here rather than calling methods
+        #    //  on MCRCustPaymTable
+        #
+        #    Amount                          postAmount  = _amount;
+        #    AmountCurCredit                 amtCredit;
+        #    AmountCurDebit                  amtDebit;
+        #    LedgerJournalACType             offsetType;
+        #    LedgerDimensionDefaultAccount   offsetAccount;
+        #    LedgerJournalTrans              ledgerJournalTransOut;
+        #
+        #    // <GEERU>
+        #    boolean                         isReturn    = _amount < 0;
+        #    boolean                         isRCash;
+        #    // </GEERU>
+        #
+        #    [offsetType, offsetAccount] = this.getPaymAccount();
+        #    // <GEERU>
+        #    isRCash = offsetType == LedgerJournalACType::RCash;
+        #    // </GEERU>
+        #
+        #    ttsbegin;
+        #
+        #    if (!mcrLedgerJournal)
+        #    {
+        #        // <GEERU>
+        #        if (isRCash)
+        #        {
+        #            mcrLedgerJournal = MCRLedgerJournal::construct(LedgerJournalType::RCash);
+        #        }
+        #        else
+        #        {
+        #        // </GEERU>
+        #            mcrLedgerJournal = MCRLedgerJournal::construct(LedgerJournalType::CustPayment);
+        #        // <GEERU>
+        #        }
+        #        // </GEERU>
+        #    }
+        #
+        #    mcrLedgerJournal.parmDefaultDimension(this.parmDefaultDimension());
+        #    mcrLedgerJournal.parmPrePayment(_isPrepay && !isReturn);
+        #
+        #    if (!ledgerJournalTable)
+        #    {
+        #        ledgerJournalTable = mcrLedgerJournal.createLedgerJournalTable();
+        #    }
+        #    if (ledgerJournalTable)
+        #    {
+        #        mcrLedgerJournal.parmLedgerJournalTable(ledgerJournalTable);
+        #        // <GEERU>
+        #        if (isRCash)
+        #        {
+        #            // have to swap account and offset account data for RCash lines
+        #            postAmount = -postAmount;
+        #
+        #            this.initMCRLedgerJournalDataRCash(_isPrepay, offsetType, offsetAccount);
+        #        }
+        #        else
+        #        {
+        #        // </GEERU>
+        #            this.initMCRLedgerJournalDataCustPayment(_isPrepay, offsetType, offsetAccount);
+        #        // <GEERU>
+        #        }
+        #        // </GEERU>
+        #        this.initCommonMCRLedgerJournalData(_isPrepay, isReturn);
+        #
+        #        if (postAmount > 0.0)
+        #        {
+        #            amtCredit = postAmount;
+        #        }
+        #        else
+        #        {
+        #            amtDebit = abs(postAmount);
+        #        }
+        #
+        #        ledgerJournalTransOut = mcrLedgerJournal.createLedgerJournalTrans(amtCredit, amtDebit);
+        #    }
+        #
+        #    ttscommit;
+        #
+        #    // post the payment journal
+        #    ledgerJournalTable.reread();
+        #    ledgerJournalTransOut.reread();
+        #
+        #    if (!skipJournalPost)
+        #    {
+        #        mcrLedgerJournal.post();
+        #    }
+        #}
+        #
+      ENDSOURCE
+      SOURCE #processPaym
+        #/// <summary>
+        #/// Processes a payment for posted amount.
+        #/// </summary>
+        #/// <param name="_postAmount">
+        #/// The amount to post.
+        #/// </param>
+        #/// <returns>
+        #/// The payment status.
+        #/// </returns>
+        #MCRCustPaymStatus processPaym(AmountCur _postAmount)
+        #{
+        #    if (this.canAuthorize())
+        #    {
+        #        this.performAuth();
+        #    }
+        #
+        #    mcrCustPaymTable.reread();
+        #
+        #    if (this.canPost(_postAmount))
+        #    {
+        #        this.post(_postAmount, mcrCustPaymTable.IsPrepay);
+        #    }
+        #    // In case of Auth reversals an amount of zero is passedto this method
+        #    //   - the payment status to be returned here would be not submitted.
+        #    if (_postAmount == 0)
+        #    {
+        #        mcrCustPaymTable.Status = MCRCustPaymStatus::NotSubmitted;
+        #    }
+        #
+        #    return mcrCustPaymTable.Status;
+        #}
+      ENDSOURCE
+      SOURCE #processPaymManually
+        #/// <summary>
+        #/// Processes a payment manually.
+        #/// </summary>
+        #/// <param name="_code">
+        #/// The credit card authorization code.
+        #/// </param>
+        #/// <param name="authorize">
+        #/// A Boolean value to either authorize or decline the payment.
+        #/// </param>
+        #/// <returns>
+        #/// The status of payment.
+        #/// </returns>
+        #MCRCustPaymStatus processPaymManually(str _code = '', boolean authorize = true)
+        #{
+        #    MCRCustPaymTotals   mcrCustPaymTotals;
+        #    AmountCur           postAmount = 0;
+        #    SalesTable          salesTable;
+        #
+        #    ttsbegin;
+        #    if (authorize)
+        #    {
+        #        if (mcrCustPaymTable.Amount > 0)
+        #        {
+        #            mcrCustPaymTable.Status = this.authorizeChargeManually(_code);
+        #        }
+        #        else if (mcrCustPaymTable.Amount < 0)
+        #        {
+        #            mcrCustPaymTable.Status = this.authorizeRefundManually(_code);
+        #        }
+        #        else
+        #        {
+        #            return mcrCustPaymTable.Status;
+        #        }
+        #        // Write manual authorize event.
+        #        MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::ManualAuthorize,
+        #                    mcrCustPaymTable, CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId));
+        #
+        #        mcrCustPaymTable.update();
+        #        mcrCustPaymTotals = MCRCustPaymTotals::construct(mcrCustPaymTable.RefTableId, mcrCustPaymTable.RefRecId);
+        #
+        #        // Only want to post pre-pays
+        #        if (mcrCustPaymTable.IsPrepay)
+        #        {
+        #            postAmount = mcrCustPaymTable.getUnpostedAmount();
+        #        }
+        #        if (this.canPost(postAmount))
+        #        {
+        #            this.post(postAmount, mcrCustPaymTable.IsPrepay);
+        #            mcrCustPaymTotals.settlePayments();
+        #        }
+        #    }
+        #    else
+        #    {
+        #        if (mcrCustPaymTable.Amount > 0)
+        #        {
+        #            mcrCustPaymTable.Status = this.declineChargeManually(_code);
+        #        }
+        #        else if (mcrCustPaymTable.Amount < 0)
+        #        {
+        #            mcrCustPaymTable.Status = this.declineRefundManually(_code);
+        #        }
+        #        else
+        #        {
+        #            mcrCustPaymTable.Status = MCRCustPaymStatus::Declined;
+        #        }
+        #
+        #        // Write manual decline event.
+        #        MCRCustPaymEvent::insertPaymEvent(MCRPaymentEventType::ManualDecline,
+        #                    mcrCustPaymTable,CreditCardAuthTrans::mcrFindLatest(mcrCustPaymTable.RecId));
+        #
+        #        mcrCustPaymTable.update();
+        #    }
+        #    ttscommit;
+        #
+        #    if (!mcrCustPaymTotals)
+        #    {
+        #        mcrCustPaymTotals = MCRCustPaymTotals::construct(mcrCustPaymTable.RefTableId, mcrCustPaymTable.RefRecId);
+        #    }
+        #    mcrCustPaymTotals.setTransStatus();
+        #
+        #    if (mcrCustPaymTable.RefTableId == tableNum(SalesTable))
+        #    {
+        #        salesTable = SalesTable::findRecId(mcrCustPaymTable.RefRecId, true);
+        #    }
+        #    if (mcrCustPaymTable.RefTableId == tableNum(CustPaymSchedLine))
+        #    {
+        #        salesTable = mcrCustPaymTable.salesTable();
+        #    }
+        #    if (salesTable)
+        #    {
+        #        salesTable.updateBackStatus();
+        #    }
+        #    return mcrCustPaymTable.Status;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #validateAuthorize
+        #/// <summary>
+        #///     Validates this payment for authorization.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     A boolean determing whether to write errors to the infolog; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if all data for this payment is valid and the payment should
+        #///     be allowed to be submitted for authorization; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     If the return value is false, then this payment is not allowed to be
+        #///     submitted for authorization.
+        #///     When extending this method, do the following:
+        #///     1) Provide an infolog prefix ("setPrefix") indicating the payment
+        #///     method and amount of the payment.
+        #///     2) Invoke "super".
+        #///     3) Perform additional validations, writing errors to the infolog
+        #///     only if _showErrors is true.
+        #/// </remarks>
+        #boolean validateAuthorize(boolean _showErrors = true)
+        #{
+        #    MCRCustPaymTotals mcrCustPaymTotals;
+        #
+        #    boolean isValid = true;
+        #
+        #    setPrefix(strFmt("@MCR32270", mcrCustPaymTable.TenderTypeId,
+        #                     mcrCustPaymTable.Amount));
+        #
+        #    mcrCustPaymTotals = MCRCustPaymTotals::construct(mcrCustPaymTable.RefTableId,
+        #                                                  mcrCustPaymTable.RefRecId);
+        #
+        #    // The account on this payment must be the same as the invoice account
+        #    //  for the related entity (sales order or free-text invoice).
+        #    // Note that this error should not occur in production.  This check will
+        #    //  catch programming errors.
+        #    if (mcrCustPaymTotals
+        #        && mcrCustPaymTable.CustAccount != mcrCustPaymTotals.getInvoiceAccount())
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error("@MCR11251");
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validateDelete
+        #/// <summary>
+        #///     Determines whether the record is allowed to be deleted.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     A boolean determing whether to write errors to the infolog; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if the record is allowed to be deleted; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     Don't allow deletion if the payment is posted at all.
+        #/// </remarks>
+        #boolean validateDelete(boolean _showErrors = true)
+        #{
+        #    boolean isValid = true;
+        #
+        #    // do not allow deletion of payments that have been posted in any amount
+        #    if (mcrCustPaymTable.PostedAmount != 0)
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error("@MCR10674");
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validatePost
+        #/// <summary>
+        #///     Validates that the specified amount may be posted.
+        #/// </summary>
+        #/// <param name="_amount">
+        #///     The amount to be posted if validated.
+        #/// </param>
+        #/// <param name="_showErrors">
+        #///     A boolean determing whether to write errors to the infolog; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if it is allowed to post the specified amount for this
+        #///     payment; otherwise false.
+        #/// </returns>
+        #boolean validatePost(Amount _amount, boolean _showErrors = true)
+        #{
+        #    boolean isValid = true;
+        #
+        #    Amount unpostedAmount = mcrCustPaymTable.getUnpostedAmount();
+        #
+        #    // this payment must be Posted/Paid
+        #    //--> Red Maple Begin
+        #    if (mcrCustPaymTable.PaymInfoTableId == tableNum(SalesTableCC))
+        #    {
+        #        if (SalesTableCC::findRecId(mcrCustPaymTable.PaymInfoRecId).Processed == NoYes::No)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR30348", enum2str(mcrCustPaymTable.Status)));
+        #            }
+        #        }
+        #    }
+        #    else
+        #    {
+        #        if (mcrCustPaymTable.Status != MCRCustPaymStatus::Posted
+        #            && mcrCustPaymTable.Status != MCRCustPaymStatus::Paid)
+        #        {
+        #            isValid = false;
+        #
+        #            if (_showErrors)
+        #            {
+        #                error(strFmt("@MCR30348", enum2str(mcrCustPaymTable.Status)));
+        #            }
+        #        }
+        #    }
+        #    //--> Red Maple End
+        #
+        #    // must be a non-zero amount
+        #    if (_amount == 0.0)
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error(strFmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #        }
+        #    }
+        #
+        #    // the amount must have the same sign as the unposted payment amount
+        #    if (isValid && sign(_amount) != sign(unpostedAmount))
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error(strFmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #        }
+        #    }
+        #
+        #    // the amount may not be greater than the unposted payment amount
+        #    if (isValid && abs(_amount) > abs(unpostedAmount))
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error(strFmt("@MCR10796", num2str(_amount, 1, 2, -1, -1)));
+        #        }
+        #    }
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #/// <summary>
+        #///     Validates this payment for an insert or update.
+        #/// </summary>
+        #/// <param name="_showErrors">
+        #///     A boolean determing whether to write errors to the infolog; optional.
+        #/// </param>
+        #/// <param name="_validateAccountSetup">
+        #///     A boolean determing whether to validate if an account is
+        #///     setup on the <c>RetailStoreTenderTypeTable</c>; optional.
+        #/// </param>
+        #/// <returns>
+        #///     true if all data for this payment is valid and should be allowed
+        #///     to be saved to the database; otherwise, false.
+        #/// </returns>
+        #/// <remarks>
+        #///     If the return value is false, then this payment should not be saved to
+        #///     the database.
+        #/// </remarks>
+        #boolean validateWrite(boolean _showErrors = true,
+        #                      boolean _validateAccountSetup = true)
+        #{
+        #    boolean isValid = true;
+        #    RetailStoreTenderTypeTable retailStoreTenderTypeTable;
+        #    SalesTable  salesTable;
+        #    boolean paymentsEnabled;
+        #
+        #    // The payments enabled has to be determined either by the channel if user is in the channel
+        #    // in case of SalesTable, and by user if the payment is applied to a free text or the payment journal.
+        #    switch(mcrCustPaymTable.RefTableId)
+        #    {
+        #        case tableNum(SalesTable) :
+        #            salesTable = mcrCustPaymTable.salesTable();
+        #            paymentsEnabled = RetailMCRChannelTable::mcrEnableOrderCompletion(salesTable);
+        #            break;
+        #        default:
+        #            paymentsEnabled = RetailMCRChannelTable::mcrEnableOrderCompletionFindByUser();
+        #            break;
+        #    }
+        #    // If the order parameters to enable order completion is off
+        #    // then MCR payments are disabled and no record should be created in
+        #    // the MCRCustPaymTable
+        #    if (!paymentsEnabled)
+        #    {
+        #       throw error("@MCR40424");
+        #    }
+        #    // The Payment SDK does not support free standing refunds
+        #    // coming from Freetextinvoices or from payment journals so validate that these
+        #    // refunds cannot be created.
+        #    if ((mcrCustPaymTable.RefTableId == tableNum(CustInvoiceTable)
+        #        || mcrCustPaymTable.RefTableId == tableNum(LedgerJournalTrans))
+        #            && mcrCustPaymTable.Amount < 0.0)
+        #    {
+        #        throw error("@MCR40444");
+        #    }
+        #    // percent amount must be within the range 0 to 100
+        #    if (mcrCustPaymTable.PercentAmount < 0.0
+        #        || mcrCustPaymTable.PercentAmount > 100.0)
+        #    {
+        #        isValid = false;
+        #
+        #        if (_showErrors)
+        #        {
+        #            error("@MCR32248");
+        #        }
+        #    }
+        #
+        #    retailStoreTenderTypeTable = RetailStoreTenderTypeTable::find(mcrCustPaymTable.Channel,
+        #                                                                    mcrCustPaymTable.TenderTypeId);
+        #
+        #    if (!retailStoreTenderTypeTable)
+        #    {
+        #        isValid = false;
+        #        if (_showErrors)
+        #        {
+        #            error(strFmt("@MCR40425",
+        #                mcrCustPaymTable.TenderTypeId,
+        #                RetailChannelTable::findByRecId(mcrCustPaymTable.Channel).name()));
+        #        }
+        #    }
+        #    // payment account is required if parameter is true
+        #    else if (_validateAccountSetup
+        #            && retailStoreTenderTypeTable.LedgerDimension == 0)
+        #    {
+        #        isValid = false;
+        #        if (_showErrors)
+        #        {
+        #            error(strFmt("@MCR10845", mcrCustPaymTable.TenderTypeId));
+        #        }
+        #    }
+        #
+        #    isValid = this.hasPaymTypeData() && isValid;
+        #
+        #    return isValid;
+        #}
+      ENDSOURCE
+      SOURCE #construct
+        #/// <summary>
+        #///     Constructs a new customer payment instance.
+        #/// </summary>
+        #/// <param name="_custPaymTable">
+        #///     The <c>MCRCustPaymTable</c> record for which this class is constructed.
+        #/// </param>
+        #/// <param name="_allowUserInput">
+        #///     Specifies whether user interaction is allowed during operations on the payment; optional.
+        #/// </param>
+        #/// <param name="_creditCardCustReversal">
+        #///     An <c>CreditCardAuthTrans</c> record that denotes reversal; optional.
+        #/// </param>
+        #/// <returns>
+        #///     A new instance of this class if it is possible; otherwise, null.
+        #/// </returns>
+        #/// <remarks>
+        #///     The actual type of the instance is determined by the payment type.
+        #///     Whenever a new class extends this class, this method should be modified
+        #///     to instantiate the new class when appropriate.
+        #/// </remarks>
+        #public static MCRCustPaym construct(MCRCustPaymTable    _custPaymTable,
+        #                                boolean                 _allowUserInput      = false,
+        #                                CreditCardAuthTrans     _creditCardCustReversal = null)
+        #{
+        #    MCRCustPaym custPaym;
+        #    switch (_custPaymTable.CustPaymType)
+        #    {
+        #        case MCRCustPaymType::Cash:
+        #            custPaym = new MCRCustPaym_Cash(_custPaymTable, _allowUserInput);
+        #            break;
+        #
+        #        case MCRCustPaymType::Check:
+        #            custPaym = new MCRCustPaym_Check(_custPaymTable, _allowUserInput);
+        #            break;
+        #
+        #        case MCRCustPaymType::CreditCard:
+        #            custPaym = new MCRCustPaym_CreditCard(_custPaymTable, _allowUserInput, _creditCardCustReversal);
+        #            break;
+        #        // Add gift card to the gift cert logic as
+        #        // underneath the covers these two behave the same way.
+        #        case MCRCustPaymType::GiftCard:
+        #            custPaym = new MCRCustPaym_GiftCard(_custPaymTable, _allowUserInput);
+        #            break;
+        #
+        #        case MCRCustPaymType::OnAccount:
+        #            custPaym = new MCRCustPaym_OnAccount(_custPaymTable, _allowUserInput);
+        #            break;
+        #        // Returns
+        #        case MCRCustPaymType::RefundCheck:
+        #            custPaym = new MCRCustPaym_RefundCheck(_custPaymTable, _allowUserInput);
+        #            break;
+        #
+        #        default:    // unhandled case
+        #            custPaym = null;
+        #            // Rather than allowing a stack trace error, throw an error message
+        #            throw error(strFmt("@MCR30889", _custPaymTable.CustPaymType));
+        #    }
+        #
+        #    return custPaym;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

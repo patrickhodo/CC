@@ -1,0 +1,2377 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; 
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #CreditCardFDMSE4XMLBuilder
+    PROPERTIES
+      Name                #CreditCardFDMSE4XMLBuilder
+      Extends             #CreditCardFirstData
+      Origin              #{D520702C-9CA1-415B-BD49-FFCE7D832D5C}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #analyzeCybersourceResponseForProfile
+        #CreditCardTable analyzeCybersourceResponseForProfile(CreditCardStr             msg,
+        #                                CreditCardTable         ccTable)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList;
+        #    XmlNode                         elementParent;
+        #    Counter                         cnt;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    CreditCardStr                   errMsg;
+        #    NoYes                           accepted;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #
+        #    ;
+        #
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be one node <TXN>
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        response.insert(node,elementParent.innerText());
+        #
+        #    }
+        #
+        #    //--> Map Lookups
+        #    if (response.exists('Transaction_Approved'))
+        #    {
+        #        if (response.lookup('Transaction_Approved') == 'true')
+        #        {
+        #            accepted = true;
+        #        }
+        #        else
+        #        {
+        #            errMsg = response.lookup('Exact_Message');
+        #        }
+        #    }
+        #
+        #    ttsbegin;
+        #    ccTable.selectForUpdate(true);
+        #    if (response.exists('TransarmorToken'))
+        #    {
+        #        ccTable.ProfileId = response.lookup('TransarmorToken');
+        #    }
+        #
+        #
+        #
+        #    if (accepted)
+        #    {
+        #
+        #        if (!ccTable.ProfileId)
+        #        {
+        #            throw error("@ACC1722");
+        #        }
+        #
+        #        ccTable.Profile = NoYes::Yes;
+        #        ccTable.CreditCardNum = '';
+        #        ttscommit;
+        #    }
+        #    else
+        #    {
+        #        Throw error(strfmt(errMsg));
+        #    }
+        #
+        #
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #analyzeResponse
+        #CreditCardTrans analyzeResponse(CreditCardStr           msg,
+        #                                CreditCardTrans                    _ccTrans)
+        #{
+        #    XMLDocument                     xmlResult;
+        #    XmlNodeList                     nodeList;
+        #    XmlNode                         elementParent;
+        #    Counter                         cnt;
+        #    CreditCardStr                   tmpStr;
+        #    CreditCardStr                   node;
+        #    Map                             response = new Map(Types::String,Types::String);
+        #
+        #    ;
+        #
+        #    if (!strStartsWith(msg,'<?xml'))
+        #    {
+        #        ttsbegin;
+        #        _ccTrans.RepMsg = msg;
+        #        _ccTrans.write();
+        #        ttsCommit;
+        #        return _ccTrans;
+        #    }
+        #
+        #    ttsbegin;
+        #    ccTRans.selectForUpdate(true);
+        #
+        #    xmlResult = new XMLDocument();
+        #    xmlResult.loadXml(msg);
+        #    tmpStr = xmlResult.xml();
+        #    nodeList = xmlResult.documentElement().childNodes();
+        #    cnt = nodeList.length();
+        #
+        #    //--> This should be one node <TXN>
+        #    for (cnt = 0 ; cnt < nodeList.length() ; cnt += 1)
+        #    {
+        #        elementParent = nodeList.item(cnt);
+        #        node = elementParent.nodeName();
+        #        response.insert(node,elementParent.innerText());
+        #
+        #    }
+        #
+        #    //--> Map Lookups
+        #    if (response.exists('Transaction_Approved'))
+        #    {
+        #        if (response.lookup('Transaction_Approved') == 'true')
+        #        {
+        #            _ccTrans.Result = '0';
+        #        }
+        #        else
+        #        {
+        #            _ccTrans.Result = response.lookup('Bank_Resp_code');
+        #            _ccTrans.RepMsg = response.lookup('Bank_Message');
+        #        }
+        #    }
+        #
+        #    if (response.exists('Authorization_Num'))
+        #    {
+        #        _ccTrans.PNRef = response.lookup('Authorization_Num');
+        #    }
+        #
+        #    if (response.exists('AVS'))
+        #    {
+        #        _ccTrans.AvsAddr = response.lookup('AVS');
+        #    }
+        #
+        #    if (response.exists('CVV2'))
+        #    {
+        #        _ccTrans.CVDResponseStr = response.lookup('CVV2');
+        #    }
+        #
+        #    if (response.exists('Transaction_Tag'))
+        #    {
+        #        _ccTrans.RetrevalRefNum = response.lookup('Transaction_Tag');
+        #    }
+        #
+        #    _ccTrans.update();
+        #    ttscommit;
+        #
+        #    return _ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #build
+        #xml build()
+        #{
+        #    xml                     xml;
+        #    CreditCardTrans         origCCTrans;
+        #    ;
+        #    switch (this.parmccTrans().TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                xml = this.buildNewAuthToken();
+        #            }
+        #            else
+        #            {
+        #                xml= this.buildNewAuth();
+        #            }
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.RetrevalRefNum)
+        #            {
+        #                if (ccTrans.Profile == NoYes::Yes)
+        #                {
+        #                     xml = this.buildReturnToken();
+        #                }
+        #                else
+        #                {
+        #                    xml = this.buildReturn();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                if (ccTrans.Profile == NoYes::Yes)
+        #                {
+        #                     xml = this.buildCreditToken();
+        #                }
+        #                else
+        #                {
+        #                     xml = this.buildCredit();
+        #                }
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D    :
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                    xml = this.buildPostAuthToken();
+        #            }
+        #            else
+        #            {
+        #                    xml = this.buildPostAuth();
+        #            }
+        #
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (ccTrans.Profile == NoYes::Yes)
+        #            {
+        #                 xml = this.buildNewSaleToken();
+        #            }
+        #            else
+        #            {
+        #                 xml = this.buildNewSale();
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            select TransDate from origCCTrans
+        #                where origCCTrans.PNRef == ccTrans.OrigID;
+        #
+        #            if (DayofMth(origCCTRans.TransDate) == DayofMth(systemDateGet())
+        #                && mthofYr(origCCTrans.TransDate) == mthofyr(systemDateGet()))
+        #            {
+        #                if (ccTrans.Profile == NoYes::Yes)
+        #                {
+        #                     xml = this.buildVoidToken();
+        #                }
+        #                else
+        #                {
+        #
+        #                    xml = this.buildVoid();
+        #                }
+        #
+        #            }
+        #            else
+        #            {
+        #                if (ccTrans.Profile == NoYes::Yes)
+        #                {
+        #                     xml = this.buildReturnToken();
+        #                }
+        #                else
+        #                {
+        #                    xml = this.buildReturn();
+        #                }
+        #            }
+        #            break;
+        #    }
+        #
+        #    return xml;
+        #}
+      ENDSOURCE
+      SOURCE #buildCredit
+        #xml buildCredit()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardStr                   verificationStr,verificationStr2;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('04');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('Card_Number');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    if (ccTrans.NameOnCard)
+        #    {
+        #        xmlTextWriter.writeStartElement('CardHoldersName');
+        #        xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (this.parmPostalAddress())
+        #    {
+        #        if (this.parmPostalAddress().Street)
+        #        {
+        #            verificationStr = this.parmPostalAddress().Street;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr = '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().ZipCode)
+        #        {
+        #            verificationStr += this.parmPostalAddress().ZipCode;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().City)
+        #        {
+        #            verificationStr += this.parmPostalAddress().City;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().State)
+        #        {
+        #            verificationStr += this.parmPostalAddress().State;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().CountryRegionId)
+        #        {
+        #            verificationStr += this.parmPostalAddress().CountryRegionId;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr1');
+        #        xmlTextWriter.writeString(verificationStr);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        verificationStr2 = ccTrans.CID;
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr2');
+        #        xmlTextWriter.writeString(verificationStr2);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Customer reference number
+        #    xmlTextWriter.writeStartElement('Customer_Ref');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildCreditToken
+        #xml buildCreditToken()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardStr                   verificationStr2;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('04');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('TransarmorToken');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card type
+        #    xmlTextWriter.writeStartElement('CardType');
+        #    xmlTextWriter.writeString(this.returnCardType());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        verificationStr2 = ccTrans.CID;
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr2');
+        #        xmlTextWriter.writeString(verificationStr2);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Customer reference number
+        #    xmlTextWriter.writeStartElement('Customer_Ref');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelope
+        #str buildEnvelope()
+        #{
+        #    CreditCardStr                   tmpstr;
+        #    ;
+        #    tmpstr =    '<Request xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        #    tmpstr +=   'Version="3" ClientTimeout="30" xmlns="http://securetransport.dw/rcservice/xml">';
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildEnvelopeHeader
+        #str buildEnvelopeHeader()
+        #{
+        #    TempStr                         tmpstr;
+        #    ;
+        #
+        #    tmpStr = '<SOAP-ENV:Header/>';
+        #
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuth
+        #xml buildNewAuth()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardStr                   verificationStr,verificationStr2;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('01');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('Card_Number');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress())
+        #    {
+        #        if (this.parmPostalAddress().Street)
+        #        {
+        #            verificationStr = this.parmPostalAddress().Street;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr = '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().ZipCode)
+        #        {
+        #            verificationStr += this.parmPostalAddress().ZipCode;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().City)
+        #        {
+        #            verificationStr += this.parmPostalAddress().City;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().State)
+        #        {
+        #            verificationStr += this.parmPostalAddress().State;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().CountryRegionId)
+        #        {
+        #            verificationStr += this.parmPostalAddress().CountryRegionId;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr1');
+        #        xmlTextWriter.writeString(verificationStr);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        verificationStr2 = ccTrans.CID;
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr2');
+        #        xmlTextWriter.writeString(verificationStr2);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Transaction_Tag');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Customer reference number
+        #    xmlTextWriter.writeStartElement('Customer_Ref');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewAuthToken
+        #xml buildNewAuthToken()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardStr                   verificationStr2;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('01');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('TransarmorToken');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card type
+        #    xmlTextWriter.writeStartElement('CardType');
+        #    xmlTextWriter.writeString(this.returnCardType());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        verificationStr2 = ccTrans.CID;
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr2');
+        #        xmlTextWriter.writeString(verificationStr2);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Transaction_Tag');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Customer reference number
+        #    xmlTextWriter.writeStartElement('Customer_Ref');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewSale
+        #xml buildNewSale()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('00');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('Card_Number');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    /*if (this.parmPostalAddress())
+        #    {
+        #        if (this.parmPostalAddress().Street)
+        #        {
+        #            verificationStr = this.parmPostalAddress().Street;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr = '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().ZipCode)
+        #        {
+        #            verificationStr += this.parmPostalAddress().ZipCode;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().City)
+        #        {
+        #            verificationStr += this.parmPostalAddress().City;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().State)
+        #        {
+        #            verificationStr += this.parmPostalAddress().State;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().CountryRegionId)
+        #        {
+        #            verificationStr += this.parmPostalAddress().CountryRegionId;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr1');
+        #        xmlTextWriter.writeString(verificationStr);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        verificationStr2 = ccTrans.CID;
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr2');
+        #        xmlTextWriter.writeString(verificationStr2);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Customer reference number
+        #    xmlTextWriter.writeStartElement('Customer_Ref');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();*/
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildNewSaleToken
+        #xml buildNewSaleToken()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardStr                   verificationStr2;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('00');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('TransarmorToken');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card type
+        #    xmlTextWriter.writeStartElement('CardType');
+        #    xmlTextWriter.writeString(this.returnCardType());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (ccTrans.CID)
+        #    {
+        #        verificationStr2 = ccTrans.CID;
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr2');
+        #        xmlTextWriter.writeString(verificationStr2);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Customer reference number
+        #    xmlTextWriter.writeStartElement('Customer_Ref');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildPartialAuthForToken
+        #xml buildPartialAuthForToken(CreditCardTable        ccTable)
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    CreditCardStr                   verificationStr;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTable.ProfileTerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('05');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(0,9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('Card_Number');
+        #    xmlTextWriter.writeString(CreditCardTable::retrieveValue(ccTable,systemDateGet()));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonthCC(ccTable) + this.returnYearCC(ccTable));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTable.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    if (this.parmPostalAddress())
+        #    {
+        #        if (this.parmPostalAddress().Street)
+        #        {
+        #            verificationStr = this.parmPostalAddress().Street;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr = '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().ZipCode)
+        #        {
+        #            verificationStr += this.parmPostalAddress().ZipCode;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().City)
+        #        {
+        #            verificationStr += this.parmPostalAddress().City;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().State)
+        #        {
+        #            verificationStr += this.parmPostalAddress().State;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        if (this.parmPostalAddress().CountryRegionId)
+        #        {
+        #            verificationStr += this.parmPostalAddress().CountryRegionId;
+        #            verificationStr += '|';
+        #        }
+        #        else
+        #        {
+        #            verificationStr += '|';
+        #        }
+        #
+        #        //--> Verification STring
+        #        xmlTextWriter.writeStartElement('VerificationStr1');
+        #        xmlTextWriter.writeString(verificationStr);
+        #        xmlTextWriter.writeEndElement();
+        #    }
+        #
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTable.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Transaction_Tag');
+        #    xmlTextWriter.writeString(int642str(ccTable.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Customer reference number
+        #    xmlTextWriter.writeStartElement('Customer_Ref');
+        #    xmlTextWriter.writeString(ccTable.CreditCardId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildPostAuth
+        #xml buildPostAuth()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('32');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> authorization num
+        #    xmlTextWriter.writeStartElement('Authorization_Num');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Transaction_Tag');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('Card_Number');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildPostAuthToken
+        #xml buildPostAuthToken()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('02');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> authorization num
+        #    xmlTextWriter.writeStartElement('Authorization_Num');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('TransarmorToken');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card type
+        #    xmlTextWriter.writeStartElement('CardType');
+        #    xmlTextWriter.writeString(this.returnCardType());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(this.parmProcessAmt(),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildRequest
+        #str buildRequest()
+        #{
+        #    CreditCardStr                   tmpstr;
+        #    ;
+        #    tmpstr =    '<Request xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        #    tmpstr +=   'Version="3" ClientTimeout="30" xmlns="http://securetransport.dw/rcservice/xml">';
+        #    return tmpStr;
+        #
+        #}
+      ENDSOURCE
+      SOURCE #buildReturn
+        #xml buildReturn()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('34');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> authorization num
+        #    xmlTextWriter.writeStartElement('Authorization_Num');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Transaction_Tag');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('Card_Number');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildReturnToken
+        #xml buildReturnToken()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('34');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> authorization num
+        #    xmlTextWriter.writeStartElement('Authorization_Num');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Transaction_Tag');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('TransarmorToken');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card type
+        #    xmlTextWriter.writeStartElement('CardType');
+        #    xmlTextWriter.writeString(this.returnCardType());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildTestAuth
+        #private xml buildTestAuth()
+        #{
+        #    xmlTextWriter                   xml_Writer;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    ;
+        #
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    xml_Writer = XMLTextWriter::newXml();
+        #    xml_Writer.formatting(XMLFormatting::None);
+        #
+        #    xml_writer.WriteStartElement('Transaction');
+        #    xml_writer.WriteElementString('ExactID', 'AD5269-03');//Gateway ID
+        #    xml_writer.WriteElementString('Password', 'welcome1');//Password
+        #    xml_writer.WriteElementString('Transaction_Type', '00');
+        #    xml_writer.WriteElementString('DollarAmount', '1.66');
+        #    xml_writer.WriteElementString('Expiry_Date', '1214');
+        #    xml_writer.WriteElementString('CardHoldersName', 'C# REST Client');
+        #    xml_writer.WriteElementString('Card_Number', '4111111111111111');
+        #    xml_writer.WriteElementString('VerificationStr2', '123');
+        #    xml_writer.WriteEndElement();
+        #
+        #    return xml_Writer.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildVoid
+        #xml buildVoid()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('33');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> authorization num
+        #    xmlTextWriter.writeStartElement('Authorization_Num');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    /*xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();*/
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Transaction_Tag');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    /*xmlTextWriter.writeStartElement('Card_Number');
+        #    xmlTextWriter.writeString(this.returnAccount());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();*/
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #buildVoidToken
+        #xml buildVoidToken()
+        #{
+        #    CreditCardStr                   parmAll;
+        #    CreditCardTerminalTable         ccTerminal;
+        #    CreditCardMerchantFirstData     ccFirstData;
+        #    xmlTextWriter                   xmlTextWriter;
+        #    CreditCardParameters            ccParameters;
+        #    ;
+        #    xmlTextWriter = XMLTextWriter::newXml();
+        #    xmlTextWriter.formatting(XMLFormatting::None);
+        #
+        #    //--> Set Terminal type
+        #    ccTerminal = CreditCardTerminalTable::findTerminalWithId(ccTrans.TerminalId);
+        #    ccFirstData = this.parmMerchantFirstdata();
+        #    ccParameters = CreditCardParameters::findParameterWithTerminal(ccTerminal.TerminalId);
+        #
+        #    //--> Build XML Document
+        #    this.buildDocument();
+        #
+        #    //--> Build envelop by hand
+        #    //parmAll = this.buildEnvelope();
+        #
+        #    xmlTextWriter.writeStartElement('Transaction');
+        #
+        #    //--> Exact ID
+        #    xmlTextWriter.writeStartElement('ExactID');
+        #    xmlTextWriter.writeString(ccFirstData.GatewayId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Password
+        #    xmlTextWriter.writeStartElement('Password');
+        #    xmlTextWriter.writeString(ccFirstData.Pwd);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('Transaction_Type');
+        #    xmlTextWriter.writeString('33');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> authorization num
+        #    xmlTextWriter.writeStartElement('Authorization_Num');
+        #    xmlTextWriter.writeString(ccTrans.OrigID);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Reference_No');
+        #    xmlTextWriter.writeString(int642str(ccTrans.RecId));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Reference number
+        #    xmlTextWriter.writeStartElement('Transaction_Tag');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card Data
+        #    xmlTextWriter.writeStartElement('TransarmorToken');
+        #    xmlTextWriter.writeString(ccTrans.ProfileId);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Credit Card type
+        #    xmlTextWriter.writeStartElement('CardType');
+        #    xmlTextWriter.writeString(this.returnCardType());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Expiration date
+        #    xmlTextWriter.writeStartElement('Expiry_Date');
+        #    xmlTextWriter.writeString(this.returnMonth() + this.returnYear());
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Name on Card
+        #    xmlTextWriter.writeStartElement('CardHoldersName');
+        #    xmlTextWriter.writeString(ccTrans.NameOnCard);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> DollarAmount
+        #    xmlTextWriter.writeStartElement('DollarAmount');
+        #    xmlTextWriter.writeString(strLRTrim(num2str(abs(this.parmProcessAmt()),9,2,1,0)));
+        #    xmlTextWriter.writeEndElement();
+        #
+        #
+        #
+        #    //--> End transaction node
+        #    xmlTextWriter.writeEndElement();
+        #    this.parmTransactionText(xmlTextWriter.writeToString());
+        #
+        #    parmAll += xmlTextWriter.writeToString();
+        #
+        #    return parmAll;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #class CreditCardFDMSE4XMLBuilder extends CreditCardFirstData
+        #{
+        #    CreditCardStr   transactionText;
+        #    Amount          processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #getAction
+        #str getAction()
+        #{
+        #    CreditCardStr                   parmList;
+        #    ;
+        #    switch (ccTrans.TransType)
+        #    {
+        #        case CreditCardTrxType::A     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/Authorise';
+        #            }
+        #            else
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/AuthoriseToken';
+        #            }
+        #            break;
+        #        case CreditCardTrxType::C     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/Authorise';
+        #            }
+        #            else
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/AuthoriseToken';
+        #            }
+        #            break;
+        #        case CreditCardTrxType::D    :
+        #            parmList = 'https://secure.vgis.co.uk/transaction/soap/SettleEx';
+        #            break;
+        #        case CreditCardTrxType::S     :
+        #            if (ccTrans.Profile == NoYes::No)
+        #            {
+        #                parmList = 'http://securetransport.dw/rcservice';
+        #            }
+        #            else
+        #            {
+        #                parmList = 'https://secure.vgis.co.uk/transaction/soap/AuthoriseToken';
+        #            }
+        #            break;
+        #        case CreditCardTrxType::V     :
+        #            parmList = 'https://secure.vgis.co.uk/transaction/soap/PostReversal';
+        #            break;
+        #    }
+        #
+        #    return parmList;
+        #}
+      ENDSOURCE
+      SOURCE #parmCCTrans
+        #CreditCardTrans parmCCTrans(CreditCardTrans _ccTrans = ccTrans)
+        #{
+        #    ;
+        #    ccTrans = _ccTrans;
+        #    return ccTrans;
+        #}
+      ENDSOURCE
+      SOURCE #parmMerchantFirstData
+        #CreditCardMerchantFirstData parmMerchantFirstData(CreditCardMerchantFirstData _merchantFirstData = merchantFirstData)
+        #{
+        #    ;
+        #    merchantFirstData = _merchantFirstData;
+        #    return merchantFirstData;
+        #}
+      ENDSOURCE
+      SOURCE #parmProcessAmt
+        #public Amount parmProcessAmt(Amount     _processAmt = processAmt)
+        #{
+        #    ;
+        #    processAmt = _processAmt;
+        #    return processAmt;
+        #}
+      ENDSOURCE
+      SOURCE #parmTransactionText
+        #str parmTransactionText(str _transactionText = transactionText)
+        #{
+        #    ;
+        #    transactionText = _transactionText;
+        #    return transactionText;
+        #}
+      ENDSOURCE
+      SOURCE #retrieveValue
+        #str retrieveValue()
+        #{
+        #    CreditCardStr        returnTxt;
+        #    ;
+        #    returnTxt = CreditCardUtility::decrypt(this.parmCCTrans().CreditCardNumEncrypt,
+        #        CreditCardEncryptionTable::retrieveKey(DateTimeUtil::date(ccTrans.OrigDateTime)));
+        #
+        #    return returnTxt;
+        #}
+      ENDSOURCE
+      SOURCE #returnAccount
+        #str returnAccount()
+        #{
+        #    CreditCardTable         ccTable;
+        #    CreditCardStr           ParmList;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == ccTrans.creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> If this is a Capture, Credit or Void, we have to
+        #        //--> Retreive the data to continue
+        #        if ( ccTrans.TrxType == 'C' ||
+        #            ccTrans.TrxType == 'D' ||
+        #            ccTrans.TrxType == 'V')
+        #        {
+        #            if (!ccTrans.AuthCode) //<-- If this is a voice auth, the credit card is not encrypted
+        #            {
+        #                if (ccTrans.TrxType == 'C' && !ccTrans.OrigId)
+        #                {
+        #                    ParmList += this.retrieveValue();
+        #                }
+        #                else
+        #                {
+        #                    ParmList += this.retrieveValue();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                ParmList += this.retrieveValue();
+        #            }
+        #
+        #
+        #        }
+        #        else if (ccTrans.OneTimeTrans == NoYes::Yes)
+        #        {
+        #            //--> Manual Entry
+        #            if (!ccTrans.CreditCardNumSecure)
+        #                throw error("@ACC707");
+        #
+        #            ParmList += this.retrieveValue();
+        #
+        #        }
+        #        else
+        #        {
+        #            throw error(strFmt("@ACC141",ccTrans.creditCardId));
+        #        }
+        #    }
+        #    else
+        #    {
+        #       ParmList += CreditCardTable::retrieveValue(ccTable,DateTimeUtil::date(ccTrans.OrigDateTime));
+        #    }
+        #
+        #    return ParmList;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #returnCardType
+        #str returnCardType()
+        #{
+        #    CreditCardTable         ccTable;
+        #    CreditCardStr           ParmList;
+        #    CreditCardType          ccType;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #        ccType =  this.parmCCTrans().CreditCardType;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #        ccType =  ccTable.CreditCardType;
+        #    }
+        #
+        #    switch (ccType)
+        #    {
+        #        case CreditCardType::AmericanExpress    :
+        #            ParmList = 'American Express';
+        #            break;
+        #        case CreditCardType::Visa    :
+        #            ParmList = 'Visa';
+        #            break;
+        #        case CreditCardType::MasterCard    :
+        #            ParmList = 'Mastercard';
+        #            break;
+        #        case CreditCardType::Discover    :
+        #            ParmList = 'Discover';
+        #            break;
+        #        case CreditCardType::Diners    :
+        #            ParmList = 'Diners Club';
+        #            break;
+        #        case CreditCardType::JCB    :
+        #            ParmList = 'JCB';
+        #            break;
+        #        case CreditCardType::Stored    :
+        #            ParmList = 'Gift Card';
+        #            break;
+        #        case CreditCardType::PayPal    :
+        #            ParmList = 'PayPal';
+        #            break;
+        #
+        #
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnDayFromDate
+        #str returnDayFromDate(date        dateTrans)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 day;
+        #    ;
+        #    day =  int2str(DayofMth(dateTrans));
+        #    if (strlen(day)==1)
+        #    {
+        #        day = '0' + day;
+        #    }
+        #
+        #    ParmList =  day;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonth
+        #str returnMonth()
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        //--> Create date
+        #                month =  int2str(Mthofyr(this.parmCCTrans().OneTimeDateExp));
+        #                if (strlen(month)==1)
+        #                {
+        #                    month = '0' + month;
+        #                }
+        #
+        #                ParmList =  month;
+        #    }
+        #    else
+        #    {
+        #        //--> Create date
+        #            month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #            if (strlen(month)==1)
+        #            {
+        #                month = '0' + month;
+        #            }
+        #
+        #            ParmList =  month;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthCC
+        #str returnMonthCC(CreditCardTable         ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #
+        #    //--> Create date
+        #    month =  int2str(Mthofyr(ccTable.ExpirationDate));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnMonthFromDate
+        #str returnMonthFromDate(date        dateTrans)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 month;
+        #    ;
+        #    month =  int2str(Mthofyr(dateTrans));
+        #    if (strlen(month)==1)
+        #    {
+        #        month = '0' + month;
+        #    }
+        #
+        #    ParmList =  month;
+        #
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYear
+        #str returnYear()
+        #{
+        #    CreditCardTable         ccTable;
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    //<--Retrieve CC Information
+        #    select ccTable where ccTable.CreditCardId == this.parmCCTrans().creditCardId;
+        #
+        #    if (!ccTable)
+        #    {
+        #        ccYear = int2str(Year(this.parmCCTrans().OneTimeDateExp));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList = ccYear;
+        #    }
+        #    else
+        #    {
+        #        ccYear = int2str(Year(ccTable.ExpirationDate));
+        #        if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #        {
+        #            ccYear = substr(ccYear,3,4);
+        #        }
+        #
+        #        ParmList =  ccYear;
+        #    }
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #returnYearCC
+        #str returnYearCC(CreditCardTable         ccTable)
+        #{
+        #    TempStr                 ParmList;
+        #    TempStr                 ccYear;
+        #    ;
+        #    ccYear = int2str(Year(ccTable.ExpirationDate));
+        #    if (CreditCardParameters::findParameter().DateType == CreditCardDateTYpe::Two && strlen(ccYear) == 4)
+        #    {
+        #        ccYear = substr(ccYear,3,4);
+        #    }
+        #
+        #    ParmList =  ccYear;
+        #
+        #    return ParmList;
+        #}
+      ENDSOURCE
+      SOURCE #createProfile
+        #server static CreditCardTable createProfile(CreditCardTable     ccTable)
+        #{
+        #    CreditCardMerchantFirstData                 ccFirstData = CreditCardMerchantFirstData::find(ccTable.ProfileTerminalId);
+        #
+        #    //--> First Data Specific variables
+        #    CreditCardFDMSE4XMLBuilder                  xmlBuilder = new CreditCardFDMSE4XMLBuilder();
+        #    //-->
+        #    CreditCardStr                               response;
+        #    CreditCardStr                               parmList;
+        #
+        #    System.Net.WebRequest                       webRequest;
+        #    System.Net.HttpWebResponse                  webResponse;
+        #    System.IO.Stream                            stream;
+        #
+        #    //--> Global Gateway header encryption fiels
+        #    ClrObject                                   clearBytes;
+        #    ClrObject                                   hashBytes;
+        #    System.Byte[]                               responseBytes;
+        #    CLRObject                                   digestBytes;
+        #    CreditCardStr                               digestStr,digestText,base64Text;
+        #    System.String                               tempStr;
+        #    CreditCardStr                               dateTime = DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime()) + 'Z' ;
+        #
+        #
+        #    System.IO.StreamWriter                      streamWriter = null;
+        #    System.IO.StreamReader                      streamReader = null;
+        #    System.Net.WebHeaderCollection              headerCollection;
+        #    System.Security.Cryptography.HMACSHA1       hmacSha1;
+        #    System.Security.Cryptography.SHA1           sha1;
+        #    InteropPermission                           clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantFirstData(ccFirstData);
+        #    xmlBuilder.parmMerchantFirstData(ccFirstData);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findByLocation(ccTable.Location));
+        #
+        #
+        #    try
+        #    {
+        #        //--> This builds the XML
+        #        ParmList += xmlBuilder.buildPartialAuthForToken(ccTable);
+        #
+        #        //--> This instantiates the SHA-1 encryption for the digest.
+        #        sha1 = System.Security.Cryptography.SHA1::Create();
+        #
+        #        //--> Create plain text
+        #        hashBytes = System.Text.Encoding::get_ASCII().GetBytes(System.Convert::ToString(parmList));
+        #
+        #        //--> Receive the hash back
+        #        digestBytes = sha1.ComputeHash(hashBytes);
+        #        //--> Hash is in HEX.  Remove the hyphens
+        #        digestStr = System.BitConverter::ToString(digestBytes);
+        #        digestStr = strReplace(digestStr,'-','');
+        #        digestStr = strLwr(digestStr);
+        #
+        #        digestText = 'POST\n';
+        #        digestText += 'application/xml\n';
+        #        digestText += digestStr + '\n';
+        #        digestText += dateTime + '\n';
+        #        digestText += '/transaction/v12';
+        #
+        #         //--> Create hash data
+        #        hashBytes = System.Text.Encoding::get_UTF8().GetBytes(digestText);
+        #        clearBytes = System.Text.Encoding::get_UTF8().GetBytes(ccFirstData.Key);
+        #        hmacSha1 = new System.Security.Cryptography.HMACSHA1(clearBytes);
+        #        responseBytes = hmacSha1.ComputeHash(hashBytes);
+        #
+        #        base64Text = System.Convert::ToBase64String( responseBytes);
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('x-gge4-date',dateTime);
+        #        headerCollection.Add('x-gge4-content-sha1', digestStr);
+        #        tempStr = 'GGE4_API ' + ccFirstData.KeyID + ':' + base64Text;
+        #
+        #        headerCollection.Add('Authorization',' GGE4_API ' + ccFirstData.KeyID + ':' + base64Text);
+        #
+        #        //--> TLS 1.2
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccFirstData.URL);
+        #
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('application/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    if (response)
+        #    {
+        #        ccTable = xmlBuilder.analyzeCybersourceResponseForProfile(response,ccTable);
+        #    }
+        #
+        #    return ccTable;
+        #}
+      ENDSOURCE
+      SOURCE #processFirstData
+        #server static str processFirstData(CreditCardTrans     ccTrans)
+        #{
+        #    CreditCardMerchantFirstData                 ccFirstData = CreditCardMerchantFirstData::find(ccTrans.TerminalId);
+        #    CreditCardParameters                        ccParameters = CreditCardParameters::findParameterWithTerminal(ccTrans.TerminalId);
+        #    CreditCardFDMSE4XMLBuilder                  xmlBuilder = new CreditCardFDMSE4XMLBuilder();
+        #    //-->
+        #    CreditCardStr                               response;
+        #    CreditCardStr                               parmList;
+        #
+        #    System.Net.WebRequest                       webRequest;
+        #    System.Net.HttpWebResponse                  webResponse;
+        #    System.IO.Stream                            stream;
+        #
+        #    //--> Global Gateway header encryption fiels
+        #    ClrObject                                   clearBytes;
+        #    System.Text.Encoding                        encoding;
+        #    System.Byte[]                               parmBytes;
+        #    System.Byte[]                               hashBytes;
+        #    System.Byte[]                               responseBytes;
+        #    CLRObject                                   digestBytes;
+        #    CreditCardStr                               digestStr,digestText,base64Text;
+        #    System.String                               tempStr;
+        #    CreditCardStr                               dateTime = DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime()) + 'Z' ;
+        #
+        #
+        #    System.IO.StreamWriter                      streamWriter = null;
+        #    System.IO.StreamReader                      streamReader = null;
+        #    System.Net.WebHeaderCollection              headerCollection;
+        #    System.Security.Cryptography.HMACSHA1       hmacSha1;
+        #    System.Security.Cryptography.SHA1           sha1;
+        #    InteropPermission                           clrPermission = new InteropPermission(InteropKind::ComInterop);
+        #
+        #    ;
+        #    clrPermission.assert();
+        #    //--> Retrieve Parameters
+        #    select ccFirstData
+        #        where ccFirstData.TerminalId == ccTrans.TerminalId;
+        #
+        #    if (ccParameters.CurrencyProcessType == CreditCardCurrencyProcessType::Specified)
+        #    {
+        #        if (!ccParameters.ProcessCurrencyCode)
+        #        {
+        #            throw error(strFmt("@ACC1835",ccTrans.TerminalId));
+        #        }
+        #
+        #        if (ccParameters.ProcessCurrencyCode != CompanyInfo::standardCurrency())
+        #        {
+        #            if (ccTrans.CurrencyCode != ccParameters.ProcessCurrencyCode)
+        #            {
+        #                throw error(strFmt("@ACC1836",
+        #                    ccTrans.TerminalId,
+        #                    ccParameters.ProcessCurrencyCode,
+        #                    ccTrans.CurrencyCode));
+        #            }
+        #
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountCur);
+        #        }
+        #        else
+        #        {
+        #            xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #        }
+        #
+        #    }
+        #    else
+        #    {
+        #        xmlBuilder.parmProcessAmt(ccTrans.AmountMST);
+        #    }
+        #
+        #    //<--Check for all required fields
+        #    xmlBuilder.checkMerchantFirstData(ccFirstData);
+        #    xmlBuilder.parmMerchantFirstData(ccFirstData);
+        #    xmlBuilder.parmPostalAddress(LogisticsPostalAddress::findRecId(ccTrans.Location));
+        #    xmlBuilder.parmCCTrans(ccTrans);
+        #
+        #    //--> Check for customer reference, if 0 or blank, insert RefRecId
+        #    if (ccTrans.CustomerRef == '0' || ccTrans.CustomerRef == '')
+        #    {
+        #        ccTrans.CustomerRef = int642str(ccTrans.RecId);
+        #    }
+        #
+        #    try
+        #    {
+        #        //--> This builds the XML
+        #        ParmList += xmlBuilder.build();
+        #
+        #        //--> This instantiates the SHA-1 encryption for the digest.
+        #        sha1 = System.Security.Cryptography.SHA1::Create();
+        #
+        #        //--> Create plain text
+        #        encoding = System.Text.Encoding::get_ASCII();
+        #        parmBytes = encoding.GetBytes(System.Convert::ToString(parmList));
+        #
+        #        //--> Receive the hash back
+        #        digestBytes = sha1.ComputeHash(parmBytes);
+        #        //--> Hash is in HEX.  Remove the hyphens
+        #        digestStr = System.BitConverter::ToString(digestBytes);
+        #        digestStr = strReplace(digestStr,'-','');
+        #        digestStr = strLwr(digestStr);
+        #
+        #        digestText = 'POST\n';
+        #        digestText += 'application/xml\n';
+        #        digestText += digestStr + '\n';
+        #        digestText += dateTime + '\n';
+        #        digestText += '/transaction/v12';
+        #
+        #         //--> Create hash data
+        #        encoding = System.Text.Encoding::get_UTF8();
+        #        hashBytes = encoding.GetBytes(digestText);
+        #        clearBytes = System.Text.Encoding::get_UTF8().GetBytes(ccFirstData.Key);
+        #        hmacSha1 = new System.Security.Cryptography.HMACSHA1(clearBytes);
+        #        responseBytes = hmacSha1.ComputeHash(hashBytes);
+        #
+        #        base64Text = System.Convert::ToBase64String( responseBytes);
+        #
+        #        headerCollection = new System.Net.WebHeaderCollection();
+        #        headerCollection.Add('x-gge4-date',dateTime);
+        #        headerCollection.Add('x-gge4-content-sha1', digestStr);
+        #        tempStr = 'GGE4_API ' + ccFirstData.KeyID + ':' + base64Text;
+        #
+        #        headerCollection.Add('Authorization',' GGE4_API ' + ccFirstData.KeyID + ':' + base64Text);
+        #
+        #        //--> TLS 1.2
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
+        #        WebRequest = System.Net.WebRequest::Create(ccFirstData.URL);
+        #
+        #        WebRequest.set_Method('POST');
+        #        webRequest.set_Headers(headerCollection);
+        #        WebRequest.set_ContentLength(strlen(parmList));
+        #        webRequest.set_ContentType('application/xml');
+        #
+        #        stream = webRequest.GetRequestStream();
+        #        streamWriter = new System.IO.StreamWriter(stream);
+        #        streamWriter.Write(parmList);
+        #        streamWriter.Close();
+        #
+        #        webResponse = webRequest.GetResponse();
+        #
+        #        stream = webResponse.GetResponseStream();
+        #        streamReader = new System.IO.StreamReader(stream);
+        #
+        #        response = streamReader.ReadToEnd();
+        #
+        #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
+        #    }
+        #    catch
+        #    {
+        #        throw error("@SYS116968");
+        #    }
+        #
+        #    return response;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END
