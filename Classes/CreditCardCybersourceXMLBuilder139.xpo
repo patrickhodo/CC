@@ -940,16 +940,16 @@ Formatversion: 1
         #        if (creditCardParameters::findParameter().AVSZipOnly == NoYes::No)
         #        {
         #            xmlGen = xmlDocument.createElement('AVSaddress1');
-        #            xmlGen.innerText(this.parmPostalAddress().Street);
+        #            xmlGen.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
         #            newOrder.appendChild(xmlGen);
         #
         #            xmlGen = xmlDocument.createElement('AVScity');
-        #            xmlGen.innerText(this.parmPostalAddress().City);
+        #            xmlGen.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().City));
         #            newOrder.appendChild(xmlGen);
         #
         #
         #            xmlGen = xmlDocument.createElement('AVSstate');
-        #            xmlGen.innerText(this.parmPostalAddress().State);
+        #            xmlGen.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().State));
         #            newOrder.appendChild(xmlGen);
         #
         #            if (ccTrans.AVSPhone)
@@ -1416,15 +1416,15 @@ Formatversion: 1
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('street1');
-        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('city');
-        #    billTO.innerText(this.parmPostalAddress().City);
+        #    billTO.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().City));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('state');
-        #    billTo.innerText(this.parmPostalAddress().State);
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().State));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('postalCode');
@@ -1436,7 +1436,7 @@ Formatversion: 1
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('phoneNumber');
-        #    billTo.innerText(ccTrans.AVSPhone);
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(ccTrans.AVSPhone));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('email');
@@ -1914,17 +1914,17 @@ Formatversion: 1
         #    xmlGen = xmlDocument.createElement('billTo');
         #
         #    billTo = xmlDocument.createElement('firstName');
-        #    billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #    billTo.innerText(this.parmFirstName(System.Web.HttpUtility::HtmlEncode(ccTrans.NameOnCard)));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('lastName');
-        #    billTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #    billTo.innerText(this.parmLastName(System.Web.HttpUtility::HtmlEncode(ccTrans.NameOnCard)));
         #    xmlGen.appendChild(billTo);
         #
         #    if (this.parmPostalAddress().Street)
         #    {
         #        billTo = xmlDocument.createElement('street1');
-        #        billTo.innerText(this.parmPostalAddress().Street);
+        #        billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
         #        xmlGen.appendChild(billTo);
         #    }
         #    else
@@ -1937,7 +1937,7 @@ Formatversion: 1
         #    if (this.parmPostalAddress().City)
         #    {
         #        billTo = xmlDocument.createElement('city');
-        #        billTO.innerText(this.parmPostalAddress().City);
+        #        billTO.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().City));
         #        xmlGen.appendChild(billTo);
         #    }
         #    else
@@ -1989,7 +1989,7 @@ Formatversion: 1
         #    if (ccTrans.AVSPhone)
         #    {
         #        billTo = xmlDocument.createElement('phoneNumber');
-        #        billTo.innerText(ccTrans.AVSPhone);
+        #        billTo.innerText(System.Web.HttpUtility::HtmlEncode(ccTrans.AVSPhone));
         #        xmlGen.appendChild(billTo);
         #    }
         #
@@ -2435,11 +2435,11 @@ Formatversion: 1
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('street1');
-        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('city');
-        #    billTO.innerText(this.parmPostalAddress().City);
+        #    billTO.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().City));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('state');
@@ -2455,7 +2455,7 @@ Formatversion: 1
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('phoneNumber');
-        #    billTo.innerText(ccTrans.AVSPhone);
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(ccTrans.AVSPhone));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('email');
@@ -2595,19 +2595,19 @@ Formatversion: 1
         #    xmlGen = xmlDocument.createElement('billTo');
         #
         #    billTo = xmlDocument.createElement('firstName');
-        #    billTo.innerText(this.parmFirstName(ccTable.NameOnCard));
+        #    billTo.innerText(this.parmFirstName(System.Web.HttpUtility::HtmlEncode(ccTable.NameOnCard)));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('lastName');
-        #    billTo.innerText(this.parmLastName(ccTable.NameOnCard));
+        #    billTo.innerText(this.parmLastName(System.Web.HttpUtility::HtmlEncode(ccTable.NameOnCard)));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('street1');
-        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('city');
-        #    billTO.innerText(this.parmPostalAddress().City);
+        #    billTO.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().City));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('state');
@@ -3164,28 +3164,49 @@ Formatversion: 1
         #    //parmList = request.xml();
         #
         #    //--> Bill to information
-        #
+        # //--> Bill to informatin
         #    xmlGen = xmlDocument.createElement('billTo');
         #
         #    billTo = xmlDocument.createElement('firstName');
-        #    billTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #    billTo.innerText(this.parmFirstName(System.Web.HttpUtility::HtmlEncode(ccTrans.NameOnCard)));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('lastName');
-        #    billTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #    billTo.innerText(this.parmLastName(System.Web.HttpUtility::HtmlEncode(ccTrans.NameOnCard)));
         #    xmlGen.appendChild(billTo);
         #
-        #    billTo = xmlDocument.createElement('street1');
-        #    billTo.innerText(this.parmPostalAddress().Street);
-        #    xmlGen.appendChild(billTo);
+        #    if (this.parmPostalAddress().Street)
+        #    {
+        #        billTo = xmlDocument.createElement('street1');
+        #        billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #    else
+        #    {
+        #        billTo = xmlDocument.createElement('street1');
+        #        billTo.innerText('null');
+        #        xmlGen.appendChild(billTo);
+        #    }
         #
-        #    billTo = xmlDocument.createElement('city');
-        #    billTO.innerText(this.parmPostalAddress().City);
-        #    xmlGen.appendChild(billTo);
+        #    if (this.parmPostalAddress().City)
+        #    {
+        #        billTo = xmlDocument.createElement('city');
+        #        billTO.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().City));
+        #        xmlGen.appendChild(billTo);
+        #    }
+        #    else
+        #    {
+        #        billTo = xmlDocument.createElement('city');
+        #        billTo.innerText('null');
+        #        xmlGen.appendChild(billTo);
+        #    }
         #
-        #    billTo = xmlDocument.createElement('state');
-        #    billTo.innerText(this.parmPostalAddress().State);
-        #    xmlGen.appendChild(billTo);
+        #    if (this.parmPostalAddress().State)
+        #    {
+        #        billTo = xmlDocument.createElement('state');
+        #        billTo.innerText(this.parmPostalAddress().State);
+        #        xmlGen.appendChild(billTo);
+        #    }
         #
         #    billTo = xmlDocument.createElement('postalCode');
         #    billTo.innerText(this.parmPostalAddress().ZipCode);
@@ -3298,27 +3319,27 @@ Formatversion: 1
         #        xmlGen = xmlDocument.createElement('shipTo');
         #
         #        shipTo = xmlDocument.createElement('firstName');
-        #        shipTo.innerText(this.parmFirstName(ccTrans.NameOnCard));
+        #        shipTo.innerText(this.parmFirstName(System.Web.HttpUtility::HtmlEncode(ccTrans.NameOnCard)));
         #        xmlGen.appendChild(shipTo);
         #
         #        shipTo = xmlDocument.createElement('lastName');
-        #        shipTo.innerText(this.parmLastName(ccTrans.NameOnCard));
+        #        shipTo.innerText(this.parmLastName(System.Web.HttpUtility::HtmlEncode(ccTrans.NameOnCard)));
         #        xmlGen.appendChild(shipTo);
         #
         #        shipTo = xmlDocument.createElement('street1');
-        #        shipTo.innerText(shipAddress.Street);
+        #        shipTo.innerText(System.Web.HttpUtility::HtmlEncode(shipAddress.Street));
         #        xmlGen.appendChild(shipTo);
         #
         #        shipTo = xmlDocument.createElement('city');
-        #        shipTO.innerText(shipAddress.City);
+        #        shipTO.innerText(System.Web.HttpUtility::HtmlEncode(shipAddress.City));
         #        xmlGen.appendChild(shipTo);
         #
         #        shipTo = xmlDocument.createElement('state');
-        #        shipTo.innerText(shipAddress.State);
+        #        shipTo.innerText(System.Web.HttpUtility::HtmlEncode(shipAddress.State));
         #        xmlGen.appendChild(shipTo);
         #
         #        shipTo = xmlDocument.createElement('postalCode');
-        #        shipTo.innerText(shipAddress.ZipCode);
+        #        shipTo.innerText(System.Web.HttpUtility::HtmlEncode(shipAddress.ZipCode));
         #        xmlGen.appendChild(shipTo);
         #
         #        shipTo = xmlDocument.createElement('country');
@@ -3396,19 +3417,19 @@ Formatversion: 1
         #    xmlGen = xmlDocument.createElement('billTo');
         #
         #    billTo = xmlDocument.createElement('firstName');
-        #    billTo.innerText(this.parmFirstName(ccTable.NameOnCard));
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmFirstName(ccTable.NameOnCard)));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('lastName');
-        #    billTo.innerText(this.parmLastName(ccTable.NameOnCard));
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmLastName(ccTable.NameOnCard)));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('street1');
-        #    billTo.innerText(this.parmPostalAddress().Street);
+        #    billTo.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().Street));
         #    xmlGen.appendChild(billTo);
         #
         #    billTo = xmlDocument.createElement('city');
-        #    billTO.innerText(this.parmPostalAddress().City);
+        #    billTO.innerText(System.Web.HttpUtility::HtmlEncode(this.parmPostalAddress().City));
         #    xmlGen.appendChild(billTo);
         #
         #    if (this.parmPostalAddress().State)
