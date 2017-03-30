@@ -64,7 +64,7 @@ Formatversion: 1
         #                }
         #                break;
         #            case    CreditCardTrxType::D        :
-        #                parmList += this.buildCapture();
+        #                parmList += this.buildComplete();
         #                break;
         #            case    CreditCardTrxType::S        :
         #                parmList += this.buildSale();
@@ -94,6 +94,8 @@ Formatversion: 1
         #
         #    try
         #    {
+        #        System.Net.ServicePointManager::set_SecurityProtocol(System.Net.SecurityProtocolType::Tls12);
+        #
         #        WebRequest = System.Net.WebRequest::Create(ccElavon.HostAddress);
         #        WebRequest.set_Method('POST');
         #        WebRequest.set_ContentLength(strlen(parmList));
@@ -112,6 +114,10 @@ Formatversion: 1
         #        response = streamReader.ReadToEnd();
         #
         #        streamReader.Close();
+        #    }
+        #    catch (Exception::CLRError)
+        #    {
+        #        response = AifUtil::getClrErrorMessage();
         #    }
         #    catch
         #    {
@@ -246,6 +252,18 @@ Formatversion: 1
         #        xmlTextWriter.writeEndElement();
         #    }
         #
+        #    xmlTextWriter.writeStartElement('ssl_invoice_number');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    /*xmlTextWriter.writeStartElement('ssl_customer_code');
+        #    xmlTextWriter.writeString(ccTrans.CustAccount);
+        #    xmlTextWriter.writeEndElement();*/
+        #
+        #    //xmlTextWriter.writeStartElement('ssl_transaction_currency');
+        #    //xmlTextWriter.writeString(Currency::findCurrencyCodeISO(ccTrans.CurrencyCode).CurrencyCodeISO);
+        #    //xmlTextWriter.writeEndElement();
+        #
         #    //--> Write the TXN end
         #    XmlTextWriter.writeEndElement();
         #
@@ -265,7 +283,7 @@ Formatversion: 1
         #
         #    //--> Transaction type
         #    xmlTextWriter.writeStartElement('ssl_transaction_type');
-        #    xmlTextWriter.writeString('ccforce');
+        #    xmlTextWriter.writeString('ccForce');
         #    xmlTextWriter.writeEndElement();
         #
         #    //--> Merchant Id
@@ -312,12 +330,46 @@ Formatversion: 1
         #    xmlTextWriter.writeString(ccTrans.OrigID);
         #    xmlTextWriter.writeEndElement();
         #
+        #    //--> txnid code
+        #    xmlTextWriter.writeStartElement('ssl_txn_id');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
         #    //--> Amount
         #    xmlTextWriter.writeStartElement('ssl_amount');
         #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
         #    xmlTextWriter.writeEndElement();
         #
         #
+        #
+        #    //--> Write the TXN end
+        #    XmlTextWriter.writeEndElement();
+        #
+        #    return XmlTextWriter.writeToString();
+        #}
+      ENDSOURCE
+      SOURCE #buildComplete
+        #str buildComplete()
+        #{
+        #    CreditCardTable     ccTable;
+        #    xmlTextWriter       xmlTextWriter;
+        #    ;
+        #    xmlTextWriter = this.buildElavonLogin();
+        #
+        #    //--> Transaction type
+        #    xmlTextWriter.writeStartElement('ssl_transaction_type');
+        #    xmlTextWriter.writeString('ccComplete');
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> txnid code
+        #    xmlTextWriter.writeStartElement('ssl_txn_id');
+        #    xmlTextWriter.writeString(ccTrans.RetrevalRefNum);
+        #    xmlTextWriter.writeEndElement();
+        #
+        #    //--> Amount
+        #    xmlTextWriter.writeStartElement('ssl_amount');
+        #    xmlTextWriter.writeString(strLRTrim(this.parmccAmountStr(this.parmccTrans().AmountMST)));
+        #    xmlTextWriter.writeEndElement();
         #
         #    //--> Write the TXN end
         #    XmlTextWriter.writeEndElement();
@@ -796,6 +848,10 @@ Formatversion: 1
         #        xmlTextWriter.writeString('null@null.com');
         #        xmlTextWriter.writeEndElement();
         #    }
+        #
+        #    xmlTextWriter.writeStartElement('ssl_invoice_number');
+        #    xmlTextWriter.writeString(ccTrans.CustomerRef);
+        #    xmlTextWriter.writeEndElement();
         #
         #    //--> Write the TXN end
         #    XmlTextWriter.writeEndElement();
